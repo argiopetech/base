@@ -1,4 +1,4 @@
-BASE -- Bayesian Analysis for Stellar Evolution
+Bayesian Analysis for Stellar Evolution
 ===============================================
 
 Introduction
