@@ -67,7 +67,7 @@ int main(void)
    scanf("%d",&verbose);
    if(verbose < 0 || verbose > 2) verbose = 1;		// give standard feedback if incorrectly specified
 
-   loadModels(nFieldStars, &theCluster);
+   loadModels(nFieldStars, &theCluster, 0);
 
    if(theCluster.evoModels.mainSequenceEvol == YALE) minMass = 0.4;
    if(theCluster.evoModels.mainSequenceEvol == DSED) minMass = 0.25;

@@ -688,7 +688,7 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   // loadMSRgbModels(&mc->clust, path, 0);
   // loadWDCool(path, mc->clust.evoModels.WDcooling);
   // loadBergeron(path, mc->clust.evoModels.filterSet);
-  loadModels(0, &mc->clust);
+  loadModels(0, &mc->clust, 0);
 
   /* use linear IFMR */
   // mc->clust.evoModels.IFMR = LINEAR;

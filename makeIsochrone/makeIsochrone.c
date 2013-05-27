@@ -102,7 +102,7 @@ int main(void)
 
 
 
-   loadModels(0, &theCluster);                    /* read in stellar evol & WD models */
+   loadModels(0, &theCluster, 0);                    /* read in stellar evol & WD models */
 
 
    /* read cluster parameters */

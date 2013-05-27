@@ -1,8 +1,10 @@
 general:
     seed : 73    # controls seed, and thereby the random number generator
-    ifmr : 1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
+    photFile: "hyades/Hyades.UBV.phot"
+    outputFileBase: "hyades/Mcmc"
 
     main_sequence:
+        ifmr      : 1    # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
         filterSet : 0    # 0 = UBVRIJHK, 1 = ACS, 2 = SDSS + JHK
         rgbModel  : 2    # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling, 2 = Yale-Yonsei, 3 = DSED
 
@@ -32,9 +34,6 @@ general:
         maxMag : 25.0
         index  : 2    #with 0 being the first filter in the dataset
 
-    photFile: "hyades/Hyades.UBV.phot"
-    outputDir: "hyades/" # ["hyades/Mcmc.a", $logClusAge, ".s", $seed, ".m", $msRgbModels, ".maxMag", $maxMag, ".modSigma", $distModSigma, ".res"]
-
 makeIsochrone:
     # No makeIsochrone-specific settings yet
 
@@ -47,6 +46,7 @@ makeCMD:
 mpiMcmc:
     burnIter   : 2000
     maxIter    : 10000
+    thin       : 1
 
 sampleWDMass:
     # No sampleWDMass-specific settings yet

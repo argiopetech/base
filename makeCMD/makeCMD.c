@@ -175,7 +175,7 @@ int main(void)
    scanf("%d",&verbose);
    if(verbose < 0 || verbose > 2) verbose = 1;		// give standard feedback if incorrectly specified
 
-   loadModels(0, &theCluster);                                      // read in stellar evol & WD models
+   loadModels(0, &theCluster, 0);                                      // read in stellar evol & WD models
 
 
    //////////////////////////////
