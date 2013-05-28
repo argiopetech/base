@@ -14,7 +14,6 @@
 #define FEH                      2          // metallicity sampling
 #define MOD                      3          // modulus sampling
 #define ABS                  4           // absorption sampling;
-#define CARBON               5
 #define IFMR_INTERCEPT       5
 #define IFMR_SLOPE           6
 #define IFMR_QUADCOEF        7
