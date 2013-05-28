@@ -10,13 +10,11 @@ static double getY  (struct cluster *pCluster);
 static double getFeH(struct cluster *pCluster);
 static double getMod(struct cluster *pCluster);
 static double getAbs(struct cluster *pCluster);
-static double getCarbonicity(struct cluster *);
 static void   setAge(struct cluster *pCluster, double newAge);
 static void   setY  (struct cluster *pCluster, double newY);
 static void   setFeH(struct cluster *pCluster, double newFeH);
 static void   setMod(struct cluster *pCluster, double newMod);
 static void   setAbs(struct cluster *pCluster, double newAbs);
-static void   setCarbonicity(struct cluster*, double);
 
 
 static double (*getThisParameter[NPARAMS])(struct cluster*) =
@@ -26,7 +24,6 @@ static double (*getThisParameter[NPARAMS])(struct cluster*) =
     &getFeH,
     &getMod,
     &getAbs,
-    &getCarbonicity
 };
 
 static void (*setThisParameter[NPARAMS])(struct cluster*, double) =
@@ -36,7 +33,6 @@ static void (*setThisParameter[NPARAMS])(struct cluster*, double) =
     &setFeH,
     &setMod,
     &setAbs,
-    &setCarbonicity
 };
 
 void initCluster(struct cluster *pCluster)
@@ -315,10 +311,6 @@ static double getAbs(struct cluster *pCluster){
   return abs;
 }
 
-static double getCarbonicity(struct cluster *pCluster){
-  return pCluster->parameter[CARBON];
-}
-
 static void   setAge(struct cluster *pCluster, double newAge){
   pCluster->parameter[AGE] = newAge;
 
@@ -340,9 +332,6 @@ static void   setAbs(struct cluster *pCluster, double newAbs){
   pCluster->parameter[ABS] = newAbs
     - pCluster->betamabs * (getParameter(pCluster,MOD) - pCluster->mean[MOD])
     - pCluster->betaFabs * (getParameter(pCluster,FEH) - pCluster->mean[FEH]);
-}
-static void   setCarbonicity(struct cluster *pCluster, double newCarbon){
-  pCluster->parameter[CARBON] = newCarbon;
 }
 
 //NOTE: nEntries and nFilts need to be set in the calling program before this will work properly.
