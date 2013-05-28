@@ -106,6 +106,7 @@ int            mti=NN+1;
 /* TEMPORARY - global variable */
 double dMass1 = 0.0005;
 
+struct Settings *settings;
 
 /*******************************************
 ********************************************
@@ -145,6 +146,9 @@ int main(int argc, char *argv[])
   MPI_Datatype clustParType;
   MPI_Datatype obsStarType;
   MPI_Status status;
+
+  settings = makeSettings("base9.yaml");
+
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &taskid);
@@ -677,8 +681,10 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
 
   /* Query user for number of steps, burn-in details, random seed */
   // fscanf(infile, "%ld",&seed);
-  puts("Seed: ");
-  scanf("%ld",&seed);
+  /* puts("Seed: "); */
+  /* scanf("%ld",&seed); */
+
+  seed = settings->seed;
   init_genrand(seed);
 
   /* load models */
@@ -688,31 +694,42 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   // loadMSRgbModels(&mc->clust, path, 0);
   // loadWDCool(path, mc->clust.evoModels.WDcooling);
   // loadBergeron(path, mc->clust.evoModels.filterSet);
-  loadModels(0, &mc->clust, 0);
+  loadModels(0, &mc->clust, settings);
 
   /* use linear IFMR */
   // mc->clust.evoModels.IFMR = LINEAR;
 
   // fscanf(infile, "%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]);
-  scanf("%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]);
+  /* scanf("%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]); */
+
+  ctrl->priorMean[FEH] = settings->cluster.Fe_H;
+  ctrl->priorVar[FEH] = settings->cluster.Fe_HSigma;
   if(ctrl->priorVar[FEH] < 0.0) {
      ctrl->priorVar[FEH] = 0.0;
   }
 
   // fscanf(infile,"%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]);
-  scanf("%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]);
+  /* scanf("%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]); */
+
+  ctrl->priorMean[MOD] = settings->cluster.distMod;
+  ctrl->priorVar[MOD] = settings->cluster.distModSigma;
   if(ctrl->priorVar[MOD] < 0.0) {
      ctrl->priorVar[MOD] = 0.0;
   }
 
   // fscanf(infile,"%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]);
-  scanf("%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]);
+  /* scanf("%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]); */
+
+  ctrl->priorMean[ABS] = settings->cluster.Av;
+  ctrl->priorVar[ABS] = settings->cluster.AvSigma;
   if(ctrl->priorVar[ABS] < 0.0) {
      ctrl->priorVar[ABS] = 0.0;
   }
 
   // fscanf(infile,"%lf",&ctrl->initialAge);
-  scanf("%lf",&ctrl->initialAge);
+  /* scanf("%lf",&ctrl->initialAge); */
+
+  ctrl->initialAge = settings->cluster.logClusAge;
   ctrl->priorVar[AGE] = 1.0;
 
   ctrl->priorVar[IFMR_INTERCEPT] = 1.0;
@@ -766,7 +783,8 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
 
   char filename[100];
   // fscanf(infile, "%s", filename);
-  scanf("%s", filename);
+  /* scanf("%s", filename); */
+  strcpy(filename, settings->photFile);
 
   if((ctrl->rData = fopen(filename,"r")) == NULL) {
     printf("***Error: file %s was not found.***\n",filename);
@@ -774,7 +792,8 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
     exit(1);
   }
 
-  scanf("%s", filename);
+  strcpy(filename, settings->outputFile);
+  strcat(filename, ".res");
   if((ctrl->rSampledParamFile = fopen(filename,"r")) == NULL) {
     printf("***Error: file %s was not found.***\n",filename);
     printf("[Exiting...]\n");
@@ -782,7 +801,11 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   }
 
   // fscanf(infile, "%lf %lf %d", &ctrl->minMag, &ctrl->maxMag, &ctrl->iMag);
-  scanf("%lf %lf %d", &ctrl->minMag, &ctrl->maxMag, &ctrl->iMag);
+  /* scanf("%lf %lf %d", &ctrl->minMag, &ctrl->maxMag, &ctrl->iMag); */
+
+  ctrl->minMag = settings->cluster.minMag;
+  ctrl->maxMag = settings->cluster.maxMag;
+  ctrl->iMag = settings->cluster.index;
   if(ctrl->iMag < 0 || ctrl->iMag > FILTS){
      printf("***Error: %d not a valid magnitude index.  Choose 0, 1,or 2.***\n", ctrl->iMag);
     printf("[Exiting...]\n");
@@ -797,8 +820,9 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   // }
 
   // fscanf(infile, "%s", filename);
-  scanf("%s", filename);
-  // strcat(filename, ".massSamples");
+  /* scanf("%s", filename); */
+  strcpy(filename, settings->outputFile);
+  strcat(filename, ".massSamples");
   if((ctrl->wMassSampleFile = fopen(filename,"w")) == NULL) {
     printf("***Error: File %s was not available for writing.***\n",filename);
     printf("[Exiting...]\n");
