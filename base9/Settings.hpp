@@ -17,7 +17,7 @@ extern "C"
     struct WhiteDwarfSettings
     {
         int filterSet;
-        int carbonicity;
+        double carbonicity;
     };
 
     struct BrownDwarfSettings
