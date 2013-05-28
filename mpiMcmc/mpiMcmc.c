@@ -302,6 +302,8 @@ int main(int argc, char *argv[])
         }
         printHeader(&ctrl);
 
+        setvbuf (ctrl.wClusterFile[0], 0, _IOLBF, 150);
+        setvbuf (ctrl.wClusterFile[1], 0, _IOLBF, 150);
     }
 
     /* set current log posterior to -HUGE_VAL */
@@ -810,7 +812,6 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
         printf("[Exiting...]\n");
         exit(1);
     }
-
 
     /* read output filename */
     // fscanf(infile, "%s", ctrl->clusterFilename);
