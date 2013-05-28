@@ -62,7 +62,7 @@ struct Settings* makeSettings(char *yamlFile)
     settings->photFile = new char[100];
     strcpy(settings->photFile, const_cast<char*>(getOrDie<string>(general, "photFile").c_str()));
     settings->outputFile = new char[100];
-    sprintf(settings->outputFile, "%s.a%0.3f.s%d.m%d.maxMag%0.1f.modSigma%0.2f.res", getOrDie<string>(general, "outputFileBase").c_str(), settings->cluster.logClusAge, settings->seed, settings->mainSequence.rgbModel, settings->cluster.maxMag, settings->cluster.distModSigma);
+    sprintf(settings->outputFile, "%s.a%0.3f.s%d.m%d.maxMag%0.1f.modSigma%0.2f", getOrDie<string>(general, "outputFileBase").c_str(), settings->cluster.logClusAge, settings->seed, settings->mainSequence.rgbModel, settings->cluster.maxMag, settings->cluster.distModSigma);
 
     return settings.release();
 }

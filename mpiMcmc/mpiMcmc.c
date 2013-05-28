@@ -836,7 +836,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     /* scanf("%s", ctrl->clusterFilename); */
 
     strcpy(ctrl->clusterFilename, settings->outputFile);
-
+    strcat(ctrl->clusterFilename, ".res");
 
     ctrl->iStart = 0;
 
