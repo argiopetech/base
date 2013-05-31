@@ -29,6 +29,7 @@ struct Settings* makeSettings(char *yamlFile)
     Node mpiConf = getNode(config, "mpiMcmc");
     Node cmdConf = getNode(config, "makeCMD");
     Node simConf = getNode(config, "simCluster");
+    Node isoConf = getNode(config, "makeIsochrone");
 
     settings->mainSequence.filterSet = getDefault<int>(mainSequence, "filterSet", 0);
     settings->mainSequence.rgbModel = getDefault<int>(mainSequence, "rgbModel", 2);
@@ -73,6 +74,9 @@ struct Settings* makeSettings(char *yamlFile)
     settings->simCluster.fractionDB = getOrDie<int>(simConf, "fractionDB");
     settings->simCluster.nFieldStars = getOrDie<int>(simConf, "nFieldStars");
     settings->simCluster.nBrownDwarfs = getOrDie<int>(simConf, "nBrownDwarfs");
+
+    settings->makeIso.M_wd_up = getOrDie<double>(isoConf, "M_wd_up");
+    settings->makeIso.verbose = getOrDie<int>(isoConf, "verbose");
 
     settings->seed = getDefault<int>(general, "seed", 73);
     // When we switch to C++11, we can change these to std::string and remove most of the cruft

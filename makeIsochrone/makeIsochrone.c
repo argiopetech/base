@@ -6,6 +6,7 @@
 #include "evolve.h"
 // #include "structures.h"
 #include "loadModels.h"
+#include "Settings.hpp"
 
 // #define  COL_MAX        1000    // max number of cluster stars
 // #define  FS_NUM          0.0    // mcmc outputs negative mass for field star
@@ -44,22 +45,28 @@ int main(void)
    struct cluster theCluster;
    struct star *stars;
 
+   struct Settings *settings = makeSettings("base9.yaml");
+
    initCluster(&theCluster);
 
    ////////////////////////////////////////////
    /////// Open files to read and write ///////
    ////////////////////////////////////////////
 
-   printf("Enter file name containing color/magnitude data:\n> ");
-   scanf("%s",filename);
+   /* printf("Enter file name containing color/magnitude data:\n> "); */
+   /* scanf("%s",filename); */
+   strcpy(filename, settings->photFile);
    if((rDataPtr = fopen(filename,"r")) == NULL) {
       printf("***Error: file %s was not found.***\n",filename);
       printf("[Exiting...]\n");
       exit(1);
    }
 
-   printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> ");
-   scanf("%lf %lf %d", &minMag, &maxMag,&iMag);
+   /* printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> "); */
+   /* scanf("%lf %lf %d", &minMag, &maxMag,&iMag); */
+   minMag = settings->cluster.minMag;
+   maxMag = settings->cluster.maxMag;
+   iMag   = settings->cluster.index;
    if(iMag<0||iMag>2){
       printf("***Error: %d not a valid magnitude index.  Choose 0,1,or 2.***\n",iMag);
       printf("[Exiting...]\n");
@@ -67,8 +74,9 @@ int main(void)
    }
 
    // char outfilename[100];
-   printf("\n Enter isochrone file name : ");
-   scanf("%s",filename);
+   /* printf("\n Enter isochrone file name : "); */
+   /* scanf("%s",filename); */
+   strcpy(filename, settings->outputFile); // File ending gets added in openOutputFiles
    openOutputFiles(&wDebugPtr, filename, DEBUG_FILE);
 
    ////////////////////////////////////////////
@@ -93,34 +101,40 @@ int main(void)
    ///////// and load models /////////
    ///////////////////////////////////
 
-   printf("\n Enter M_wd_up : ");
-   scanf("%lf", &theCluster.M_wd_up);
+   /* printf("\n Enter M_wd_up : "); */
+   /* scanf("%lf", &theCluster.M_wd_up); */
+   theCluster.M_wd_up = settings->makeIso.M_wd_up;
 
-   printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?");
-   scanf("%d",&verbose);
+   /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
+   /* scanf("%d",&verbose); */
+       verbose = settings->makeIso.verbose;
    if(verbose < 0 || verbose > 2) verbose = 1;		/* give standard feedback if incorrectly specified */
 
 
-
-   loadModels(0, &theCluster, 0);                    /* read in stellar evol & WD models */
+   loadModels(0, &theCluster, settings);                /* read in stellar evol & WD models */
 
 
    /* read cluster parameters */
-   printf("\n Enter cluster log(age) : ");
-   scanf("%lf", &theCluster.parameter[AGE]);
+   /* printf("\n Enter cluster log(age) : "); */
+   /* scanf("%lf", &theCluster.parameter[AGE]); */
+   theCluster.parameter[AGE] = settings->cluster.logClusAge;
 
-   printf("\n Enter cluster [Fe/H] : ");
-   scanf("%lf", &theCluster.parameter[FEH]);
+   /* printf("\n Enter cluster [Fe/H] : "); */
+   /* scanf("%lf", &theCluster.parameter[FEH]); */
+   theCluster.parameter[FEH] = settings->cluster.Fe_H;
 
-   printf("\n Enter cluster distance modulus : ");
-   scanf("%lf", &theCluster.parameter[MOD]);
+   /* printf("\n Enter cluster distance modulus : "); */
+   /* scanf("%lf", &theCluster.parameter[MOD]); */
+   theCluster.parameter[MOD] = settings->cluster.distMod;
 
-   printf("\n Enter cluster absorption : ");
-   scanf("%lf", &theCluster.parameter[ABS]);
+   /* printf("\n Enter cluster absorption : "); */
+   /* scanf("%lf", &theCluster.parameter[ABS]); */
+   theCluster.parameter[ABS] = settings->cluster.Av;
 
    if(theCluster.evoModels.mainSequenceEvol == CHABHELIUM) {
-     printf("\n Enter cluster [He/H] : ");
-     scanf("%lf", &theCluster.parameter[YYY]);
+     /* printf("\n Enter cluster [He/H] : "); */
+     /* scanf("%lf", &theCluster.parameter[YYY]); */
+     theCluster.parameter[YYY] = settings->cluster.Y;
    }
    else {
      theCluster.parameter[YYY] = 0.0;

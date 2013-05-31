@@ -50,6 +50,12 @@ extern "C"
         double M_wd_up;
     };
 
+    struct MakeIsochroneSettings
+    {
+        int verbose;
+        double M_wd_up;
+    };
+
     struct ClusterSigmas
     {
         double Fe_H;
@@ -86,6 +92,7 @@ extern "C"
         struct MakeCMDSettings makeCMD;
         struct ClusterSettings cluster;
         struct SimClusterSettings simCluster;
+        struct MakeIsochroneSettings makeIso;
     };
 
     struct Settings* makeSettings(char*);
