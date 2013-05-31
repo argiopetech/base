@@ -782,7 +782,7 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   char filename[100];
   // fscanf(infile, "%s", filename);
   /* scanf("%s", filename); */
-  strcpy(filename, settings->photFile);
+  strcpy(filename, settings->files.phot);
 
   if((ctrl->rData = fopen(filename,"r")) == NULL) {
     printf("***Error: file %s was not found.***\n",filename);
@@ -790,7 +790,7 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
     exit(1);
   }
 
-  strcpy(filename, settings->outputFile);
+  strcpy(filename, settings->files.output);
   strcat(filename, ".res");
   if((ctrl->rSampledParamFile = fopen(filename,"r")) == NULL) {
     printf("***Error: file %s was not found.***\n",filename);
@@ -819,7 +819,7 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
 
   // fscanf(infile, "%s", filename);
   /* scanf("%s", filename); */
-  strcpy(filename, settings->outputFile);
+  strcpy(filename, settings->files.output);
   strcat(filename, ".massSamples");
   if((ctrl->wMassSampleFile = fopen(filename,"w")) == NULL) {
     printf("***Error: File %s was not available for writing.***\n",filename);

@@ -55,7 +55,7 @@ int main(void)
 
    /* printf("Enter file name containing color/magnitude data:\n> "); */
    /* scanf("%s",filename); */
-   strcpy(filename, settings->photFile);
+   strcpy(filename, settings->files.phot);
    if((rDataPtr = fopen(filename,"r")) == NULL) {
       printf("***Error: file %s was not found.***\n",filename);
       printf("[Exiting...]\n");
@@ -76,7 +76,7 @@ int main(void)
    // char outfilename[100];
    /* printf("\n Enter isochrone file name : "); */
    /* scanf("%s",filename); */
-   strcpy(filename, settings->outputFile); // File ending gets added in openOutputFiles
+   strcpy(filename, settings->files.output); // File ending gets added in openOutputFiles
    openOutputFiles(&wDebugPtr, filename, DEBUG_FILE);
 
    ////////////////////////////////////////////
@@ -103,11 +103,11 @@ int main(void)
 
    /* printf("\n Enter M_wd_up : "); */
    /* scanf("%lf", &theCluster.M_wd_up); */
-   theCluster.M_wd_up = settings->makeIso.M_wd_up;
+   theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
 
    /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
    /* scanf("%d",&verbose); */
-       verbose = settings->makeIso.verbose;
+   verbose = settings->verbose;
    if(verbose < 0 || verbose > 2) verbose = 1;		/* give standard feedback if incorrectly specified */
 
 

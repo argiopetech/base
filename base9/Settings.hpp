@@ -18,6 +18,7 @@ extern "C"
         int ifmr;
         int wdModel;
         double carbonicity;
+        double M_wd_up;
     };
 
     struct BrownDwarfSettings
@@ -34,26 +35,28 @@ extern "C"
 
     struct MakeCMDSettings
     {
-        int verbose;
-        double M_wd_up;
-        char *scatterFile;
     };
 
     struct SimClusterSettings
     {
         int nStars;
-        int verbose;
         int nFieldStars;
         int nBrownDwarfs;
-        int fractionBinary; // Fraction * 100
-        int fractionDB; // Fraction * 100
-        double M_wd_up;
+        int percentBinary; // Fraction * 100
+        int percentDB; // Fraction * 100
     };
 
     struct MakeIsochroneSettings
     {
-        int verbose;
-        double M_wd_up;
+    };
+
+    struct ScatterClusterSettings
+    {
+        int relevantFilt;
+        int exposures[14];
+        double brightLimit;
+        double faintLimit;
+        double limitS2N;
     };
 
     struct ClusterSigmas
@@ -80,11 +83,19 @@ extern "C"
         int index;
     };
 
+    struct Files
+    {
+        char *phot;
+        char *output;
+        char *scatter;
+    };
+
     struct Settings
     {
         int seed;
-        char *photFile;
-        char *outputFile;
+        int verbose;
+
+        struct Files files;
         struct MainSequenceSettings mainSequence;
         struct WhiteDwarfSettings whiteDwarf;
         struct BrownDwarfSettings brownDwarf;
@@ -93,6 +104,7 @@ extern "C"
         struct ClusterSettings cluster;
         struct SimClusterSettings simCluster;
         struct MakeIsochroneSettings makeIso;
+        struct ScatterClusterSettings scatterCluster;
     };
 
     struct Settings* makeSettings(char*);

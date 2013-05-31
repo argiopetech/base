@@ -814,7 +814,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     // fscanf(infile, "%s", filename);
     /* scanf("%s", filename); */
 
-    strcpy(filename, settings->photFile);
+    strcpy(filename, settings->files.phot);
     if((ctrl->rData = fopen(filename,"r")) == NULL) {
         printf("***Error: file %s was not found.***\n",filename);
         printf("[Exiting...]\n");
@@ -835,7 +835,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     // fscanf(infile, "%s", ctrl->clusterFilename);
     /* scanf("%s", ctrl->clusterFilename); */
 
-    strcpy(ctrl->clusterFilename, settings->outputFile);
+    strcpy(ctrl->clusterFilename, settings->files.output);
     strcat(ctrl->clusterFilename, ".res");
 
     ctrl->iStart = 0;

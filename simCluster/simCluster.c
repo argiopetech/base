@@ -60,9 +60,9 @@ int main(void)
    /*       &theCluster.parameter[FEH],&theCluster.parameter[YYY], &nFieldStars, &nBrownDwarfs); */
 
    theCluster.nStars = settings->simCluster.nStars;
-   theCluster.M_wd_up = settings->simCluster.M_wd_up;
-   fractionBinary = settings->simCluster.fractionBinary;
-   fractionDB = settings->simCluster.fractionDB;
+   theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
+   fractionBinary = settings->simCluster.percentBinary;
+   fractionDB = settings->simCluster.percentDB;
    theCluster.parameter[MOD] = settings->cluster.distMod;
    theCluster.parameter[ABS] = settings->cluster.Av;
    theCluster.parameter[AGE] = settings->cluster.logClusAge;
@@ -80,7 +80,7 @@ int main(void)
 
    /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
    /* scanf("%d",&verbose); */
-   verbose = settings->simCluster.verbose;
+   verbose = settings->verbose;
    if(verbose < 0 || verbose > 2) verbose = 1;		// give standard feedback if incorrectly specified
 
    loadModels(nFieldStars, &theCluster, settings);
@@ -90,7 +90,7 @@ int main(void)
 
    /* printf("\n Enter CM diag output file name : "); */
    /* scanf("%s",w_file); */
-   strcpy(w_file, settings->outputFile);
+   strcpy(w_file, settings->files.output);
    strcat(w_file, ".sim.out");
    if((w_ptr = fopen(w_file,"w")) == NULL) {
       printf("\n\n file %s was not available for writing - exiting ",w_file);

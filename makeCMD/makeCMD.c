@@ -69,7 +69,7 @@ int main(void)
 
    /* printf("Enter file name containing color/magnitude data:\n> "); */
    /* scanf("%s",filename); */
-   strcpy(filename, settings->makeCMD.scatterFile);
+   strcpy(filename, settings->files.scatter);
    if((rDataPtr = fopen(filename,"r")) == NULL) {
       printf("***Error: file %s was not found.***\n",filename);
       printf("[Exiting...]\n");
@@ -90,7 +90,7 @@ int main(void)
    /* printf("\n Enter mcmc file name : "); */
    /* scanf("%s",filename); */
    // This is a leftover from Base8 and may not work with the current cluster files
-   strcpy(filename, settings->outputFile);
+   strcpy(filename, settings->files.output);
    openOutputFiles(&rClusterPtr, filename, CLUS_READ);
    openOutputFiles(&wClusterStatPtr, filename, CLUS_STAT_WRITE);
    openOutputFiles(&wCmdPtr, filename, CMD_FILE);
@@ -181,8 +181,8 @@ int main(void)
 
    /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
    /* scanf("%d",&verbose); */
-   theCluster.M_wd_up = settings->makeCMD.M_wd_up;
-   verbose            = settings->makeCMD.verbose;
+   theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
+   verbose            = settings->verbose;
 
    if(verbose < 0 || verbose > 2) verbose = 1;		// give standard feedback if incorrectly specified
 
