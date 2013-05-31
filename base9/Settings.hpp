@@ -32,6 +32,13 @@ extern "C"
         int thin;
     };
 
+    struct MakeCMDSettings
+    {
+        double M_wd_up;
+        int verbose;
+        char *scatterFile;
+    };
+
     struct ClusterSigmas
     {
         double Fe_H;
@@ -65,6 +72,7 @@ extern "C"
         struct WhiteDwarfSettings whiteDwarf;
         struct BrownDwarfSettings brownDwarf;
         struct MpiMcmcSettings mpiMcmc;
+        struct MakeCMDSettings makeCMD;
         struct ClusterSettings cluster;
     };
 

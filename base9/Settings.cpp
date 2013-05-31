@@ -27,6 +27,7 @@ struct Settings* makeSettings(char *yamlFile)
     Node priors = getNode(cluster, "priors");
     Node sigmas = getNode(cluster, "sigmas");
     Node mpiConf = getNode(config, "mpiMcmc");
+    Node cmdConf = getNode(config, "makeCMD");
 
     settings->mainSequence.filterSet = getDefault<int>(mainSequence, "filterSet", 0);
     settings->mainSequence.rgbModel = getDefault<int>(mainSequence, "rgbModel", 2);
@@ -58,6 +59,11 @@ struct Settings* makeSettings(char *yamlFile)
     settings->mpiMcmc.burnIter = getDefault<int>(mpiConf, "burnIter", 2000);
     settings->mpiMcmc.maxIter = getDefault<int>(mpiConf, "maxIter", 10000);
     settings->mpiMcmc.thin = getDefault<int>(mpiConf, "thin", 1);
+
+    settings->makeCMD.M_wd_up = getOrDie<double>(cmdConf, "M_wd_up");
+    settings->makeCMD.verbose = getOrDie<int>(cmdConf, "verbose");
+    settings->makeCMD.scatterFile = new char[100];
+    strcpy(settings->makeCMD.scatterFile, const_cast<char*>(getOrDie<string>(cmdConf, "scatterFile").c_str()));
 
     settings->seed = getDefault<int>(general, "seed", 73);
     // When we switch to C++11, we can change these to std::string and remove most of the cruft

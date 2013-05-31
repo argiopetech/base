@@ -41,7 +41,9 @@ scatterCluster:
     # No scatterCluster-specific settings yet
 
 makeCMD:
-    # No makeCMD-specific settings yet
+    M_wd_up:          0.0 # No idea what this is, nor what its default should be...
+    verbose:          0 # 0 is quiet, 1 is verbose, 2 is very verbose
+    scatterFile:      "" # Empty string. I assume this will be a primarily CLI option
 
 mpiMcmc:
     burnIter:         2000
