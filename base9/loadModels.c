@@ -70,7 +70,7 @@ void loadModels(int needFS, struct cluster *theCluster, struct Settings *setting
   /* printf("> "); */
   /* scanf("%d",&(theCluster->evoModels.IFMR)); */
 
-  theCluster->evoModels.IFMR = settings->mainSequence.ifmr;
+  theCluster->evoModels.IFMR = settings->whiteDwarf.ifmr;
 
   /* printf("Choose a white dwarf filter set:\n"); */
   /* printf("\t0. Wood \n"); */
@@ -78,7 +78,7 @@ void loadModels(int needFS, struct cluster *theCluster, struct Settings *setting
   /* printf("> "); */
   /* scanf("%d",&(theCluster->evoModels.WDcooling)); */
 
-  theCluster->evoModels.WDcooling = settings->whiteDwarf.filterSet;
+  theCluster->evoModels.WDcooling = settings->whiteDwarf.wdModel;
 
   if(theCluster->evoModels.WDcooling < 0 || theCluster->evoModels.WDcooling > 1) {
       printf("***Error: No models found for white dwarf filter set %d.***\n",theCluster->evoModels.WDcooling);
@@ -99,7 +99,7 @@ void loadModels(int needFS, struct cluster *theCluster, struct Settings *setting
   /* scanf("%d",&(theCluster->evoModels.brownDwarfEvol)); */
   //printf("*** %d ***\n",theCluster->evoModels.brownDwarfEvol);
 
-  theCluster->evoModels.brownDwarfEvol = settings->brownDwarf.filterSet;
+  theCluster->evoModels.brownDwarfEvol = settings->brownDwarf.bdModel;
 
   if(theCluster->evoModels.brownDwarfEvol == BARAFFE)
     loadBaraffe(path);

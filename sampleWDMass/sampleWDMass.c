@@ -701,7 +701,7 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   /* scanf("%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]); */
 
   ctrl->priorMean[FEH] = settings->cluster.Fe_H;
-  ctrl->priorVar[FEH] = settings->cluster.Fe_HSigma;
+  ctrl->priorVar[FEH] = settings->cluster.sigma.Fe_H;
   if(ctrl->priorVar[FEH] < 0.0) {
      ctrl->priorVar[FEH] = 0.0;
   }
@@ -710,7 +710,7 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   /* scanf("%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]); */
 
   ctrl->priorMean[MOD] = settings->cluster.distMod;
-  ctrl->priorVar[MOD] = settings->cluster.distModSigma;
+  ctrl->priorVar[MOD] = settings->cluster.sigma.distMod;
   if(ctrl->priorVar[MOD] < 0.0) {
      ctrl->priorVar[MOD] = 0.0;
   }
@@ -719,7 +719,7 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   /* scanf("%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]); */
 
   ctrl->priorMean[ABS] = settings->cluster.Av;
-  ctrl->priorVar[ABS] = settings->cluster.AvSigma;
+  ctrl->priorVar[ABS] = settings->cluster.sigma.Av;
   if(ctrl->priorVar[ABS] < 0.0) {
      ctrl->priorVar[ABS] = 0.0;
   }

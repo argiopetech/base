@@ -1,38 +1,38 @@
 general:
-    seed : 73    # controls seed, and thereby the random number generator
-    photFile: "hyades/Hyades.UBV.phot"
-    outputFileBase: "hyades/Mcmc"
+    seed:             73    # initialize the random number generator
+    photFile:         "hyades/Hyades.UBV.phot"
+    outputFileBase:   "hyades/Mcmc"
 
     main_sequence:
-        ifmr      : 1    # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
-        filterSet : 0    # 0 = UBVRIJHK, 1 = ACS, 2 = SDSS + JHK
-        rgbModel  : 2    # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling, 2 = Yale-Yonsei, 3 = DSED
+        filterSet:    0     # 0 = UBVRIJHK, 1 = ACS, 2 = SDSS + JHK
+        rgbModel:     2     # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling, 2 = Yale-Yonsei, 3 = DSED
 
     white_dwarfs:
-        filterSet   : 1    # 0 = Wood, 1 = Montgomery
-        carbonicity : 0.7
+        wdModel:      1     # 0 = Wood, 1 = Montgomery
+        ifmr:         1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
+        carbonicity:  0.7
 
     brown_dwarfs:
-        filterSet : 1    # 0 = None, 1 = Baraffe
+        bdModel:      1     # 0 = None, 1 = Baraffe
 
     cluster:
-        Fe_H      : 0.07
-        Fe_HSigma : 0.05
+        priors:
+            Fe_H:     0.07
+            distMod:  0.0
+            Av:       0.009
+            Y:        0.29
 
-        distMod      : 0.0
-        distModSigma : 0.05
+        sigmas:
+            Fe_H:     0.05
+            distMod:  0.05
+            Av:       0.006
+            Y:        0.0
 
-        Av      : 0.009
-        AvSigma : 0.006
+        logClusAge:   8.796 # not a prior, just a starting value
 
-        Y      : 0.29
-        YSigma : 0.0
-
-        logClusAge : 8.796
-
-        minMag : 0.0
-        maxMag : 25.0
-        index  : 2    #with 0 being the first filter in the dataset
+        minMag:       0.0   # these variables can be used to read a subset of the photometry
+        maxMag:       25.0
+        index:        2     # with 0 being the first filter in the dataset
 
 makeIsochrone:
     # No makeIsochrone-specific settings yet
@@ -44,9 +44,9 @@ makeCMD:
     # No makeCMD-specific settings yet
 
 mpiMcmc:
-    burnIter   : 2000
-    maxIter    : 10000
-    thin       : 1
+    burnIter:         2000
+    runIter:          10000
+    thin:             1
 
 sampleWDMass:
     # No sampleWDMass-specific settings yet

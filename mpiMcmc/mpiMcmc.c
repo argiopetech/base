@@ -712,7 +712,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     /* scanf("%lf %lf",&ctrl->priorMean[FEH],&priorSigma); */
 
     ctrl->priorMean[FEH] = settings->cluster.Fe_H;
-    priorSigma = settings->cluster.Fe_HSigma;
+    priorSigma = settings->cluster.sigma.Fe_H;
 
     if(priorSigma < 0.0) {
         priorSigma = 0.0;
@@ -723,7 +723,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     /* scanf("%lf %lf",&ctrl->priorMean[MOD],&priorSigma); */
 
     ctrl->priorMean[MOD] = settings->cluster.distMod;
-    priorSigma = settings->cluster.distModSigma;
+    priorSigma = settings->cluster.sigma.distMod;
 
     if(priorSigma < 0.0) {
         priorSigma = 0.0;
@@ -734,7 +734,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     /* scanf("%lf %lf",&ctrl->priorMean[ABS],&priorSigma); */
 
     ctrl->priorMean[ABS] = settings->cluster.Av;
-    priorSigma = settings->cluster.AvSigma;
+    priorSigma = settings->cluster.sigma.Av;
 
     if(priorSigma < 0.0) {
         priorSigma = 0.0;
