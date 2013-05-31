@@ -54,4 +54,10 @@ sampleWDMass:
     # No sampleWDMass-specific settings yet
 
 simCluster:
-    # No simCluster-specific settings yet
+    nStars:           0
+    M_wd_up:          0.0
+    verbose:          0 # 0 is quiet, 1 is verbose, 2 is very verbose
+    fractionBinary:   10 # in integer percent
+    fractionDB:       10 # in integer percent
+    nFieldStars:      0
+    nBrownDwarfs:     0

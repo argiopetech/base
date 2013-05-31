@@ -28,6 +28,7 @@ struct Settings* makeSettings(char *yamlFile)
     Node sigmas = getNode(cluster, "sigmas");
     Node mpiConf = getNode(config, "mpiMcmc");
     Node cmdConf = getNode(config, "makeCMD");
+    Node simConf = getNode(config, "simCluster");
 
     settings->mainSequence.filterSet = getDefault<int>(mainSequence, "filterSet", 0);
     settings->mainSequence.rgbModel = getDefault<int>(mainSequence, "rgbModel", 2);
@@ -64,6 +65,14 @@ struct Settings* makeSettings(char *yamlFile)
     settings->makeCMD.verbose = getOrDie<int>(cmdConf, "verbose");
     settings->makeCMD.scatterFile = new char[100];
     strcpy(settings->makeCMD.scatterFile, const_cast<char*>(getOrDie<string>(cmdConf, "scatterFile").c_str()));
+
+    settings->simCluster.nStars = getOrDie<int>(simConf, "nStars");
+    settings->simCluster.verbose = getOrDie<int>(simConf, "verbose");
+    settings->simCluster.M_wd_up = getOrDie<double>(simConf, "M_wd_up");
+    settings->simCluster.fractionBinary = getOrDie<int>(simConf, "fractionBinary");
+    settings->simCluster.fractionDB = getOrDie<int>(simConf, "fractionDB");
+    settings->simCluster.nFieldStars = getOrDie<int>(simConf, "nFieldStars");
+    settings->simCluster.nBrownDwarfs = getOrDie<int>(simConf, "nBrownDwarfs");
 
     settings->seed = getDefault<int>(general, "seed", 73);
     // When we switch to C++11, we can change these to std::string and remove most of the cruft

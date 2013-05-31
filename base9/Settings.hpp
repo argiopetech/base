@@ -34,9 +34,20 @@ extern "C"
 
     struct MakeCMDSettings
     {
-        double M_wd_up;
         int verbose;
+        double M_wd_up;
         char *scatterFile;
+    };
+
+    struct SimClusterSettings
+    {
+        int nStars;
+        int verbose;
+        int nFieldStars;
+        int nBrownDwarfs;
+        int fractionBinary; // Fraction * 100
+        int fractionDB; // Fraction * 100
+        double M_wd_up;
     };
 
     struct ClusterSigmas
@@ -74,6 +85,7 @@ extern "C"
         struct MpiMcmcSettings mpiMcmc;
         struct MakeCMDSettings makeCMD;
         struct ClusterSettings cluster;
+        struct SimClusterSettings simCluster;
     };
 
     struct Settings* makeSettings(char*);
