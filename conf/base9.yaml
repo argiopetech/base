@@ -43,10 +43,8 @@ makeIsochrone:
     # No makeIsochrone-specific settings yet
 
 scatterCluster:
-# Elliot - I'm breaking this former 3 element array called brightLimit into the variables known to scatterCluster
      brightLimit:       0     # apparant mags, can remove bright stars, e.g. RGB
      faintLimit:        30    # apparant mags, can remove faint stars, e.g. faint MS and WDs
-# Elliot - I cahnged firstFilt to relevantFilt here, as that might make more sense to the YAML-reading individual
      relevantFilt:      1     # 0=bluest band available
      limitS2N:          1     # use to remove objects with overly low signal-to-noise
      exposures:         [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]   # exposure times in hours, use, e.g., (1 1 1 0 0 ...) for UBV (14 entries)
