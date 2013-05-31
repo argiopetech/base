@@ -51,7 +51,6 @@ struct ifmrGridControl {
   int nSamples;
   double start[NPARAMS]; /* starting points for grid evaluations */
   double end[NPARAMS]; /* end points for grid evaluations */
-  double d[NPARAMS]; /* grid spacing */
 };
 
 /* For posterior evaluation on a grid */
@@ -220,7 +219,6 @@ int main(int argc, char *argv[])
 
   MPI_Bcast(ctrl.start, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
   MPI_Bcast(ctrl.end, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-  MPI_Bcast(ctrl.d, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
 
   if (taskid == MASTER) {
@@ -845,28 +843,6 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
     ctrl->filterPriorMin[j] = 1000;
     ctrl->filterPriorMax[j] = -1000;
   }
-
-  scanf("%lf %lf", &ctrl->start[AGE], &ctrl->end[AGE]);
-  scanf("%lf %lf", &ctrl->start[FEH], &ctrl->end[FEH]);
-  scanf("%lf %lf", &ctrl->start[MOD], &ctrl->end[MOD]);
-  scanf("%lf %lf", &ctrl->start[ABS], &ctrl->end[ABS]);
-  if (mc->clust.evoModels.mainSequenceEvol == CHABHELIUM)
-    scanf("%lf %lf",&ctrl->start[YYY],&ctrl->end[YYY]);
-  scanf("%lf %lf", &ctrl->start[IFMR_INTERCEPT], &ctrl->end[IFMR_INTERCEPT]);
-  scanf("%lf %lf", &ctrl->start[IFMR_SLOPE], &ctrl->end[IFMR_SLOPE]);
-
-
-  ctrl->d[AGE] = (ctrl->end[AGE] - ctrl->start[AGE]) / (double) N_AGE;
-  ctrl->d[FEH] = (ctrl->end[FEH] - ctrl->start[FEH]) / (double) N_FEH;
-  ctrl->d[MOD] = (ctrl->end[MOD] - ctrl->start[MOD]) / (double) N_MOD;
-  ctrl->d[ABS] = (ctrl->end[ABS] - ctrl->start[ABS]) / (double) N_ABS;
-  ctrl->d[IFMR_INTERCEPT] = (ctrl->end[IFMR_INTERCEPT] - ctrl->start[IFMR_INTERCEPT]) / (double) N_IFMR_INT;
-  ctrl->d[IFMR_SLOPE] = (ctrl->end[IFMR_SLOPE] - ctrl->start[IFMR_SLOPE]) / (double) N_IFMR_SLOPE;
-  if (mc->clust.evoModels.mainSequenceEvol == CHABHELIUM)
-    ctrl->d[YYY] = (ctrl->end[YYY] - ctrl->start[YYY]) / (double) N_Y;
-  else
-    ctrl->d[YYY] = 0.0;
-
 } // initIfmrGridControl
 
 
