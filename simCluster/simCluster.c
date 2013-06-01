@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "mt19937ar.h"
 #include "evolve.h"
 #include "structures.h"
 #include "loadModels.h"
+#include "Settings.hpp"
 
 double gen_norm(double mean, double std_dev);
 
@@ -28,9 +30,7 @@ unsigned long mt[NN], seed=0;
 int           mti=NN+1;
 
 int main(void)
-
 {
-
    int    i, filt, nStars, cmpnt, nFieldStars, nBrownDwarfs;
    double fractionBinary, tempU, massTotal, fractionDB, tempMod, minV, maxV, minMass=0.15;
    char   w_file[100];
@@ -42,6 +42,8 @@ int main(void)
    double genrand_res53(void);
    void   updateCount(struct star *pStar, int cmpnt);
 
+   struct Settings *settings = makeSettings("base9.yaml");
+
    //macros defined in structures.h
    initCluster(&theCluster);
    initStar(&theStar);
@@ -51,34 +53,50 @@ int main(void)
 
    printf("\n ***You are running simCluster version %.1f.***\n",VERSION);
                                                         // clusY needed, but ignored unless modelSet = 3
-   printf("\n Enter nSystems, WDMassUp, percentBinary, percentDB, (m-M)v, Av, logClusterAge, [Fe/H], Y, nFieldStars, nBrownDwarfs : ");
-   printf("(e.g., 1000 6.0 50 25 12.0 0.5 9.0 -0.3 0.27 100) : ");
-   scanf("%d %lf %lf %lf %lf %lf %lf %lf %lf %d %d", &theCluster.nStars, &theCluster.M_wd_up,&fractionBinary,&fractionDB,
-         &theCluster.parameter[MOD],&theCluster.parameter[ABS],&theCluster.parameter[AGE],
-         &theCluster.parameter[FEH],&theCluster.parameter[YYY], &nFieldStars, &nBrownDwarfs);
+   /* printf("\n Enter nSystems, WDMassUp, percentBinary, percentDB, (m-M)v, Av, logClusterAge, [Fe/H], Y, nFieldStars, nBrownDwarfs : "); */
+   /* printf("(e.g., 1000 6.0 50 25 12.0 0.5 9.0 -0.3 0.27 100) : "); */
+   /* scanf("%d %lf %lf %lf %lf %lf %lf %lf %lf %d %d", &theCluster.nStars, &theCluster.M_wd_up,&fractionBinary,&fractionDB, */
+   /*       &theCluster.parameter[MOD],&theCluster.parameter[ABS],&theCluster.parameter[AGE], */
+   /*       &theCluster.parameter[FEH],&theCluster.parameter[YYY], &nFieldStars, &nBrownDwarfs); */
+
+   theCluster.nStars = settings->simCluster.nStars;
+   theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
+   fractionBinary = settings->simCluster.percentBinary;
+   fractionDB = settings->simCluster.percentDB;
+   theCluster.parameter[MOD] = settings->cluster.distMod;
+   theCluster.parameter[ABS] = settings->cluster.Av;
+   theCluster.parameter[AGE] = settings->cluster.logClusAge;
+   theCluster.parameter[FEH] = settings->cluster.Fe_H;
+   theCluster.parameter[YYY] = settings->cluster.Y;
+   nFieldStars = settings->simCluster.nFieldStars;
+   nBrownDwarfs = settings->simCluster.nBrownDwarfs;
 
    fractionBinary /= 100.;					// input as percentages, use as fractions
    fractionDB     /= 100.;
 
-   printf("\n Enter an integer seed: ");
-   scanf("%ld",&seed);
+   /* printf("\n Enter an integer seed: "); */
+   /* scanf("%ld",&seed); */
+   seed = settings->seed;
 
-   printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?");
-   scanf("%d",&verbose);
+   /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
+   /* scanf("%d",&verbose); */
+   verbose = settings->verbose;
    if(verbose < 0 || verbose > 2) verbose = 1;		// give standard feedback if incorrectly specified
 
-   loadModels(nFieldStars, &theCluster);
+   loadModels(nFieldStars, &theCluster, settings);
 
    if(theCluster.evoModels.mainSequenceEvol == YALE) minMass = 0.4;
    if(theCluster.evoModels.mainSequenceEvol == DSED) minMass = 0.25;
 
-   printf("\n Enter CM diag output file name : ");
-   scanf("%s",w_file);
+   /* printf("\n Enter CM diag output file name : "); */
+   /* scanf("%s",w_file); */
+   strcpy(w_file, settings->files.output);
+   strcat(w_file, ".sim.out");
    if((w_ptr = fopen(w_file,"w")) == NULL) {
       printf("\n\n file %s was not available for writing - exiting ",w_file);
       exit(1);
    }
-   printf("\n\n");
+   /* printf("\n\n"); */
 
    nStars = 0;
    massTotal = 0.0;

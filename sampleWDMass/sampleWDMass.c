@@ -51,7 +51,6 @@ struct ifmrGridControl {
   int nSamples;
   double start[NPARAMS]; /* starting points for grid evaluations */
   double end[NPARAMS]; /* end points for grid evaluations */
-  double d[NPARAMS]; /* grid spacing */
 };
 
 /* For posterior evaluation on a grid */
@@ -106,6 +105,7 @@ int            mti=NN+1;
 /* TEMPORARY - global variable */
 double dMass1 = 0.0005;
 
+struct Settings *settings;
 
 /*******************************************
 ********************************************
@@ -145,6 +145,9 @@ int main(int argc, char *argv[])
   MPI_Datatype clustParType;
   MPI_Datatype obsStarType;
   MPI_Status status;
+
+  settings = makeSettings("base9.yaml");
+
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &taskid);
@@ -216,7 +219,6 @@ int main(int argc, char *argv[])
 
   MPI_Bcast(ctrl.start, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
   MPI_Bcast(ctrl.end, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-  MPI_Bcast(ctrl.d, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
 
   if (taskid == MASTER) {
@@ -677,8 +679,10 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
 
   /* Query user for number of steps, burn-in details, random seed */
   // fscanf(infile, "%ld",&seed);
-  puts("Seed: ");
-  scanf("%ld",&seed);
+  /* puts("Seed: "); */
+  /* scanf("%ld",&seed); */
+
+  seed = settings->seed;
   init_genrand(seed);
 
   /* load models */
@@ -688,31 +692,42 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   // loadMSRgbModels(&mc->clust, path, 0);
   // loadWDCool(path, mc->clust.evoModels.WDcooling);
   // loadBergeron(path, mc->clust.evoModels.filterSet);
-  loadModels(0, &mc->clust);
+  loadModels(0, &mc->clust, settings);
 
   /* use linear IFMR */
   // mc->clust.evoModels.IFMR = LINEAR;
 
   // fscanf(infile, "%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]);
-  scanf("%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]);
+  /* scanf("%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]); */
+
+  ctrl->priorMean[FEH] = settings->cluster.Fe_H;
+  ctrl->priorVar[FEH] = settings->cluster.sigma.Fe_H;
   if(ctrl->priorVar[FEH] < 0.0) {
      ctrl->priorVar[FEH] = 0.0;
   }
 
   // fscanf(infile,"%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]);
-  scanf("%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]);
+  /* scanf("%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]); */
+
+  ctrl->priorMean[MOD] = settings->cluster.distMod;
+  ctrl->priorVar[MOD] = settings->cluster.sigma.distMod;
   if(ctrl->priorVar[MOD] < 0.0) {
      ctrl->priorVar[MOD] = 0.0;
   }
 
   // fscanf(infile,"%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]);
-  scanf("%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]);
+  /* scanf("%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]); */
+
+  ctrl->priorMean[ABS] = settings->cluster.Av;
+  ctrl->priorVar[ABS] = settings->cluster.sigma.Av;
   if(ctrl->priorVar[ABS] < 0.0) {
      ctrl->priorVar[ABS] = 0.0;
   }
 
   // fscanf(infile,"%lf",&ctrl->initialAge);
-  scanf("%lf",&ctrl->initialAge);
+  /* scanf("%lf",&ctrl->initialAge); */
+
+  ctrl->initialAge = settings->cluster.logClusAge;
   ctrl->priorVar[AGE] = 1.0;
 
   ctrl->priorVar[IFMR_INTERCEPT] = 1.0;
@@ -766,7 +781,8 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
 
   char filename[100];
   // fscanf(infile, "%s", filename);
-  scanf("%s", filename);
+  /* scanf("%s", filename); */
+  strcpy(filename, settings->files.phot);
 
   if((ctrl->rData = fopen(filename,"r")) == NULL) {
     printf("***Error: file %s was not found.***\n",filename);
@@ -774,7 +790,8 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
     exit(1);
   }
 
-  scanf("%s", filename);
+  strcpy(filename, settings->files.output);
+  strcat(filename, ".res");
   if((ctrl->rSampledParamFile = fopen(filename,"r")) == NULL) {
     printf("***Error: file %s was not found.***\n",filename);
     printf("[Exiting...]\n");
@@ -782,7 +799,11 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   }
 
   // fscanf(infile, "%lf %lf %d", &ctrl->minMag, &ctrl->maxMag, &ctrl->iMag);
-  scanf("%lf %lf %d", &ctrl->minMag, &ctrl->maxMag, &ctrl->iMag);
+  /* scanf("%lf %lf %d", &ctrl->minMag, &ctrl->maxMag, &ctrl->iMag); */
+
+  ctrl->minMag = settings->cluster.minMag;
+  ctrl->maxMag = settings->cluster.maxMag;
+  ctrl->iMag = settings->cluster.index;
   if(ctrl->iMag < 0 || ctrl->iMag > FILTS){
      printf("***Error: %d not a valid magnitude index.  Choose 0, 1,or 2.***\n", ctrl->iMag);
     printf("[Exiting...]\n");
@@ -797,8 +818,9 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
   // }
 
   // fscanf(infile, "%s", filename);
-  scanf("%s", filename);
-  // strcat(filename, ".massSamples");
+  /* scanf("%s", filename); */
+  strcpy(filename, settings->files.output);
+  strcat(filename, ".massSamples");
   if((ctrl->wMassSampleFile = fopen(filename,"w")) == NULL) {
     printf("***Error: File %s was not available for writing.***\n",filename);
     printf("[Exiting...]\n");
@@ -821,28 +843,6 @@ static void initIfmrGridControl(struct chain *mc, struct ifmrGridControl *ctrl) 
     ctrl->filterPriorMin[j] = 1000;
     ctrl->filterPriorMax[j] = -1000;
   }
-
-  scanf("%lf %lf", &ctrl->start[AGE], &ctrl->end[AGE]);
-  scanf("%lf %lf", &ctrl->start[FEH], &ctrl->end[FEH]);
-  scanf("%lf %lf", &ctrl->start[MOD], &ctrl->end[MOD]);
-  scanf("%lf %lf", &ctrl->start[ABS], &ctrl->end[ABS]);
-  if (mc->clust.evoModels.mainSequenceEvol == CHABHELIUM)
-    scanf("%lf %lf",&ctrl->start[YYY],&ctrl->end[YYY]);
-  scanf("%lf %lf", &ctrl->start[IFMR_INTERCEPT], &ctrl->end[IFMR_INTERCEPT]);
-  scanf("%lf %lf", &ctrl->start[IFMR_SLOPE], &ctrl->end[IFMR_SLOPE]);
-
-
-  ctrl->d[AGE] = (ctrl->end[AGE] - ctrl->start[AGE]) / (double) N_AGE;
-  ctrl->d[FEH] = (ctrl->end[FEH] - ctrl->start[FEH]) / (double) N_FEH;
-  ctrl->d[MOD] = (ctrl->end[MOD] - ctrl->start[MOD]) / (double) N_MOD;
-  ctrl->d[ABS] = (ctrl->end[ABS] - ctrl->start[ABS]) / (double) N_ABS;
-  ctrl->d[IFMR_INTERCEPT] = (ctrl->end[IFMR_INTERCEPT] - ctrl->start[IFMR_INTERCEPT]) / (double) N_IFMR_INT;
-  ctrl->d[IFMR_SLOPE] = (ctrl->end[IFMR_SLOPE] - ctrl->start[IFMR_SLOPE]) / (double) N_IFMR_SLOPE;
-  if (mc->clust.evoModels.mainSequenceEvol == CHABHELIUM)
-    ctrl->d[YYY] = (ctrl->end[YYY] - ctrl->start[YYY]) / (double) N_Y;
-  else
-    ctrl->d[YYY] = 0.0;
-
 } // initIfmrGridControl
 
 
