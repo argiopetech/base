@@ -36,7 +36,7 @@ general:
         logClusAge:     8.796 # not a prior, just a starting value
 
         minMag:         0.0   # these variables can be used to read a subset of the photometry
-        maxMag:         25.0
+        maxMag:         30.0
         index:          2     # with 0 being the first filter in the dataset
 
 makeIsochrone:
@@ -47,7 +47,7 @@ scatterCluster:
      faintLimit:        30    # apparant mags, can remove faint stars, e.g. faint MS and WDs
      relevantFilt:      1     # 0=bluest band available
      limitS2N:          1     # use to remove objects with overly low signal-to-noise
-     exposures:         [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]   # exposure times in hours, use, e.g., (1 1 1 0 0 ...) for UBV (14 entries)
+     exposures:         [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]   # exposure times in hours, e.g., (1 1 1 0 0 ...) for UBV 
 
 makeCMD:
     # No makeCMD-specific settings yet
@@ -61,7 +61,7 @@ sampleWDMass:
     # No sampleWDMass-specific settings yet
 
 simCluster:
-    nStars:             0
+    nStars:             100
     percentBinary:      0     # percent binaries (drawn randomly)
     percentDB:          0     # percent of WDs that have He atmospheres (drawn randomly)
     nFieldStars:        0
