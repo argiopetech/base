@@ -47,7 +47,7 @@ int outputScatter(FILE* w_ptr, int isFS, double clusterMemberPrior);
 
 
 
-int main()
+int main(int argc, char *argv[])
 
 {
 
@@ -57,7 +57,18 @@ int main()
     char   filename[100], line[1000], aFilterName[10];
     FILE   *r_ptr, *w_ptr;
 
-    struct Settings *settings = makeSettings("base9.yaml");
+    struct Settings *settings = malloc(sizeof(struct Settings));
+    settingsFromCLI(argc, argv, settings);
+    if (settings->files.config)
+    {
+        makeSettings(settings->files.config, settings);
+    }
+    else
+    {
+        makeSettings("base9.yaml", settings);
+    }
+
+    settingsFromCLI(argc, argv, settings);
 
     /* printf("\n Enter simulated cluster file name : "); */
     /* scanf("%s",filename); */
