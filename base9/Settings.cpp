@@ -35,15 +35,15 @@ struct Settings* makeSettings(char *yamlFile)
     Node isoConf = getNode(config, "makeIsochrone");
     Node scatterConf = getNode(config, "scatterCluster");
 
-    settings->mainSequence.filterSet = getDefault<int>(mainSequence, "filterSet", 0);
-    settings->mainSequence.rgbModel = getDefault<int>(mainSequence, "rgbModel", 2);
+    settings->mainSequence.filterSet = getOrDie<int>(mainSequence, "filterSet");
+    settings->mainSequence.rgbModel = getOrDie<int>(mainSequence, "rgbModel");
 
-    settings->whiteDwarf.ifmr = getDefault<int>(whiteDwarfs, "ifmr", 1);
-    settings->whiteDwarf.wdModel = getDefault<int>(whiteDwarfs, "wdModel", 1);
-    settings->whiteDwarf.carbonicity = getDefault<double>(whiteDwarfs, "carbonicity", 0.7);
+    settings->whiteDwarf.ifmr = getOrDie<int>(whiteDwarfs, "ifmr");
+    settings->whiteDwarf.wdModel = getOrDie<int>(whiteDwarfs, "wdModel");
+    settings->whiteDwarf.carbonicity = getOrDie<double>(whiteDwarfs, "carbonicity");
     settings->whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfs, "M_wd_up");
 
-    settings->brownDwarf.bdModel = getDefault<int>(brownDwarfs, "bdModel", 1);
+    settings->brownDwarf.bdModel = getOrDie<int>(brownDwarfs, "bdModel");
 
     settings->cluster.Fe_H = getOrDie<double>(priors, "Fe_H");
     settings->cluster.sigma.Fe_H = getOrDie<double>(sigmas, "Fe_H");
@@ -59,13 +59,13 @@ struct Settings* makeSettings(char *yamlFile)
 
     settings->cluster.logClusAge = getOrDie<double>(cluster, "logClusAge");
 
-    settings->cluster.minMag = getDefault<double>(cluster, "minMag", 0.0);
-    settings->cluster.maxMag = getDefault<double>(cluster, "maxMag", 25.0);
-    settings->cluster.index = getDefault<int>(cluster, "index", 2);
+    settings->cluster.minMag = getOrDie<double>(cluster, "minMag");
+    settings->cluster.maxMag = getOrDie<double>(cluster, "maxMag");
+    settings->cluster.index = getOrDie<int>(cluster, "index");
 
-    settings->mpiMcmc.burnIter = getDefault<int>(mpiConf, "burnIter", 2000);
-    settings->mpiMcmc.maxIter = getDefault<int>(mpiConf, "maxIter", 10000);
-    settings->mpiMcmc.thin = getDefault<int>(mpiConf, "thin", 1);
+    settings->mpiMcmc.burnIter = getOrDie<int>(mpiConf, "burnIter");
+    settings->mpiMcmc.maxIter = getOrDie<int>(mpiConf, "maxIter");
+    settings->mpiMcmc.thin = getOrDie<int>(mpiConf, "thin");
 
     settings->simCluster.nStars = getOrDie<int>(simConf, "nStars");
     settings->simCluster.percentBinary = getOrDie<int>(simConf, "percentBinary");
@@ -79,7 +79,7 @@ struct Settings* makeSettings(char *yamlFile)
     settings->scatterCluster.limitS2N = getOrDie<double>(scatterConf, "limitS2N");
     memcpy(settings->scatterCluster.exposures, static_cast<const void*>(getOrDie<vector<double>>(scatterConf, "exposures").data()), 14 * sizeof(double));
 
-    settings->seed = getDefault<int>(general, "seed", 73);
+    settings->seed = getOrDie<int>(general, "seed");
     settings->verbose = getOrDie<int>(general, "verbose");
 
     // When we switch to C++11, we can change these to std::string and remove most of the cruft
