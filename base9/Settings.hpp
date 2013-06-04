@@ -45,7 +45,7 @@ extern "C"
     struct ScatterClusterSettings
     {
         int relevantFilt;
-        int exposures[14];
+        double exposures[14];
         double brightLimit;
         double faintLimit;
         double limitS2N;
