@@ -83,8 +83,6 @@ int main(int argc, char *argv[])
 /* //            sleep(5); */
 /*     } */
 
-    settings = makeSettings("base9.yaml");
-
     int i,
         j,
         p,
@@ -130,6 +128,20 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
     MPI_Type_contiguous(2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
     MPI_Type_commit(&obsStarType);
+
+
+    settings = malloc(sizeof(struct Settings));
+    settingsFromCLI(argc, argv, settings);
+    if (settings->files.config)
+    {
+        makeSettings(settings->files.config, settings);
+    }
+    else
+    {
+        makeSettings("base9.yaml", settings);
+    }
+
+    settingsFromCLI(argc, argv, settings);
 
     initCluster(&(mc.clust));
     initCluster(&propClustWorker);

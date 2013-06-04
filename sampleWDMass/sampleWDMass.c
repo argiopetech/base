@@ -146,7 +146,18 @@ int main(int argc, char *argv[])
   MPI_Datatype obsStarType;
   MPI_Status status;
 
-  settings = makeSettings("base9.yaml");
+  settings = malloc(sizeof(struct Settings));
+   settingsFromCLI(argc, argv, settings);
+   if (settings->files.config)
+   {
+       makeSettings(settings->files.config, settings);
+   }
+   else
+   {
+       makeSettings("base9.yaml", settings);
+   }
+
+   settingsFromCLI(argc, argv, settings);
 
 
   MPI_Init(&argc, &argv);

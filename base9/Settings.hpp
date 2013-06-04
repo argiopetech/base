@@ -33,10 +33,6 @@ extern "C"
         int thin;
     };
 
-    struct MakeCMDSettings
-    {
-    };
-
     struct SimClusterSettings
     {
         int nStars;
@@ -46,14 +42,10 @@ extern "C"
         int percentDB; // Fraction * 100
     };
 
-    struct MakeIsochroneSettings
-    {
-    };
-
     struct ScatterClusterSettings
     {
         int relevantFilt;
-        int exposures[14];
+        double exposures[14];
         double brightLimit;
         double faintLimit;
         double limitS2N;
@@ -88,6 +80,7 @@ extern "C"
         char *phot;
         char *output;
         char *scatter;
+        char *config;
     };
 
     struct Settings
@@ -100,14 +93,13 @@ extern "C"
         struct WhiteDwarfSettings whiteDwarf;
         struct BrownDwarfSettings brownDwarf;
         struct MpiMcmcSettings mpiMcmc;
-        struct MakeCMDSettings makeCMD;
         struct ClusterSettings cluster;
         struct SimClusterSettings simCluster;
-        struct MakeIsochroneSettings makeIso;
         struct ScatterClusterSettings scatterCluster;
     };
 
-    struct Settings* makeSettings(char*);
+    void makeSettings(char*, struct Settings*);
+    void settingsFromCLI(int argc, char **argv, struct Settings *settings);
 
 #ifdef __cplusplus
 }
