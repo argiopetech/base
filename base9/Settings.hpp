@@ -33,10 +33,6 @@ extern "C"
         int thin;
     };
 
-    struct MakeCMDSettings
-    {
-    };
-
     struct SimClusterSettings
     {
         int nStars;
@@ -44,10 +40,6 @@ extern "C"
         int nBrownDwarfs;
         int percentBinary; // Fraction * 100
         int percentDB; // Fraction * 100
-    };
-
-    struct MakeIsochroneSettings
-    {
     };
 
     struct ScatterClusterSettings
@@ -100,10 +92,8 @@ extern "C"
         struct WhiteDwarfSettings whiteDwarf;
         struct BrownDwarfSettings brownDwarf;
         struct MpiMcmcSettings mpiMcmc;
-        struct MakeCMDSettings makeCMD;
         struct ClusterSettings cluster;
         struct SimClusterSettings simCluster;
-        struct MakeIsochroneSettings makeIso;
         struct ScatterClusterSettings scatterCluster;
     };
 
