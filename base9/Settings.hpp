@@ -80,6 +80,7 @@ extern "C"
         char *phot;
         char *output;
         char *scatter;
+        char *config;
     };
 
     struct Settings
@@ -97,7 +98,8 @@ extern "C"
         struct ScatterClusterSettings scatterCluster;
     };
 
-    struct Settings* makeSettings(char*);
+    void makeSettings(char*, struct Settings*);
+    void settingsFromCLI(int argc, char **argv, struct Settings *settings);
 
 #ifdef __cplusplus
 }

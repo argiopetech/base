@@ -29,7 +29,7 @@ int    verbose, needMassNow=1, useFilt[FILTS];
 unsigned long mt[NN], seed=0;
 int           mti=NN+1;
 
-int main(void)
+int main(int argc, char *argv[])
 {
    int    i, filt, nStars, cmpnt, nFieldStars, nBrownDwarfs;
    double fractionBinary, tempU, massTotal, fractionDB, tempMod, minV, maxV, minMass=0.15;
@@ -42,7 +42,18 @@ int main(void)
    double genrand_res53(void);
    void   updateCount(struct star *pStar, int cmpnt);
 
-   struct Settings *settings = makeSettings("base9.yaml");
+   struct Settings *settings = malloc(sizeof(struct Settings));
+   settingsFromCLI(argc, argv, settings);
+   if (settings->files.config)
+   {
+       makeSettings(settings->files.config, settings);
+   }
+   else
+   {
+       makeSettings("base9.yaml", settings);
+   }
+
+   settingsFromCLI(argc, argv, settings);
 
    //macros defined in structures.h
    initCluster(&theCluster);

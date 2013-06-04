@@ -28,7 +28,7 @@ int verbose, needMassNow=1, useFilt[FILTS], numFilts;
 
 static void openOutputFiles(FILE **filePtr, char *filename, int fileType);
 
-int main(void)
+int main(int argc, char *argv[])
 {
 
   /////////////////////////////////
@@ -45,7 +45,18 @@ int main(void)
    struct cluster theCluster;
    struct star *stars;
 
-   struct Settings *settings = makeSettings("base9.yaml");
+   struct Settings *settings = malloc(sizeof(struct Settings));
+   settingsFromCLI(argc, argv, settings);
+   if (settings->files.config)
+   {
+       makeSettings(settings->files.config, settings);
+   }
+   else
+   {
+       makeSettings("base9.yaml", settings);
+   }
+
+   settingsFromCLI(argc, argv, settings);
 
    initCluster(&theCluster);
 
