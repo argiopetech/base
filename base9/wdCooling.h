@@ -1,7 +1,7 @@
 #ifndef WDCOOL_H
 #define WDCOOL_H
 
-#define MAX_WD_MODEL        150   /* Biggest WD model file (to date) has <~100 entries */
+#define MAX_WD_MODEL        300   // Althaus models have lots of entries
 
 struct wdCarbonCurve {
     double x_carbon;
