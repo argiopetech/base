@@ -146,23 +146,23 @@ int main(int argc, char *argv[])
   MPI_Datatype obsStarType;
   MPI_Status status;
 
-  settings = malloc(sizeof(struct Settings));
-   settingsFromCLI(argc, argv, settings);
-   if (settings->files.config)
-   {
-       makeSettings(settings->files.config, settings);
-   }
-   else
-   {
-       makeSettings("base9.yaml", settings);
-   }
-
-   settingsFromCLI(argc, argv, settings);
-
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &taskid);
   MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
+
+  settings = malloc(sizeof(struct Settings));
+  settingsFromCLI(argc, argv, settings);
+  if (settings->files.config)
+  {
+      makeSettings(settings->files.config, settings);
+  }
+  else
+  {
+      makeSettings("base9.yaml", settings);
+  }
+
+  settingsFromCLI(argc, argv, settings);
 
     /* { */
     /*     int i = 0; */
