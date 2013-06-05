@@ -20,8 +20,6 @@ cmake_minimum_required(VERSION 2.8)
 #    message(FATAL_ERROR "Your C++ compiler does not support C++11.")
 #endif ()
 
-
-
 set(CMAKE_C_COMPILER "mpicc")
 set(CMAKE_C_FLAGS "-O3 -ffast-math -fstrict-aliasing" CACHE STRING 
     "Flags used by the compiler during all build types."
