@@ -26,7 +26,7 @@ set(CMAKE_C_FLAGS "-O3 -ffast-math -fstrict-aliasing" CACHE STRING
     FORCE)
 
 set(CMAKE_CXX_COMPILER "mpiCC")
-set(CMAKE_CXX_FLAGS "-O3 -ffast-math -fstrict-aliasing -std=c++0x" CACHE STRING 
+set(CMAKE_CXX_FLAGS "-O3 -ffast-math -fstrict-aliasing" CACHE STRING 
     "Flags used by the compiler during all build types."
     FORCE)
 
