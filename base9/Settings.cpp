@@ -172,6 +172,8 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
 
     int c, option_index;
 
+    optind = 0;
+
     while ((c = getopt_long (argc, t_argv, "", long_options, &option_index)) != (-1))
     {
         switch (c)
@@ -308,6 +310,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
 
             case 0xE1:
                 istringstream(string(optarg)) >> settings->scatterCluster.limitS2N;
+                break;
 
             case 0xE0:
                 istringstream(string(optarg)) >> settings->seed;

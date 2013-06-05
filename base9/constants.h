@@ -35,6 +35,7 @@
 //WD Cooling
 #define WOOD               0
 #define MONTGOMERY         1
+#define ALTHAUS            2
 
 //WD Atmosphere
 #define BERGERON                       0

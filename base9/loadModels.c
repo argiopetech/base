@@ -80,7 +80,7 @@ void loadModels(int needFS, struct cluster *theCluster, struct Settings *setting
 
   theCluster->evoModels.WDcooling = settings->whiteDwarf.wdModel;
 
-  if(theCluster->evoModels.WDcooling < 0 || theCluster->evoModels.WDcooling > 1) {
+  if(theCluster->evoModels.WDcooling < 0 || theCluster->evoModels.WDcooling > 2) {
       printf("***Error: No models found for white dwarf filter set %d.***\n",theCluster->evoModels.WDcooling);
       printf("[Exiting...]\n");
       exit(1);
