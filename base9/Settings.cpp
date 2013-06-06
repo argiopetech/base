@@ -423,8 +423,7 @@ Node getNode(Node &n, string &&f)
     }
 }
 
-//[[noreturn]]
-void exitWith (string &&s)
+[[noreturn]] void exitWith (string &&s)
 {
     cerr << s << endl;
     abort();

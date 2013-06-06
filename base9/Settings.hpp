@@ -107,7 +107,6 @@ extern "C"
 template <typename T> T getDefault(YAML::Node&, std::string&&, T);
 template <typename T> T getOrDie(YAML::Node&, std::string&&);
 YAML::Node getNode(YAML::Node &n, std::string &&f);
-//[[noreturn]]
-void exitWith (std::string&&);
+[[noreturn]] void exitWith (std::string&&);
 #endif
 #endif
