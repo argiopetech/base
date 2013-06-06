@@ -4,7 +4,7 @@ file(GLOB SIMCLUSTER_FILES *.c)
 
 add_executable(simCluster ${SIMCLUSTER_FILES})
 
-target_link_libraries(simCluster base9 m)
+target_link_libraries(simCluster base9 m ${MPI_LIBRARIES})
 
 install(TARGETS simCluster
         DESTINATION bin)
