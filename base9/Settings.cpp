@@ -167,6 +167,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
         {"scatterFile",    required_argument, 0, 0xDE},
         {"outputFileBase", required_argument, 0, 0xDD},
         {"config",         required_argument, 0, 0xDC},
+        {"help",           no_argument,       0, 0xDB},
         {0, 0, 0, 0}
     };
 
@@ -365,6 +366,11 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                 strcpy(settings->files.config, optarg);
                 break;
 
+            case 0xDB: // --help
+                printUsage();
+                MPI_Finalize();
+                exit(EXIT_SUCCESS);
+
             case '?':
                 // getopt_long already printed an error message.
                 printUsage();
@@ -440,6 +446,7 @@ void printUsage()
     {
         cerr << "\nUsage:" << endl;
         cerr << "=======" << endl;
+        cerr << "\t--config\t\tYAML configuration file" << endl << endl;
         cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
         cerr << "\t--rgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
         cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;;
@@ -458,7 +465,7 @@ void printUsage()
         cerr << "\t--logClusAge" << endl;
         cerr << "\t--minMag" << endl;
         cerr << "\t--maxMag" << endl;
-        cerr << "\t--index\t\t0 being the first filter in the dataset" << endl;
+        cerr << "\t--index\t\t\t0 being the first filter in the dataset" << endl;
         cerr << "\t--burnIter" << endl;
         cerr << "\t--maxIter" << endl;
         cerr << "\t--thin" << endl;
@@ -474,7 +481,7 @@ void printUsage()
         cerr << "\t--seed\t\t\tinitialize the random number generator" << endl;
         cerr << "\t--photFile" << endl;
         cerr << "\t--scatterFile" << endl;
-        cerr << "\t--outputFileBase\t\tRun information is appended to this name" << endl;
+        cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
         cerr << endl;
     }
 
