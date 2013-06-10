@@ -23,9 +23,3 @@ IF (NOT Boost_FOUND)
 
     set( Boost_LIBRARIES ${binary_dir}/stage/lib )
 ENDIF()
-
-ExternalProject_Add(
-        yamlcpp
-        URL https://yaml-cpp.googlecode.com/files/yaml-cpp-0.5.1.tar.gz
-        CMAKE_ARGS -DBUILD_SHARED_LIBS:BOOL=ON -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
-        )

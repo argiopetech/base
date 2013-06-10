@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 
 project(Base9 C CXX)
 
+list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
+
+include(GetProject)
+
 if(CMAKE_CONFIGURATION_TYPES)
   list(APPEND CMAKE_CONFIGURATION_TYPES PROFILE)
   set(CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING
@@ -12,8 +16,8 @@ endif()
 find_package(MPI)
 
 if (NOT (MPI_C_FOUND AND MPI_CXX_FOUND))
-    message( STATUS ${MPI_CXX_COMPILER})
-    message( FATAL_ERROR "It looks like MPI isn't installed..." )
+  message( STATUS ${MPI_CXX_COMPILER})
+  message( FATAL_ERROR "It looks like MPI isn't installed..." )
 endif()
 
 set(CMAKE_C_FLAGS                  "-march=native -ffast-math -fstrict-aliasing -Wall ${MPI_C_COMPILE_FLAGS}" CACHE STRING "" FORCE)
@@ -36,16 +40,19 @@ set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "-L/usr/local/lib -lprofiler")
 
 # Compiler-specific C++11 activation.
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-    execute_process(
-        COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-#    if (NOT (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6))
-    if (NOT (GCC_VERSION VERION_EQUAL 4.6))
-        message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.6 or Clang 3.2 (recommended). If Clang is installed, try 'CC=`which clang` CXX=`which clang++` cmake ..")
-    endif ()
+  execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+  if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
+    message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or Clang 3.2 (recommended). If Clang is installed, try `CC=`which clang` CXX=`which clang++` cmake ..")
+  endif ()
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__extern_always_inline=inline")# -stdlib=libc++ -D__extern_always_inline=inline")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__extern_always_inline=inline")
+
+  if (APPLE AND (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+  endif ()
+
 else ()
-    message(FATAL_ERROR "Your C++ compiler does not support C++11.")
+  message(FATAL_ERROR "Your C++ compiler does not support C++11.")
 endif ()
 
 MARK_AS_ADVANCED(
@@ -59,10 +66,10 @@ MARK_AS_ADVANCED(
 #####################################
 
 find_library(GSL_LOC
-             gsl)
+  gsl)
 
 find_library(GSLCBLAS_LOC
-	     gslcblas)
+  gslcblas)
 
 MARK_AS_ADVANCED(
   GSL_LOC
@@ -70,6 +77,9 @@ MARK_AS_ADVANCED(
 
 # Additional include and link directories
 include_directories(base9)
+
+# External projects
+get_project( "YamlCpp" )
 
 # Libraries
 add_subdirectory(base9)
