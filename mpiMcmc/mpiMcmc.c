@@ -658,12 +658,9 @@ static void initStepSizes(struct cluster *clust)
 /* Decides whether to accept a proposed cluster property */
 static int acceptClustMarg(double logPostCurr, double logPostProp)
 {
-    if (fabs(logPostProp + HUGE_VAL) < EPS) {
-        return 0;
-    }
-
     double alpha = logPostProp - logPostCurr;
-    if (fabs(alpha - HUGE_VAL) < EPS) {
+    if (alpha >= 0) // Short circuit exit to the MH algorithm
+    {
         return 1;
     }
 
@@ -671,10 +668,12 @@ static int acceptClustMarg(double logPostCurr, double logPostProp)
     if(u < 1.e-15) u = 1.e-15;
     u = log(u);
 
-    if(u < alpha) {
+    if(u < alpha)
+    {
         return 1;
     }
-    else {
+    else
+    {
         return 0;
     }
 }
