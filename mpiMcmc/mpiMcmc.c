@@ -153,6 +153,7 @@ int main(int argc, char *argv[])
     MPI_Bcast(&mc.clust.evoModels.filterSet, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
     MPI_Bcast(&mc.clust.evoModels.brownDwarfEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
     MPI_Bcast(&mc.clust.evoModels.IFMR, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast(&mc.clust.carbonicity, 1, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
     mc.clust.evoModels.WDatm = BERGERON;
     // mc.clust.evoModels.IFMR = LINEAR;
