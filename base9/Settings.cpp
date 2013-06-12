@@ -111,13 +111,7 @@ void makeSettings(char *yamlFile, struct Settings *settings)
     strcpy(settings->files.phot, const_cast<char*>(getOrDie<string>(files, "photFile").c_str()));
 
     settings->files.output = new char[100];
-    sprintf(settings->files.output, "%s.a%0.3f.s%d.m%d.maxMag%0.1f.modSigma%0.2f"
-            , getOrDie<string>(files, "outputFileBase").c_str()
-            , settings->cluster.logClusAge
-            , settings->seed
-            , settings->mainSequence.rgbModel
-            , settings->cluster.maxMag
-            , settings->cluster.sigma.distMod);
+    strcpy(settings->files.phot, const_cast<char*>(getOrDie<string>(files, "outputFileBase").c_str()));
 
     settings->files.scatter = new char[100];
     strcpy(settings->files.scatter, const_cast<char*>(getOrDie<string>(files, "scatterFile").c_str()));
