@@ -1,5 +1,5 @@
 general:
-    seed:               73    # initialize the random number generator
+    seed:               703   # initialize the random number generator
     verbose:            0     # 0 is quiet, 1 is verbose, 2 is very verbose
 
     files:
