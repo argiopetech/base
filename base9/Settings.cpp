@@ -59,7 +59,7 @@ void makeSettings(char *yamlFile, struct Settings *settings)
     Node scatterConf = getNode(config, "scatterCluster");
 
     settings->mainSequence.filterSet = getOrDie<int>(mainSequence, "filterSet");
-    settings->mainSequence.rgbModel = getOrDie<int>(mainSequence, "rgbModel");
+    settings->mainSequence.msRgbModel = getOrDie<int>(mainSequence, "msRgbModel");
 
     settings->whiteDwarf.ifmr = getOrDie<int>(whiteDwarfs, "ifmr");
     settings->whiteDwarf.wdModel = getOrDie<int>(whiteDwarfs, "wdModel");
@@ -134,7 +134,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
 
         // These all have to be parsed
         {"filterSet",      required_argument, 0, 0xFF},
-        {"rgbModel",       required_argument, 0, 0xFE},
+        {"msRgbModel",       required_argument, 0, 0xFE},
         {"ifmr",           required_argument, 0, 0xFD},
         {"wdModel",        required_argument, 0, 0xFC},
         {"carbonicity",    required_argument, 0, 0xFB},
@@ -196,7 +196,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                 break;
 
             case 0xFE:
-                istringstream(string(optarg)) >> settings->mainSequence.rgbModel;
+                istringstream(string(optarg)) >> settings->mainSequence.msRgbModel;
                 break;
 
             case 0xFD:
@@ -356,7 +356,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                         , optarg
                         , settings->cluster.logClusAge
                         , settings->seed
-                        , settings->mainSequence.rgbModel
+                        , settings->mainSequence.msRgbModel
                         , settings->cluster.maxMag
                         , settings->cluster.sigma.distMod);
                 break;
@@ -450,7 +450,7 @@ void printUsage()
         cerr << "=======" << endl;
         cerr << "\t--config\t\tYAML configuration file" << endl << endl;
         cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
-        cerr << "\t--rgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
+        cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
         cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;;
         cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery" << endl << endl;
         cerr << "\t--carbonicity\t\t" << endl;

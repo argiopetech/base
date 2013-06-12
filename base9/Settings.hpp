@@ -10,7 +10,7 @@ extern "C"
     struct MainSequenceSettings
     {
         int filterSet;
-        int rgbModel;
+        int msRgbModel;
     };
 
     struct WhiteDwarfSettings
