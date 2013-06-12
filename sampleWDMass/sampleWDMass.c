@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
   MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
 
   settings = malloc(sizeof(struct Settings));
+  zeroSettingPointers(settings);
   settingsFromCLI(argc, argv, settings);
   if (settings->files.config)
   {

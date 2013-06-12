@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
    struct star *stars;
 
    struct Settings *settings = malloc(sizeof(struct Settings));
+   zeroSettingPointers(settings);
    settingsFromCLI(argc, argv, settings);
    if (settings->files.config)
    {

@@ -22,6 +22,14 @@ using YAML::LoadFile;
 // Forward declaration
 void printUsage();
 
+void zeroSettingPointers(struct Settings *settings)
+{
+        settings->files.phot = nullptr;
+        settings->files.output = nullptr;
+        settings->files.scatter = nullptr;
+        settings->files.config = nullptr;
+}
+
 void makeSettings(char *yamlFile, struct Settings *settings)
 {
     Node config;

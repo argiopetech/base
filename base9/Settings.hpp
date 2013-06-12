@@ -99,6 +99,7 @@ extern "C"
     };
 
     void makeSettings(char*, struct Settings*);
+    void zeroSettingPointers(struct Settings*);
     void settingsFromCLI(int argc, char **argv, struct Settings *settings);
 
 #ifdef __cplusplus
