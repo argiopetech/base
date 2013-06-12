@@ -829,7 +829,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
 
     strcpy(filename, settings->files.phot);
     if((ctrl->rData = fopen(filename,"r")) == NULL) {
-        printf("***Error: file %s was not found.***\n",filename);
+        printf("***Error: Photometry file %s was not found.***\n",filename);
         printf("[Exiting...]\n");
         exit(1);
     }

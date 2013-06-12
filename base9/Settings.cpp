@@ -111,7 +111,7 @@ void makeSettings(char *yamlFile, struct Settings *settings)
     strcpy(settings->files.phot, const_cast<char*>(getOrDie<string>(files, "photFile").c_str()));
 
     settings->files.output = new char[100];
-    strcpy(settings->files.phot, const_cast<char*>(getOrDie<string>(files, "outputFileBase").c_str()));
+    strcpy(settings->files.output, const_cast<char*>(getOrDie<string>(files, "outputFileBase").c_str()));
 
     settings->files.scatter = new char[100];
     strcpy(settings->files.scatter, const_cast<char*>(getOrDie<string>(files, "scatterFile").c_str()));
@@ -352,13 +352,8 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                 assert(optarg); // This is a required parameter, so it should never be null
 
                 settings->files.output = new char[100];
-                sprintf(settings->files.output, "%s.a%0.3f.s%d.m%d.maxMag%0.1f.modSigma%0.2f"
-                        , optarg
-                        , settings->cluster.logClusAge
-                        , settings->seed
-                        , settings->mainSequence.msRgbModel
-                        , settings->cluster.maxMag
-                        , settings->cluster.sigma.distMod);
+                strcpy(settings->files.output, optarg);
+
                 break;
 
             case 0xDC:
