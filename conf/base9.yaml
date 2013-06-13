@@ -12,7 +12,7 @@ general:
         msRgbModel:     2     # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling, 2 = Yale-Yonsei, 3 = DSED
 
     white_dwarfs:
-        wdModel:        1     # 0 = Wood, 1 = Montgomery
+        wdModel:        1     # 0 = Wood, 1 = Montgomery, 2 = Althaus
         M_wd_up:        8.0   # The maximum mass for a WD-producing star
         ifmr:           1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
         carbonicity:    0.7
