@@ -4,7 +4,7 @@ file(GLOB SAMPLEWDMASS_FILES *.c)
 
 add_executable(sampleWDMass ${SAMPLEWDMASS_FILES})
 
-target_link_libraries(sampleWDMass base9 m)
+target_link_libraries(sampleWDMass base9 m ${MPI_LIBRARIES})
 
 install(TARGETS sampleWDMass
         DESTINATION bin)

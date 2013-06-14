@@ -6,6 +6,7 @@
 #include "evolve.h"
 #include "structures.h"
 #include "loadModels.h"
+#include "Settings.hpp"
 
 #define  COL_MAX        1000                        // max number of cluster stars
 #define  FS_NUM          0.0                        // mcmc outputs negative mass for field star
@@ -27,7 +28,7 @@ void openOutputFiles(FILE **filePtr, char *filename, int fileType);
 // double intlFinalMassReln(double zamsMass, int IFMR);
 double intlFinalMassReln(struct cluster *pCluster, double zamsMass);
 
-int main(void)
+int main(int argc, char *argv[])
 
 {
 
@@ -58,31 +59,50 @@ int main(void)
    struct cluster theCluster;
    struct star *stars;
 
-   initCluster(&theCluster);
+   struct Settings *settings = malloc(sizeof(struct Settings));
+   zeroSettingPointers(settings);
+   settingsFromCLI(argc, argv, settings);
+   if (settings->files.config)
+   {
+       makeSettings(settings->files.config, settings);
+   }
+   else
+   {
+       makeSettings("base9.yaml", settings);
+   }
 
+   settingsFromCLI(argc, argv, settings);
+
+   initCluster(&theCluster);
 
    ////////////////////////////////////////////
    /////// Open files to read and write ///////
    ////////////////////////////////////////////
 
-   printf("Enter file name containing color/magnitude data:\n> ");
-   scanf("%s",filename);
+   /* printf("Enter file name containing color/magnitude data:\n> "); */
+   /* scanf("%s",filename); */
+   strcpy(filename, settings->files.scatter);
    if((rDataPtr = fopen(filename,"r")) == NULL) {
       printf("***Error: file %s was not found.***\n",filename);
       printf("[Exiting...]\n");
       exit(1);
    }
 
-   printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> ");
-   scanf("%lf %lf %d", &minMag, &maxMag,&iMag);
+   /* printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> "); */
+   minMag = settings->cluster.minMag;
+   maxMag = settings->cluster.maxMag;
+   iMag   = settings->cluster.index;
+
    if(iMag<0||iMag>2){
       printf("***Error: %d not a valid magnitude index.  Choose 0,1,or 2.***\n",iMag);
       printf("[Exiting...]\n");
       exit(1);
    }
 
-   printf("\n Enter mcmc file name : ");
-   scanf("%s",filename);
+   /* printf("\n Enter mcmc file name : "); */
+   /* scanf("%s",filename); */
+   // This is a leftover from Base8 and may not work with the current cluster files
+   strcpy(filename, settings->files.output);
    openOutputFiles(&rClusterPtr, filename, CLUS_READ);
    openOutputFiles(&wClusterStatPtr, filename, CLUS_STAT_WRITE);
    openOutputFiles(&wCmdPtr, filename, CMD_FILE);
@@ -168,14 +188,17 @@ int main(void)
    ///////// and load models /////////
    ///////////////////////////////////
 
-   printf("\n Enter M_wd_up : ");
-   scanf("%lf", &theCluster.M_wd_up);
+   /* printf("\n Enter M_wd_up : "); */
+   /* scanf("%lf", &theCluster.M_wd_up); */
 
-   printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?");
-   scanf("%d",&verbose);
+   /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
+   /* scanf("%d",&verbose); */
+   theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
+   verbose            = settings->verbose;
+
    if(verbose < 0 || verbose > 2) verbose = 1;		// give standard feedback if incorrectly specified
 
-   loadModels(0, &theCluster);                                      // read in stellar evol & WD models
+   loadModels(0, &theCluster, settings);                // read in stellar evol & WD models
 
 
    //////////////////////////////

@@ -7,14 +7,53 @@
 #include "wdCooling.h"
 #include "binSearch.h"
 #include <mpi.h>
+#include <assert.h>
 
 static int    nIso;
 static double *wdMasses;
 static struct wdCoolingCurve *wdCurves;
 static int coolingModel;
 
+struct althausModel
+{
+    char* filename;
+    int hasHLum;
+    double mass;
+};
+
+#define no 0
+#define yes 1
+
 void loadWDCool(char *path, int modelSet)
 {
+    static struct althausModel althaus[] =
+    {
+        {"T045_1E4.Z0", no,  0.45},
+        {"T047_1E4.Z0", no,  0.47},
+        {"T05_1E4.Z0",  no,  0.50},
+        {"T052_1E4.Z0", no,  0.52},
+        {"T054_1E4.Z0", no,  0.54},
+        {"T056_1E4.Z0", no,  0.56},
+        {"T058_1E4.Z0", yes, 0.58},
+        {"T06_1E4.Z0",  yes, 0.60},
+        {"T062_1E4.Z0", yes, 0.62},
+        {"T064_1E4.Z0", yes, 0.64},
+        {"T066_1E4.Z0", yes, 0.66},
+        {"T068_1E4.Z0", yes, 0.68},
+        {"T07_1E4.Z0",  yes, 0.70},
+        {"T072_1E4.Z0", yes, 0.72},
+        {"T074_1E4.Z0", yes, 0.74},
+        {"T076_1E4.Z0", yes, 0.76},
+        {"T078_1E4.Z0", yes, 0.78},
+        {"T08_1E4.Z0",  yes, 0.80},
+        {"T082_1E4.Z0", yes, 0.82},
+        {"T084_1E4.Z0", yes, 0.84},
+        {"T09_1E4.Z0",  yes, 0.90},
+        {"T10_1E4.Z0",  yes, 1.00},
+        {"T11_1E4.Z0",  yes, 1.10},
+        {0, 0, 0}
+    };
+
     int massCurves = 0, carbonCurves = 0, entries = 0;
     FILE *pCoolingModels;
     char tempFile[100]="\0", line[240];
@@ -47,49 +86,118 @@ void loadWDCool(char *path, int modelSet)
     {
         strcat(tempFile,"wdtables");
     }
-    else
+    else if (modelSet != ALTHAUS)
     {
         printf("\nCooling models do not exist.  Exiting...\n");
         exit(1);
     }
 
-    if ((pCoolingModels = fopen(tempFile,"r")) == NULL)
+    if ((modelSet == MONTGOMERY) || (modelSet == WOOD))
     {
-        printf("\n\n file %s was not found - exiting\n",tempFile);
-        exit(1);
-    }
 
-    fgets(line, 240, pCoolingModels); /* after header line, read in Wood model file */
-
-    while (fgets(line, 240, pCoolingModels) != NULL)
-    {
-        if (modelSet == WOOD)
+        if ((pCoolingModels = fopen(tempFile,"r")) == NULL)
         {
-            sscanf(line,"%*d %lf %*f %*f %*f %lf %lf %*f %*f %*f %lf", &tempAge, &tempRadius, &tempTeff, &tempMass);
-            tempCarbon = 0.6; // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
-        }
-        else
-        {
-            sscanf(line,"%*d %lf %*f %*f %*f %lf %lf %*f %*f %*f %lf %lf", &tempAge, &tempRadius, &tempTeff, &tempMass, &tempCarbon);
+            printf("\n\n file %s was not found - exiting\n",tempFile);
+            exit(1);
         }
 
-        if ((massCurves == 0) && (carbonCurves == 0) && (entries == 0))
+        fgets(line, 240, pCoolingModels); /* after header line, read in Wood model file */
+
+        while (fgets(line, 240, pCoolingModels) != NULL)
         {
+            if (modelSet == WOOD)
+            {
+                sscanf(line,"%*d %lf %*f %*f %*f %lf %lf %*f %*f %*f %lf", &tempAge, &tempRadius, &tempTeff, &tempMass);
+                tempCarbon = 0.6; // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
+            }
+            else
+            {
+                sscanf(line,"%*d %lf %*f %*f %*f %lf %lf %*f %*f %*f %lf %lf", &tempAge, &tempRadius, &tempTeff, &tempMass, &tempCarbon);
+            }
+
+            if ((massCurves == 0) && (carbonCurves == 0) && (entries == 0))
+            {
+                lastMass = tempMass;
+                lastCarbon = tempCarbon;
+            }
+
+            // If the mass for this entry isn't the same as the mass of
+            // the last entry, it's a new cooling curve.  Re-allocate
+            // memory for the wdCurves array and start storing in the next
+            // entry. Additionally, make a new cooling curve every time
+            // there is a new carbon. In theory it will already do this
+            // due to going from max to min mass, but I check anyway.
+
+            if ((tempMass != lastMass))
+            {
+                wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
+                wdCurves[massCurves].length = carbonCurves + 1;
+
+                massCurves += 1;
+                carbonCurves = 0;
+                entries = 0;
+
+                if ((tempAlloc = (void *) realloc(wdCurves, (massCurves+1) * sizeof(struct wdCoolingCurve))) == NULL)
+                    perror("wdCurves memory allocation error \n");
+                else
+                    wdCurves = (struct wdCoolingCurve *) tempAlloc;
+
+                if ((wdCurves[massCurves].wdCarbons = (double *) calloc(1, sizeof(double))) == NULL)
+                    perror("MEMORY ALLOCATION ERROR \n");
+
+                if ((wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) calloc(1, sizeof(struct wdCarbonCurve))) == NULL)
+                    perror("MEMORY ALLOCATION ERROR \n");
+
+                if ((tempAlloc = (void *) realloc(wdMasses, (massCurves+1) * sizeof(double))) == NULL)
+                    perror("wdMasses memory allocation error \n");
+                else
+                    wdMasses = (double *) tempAlloc;
+
+            }
+            else if (tempCarbon != lastCarbon)
+            {
+                wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
+                carbonCurves += 1;
+                entries = 0;
+
+                if ((tempAlloc = (void *) realloc(wdCurves[massCurves].carbonCurve, (carbonCurves+1) * sizeof(struct wdCarbonCurve))) == NULL)
+                    perror("wdMasses memory allocation error \n");
+                else
+                    wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) tempAlloc;
+
+                if ((tempAlloc = (void *) realloc(wdCurves[massCurves].wdCarbons, (carbonCurves+1) * sizeof(double))) == NULL)
+                    perror("wdMasses memory allocation error \n");
+                else
+                    wdCurves[massCurves].wdCarbons = (double *) tempAlloc;
+            }
+
+            wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
+            wdCurves[massCurves].mass = wdMasses[massCurves] = tempMass;
+            wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
+            wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
+            wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10(tempAge);
             lastMass = tempMass;
             lastCarbon = tempCarbon;
+            entries++;
         }
+    }
+    else if (modelSet == ALTHAUS)
+    {
+        int i = 0;
+        tempCarbon = 0.6; // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
+        massCurves = -1;
 
-        // If the mass for this entry isn't the same as the mass of
-        // the last entry, it's a new cooling curve.  Re-allocate
-        // memory for the wdCurves array and start storing in the next
-        // entry. Additionally, make a new cooling curve every time
-        // there is a new carbon. In theory it will already do this
-        // due to going from max to min mass, but I check anyway.
-
-        if ((tempMass != lastMass))
+        while (althaus[i].filename != 0) // Keep going till we hit the last record
         {
-            wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
-            wdCurves[massCurves].length = carbonCurves + 1;
+            strcpy(tempFile, path);
+            strcat(tempFile, "althaus/");
+            strcat(tempFile, althaus[i].filename);
+
+            if ((pCoolingModels = fopen(tempFile,"r")) == NULL)
+            {
+                printf("\n\n file %s was not found - exiting\n",tempFile);
+                exit(1);
+            }
 
             massCurves += 1;
             carbonCurves = 0;
@@ -111,32 +219,36 @@ void loadWDCool(char *path, int modelSet)
             else
                 wdMasses = (double *) tempAlloc;
 
-        }
-        else if (tempCarbon != lastCarbon)
-        {
+            fgets(line, 240, pCoolingModels); // Read in two header lines
+            fgets(line, 240, pCoolingModels);
+
+            while (fgets(line, 240, pCoolingModels) != NULL)
+            {
+                if (althaus[i].hasHLum) // Has one extra throwaway field
+                {
+                    sscanf(line,"%*f %lf %*f %*f %*f %lf %lf %*f %*f %*f", &tempTeff, &tempAge, &tempRadius);
+                }
+                else
+                {
+                    sscanf(line,"%*f %lf %*f %*f %*f %lf %lf %*f %*f", &tempTeff, &tempAge, &tempRadius);
+                }
+
+                wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
+                wdCurves[massCurves].mass = wdMasses[massCurves] = althaus[i].mass;
+                wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
+                wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
+                wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10(1e6) + tempAge;
+                entries++;
+                assert(entries < MAX_WD_MODEL);
+            }
+
             wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
-            carbonCurves += 1;
-            entries = 0;
+            wdCurves[massCurves].length = carbonCurves + 1;
 
-            if ((tempAlloc = (void *) realloc(wdCurves[massCurves].carbonCurve, (carbonCurves+1) * sizeof(struct wdCarbonCurve))) == NULL)
-                perror("wdMasses memory allocation error \n");
-            else
-                wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) tempAlloc;
-
-            if ((tempAlloc = (void *) realloc(wdCurves[massCurves].wdCarbons, (carbonCurves+1) * sizeof(double))) == NULL)
-                perror("wdMasses memory allocation error \n");
-            else
-                wdCurves[massCurves].wdCarbons = (double *) tempAlloc;
+//            fclose(pCoolingModels);
+            pCoolingModels = 0;
+            i += 1;
         }
-
-        wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
-        wdCurves[massCurves].mass = wdMasses[massCurves] = tempMass;
-        wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
-        wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
-        wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10(tempAge);
-        lastMass = tempMass;
-        lastCarbon = tempCarbon;
-        entries++;
     }
 
     wdCurves[massCurves].length = carbonCurves + 1;
@@ -144,7 +256,7 @@ void loadWDCool(char *path, int modelSet)
 
     nIso = massCurves + 1;
 
-    fclose(pCoolingModels);
+//    fclose(pCoolingModels);
 
     /* int i, j; */
     /* for (i = 0; i < nIso; i++) */
@@ -162,7 +274,7 @@ void loadWDCool(char *path, int modelSet)
 
 double wdMassToTeffAndRadius(double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double *thisWDLogRadius)
 {
-    if (coolingModel == WOOD)
+    if ((coolingModel == WOOD) || (coolingModel == ALTHAUS))
     {
         return wdMassToTeffAndRadius_wood(logAge, wdPrecLogAge, wdMass, thisWDLogRadius);
     }
@@ -271,7 +383,7 @@ double wdMassToTeffAndRadius_wood(double logAge, double wdPrecLogAge, double wdM
         }
 
         ageTeff[m - massIndex] = linInterpExtrap(wdCurves[m].carbonCurve[0].logAge[ageIndex],  wdCurves[m].carbonCurve[0].logAge[ageIndex+1], wdCurves[m].carbonCurve[0].logTeff[ageIndex], wdCurves[m].carbonCurve[0].logTeff[ageIndex+1], wdCoolLogAge);
-
+ 
         ageRadius[m - massIndex] = linInterpExtrap(wdCurves[m].carbonCurve[0].logAge[ageIndex],  wdCurves[m].carbonCurve[0].logAge[ageIndex+1], wdCurves[m].carbonCurve[0].logRadius[ageIndex], wdCurves[m].carbonCurve[0].logRadius[ageIndex+1], wdCoolLogAge);
 
     }

@@ -1,0 +1,68 @@
+general:
+    seed:               703   # initialize the random number generator
+    verbose:            0     # 0 is quiet, 1 is verbose, 2 is very verbose
+
+    files:
+        photFile:       "hyades/Hyades.UBV.phot"
+        outputFileBase: "hyades/Mcmc"
+        scatterFile:    ""    # Empty string.  This is primarily a CLI option
+
+    main_sequence:
+        filterSet:      0     # 0 = UBVRIJHK, 1 = ACS, 2 = SDSS + JHK
+        msRgbModel:     2     # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling, 2 = Yale-Yonsei, 3 = DSED
+
+    white_dwarfs:
+        wdModel:        1     # 0 = Wood, 1 = Montgomery, 2 = Althaus
+        M_wd_up:        8.0   # The maximum mass for a WD-producing star
+        ifmr:           1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
+        carbonicity:    0.7
+
+    brown_dwarfs:
+        bdModel:        1     # 0 = None, 1 = Baraffe
+
+    cluster:
+        priors:
+            Fe_H:       0.07
+            distMod:    0.0
+            Av:         0.009
+            Y:          0.29
+
+        sigmas:
+            Fe_H:       0.05
+            distMod:    0.05
+            Av:         0.006
+            Y:          0.0
+
+        logClusAge:     8.796 # not a prior, just a starting value
+
+        minMag:         0.0   # these variables can be used to read a subset of the photometry
+        maxMag:         30.0
+        index:          2     # with 0 being the first filter in the dataset
+
+makeIsochrone:
+    # No makeIsochrone-specific settings yet
+
+scatterCluster:
+     brightLimit:       0     # apparant mags, can remove bright stars, e.g. RGB
+     faintLimit:        30    # apparant mags, can remove faint stars, e.g. faint MS and WDs
+     relevantFilt:      1     # 0=bluest band available
+     limitS2N:          1     # use to remove objects with overly low signal-to-noise
+     exposures:         [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]   # exposure times in hours, e.g., (1 1 1 0 0 ...) for UBV 
+
+makeCMD:
+    # No makeCMD-specific settings yet
+
+mpiMcmc:
+    burnIter:           2000
+    runIter:            10000
+    thin:               1
+
+sampleWDMass:
+    # No sampleWDMass-specific settings yet
+
+simCluster:
+    nStars:             100
+    percentBinary:      0     # percent binaries (drawn randomly)
+    percentDB:          0     # percent of WDs that have He atmospheres (drawn randomly)
+    nFieldStars:        0
+    nBrownDwarfs:       0

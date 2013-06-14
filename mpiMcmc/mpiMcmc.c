@@ -16,6 +16,7 @@
 #include "samplers.h"
 #include "leastSquares.h"
 #include "mt19937ar.h"
+#include "Settings.hpp"
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
@@ -58,8 +59,10 @@ extern struct globalIso isochrone;
 
 int    verbose = 0, needMassNow = 0, useFilt[FILTS], numFilts = 0;
 
+struct Settings* settings;
+
 /* For random number generator (mt19937ar.c) */
-unsigned long  mt[NN], seed;
+unsigned long  mt[NN];
 int            mti=NN+1;
 
 int taskid;
@@ -70,15 +73,15 @@ int taskid;
 *******************************************/
 int main(int argc, char *argv[])
 {
-    {
-        int i = 0;
-        char hostname[256];
-        gethostname(hostname, sizeof(hostname));
-        printf("PID %d on %s ready for attach\n", getpid(), hostname);
-        fflush(stdout);
-//        while (0 == i)
-//            sleep(5);
-    }
+ /*    { */
+/*         int i = 0; */
+/*         char hostname[256]; */
+/*         gethostname(hostname, sizeof(hostname)); */
+/*         printf("PID %d on %s ready for attach\n", getpid(), hostname); */
+/*         fflush(stdout); */
+/* //        while (0 == i) */
+/* //            sleep(5); */
+/*     } */
 
     int i,
         j,
@@ -126,6 +129,21 @@ int main(int argc, char *argv[])
     MPI_Type_contiguous(2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
     MPI_Type_commit(&obsStarType);
 
+
+    settings = malloc(sizeof(struct Settings));
+    zeroSettingPointers(settings);
+    settingsFromCLI(argc, argv, settings);
+    if (settings->files.config)
+    {
+        makeSettings(settings->files.config, settings);
+    }
+    else
+    {
+        makeSettings("base9.yaml", settings);
+    }
+
+    settingsFromCLI(argc, argv, settings);
+
     initCluster(&(mc.clust));
     initCluster(&propClustWorker);
     initCluster(&propClustMaster);
@@ -142,10 +160,9 @@ int main(int argc, char *argv[])
     }
 
     /* /\*** broadcast control parameters to other processes ***\/ */
-    MPI_Bcast(&seed, 1, MPI_UNSIGNED_LONG, MASTER, MPI_COMM_WORLD);
     if (taskid != MASTER)
     {
-        init_genrand(seed);
+        init_genrand(settings->seed);
     }
 
     MPI_Bcast(&mc.clust.evoModels.WDcooling, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
@@ -303,6 +320,8 @@ int main(int argc, char *argv[])
         }
         printHeader(&ctrl);
 
+        setvbuf (ctrl.wClusterFile[0], 0, _IOLBF, 150);
+        setvbuf (ctrl.wClusterFile[1], 0, _IOLBF, 150);
     }
 
     /* set current log posterior to -HUGE_VAL */
@@ -641,12 +660,15 @@ static void initStepSizes(struct cluster *clust)
 /* Decides whether to accept a proposed cluster property */
 static int acceptClustMarg(double logPostCurr, double logPostProp)
 {
-    if (fabs(logPostProp + HUGE_VAL) < EPS) {
+    if (isinf(logPostProp))
+    {
+        puts("-Inf posterior proposed and rejected");
         return 0;
     }
 
     double alpha = logPostProp - logPostCurr;
-    if (fabs(alpha - HUGE_VAL) < EPS) {
+    if (alpha >= 0) // Short circuit exit to the MH algorithm
+    {
         return 1;
     }
 
@@ -654,10 +676,12 @@ static int acceptClustMarg(double logPostCurr, double logPostProp)
     if(u < 1.e-15) u = 1.e-15;
     u = log(u);
 
-    if(u < alpha) {
+    if(u < alpha)
+    {
         return 1;
     }
-    else {
+    else
+    {
         return 0;
     }
 }
@@ -686,9 +710,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     // }
 
     /* Read number of steps, burn-in details, random seed */
-    // fscanf(infile, "%ld",&seed);
-    scanf("%ld",&seed);
-    init_genrand(seed);
+    init_genrand(settings->seed);
 
     /* load models */
     // fscanf(infile, "%d", &ctrl->modelSet);
@@ -702,32 +724,46 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     // loadWDCool(path, mc->clust.evoModels.WDcooling);
     // loadBergeron(path, mc->clust.evoModels.filterSet);
 
-    loadModels(0, &mc->clust);
+    loadModels(0, &mc->clust, settings);
 
 
     // fscanf(infile, "%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]);
-    scanf("%lf %lf",&ctrl->priorMean[FEH],&priorSigma);
+    /* scanf("%lf %lf",&ctrl->priorMean[FEH],&priorSigma); */
+
+    ctrl->priorMean[FEH] = settings->cluster.Fe_H;
+    priorSigma = settings->cluster.sigma.Fe_H;
+
     if(priorSigma < 0.0) {
         priorSigma = 0.0;
     }
     ctrl->priorVar[FEH] = priorSigma*priorSigma;
 
     // fscanf(infile,"%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]);
-    scanf("%lf %lf",&ctrl->priorMean[MOD],&priorSigma);
+    /* scanf("%lf %lf",&ctrl->priorMean[MOD],&priorSigma); */
+
+    ctrl->priorMean[MOD] = settings->cluster.distMod;
+    priorSigma = settings->cluster.sigma.distMod;
+
     if(priorSigma < 0.0) {
         priorSigma = 0.0;
     }
     ctrl->priorVar[MOD] = priorSigma*priorSigma;
 
     // fscanf(infile,"%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]);
-    scanf("%lf %lf",&ctrl->priorMean[ABS],&priorSigma);
+    /* scanf("%lf %lf",&ctrl->priorMean[ABS],&priorSigma); */
+
+    ctrl->priorMean[ABS] = settings->cluster.Av;
+    priorSigma = settings->cluster.sigma.Av;
+
     if(priorSigma < 0.0) {
         priorSigma = 0.0;
     }
     ctrl->priorVar[ABS] = priorSigma*priorSigma;
 
     // fscanf(infile,"%lf",&ctrl->initialAge);
-    scanf("%lf",&ctrl->initialAge);
+    /* scanf("%lf",&ctrl->initialAge); */
+
+    ctrl->initialAge = settings->cluster.logClusAge;
     ctrl->priorVar[AGE] = 1.0;
 
     if (mc->clust.evoModels.IFMR <= 3) {
@@ -787,36 +823,39 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
     priorMean[YYY] = ctrl->priorMean[YYY];
 
     /* read burnIter and nIter */
-    // fscanf(infile, "%d", &ctrl->burnIter);
-    // fscanf(infile, "%d", &ctrl->nIter);
-    // fscanf(infile, "%d", &ctrl->thin);
-    scanf("%d", &ctrl->burnIter);
-    scanf("%d", &ctrl->nIter);
-    scanf("%d", &ctrl->thin);
+    ctrl->burnIter = settings->mpiMcmc.burnIter;
+    ctrl->nIter = settings->mpiMcmc.maxIter;
+    ctrl->thin = settings->mpiMcmc.thin;
 
     /* open files for reading (data) and writing */
 
     char filename[100];
     // fscanf(infile, "%s", filename);
-    scanf("%s", filename);
+    /* scanf("%s", filename); */
+
+    strcpy(filename, settings->files.phot);
     if((ctrl->rData = fopen(filename,"r")) == NULL) {
-        printf("***Error: file %s was not found.***\n",filename);
+        printf("***Error: Photometry file %s was not found.***\n",filename);
         printf("[Exiting...]\n");
         exit(1);
     }
 
-    scanf("%lf %lf %d", &ctrl->minMag, &ctrl->maxMag, &ctrl->iMag);
+    ctrl->minMag = settings->cluster.minMag;
+    ctrl->maxMag = settings->cluster.maxMag;
+    ctrl->iMag = settings->cluster.index;
+
     if(ctrl->iMag < 0 || ctrl->iMag > FILTS){
         printf("***Error: %d not a valid magnitude index.  Choose 0, 1,or 2.***\n", ctrl->iMag);
         printf("[Exiting...]\n");
         exit(1);
     }
 
-
     /* read output filename */
     // fscanf(infile, "%s", ctrl->clusterFilename);
-    scanf("%s", ctrl->clusterFilename);
+    /* scanf("%s", ctrl->clusterFilename); */
 
+    strcpy(ctrl->clusterFilename, settings->files.output);
+    strcat(ctrl->clusterFilename, ".res");
 
     ctrl->iStart = 0;
 

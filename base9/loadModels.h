@@ -7,7 +7,8 @@
 #include "gBergMag.h"
 #include "wdCooling.h"
 #include "gBaraffeMag.h"
+#include "Settings.hpp"
 
-void loadModels(int needFS, struct cluster *theCluster);
+void loadModels(int needFS, struct cluster *theCluster, struct Settings*);
 
 #endif
