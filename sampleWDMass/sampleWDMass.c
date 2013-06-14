@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
   // minchunk = N_GRID / numtasks;
   // extra = N_GRID % numtasks;
 
-  MPI_Type_contiguous(6, MPI_DOUBLE, &clustParType);
+  MPI_Type_contiguous(7, MPI_DOUBLE, &clustParType);
   MPI_Type_commit(&clustParType);
   MPI_Type_contiguous(2*FILTS + 1, MPI_DOUBLE, &obsStarType);
   MPI_Type_commit(&obsStarType);
