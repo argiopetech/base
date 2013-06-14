@@ -20,6 +20,9 @@ if (NOT (MPI_C_FOUND AND MPI_CXX_FOUND))
   message( FATAL_ERROR "It looks like MPI isn't installed..." )
 endif()
 
+include_directories( ${MPI_C_INCLUDE_PATH} )
+include_directories( ${MPI_CXX_INCLUDE_PATH} )
+
 set(CMAKE_C_FLAGS                  "-O1 -march=native -ffast-math -fstrict-aliasing -Wall ${MPI_C_COMPILE_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_DEBUG            "-O0 -g" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG" CACHE STRING "" FORCE)

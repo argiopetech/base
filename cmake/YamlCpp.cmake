@@ -12,7 +12,7 @@ set(YAML_CPP_VERSION_MINOR \"5\")
 set(YAML_CPP_VERSION_PATCH \"1\")
 set(YAML_CPP_VERSION \"\${YAML_CPP_VERSION_MAJOR}.\${YAML_CPP_VERSION_MINOR}.\${YAML_CPP_VERSION_PATCH}\")
 
-set(header_directory \"include/yaml-cpp/\")
+set(YAML_CPP_INCLUDE_DIRS \"\${YAML_CPP_SOURCE_DIR}/include/\" PARENT_SCOPE)
 
 file(GLOB sources \"src/[a-zA-Z]*.cpp\")
 file(GLOB_RECURSE public_headers \"include/yaml-cpp/[a-zA-Z]*.h\")
@@ -24,8 +24,10 @@ file(GLOB contrib_private_headers \"src/contrib/[a-zA-Z]*.h\")
 include_directories(\${YAML_CPP_SOURCE_DIR}/src)
 include_directories(\${YAML_CPP_SOURCE_DIR}/include)
 
+set(Boost_USE_MULTITHREAD ON)
 find_package(Boost REQUIRED)
-include_directories(\${Boost_INCLUDE_DIRS})
+include_directories(\${INCLUDE_DIRECTORIES} \${Boost_INCLUDE_DIRS})
+link_directories(\${LINK_DIRECTORIES} \${Boost_LIBRARY_DIRS})
 
 add_library(yaml-cpp STATIC
 	\${sources}

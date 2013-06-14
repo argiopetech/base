@@ -6,8 +6,8 @@
 #include <mpi.h>
 #include <string>
 #include <vector>
-#include <yaml-cpp/yaml.h>
 
+#include "yaml-cpp/yaml.h"
 #include "Settings.hpp"
 
 using std::cerr;

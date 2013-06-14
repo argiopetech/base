@@ -660,7 +660,7 @@ static void initStepSizes(struct cluster *clust)
 /* Decides whether to accept a proposed cluster property */
 static int acceptClustMarg(double logPostCurr, double logPostProp)
 {
-    if (logPostProp == -INFINITY)
+    if (isinf(logPostProp))
     {
         puts("-Inf posterior proposed and rejected");
         return 0;
