@@ -37,7 +37,7 @@ void loadModels(int needFS, struct cluster *theCluster, struct Settings *setting
   /* printf("> "); */
   /* scanf("%d",&(theCluster->evoModels.mainSequenceEvol)); */
 
-  theCluster->evoModels.mainSequenceEvol = settings->mainSequence.rgbModel;
+  theCluster->evoModels.mainSequenceEvol = settings->mainSequence.msRgbModel;
 
   if(theCluster->evoModels.mainSequenceEvol < 0 || theCluster->evoModels.mainSequenceEvol > 3) {
       printf("***Error: No models found for main sequence evolution model %d.***\n",theCluster->evoModels.mainSequenceEvol);

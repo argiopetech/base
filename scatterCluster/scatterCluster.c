@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
     FILE   *r_ptr, *w_ptr;
 
     struct Settings *settings = malloc(sizeof(struct Settings));
+    zeroSettingPointers(settings);
     settingsFromCLI(argc, argv, settings);
     if (settings->files.config)
     {

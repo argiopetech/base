@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
    void   updateCount(struct star *pStar, int cmpnt);
 
    struct Settings *settings = malloc(sizeof(struct Settings));
+   zeroSettingPointers(settings);
    settingsFromCLI(argc, argv, settings);
    if (settings->files.config)
    {

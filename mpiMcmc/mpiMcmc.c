@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
 
 
     settings = malloc(sizeof(struct Settings));
+    zeroSettingPointers(settings);
     settingsFromCLI(argc, argv, settings);
     if (settings->files.config)
     {
@@ -659,12 +660,15 @@ static void initStepSizes(struct cluster *clust)
 /* Decides whether to accept a proposed cluster property */
 static int acceptClustMarg(double logPostCurr, double logPostProp)
 {
-    if (fabs(logPostProp + HUGE_VAL) < EPS) {
+    if (isinf(logPostProp))
+    {
+        puts("-Inf posterior proposed and rejected");
         return 0;
     }
 
     double alpha = logPostProp - logPostCurr;
-    if (fabs(alpha - HUGE_VAL) < EPS) {
+    if (alpha >= 0) // Short circuit exit to the MH algorithm
+    {
         return 1;
     }
 
@@ -672,10 +676,12 @@ static int acceptClustMarg(double logPostCurr, double logPostProp)
     if(u < 1.e-15) u = 1.e-15;
     u = log(u);
 
-    if(u < alpha) {
+    if(u < alpha)
+    {
         return 1;
     }
-    else {
+    else
+    {
         return 0;
     }
 }
@@ -829,7 +835,7 @@ static void initIfmrMcmcControl(struct chain *mc, struct ifmrMcmcControl *ctrl) 
 
     strcpy(filename, settings->files.phot);
     if((ctrl->rData = fopen(filename,"r")) == NULL) {
-        printf("***Error: file %s was not found.***\n",filename);
+        printf("***Error: Photometry file %s was not found.***\n",filename);
         printf("[Exiting...]\n");
         exit(1);
     }

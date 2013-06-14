@@ -6,8 +6,8 @@
 #include <mpi.h>
 #include <string>
 #include <vector>
-#include <yaml-cpp/yaml.h>
 
+#include "yaml-cpp/yaml.h"
 #include "Settings.hpp"
 
 using std::cerr;
@@ -21,6 +21,14 @@ using YAML::LoadFile;
 
 // Forward declaration
 void printUsage();
+
+void zeroSettingPointers(struct Settings *settings)
+{
+        settings->files.phot = nullptr;
+        settings->files.output = nullptr;
+        settings->files.scatter = nullptr;
+        settings->files.config = nullptr;
+}
 
 void makeSettings(char *yamlFile, struct Settings *settings)
 {
@@ -51,7 +59,7 @@ void makeSettings(char *yamlFile, struct Settings *settings)
     Node scatterConf = getNode(config, "scatterCluster");
 
     settings->mainSequence.filterSet = getOrDie<int>(mainSequence, "filterSet");
-    settings->mainSequence.rgbModel = getOrDie<int>(mainSequence, "rgbModel");
+    settings->mainSequence.msRgbModel = getOrDie<int>(mainSequence, "msRgbModel");
 
     settings->whiteDwarf.ifmr = getOrDie<int>(whiteDwarfs, "ifmr");
     settings->whiteDwarf.wdModel = getOrDie<int>(whiteDwarfs, "wdModel");
@@ -103,13 +111,7 @@ void makeSettings(char *yamlFile, struct Settings *settings)
     strcpy(settings->files.phot, const_cast<char*>(getOrDie<string>(files, "photFile").c_str()));
 
     settings->files.output = new char[100];
-    sprintf(settings->files.output, "%s.a%0.3f.s%d.m%d.maxMag%0.1f.modSigma%0.2f"
-            , getOrDie<string>(files, "outputFileBase").c_str()
-            , settings->cluster.logClusAge
-            , settings->seed
-            , settings->mainSequence.rgbModel
-            , settings->cluster.maxMag
-            , settings->cluster.sigma.distMod);
+    strcpy(settings->files.output, const_cast<char*>(getOrDie<string>(files, "outputFileBase").c_str()));
 
     settings->files.scatter = new char[100];
     strcpy(settings->files.scatter, const_cast<char*>(getOrDie<string>(files, "scatterFile").c_str()));
@@ -132,7 +134,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
 
         // These all have to be parsed
         {"filterSet",      required_argument, 0, 0xFF},
-        {"rgbModel",       required_argument, 0, 0xFE},
+        {"msRgbModel",       required_argument, 0, 0xFE},
         {"ifmr",           required_argument, 0, 0xFD},
         {"wdModel",        required_argument, 0, 0xFC},
         {"carbonicity",    required_argument, 0, 0xFB},
@@ -167,6 +169,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
         {"scatterFile",    required_argument, 0, 0xDE},
         {"outputFileBase", required_argument, 0, 0xDD},
         {"config",         required_argument, 0, 0xDC},
+        {"help",           no_argument,       0, 0xDB},
         {0, 0, 0, 0}
     };
 
@@ -193,7 +196,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                 break;
 
             case 0xFE:
-                istringstream(string(optarg)) >> settings->mainSequence.rgbModel;
+                istringstream(string(optarg)) >> settings->mainSequence.msRgbModel;
                 break;
 
             case 0xFD:
@@ -349,13 +352,8 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                 assert(optarg); // This is a required parameter, so it should never be null
 
                 settings->files.output = new char[100];
-                sprintf(settings->files.output, "%s.a%0.3f.s%d.m%d.maxMag%0.1f.modSigma%0.2f"
-                        , optarg
-                        , settings->cluster.logClusAge
-                        , settings->seed
-                        , settings->mainSequence.rgbModel
-                        , settings->cluster.maxMag
-                        , settings->cluster.sigma.distMod);
+                strcpy(settings->files.output, optarg);
+
                 break;
 
             case 0xDC:
@@ -364,6 +362,11 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                 settings->files.config = new char[100];
                 strcpy(settings->files.config, optarg);
                 break;
+
+            case 0xDB: // --help
+                printUsage();
+                MPI_Finalize();
+                exit(EXIT_SUCCESS);
 
             case '?':
                 // getopt_long already printed an error message.
@@ -423,8 +426,7 @@ Node getNode(Node &n, string &&f)
     }
 }
 
-//[[noreturn]]
-void exitWith (string &&s)
+[[noreturn]] void exitWith (string &&s)
 {
     cerr << s << endl;
     abort();
@@ -441,8 +443,9 @@ void printUsage()
     {
         cerr << "\nUsage:" << endl;
         cerr << "=======" << endl;
+        cerr << "\t--config\t\tYAML configuration file" << endl << endl;
         cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
-        cerr << "\t--rgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
+        cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
         cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;;
         cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery" << endl << endl;
         cerr << "\t--carbonicity\t\t" << endl;
@@ -459,7 +462,7 @@ void printUsage()
         cerr << "\t--logClusAge" << endl;
         cerr << "\t--minMag" << endl;
         cerr << "\t--maxMag" << endl;
-        cerr << "\t--index\t\t0 being the first filter in the dataset" << endl;
+        cerr << "\t--index\t\t\t0 being the first filter in the dataset" << endl;
         cerr << "\t--burnIter" << endl;
         cerr << "\t--maxIter" << endl;
         cerr << "\t--thin" << endl;
@@ -475,7 +478,7 @@ void printUsage()
         cerr << "\t--seed\t\t\tinitialize the random number generator" << endl;
         cerr << "\t--photFile" << endl;
         cerr << "\t--scatterFile" << endl;
-        cerr << "\t--outputFileBase\t\tRun information is appended to this name" << endl;
+        cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
         cerr << endl;
     }
 

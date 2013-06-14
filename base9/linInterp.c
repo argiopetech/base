@@ -25,7 +25,7 @@ double linInterp(double x1, double x2, double y1, double y2, double xActual)
         }
         return y1;							/* which should equal y2 */
     }
-    else if((xActual < x1 && xActual < x2) || (xActual > x1 && xActual > x2)) {
+    else if(((xActual < x1) && (xActual < x2)) || ((xActual > x1) && (xActual > x2))) {
         if(verbose) {
             printf("xActual out of range: x1 = %.6f x2 = %.6f y1 = %.6f y2 = %.6f xActual = %.6f\n",
                    x1,x2,y1,y2,xActual);

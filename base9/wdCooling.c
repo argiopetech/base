@@ -185,6 +185,7 @@ void loadWDCool(char *path, int modelSet)
     {
         int i = 0;
         tempCarbon = 0.6; // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
+        massCurves = -1;
 
         while (althaus[i].filename != 0) // Keep going till we hit the last record
         {
@@ -236,7 +237,7 @@ void loadWDCool(char *path, int modelSet)
                 wdCurves[massCurves].mass = wdMasses[massCurves] = althaus[i].mass;
                 wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
                 wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
-                wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = tempAge;
+                wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10(1e6) + tempAge;
                 entries++;
                 assert(entries < MAX_WD_MODEL);
             }
@@ -382,7 +383,7 @@ double wdMassToTeffAndRadius_wood(double logAge, double wdPrecLogAge, double wdM
         }
 
         ageTeff[m - massIndex] = linInterpExtrap(wdCurves[m].carbonCurve[0].logAge[ageIndex],  wdCurves[m].carbonCurve[0].logAge[ageIndex+1], wdCurves[m].carbonCurve[0].logTeff[ageIndex], wdCurves[m].carbonCurve[0].logTeff[ageIndex+1], wdCoolLogAge);
-
+ 
         ageRadius[m - massIndex] = linInterpExtrap(wdCurves[m].carbonCurve[0].logAge[ageIndex],  wdCurves[m].carbonCurve[0].logAge[ageIndex+1], wdCurves[m].carbonCurve[0].logRadius[ageIndex], wdCurves[m].carbonCurve[0].logRadius[ageIndex+1], wdCoolLogAge);
 
     }
