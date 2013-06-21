@@ -28,6 +28,7 @@ void zeroSettingPointers(struct Settings *settings)
         settings->files.output = nullptr;
         settings->files.scatter = nullptr;
         settings->files.config = nullptr;
+        settings->files.models = nullptr;
 }
 
 void makeSettings(char *yamlFile, struct Settings *settings)
@@ -115,6 +116,9 @@ void makeSettings(char *yamlFile, struct Settings *settings)
 
     settings->files.scatter = new char[100];
     strcpy(settings->files.scatter, const_cast<char*>(getOrDie<string>(files, "scatterFile").c_str()));
+
+    settings->files.models = new char[100];
+    strcpy(settings->files.models, const_cast<char*>(getOrDie<string>(files, "modelDirectory").c_str()));
 }
 
 void settingsFromCLI(int argc, char **argv, struct Settings *settings)
@@ -134,7 +138,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
 
         // These all have to be parsed
         {"filterSet",      required_argument, 0, 0xFF},
-        {"msRgbModel",       required_argument, 0, 0xFE},
+        {"msRgbModel",     required_argument, 0, 0xFE},
         {"ifmr",           required_argument, 0, 0xFD},
         {"wdModel",        required_argument, 0, 0xFC},
         {"carbonicity",    required_argument, 0, 0xFB},
@@ -170,6 +174,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
         {"outputFileBase", required_argument, 0, 0xDD},
         {"config",         required_argument, 0, 0xDC},
         {"help",           no_argument,       0, 0xDB},
+        {"modelDirectory", required_argument, 0, 0xDA},
         {0, 0, 0, 0}
     };
 
@@ -322,7 +327,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
             case 0xDF:
                 if (settings->files.phot) // Already something here...
                 {
-                    delete settings->files.phot;
+                    delete[] settings->files.phot;
                 }
 
                 assert(optarg); // This is a required parameter, so it should never be null
@@ -334,7 +339,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
             case 0xDE:
                 if (settings->files.scatter) // Already something here...
                 {
-                    delete settings->files.scatter;
+                    delete[] settings->files.scatter;
                 }
 
                 assert(optarg); // This is a required parameter, so it should never be null
@@ -346,7 +351,7 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
             case 0xDD:
                 if (settings->files.output) // Already something here...
                 {
-                    delete settings->files.output;
+                    delete[] settings->files.output;
                 }
 
                 assert(optarg); // This is a required parameter, so it should never be null
@@ -367,6 +372,19 @@ void settingsFromCLI(int argc, char **argv, struct Settings *settings)
                 printUsage();
                 MPI_Finalize();
                 exit(EXIT_SUCCESS);
+
+            case 0xDA:
+                if (settings->files.models) // Already something here...
+                {
+                    delete[] settings->files.models;
+                }
+
+                assert(optarg); // This is a required parameter, so it should never be null
+
+                settings->files.models = new char[100];
+                strcpy(settings->files.models, optarg);
+
+                break;
 
             case '?':
                 // getopt_long already printed an error message.
@@ -479,6 +497,7 @@ void printUsage()
         cerr << "\t--photFile" << endl;
         cerr << "\t--scatterFile" << endl;
         cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
+        cerr << "\t--modelDirectory\tThe directory in which models are located" << endl
         cerr << endl;
     }
 

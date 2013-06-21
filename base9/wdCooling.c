@@ -314,16 +314,15 @@ void loadWDCool(char *path, int modelSet)
 
             while (fgets(line, 240, pCoolingModels) != NULL)
             {
-// log(L) log(TEFF) log T_c log Ro_c  age/Myr  Mass  Log(Lpp) Log(Lcno) Log(LHe) Log(Lnu) Log MHtot Log(grav) R/R_sun
-                sscanf(line,"%*f %lf %*f %*f %lf %lf %lf %*f %*f", &tempTeff, &tempAge, &tempRadius);
+                sscanf(line,"%*f %lf %*f %*f %lf %*f %*f %*f %*f %*f %*f %*f %lf", &tempTeff, &tempAge, &tempRadius);
 
                 if (tempAge >= 0)
                 {
                     wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
                     wdCurves[massCurves].mass = wdMasses[massCurves] = renedo[i].mass;
                     wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
-                    wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
-                    wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10(1e6 + tempAge);
+                    wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = log(tempRadius * R_sun);
+                    wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10(1e6 * tempAge);
                     entries++;
                     assert(entries < MAX_WD_MODEL);
                 }
