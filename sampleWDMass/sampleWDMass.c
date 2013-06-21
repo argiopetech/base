@@ -215,12 +215,11 @@ int main(int argc, char *argv[])
   // mc.clust.evoModels.IFMR = LINEAR;
 
   if (taskid != MASTER) { /* already loaded in the MASTER task */
-    char path[100] = "models/";
     if(mc.clust.evoModels.brownDwarfEvol == BARAFFE)
-      loadBaraffe(path);
-    loadMSRgbModels(&mc.clust, path, 0);
-    loadWDCool(path, mc.clust.evoModels.WDcooling);
-    loadBergeron(path,  mc.clust.evoModels.filterSet);
+      loadBaraffe(settings->files.models);
+    loadMSRgbModels(&mc.clust, settings->files.models, 0);
+    loadWDCool(settings->files.models, mc.clust.evoModels.WDcooling);
+    loadBergeron(settings->files.models,  mc.clust.evoModels.filterSet);
   }
 
 

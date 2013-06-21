@@ -81,6 +81,7 @@ extern "C"
         char *output;
         char *scatter;
         char *config;
+        char *models;
     };
 
     struct Settings

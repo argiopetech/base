@@ -176,12 +176,11 @@ int main(int argc, char *argv[])
     // mc.clust.evoModels.IFMR = LINEAR;
 
     if (taskid != MASTER) { /* already loaded in the MASTER task */
-        char path[100] = "models/";
         if(mc.clust.evoModels.brownDwarfEvol == BARAFFE)
-            loadBaraffe(path);
-        loadMSRgbModels(&mc.clust, path, 0);
-        loadWDCool(path, mc.clust.evoModels.WDcooling);
-        loadBergeron(path,  mc.clust.evoModels.filterSet);
+            loadBaraffe(settings->files.models);
+        loadMSRgbModels(&mc.clust, settings->files.models, 0);
+        loadWDCool(settings->files.models, mc.clust.evoModels.WDcooling);
+        loadBergeron(settings->files.models,  mc.clust.evoModels.filterSet);
     }
 
     MPI_Bcast(ctrl.priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
@@ -1073,7 +1072,6 @@ static void propClustMarg(struct cluster *clust, const struct ifmrMcmcControl *c
 static void propClustBigSteps(struct cluster *clust, const struct ifmrMcmcControl *ctrl) {
     /* DOF defined in densities.h */
     double scale = 5.0;
-    double sample = 0.0;
     int p;
 
     for (p = 0; p < NPARAMS; p++) {

@@ -1,7 +1,7 @@
 #ifndef WDCOOL_H
 #define WDCOOL_H
 
-#define MAX_WD_MODEL        300   // Althaus models have lots of entries
+#define MAX_WD_MODEL        1000   // Renedo models have lots of entries
 
 struct wdCarbonCurve {
     double x_carbon;

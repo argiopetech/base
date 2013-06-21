@@ -11,7 +11,7 @@ IF (NOT Boost_FOUND)
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ./b2
             BUILD_IN_SOURCE 1
-            INSTALL_COMMAND ./b2 install
+            INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX}
             )
 
     set_property( TARGET Boost PROPERTY FOLDER "Externals")
