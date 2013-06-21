@@ -13,6 +13,8 @@
 #define BD                 5                    // Brown dwarf/planet
 #define DNE                9                    // Does not exist (zams mass > 100 Msun or < 0.0001)
 
+#define R_sun              6.96342e10
+
 // Filter sets
 #define UBVRIJHK           0
 #define ACS                1
@@ -36,6 +38,7 @@
 #define WOOD               0
 #define MONTGOMERY         1
 #define ALTHAUS            2
+#define RENEDO             3
 
 //WD Atmosphere
 #define BERGERON                       0
