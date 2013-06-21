@@ -36,6 +36,7 @@
 #define WOOD               0
 #define MONTGOMERY         1
 #define ALTHAUS            2
+#define RENEDO             3
 
 //WD Atmosphere
 #define BERGERON                       0

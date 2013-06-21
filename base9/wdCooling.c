@@ -21,6 +21,12 @@ struct althausModel
     double mass;
 };
 
+struct renedoModel
+{
+    char* filename;
+    double mass;
+};
+
 #define no 0
 #define yes 1
 
@@ -52,6 +58,22 @@ void loadWDCool(char *path, int modelSet)
         {"T10_1E4.Z0",  yes, 1.00},
         {"T11_1E4.Z0",  yes, 1.10},
         {0, 0, 0}
+    };
+
+    static struct renedoModel renedo[] =
+    {
+        {"wd0524_z001.trk", 0.524},
+        {"wd0570_z001.trk", 0.570},
+        {"wd0593_z001.trk", 0.593},
+        {"wd0609_z001.trk", 0.609},
+        {"wd0632_z001.trk", 0.632},
+        {"wd0659_z001.trk", 0.659},
+        {"wd0705_z001.trk", 0.705},
+        {"wd0767_z001.trk", 0.767},
+        {"wd0837_z001.trk", 0.837},
+        {"wd0877_z001.trk", 0.877},
+        {"wd0934_z001.trk", 0.934},
+        {0, 0}
     };
 
     int massCurves = 0, carbonCurves = 0, entries = 0;
@@ -248,6 +270,73 @@ void loadWDCool(char *path, int modelSet)
 //            fclose(pCoolingModels);
             pCoolingModels = 0;
             i += 1;
+        }
+    }
+    else if (modelSet == RENEDO)
+    {
+        int i = 0;
+        tempCarbon = 0.6; // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
+        massCurves = -1;
+
+        while (renedo[i].filename != 0) // Keep going till we hit the last record
+        {
+            strcpy(tempFile, path);
+            strcat(tempFile, "renedo/");
+            strcat(tempFile, renedo[i].filename);
+
+            if ((pCoolingModels = fopen(tempFile,"r")) == NULL)
+            {
+                printf("\n\n file %s was not found - exiting\n",tempFile);
+                exit(1);
+            }
+
+            massCurves += 1;
+            carbonCurves = 0;
+            entries = 0;
+
+            if ((tempAlloc = (void *) realloc(wdCurves, (massCurves+1) * sizeof(struct wdCoolingCurve))) == NULL)
+                perror("wdCurves memory allocation error \n");
+            else
+                wdCurves = (struct wdCoolingCurve *) tempAlloc;
+
+            if ((wdCurves[massCurves].wdCarbons = (double *) calloc(1, sizeof(double))) == NULL)
+                perror("MEMORY ALLOCATION ERROR \n");
+
+            if ((wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) calloc(1, sizeof(struct wdCarbonCurve))) == NULL)
+                perror("MEMORY ALLOCATION ERROR \n");
+
+            if ((tempAlloc = (void *) realloc(wdMasses, (massCurves+1) * sizeof(double))) == NULL)
+                perror("wdMasses memory allocation error \n");
+            else
+                wdMasses = (double *) tempAlloc;
+
+            fgets(line, 240, pCoolingModels); // Read in header line
+
+            while (fgets(line, 240, pCoolingModels) != NULL)
+            {
+// log(L) log(TEFF) log T_c log Ro_c  age/Myr  Mass  Log(Lpp) Log(Lcno) Log(LHe) Log(Lnu) Log MHtot Log(grav) R/R_sun
+                sscanf(line,"%*f %lf %*f %*f %lf %lf %lf %*f %*f", &tempTeff, &tempAge, &tempRadius);
+
+                if (tempAge >= 0)
+                {
+                    wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
+                    wdCurves[massCurves].mass = wdMasses[massCurves] = renedo[i].mass;
+                    wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
+                    wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
+                    wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10(1e6 + tempAge);
+                    entries++;
+                    assert(entries < MAX_WD_MODEL);
+                }
+            }
+
+            if (tempAge >= 0)
+            {
+                wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
+                wdCurves[massCurves].length = carbonCurves + 1;
+
+                pCoolingModels = 0;
+                i += 1;
+            }
         }
     }
 
