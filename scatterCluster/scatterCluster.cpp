@@ -25,9 +25,9 @@
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
-#include "mt19937ar.h"
-#include "evolve.h"
-#include "structures.h"
+#include "mt19937ar.hpp"
+#include "evolve.hpp"
+#include "structures.hpp"
 #include "Settings.hpp"
 
 unsigned long mt[NN];

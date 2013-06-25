@@ -3,7 +3,7 @@
 #else
 #define EVOLVE_H
 
-#include "structures.h"
+#include "structures.hpp"
 
 #define VERSION            4.8  // last update: 25aug09
 

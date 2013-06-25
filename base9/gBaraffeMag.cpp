@@ -2,9 +2,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "evolve.h"
-#include "linInterp.h"
-#include "gBaraffeMag.h"
+#include "evolve.hpp"
+#include "linInterp.hpp"
+#include "gBaraffeMag.hpp"
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
 extern int verbose, useFilt[FILTS];

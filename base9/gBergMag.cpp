@@ -15,9 +15,9 @@ The appropriate magnitudes are put in globalMags[][].
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "evolve.h"
-#include "linInterp.h"
-#include "gBergMag.h"
+#include "evolve.hpp"
+#include "linInterp.hpp"
+#include "gBergMag.hpp"
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
 extern int verbose, useFilt[FILTS];

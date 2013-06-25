@@ -9,7 +9,7 @@
 #define AGEPROPSTEPSIZE         0.02
 #define AGE_WANDER               100
 
-#include "structures.h"
+#include "structures.hpp"
 
 void propFieldStar (struct star *inputStar);
 void propMass (struct star *inputstar);

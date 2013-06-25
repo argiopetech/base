@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include "evolve.h"
-#include "msRgbEvol.h"
-#include "gBaraffeMag.h"
-#include "densities.h"
+#include "evolve.hpp"
+#include "msRgbEvol.hpp"
+#include "gBaraffeMag.hpp"
+#include "densities.hpp"
 
 #define MAX_ENTRIES 370
 

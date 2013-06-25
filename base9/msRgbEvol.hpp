@@ -3,13 +3,13 @@
 #else
 #define MSRGBEVOL_H
 
-#include "evolve.h"
-#include "msRgbEvol.h"
-#include "gDsedMag.h"
-#include "gGirMag.h"
-#include "gChabMag.h"
-#include "gYaleMag.h"
-#include "structures.h"
+#include "evolve.hpp"
+#include "msRgbEvol.hpp"
+#include "gDsedMag.hpp"
+#include "gGirMag.hpp"
+#include "gChabMag.hpp"
+#include "gYaleMag.hpp"
+#include "structures.hpp"
 
 void deriveAgbTipMass (struct cluster *pCluster);
 double msRgbEvol (struct cluster *pCluster, double zamsMass);

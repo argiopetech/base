@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "evolve.h"
-#include "gChabMag.h"
-#include "binSearch.h"
-#include "linInterp.h"
+#include "evolve.hpp"
+#include "gChabMag.hpp"
+#include "binSearch.hpp"
+#include "linInterp.hpp"
 
 extern int verbose;
 extern int useFilt[FILTS];

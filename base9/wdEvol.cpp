@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "evolve.h"
-#include "gBergMag.h"
-#include "wdCooling.h"
-#include "structures.h"
+#include "evolve.hpp"
+#include "gBergMag.hpp"
+#include "wdCooling.hpp"
+#include "structures.hpp"
 
 #define LOG_G_PLUS_LOG_M_SUN 26.12302173752
 

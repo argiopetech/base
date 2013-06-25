@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include "leastSquares.h"
-#include "poly.h"
-#include "solve.h"
+#include "leastSquares.hpp"
+#include "poly.hpp"
+#include "solve.hpp"
 
 // Calculates beta using least squares fit (in order to eliminate correlation between ages and WD masses)
 double leastSquaresBeta (double *x, double *y, int l)

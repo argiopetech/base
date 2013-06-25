@@ -3,12 +3,12 @@
 
 #include <math.h>
 #include <stdio.h>
-#include "samplers.h"
-#include "densities.h"
-#include "decide.h"
-#include "mt19937ar.h"
-#include "evolve.h"
-#include "structures.h"
+#include "samplers.hpp"
+#include "densities.hpp"
+#include "decide.hpp"
+#include "mt19937ar.hpp"
+#include "evolve.hpp"
+#include "structures.hpp"
 
 //extern int    numFilts;
 

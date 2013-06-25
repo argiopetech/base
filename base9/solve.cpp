@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
-#include "solve.h"
+#include "solve.hpp"
 #define NR_END 1
 #define FREE_ARG char*
 #ifndef TINY

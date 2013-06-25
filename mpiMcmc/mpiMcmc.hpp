@@ -13,7 +13,7 @@
 
 #define ALLOC_CHUNK   5
 
-#include "evolve.h"
+#include "evolve.hpp"
 
 #define N_MS_MASS1        500
 #define N_MS_MASS_RATIO   20

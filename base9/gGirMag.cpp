@@ -2,10 +2,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "evolve.h"
-#include "linInterp.h"
-#include "binSearch.h"
-#include "gGirMag.h"
+#include "evolve.hpp"
+#include "linInterp.hpp"
+#include "binSearch.hpp"
+#include "gGirMag.hpp"
 
 #define AGELO  0
 #define AGEHI  1

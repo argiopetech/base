@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "evolve.h"
-#include "linInterp.h"
-#include "wdCooling.h"
-#include "binSearch.h"
+#include "evolve.hpp"
+#include "linInterp.hpp"
+#include "wdCooling.hpp"
+#include "binSearch.hpp"
 #include <mpi.h>
 #include <assert.h>
 

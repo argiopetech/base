@@ -4,10 +4,10 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "constants.h"
-#include "evolve.h"
-#include "structures.h"
-#include "densities.h"
+#include "constants.hpp"
+#include "evolve.hpp"
+#include "structures.hpp"
+#include "densities.hpp"
 
 #define  SQR(z) ((z)*(z))
 

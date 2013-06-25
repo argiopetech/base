@@ -3,9 +3,9 @@
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
-#include "evolve.h"
-#include "structures.h"
-#include "loadModels.h"
+#include "evolve.hpp"
+#include "structures.hpp"
+#include "loadModels.hpp"
 #include "Settings.hpp"
 
 #define  COL_MAX        1000    // max number of cluster stars

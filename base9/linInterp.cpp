@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "linInterp.h"
+#include "linInterp.hpp"
 
 #define EPS 1e-6
 

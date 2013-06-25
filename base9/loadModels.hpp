@@ -3,10 +3,10 @@
 #else
 #define LOAD_MODELS_H
 
-#include "msRgbEvol.h"
-#include "gBergMag.h"
-#include "wdCooling.h"
-#include "gBaraffeMag.h"
+#include "msRgbEvol.hpp"
+#include "gBergMag.hpp"
+#include "wdCooling.hpp"
+#include "gBaraffeMag.hpp"
 #include "Settings.hpp"
 
 void loadModels (int needFS, struct cluster *theCluster, struct Settings *);

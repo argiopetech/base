@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "evolve.h"
-#include "loadModels.h"
-#include "msRgbEvol.h"
-#include "gBergMag.h"
-#include "wdCooling.h"
-#include "gBaraffeMag.h"
+#include "evolve.hpp"
+#include "loadModels.hpp"
+#include "msRgbEvol.hpp"
+#include "gBergMag.hpp"
+#include "wdCooling.hpp"
+#include "gBaraffeMag.hpp"
 
 // Declared in parent program (mcmc, simCluster, makeCMD)
 extern int verbose;

@@ -42,7 +42,7 @@
 */
 
 #include <stdio.h>
-#include "mt19937ar.h"
+#include "mt19937ar.hpp"
 
 extern unsigned long mt[NN];
 extern int mti;

@@ -22,7 +22,7 @@
 //===========================================================================
 
 #include <math.h>               // Needed for sqrt() and log()
-#include "mt19937ar.h"
+#include "mt19937ar.hpp"
 
 #define PI         3.14159265   // The value of pi
 

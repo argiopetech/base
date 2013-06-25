@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "mt19937ar.h"
+#include "mt19937ar.hpp"
 
 extern int verbose;
 

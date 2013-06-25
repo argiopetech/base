@@ -5,16 +5,16 @@
 #include <math.h>
 #include <string.h>
 #include <mpi.h>
-#include "evolve.h"
-#include "loadModels.h"
-#include "msRgbEvol.h"
-#include "gBergMag.h"
-#include "wdCooling.h"
-#include "densities.h"
-#include "decide.h"
-#include "samplers.h"
-#include "leastSquares.h"
-#include "mt19937ar.h"
+#include "evolve.hpp"
+#include "loadModels.hpp"
+#include "msRgbEvol.hpp"
+#include "gBergMag.hpp"
+#include "wdCooling.hpp"
+#include "densities.hpp"
+#include "decide.hpp"
+#include "samplers.hpp"
+#include "leastSquares.hpp"
+#include "mt19937ar.hpp"
 
 #define ALLOC_CHUNK   5
 

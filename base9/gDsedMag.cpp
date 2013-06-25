@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "evolve.h"
-#include "gDsedMag.h"
-#include "binSearch.h"
-#include "linInterp.h"
+#include "evolve.hpp"
+#include "gDsedMag.hpp"
+#include "binSearch.hpp"
+#include "linInterp.hpp"
 #include <gsl/gsl_errno.h>      // need these two lines for gnu interpolation -- TvH
 #include <gsl/gsl_spline.h>
 

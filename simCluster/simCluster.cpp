@@ -6,10 +6,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "mt19937ar.h"
-#include "evolve.h"
-#include "structures.h"
-#include "loadModels.h"
+#include "mt19937ar.hpp"
+#include "evolve.hpp"
+#include "structures.hpp"
+#include "loadModels.hpp"
 #include "Settings.hpp"
 
 double gen_norm (double mean, double std_dev);

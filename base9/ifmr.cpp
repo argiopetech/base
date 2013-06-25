@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <math.h>
-#include "linInterp.h"
+#include "linInterp.hpp"
 #include <stdlib.h>
-#include "evolve.h"
+#include "evolve.hpp"
 
 double weidemannIFMR (double zamsMass);
 double williamsIFMR (double zamsMass);

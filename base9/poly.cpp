@@ -1,5 +1,5 @@
 #include <math.h>
-#include "poly.h"
+#include "poly.hpp"
 
 // Calculates the polynomial c[0] + c[1]*x + c[2]*x^2... c[n]*x^n
 double poly (double *c, double x, int n)

@@ -4,10 +4,10 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "samplers.h"
-#include "densities.h"
-#include "mt19937ar.h"
-#include "evolve.h"
+#include "samplers.hpp"
+#include "densities.hpp"
+#include "mt19937ar.hpp"
+#include "evolve.hpp"
 
 void propFieldStar (struct star *inputStar)
 {

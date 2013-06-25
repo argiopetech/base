@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "evolve.h"
-#include "structures.h"
+#include "evolve.hpp"
+#include "structures.hpp"
 
 static double getAge (struct cluster *pCluster);
 static double getY (struct cluster *pCluster);

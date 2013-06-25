@@ -3,7 +3,7 @@
 #else
 #define STRUCT_H
 
-#include "constants.h"
+#include "constants.hpp"
 
 //Be careful adding new sample types.  Their order is important.
 //There are a few places in the code that test for SAMPLE_TYPE > or <.

@@ -2,11 +2,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "evolve.h"
-#include "linInterp.h"
-#include "binSearch.h"
-#include "gYaleMag.h"
-#include "binSearch.h"
+#include "evolve.hpp"
+#include "linInterp.hpp"
+#include "binSearch.hpp"
+#include "gYaleMag.hpp"
+#include "binSearch.hpp"
 
 // Fortran functions found in YYinterp.f
 //extern void loadyyf_();
