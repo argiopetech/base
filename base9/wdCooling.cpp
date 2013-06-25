@@ -16,14 +16,14 @@ static int coolingModel;
 
 struct althausModel
 {
-    char *filename;
+    const char *filename;
     int hasHLum;
     double mass;
 };
 
 struct renedoModel
 {
-    char *filename;
+    const char *filename;
     double mass;
 };
 
