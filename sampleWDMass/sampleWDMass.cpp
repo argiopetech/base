@@ -152,7 +152,7 @@ int main (int argc, char *argv[])
     MPI_Comm_rank (MPI_COMM_WORLD, &taskid);
     MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
 
-    settings = malloc (sizeof (struct Settings));
+    settings = new struct Settings;
     zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
     if (settings->files.config)
@@ -241,10 +241,8 @@ int main (int argc, char *argv[])
     {
         readCmdData (&mc, &ctrl);
 
-        if ((obs = calloc (mc.clust.nStars, sizeof (obsStar))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
-        if ((starStatus = calloc (mc.clust.nStars, sizeof (int))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
+        obs = new obsStar[mc.clust.nStars]();
+        starStatus = new int[mc.clust.nStars]();
 
         for (i = 0; i < mc.clust.nStars; i++)
         {
@@ -279,10 +277,8 @@ int main (int argc, char *argv[])
     MPI_Barrier (MPI_COMM_WORLD);
     if (taskid != MASTER)
     {
-        if ((obs = calloc (mc.clust.nStars, sizeof (obsStar))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
-        if ((starStatus = calloc (mc.clust.nStars, sizeof (int))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
+        obs = new obsStar[mc.clust.nStars]();
+        starStatus = new int[mc.clust.nStars]();
     }
 
     MPI_Bcast (starStatus, mc.clust.nStars, MPI_INT, MASTER, MPI_COMM_WORLD);
@@ -290,8 +286,7 @@ int main (int argc, char *argv[])
     if (taskid != MASTER)
     {
         /* initialize the stars array */
-        if ((mc.stars = calloc (mc.clust.nStars, sizeof (struct star))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
+        mc.stars = new star[mc.clust.nStars]();
 
         for (i = 0; i < mc.clust.nStars; i++)
         {
@@ -597,9 +592,12 @@ int main (int argc, char *argv[])
 
     free (sampledPars);
     free (unifs);
-    free (mc.stars);
-    free (obs);
-    free (starStatus);
+
+    delete[] (obs);
+    delete[] (starStatus);
+    delete[] mc.stars;
+
+    delete settings;
 
     MPI_Type_free (&clustParType);
     MPI_Type_free (&obsStarType);
@@ -974,8 +972,7 @@ static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl)
     void *tempAlloc;            // temporary for allocation
 
     // why is this necessary???
-    if ((mc->stars = calloc (0, sizeof (struct star))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    mc->stars = nullptr;
 
     while (moreStars)
     {
@@ -1046,8 +1043,7 @@ static void readSampledParams (struct chain *mc, struct ifmrGridControl *ctrl, c
 
     char line[300];
 
-    if ((*sampledPars = calloc (0, sizeof (clustPar))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    *sampledPars = nullptr;
 
     fgets (line, 300, ctrl->rSampledParamFile); // skip first header line
 
