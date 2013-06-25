@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
     char filename[100], line[1000], aFilterName[10];
     FILE *r_ptr, *w_ptr;
 
-    struct Settings *settings = malloc (sizeof (struct Settings));
+    struct Settings *settings = new struct Settings;
 
     zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
@@ -271,6 +271,8 @@ int main (int argc, char *argv[])
 
     fclose (r_ptr);
     fclose (w_ptr);
+
+    delete settings;
 
     return (0);
 }
