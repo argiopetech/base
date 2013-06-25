@@ -25,7 +25,7 @@
 #define N_Y       1
 #define N_IFMR_INT   10
 #define N_IFMR_SLOPE 10
-#define N_GRID    (N_AGE*N_FEH*N_MOD*N_ABS*N_Y*N_IFMR_INT*N_IFMR_SLOPE)
+#define N_GRID    (N_AGE * N_FEH * N_MOD * N_ABS * N_Y * N_IFMR_INT * N_IFMR_SLOPE)
 #define MASTER          0       /* taskid of first process */
 
 
@@ -33,7 +33,6 @@ struct ifmrGridControl
 {
     FILE *rData;
     FILE *rSampledParamFile;
-    // FILE *wClusterFile;
     FILE *wMassSampleFile;
     FILE *wMembershipFile;
     double initialAge;
@@ -51,7 +50,7 @@ struct ifmrGridControl
     int numFilts;
     int nSamples;
     double start[NPARAMS];      /* starting points for grid evaluations */
-    double end[NPARAMS];                /* end points for grid evaluations */
+    double end[NPARAMS];        /* end points for grid evaluations */
 };
 
 /* For posterior evaluation on a grid */
@@ -104,11 +103,6 @@ double dMass1 = 0.0005;
 
 struct Settings *settings;
 
-/*******************************************
-********************************************
-** MAIN FUNCTION
-********************************************
-*******************************************/
 int main (int argc, char *argv[])
 {
     int i, j, filt, numtasks,   /* total number of MPI process in partitiion */
@@ -186,8 +180,8 @@ int main (int argc, char *argv[])
 
     printf ("carbonicity: %lf\n", mc.clust.carbonicity);
 
-    if (taskid != MASTER)
-    {                           /* already loaded in the MASTER task */
+    if (taskid != MASTER) /* already loaded in the MASTER task */
+    {
         if (mc.clust.evoModels.brownDwarfEvol == BARAFFE)
             loadBaraffe (settings->files.models);
         loadMSRgbModels (&mc.clust, settings->files.models, 0);
