@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
     struct cluster theCluster;
     struct star *stars;
 
-    struct Settings *settings = malloc (sizeof (struct Settings));
+    struct Settings *settings = new struct Settings;
 
     zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
@@ -517,6 +517,9 @@ int main (int argc, char *argv[])
     fclose (rMassPtr[0]);
     fclose (rMassPtr[1]);
     fclose (wCmdPtr);
+
+    delete settings;
+
     return (0);
 }
 
