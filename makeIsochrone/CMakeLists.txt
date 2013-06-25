@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB MAKEISOCHRONE_FILES *.c)
+file(GLOB MAKEISOCHRONE_FILES *.cpp *.hpp)
 
 add_executable(makeIsochrone ${MAKEISOCHRONE_FILES})
 

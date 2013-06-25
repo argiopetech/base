@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB MPIMCMC_FILES *.c)
+file(GLOB MPIMCMC_FILES *.cpp *.hpp)
 
 add_executable(mpiMcmc ${MPIMCMC_FILES})
 

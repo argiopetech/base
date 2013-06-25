@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB SIMCLUSTER_FILES *.c)
+file(GLOB SIMCLUSTER_FILES *.cpp *.hpp)
 
 add_executable(simCluster ${SIMCLUSTER_FILES})
 

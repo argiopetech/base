@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB BASE9_FILES *.c *.cpp) 
+file(GLOB BASE9_FILES *.cpp *.hpp) 
 
 include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 

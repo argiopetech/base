@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB SCATTERCLUSTER_FILES *.c)
+file(GLOB SCATTERCLUSTER_FILES *.cpp *.hpp)
 
 add_executable(scatterCluster ${SCATTERCLUSTER_FILES})
 

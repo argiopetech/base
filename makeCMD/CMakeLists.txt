@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB MAKECMD_FILES *.c)
+file(GLOB MAKECMD_FILES *.cpp *.hpp)
 
 add_executable(makeCMD ${MAKECMD_FILES})
 

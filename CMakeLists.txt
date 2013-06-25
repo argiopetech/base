@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(Base9 C CXX)
+project(Base9 CXX)
 
 list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 
@@ -15,20 +15,13 @@ endif()
 
 find_package(MPI)
 
-if (NOT (MPI_C_FOUND AND MPI_CXX_FOUND))
+if (NOT (MPI_CXX_FOUND))
   message( STATUS ${MPI_CXX_COMPILER})
   message( FATAL_ERROR "It looks like MPI isn't installed..." )
 endif()
 
-include_directories( ${MPI_C_INCLUDE_PATH} )
 include_directories( ${MPI_CXX_INCLUDE_PATH} )
 
-set(CMAKE_C_FLAGS                  "-O1 -march=native -ffast-math -fstrict-aliasing -Wall ${MPI_C_COMPILE_FLAGS}" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_DEBUG            "-O0 -g" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_RELEASE          "-O3 -DNDEBUG" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_PROFILE          "-O3 -g -DNDEBUG" CACHE STRING "" FORCE)
 
 set(CMAKE_CXX_FLAGS                "-O1 -ffast-math -march=native -fstrict-aliasing -std=c++11 -Wall ${MPI_CXX_COMPILE_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g" CACHE STRING "" FORCE)
@@ -60,7 +53,6 @@ endif ()
 
 MARK_AS_ADVANCED(
   CMAKE_CXX_FLAGS_PROFILE
-  CMAKE_C_FLAGS_PROFILE
   CMAKE_EXE_LINKER_FLAGS_PROFILE
   CMAKE_SHARED_LINKER_FLAGS_PROFILE)
 
