@@ -18,6 +18,7 @@
 
 \#*
 *~
+*_flymake.cpp
 
 BUILD/*
 contrib/BUILD/*
