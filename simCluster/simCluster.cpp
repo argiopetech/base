@@ -42,7 +42,7 @@ int main (int argc, char *argv[])
     double genrand_res53 (void);
     void updateCount (struct star *pStar, int cmpnt);
 
-    struct Settings *settings = malloc (sizeof (struct Settings));
+    struct Settings *settings = new struct Settings;
 
     zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
@@ -342,6 +342,8 @@ int main (int argc, char *argv[])
     }
 
     fclose (w_ptr);
+
+    delete settings;
 
     return (0);
 }
