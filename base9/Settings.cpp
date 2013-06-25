@@ -31,7 +31,7 @@ void zeroSettingPointers (struct Settings *settings)
     settings->files.models = nullptr;
 }
 
-void makeSettings (char *yamlFile, struct Settings *settings)
+void makeSettings (const char *yamlFile, struct Settings *settings)
 {
     Node config;
 
