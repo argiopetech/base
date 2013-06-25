@@ -27,7 +27,7 @@
 #define PI         3.14159265   // The value of pi
 
 //----- Function prototypes -------------------------------------------------
-double gen_norm(double mean, double std_dev);  // Returns a normal rv
+double gen_norm (double mean, double std_dev);  // Returns a normal rv
 
 //===========================================================================
 //=  Function to generate normally distributed random variable using the    =
@@ -35,31 +35,31 @@ double gen_norm(double mean, double std_dev);  // Returns a normal rv
 //=    - Input: mean and standard deviation                                 =
 //=    - Output: Returns with normally distributed random variable          =
 //===========================================================================
-double gen_norm(double mean, double std_dev)
+double gen_norm (double mean, double std_dev)
 {
-  double   u, r, theta;           // Variables for Box-Muller method
-  double   x;                     // Normal(0, 1) rv
-  double   norm_rv;               // The adjusted normal rv
+    double u, r, theta;         // Variables for Box-Muller method
+    double x;                   // Normal(0, 1) rv
+    double norm_rv;             // The adjusted normal rv
 
-  // Generate u
-  u = 0.0;
-  while (u == 0.0)
-    u = genrand_res53();
+    // Generate u
+    u = 0.0;
+    while (u == 0.0)
+        u = genrand_res53 ();
 
-  // Compute r
-  r = sqrt(-2.0 * log(u));
+    // Compute r
+    r = sqrt (-2.0 * log (u));
 
-  // Generate theta
-  theta = 0.0;
-  while (theta == 0.0)
-    theta = 2.0 * PI * genrand_res53();
+    // Generate theta
+    theta = 0.0;
+    while (theta == 0.0)
+        theta = 2.0 * PI * genrand_res53 ();
 
-  // Generate x value
-  x = r * cos(theta);
+    // Generate x value
+    x = r * cos (theta);
 
-  // Adjust x value for specified mean and variance
-  norm_rv = (x * std_dev) + mean;
+    // Adjust x value for specified mean and variance
+    norm_rv = (x * std_dev) + mean;
 
-  // Return the normally distributed RV value
-  return(norm_rv);
+    // Return the normally distributed RV value
+    return (norm_rv);
 }

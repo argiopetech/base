@@ -3,15 +3,15 @@
 
 #define EPSILON     1.e-15
 #define EPS                0.000001
-#define FILTS              14                           // UBVRIJHK, respectively
-#define MAG_LIST           26                           // list length for mag vs. S/N
-#define MODEL_LIST         118                          // age/Mv/V-I entries in WD model array
+#define FILTS              14   // UBVRIJHK, respectively
+#define MAG_LIST           26   // list length for mag vs. S/N
+#define MODEL_LIST         118  // age/Mv/V-I entries in WD model array
 
-#define MSRG               1                    // Main-sequence or red giant
-#define WD                 3                    // White dwarf
-#define NSBH               4                    // Neutron star or black hole
-#define BD                 5                    // Brown dwarf/planet
-#define DNE                9                    // Does not exist (zams mass > 100 Msun or < 0.0001)
+#define MSRG               1    // Main-sequence or red giant
+#define WD                 3    // White dwarf
+#define NSBH               4    // Neutron star or black hole
+#define BD                 5    // Brown dwarf/planet
+#define DNE                9    // Does not exist (zams mass > 100 Msun or < 0.0001)
 
 #define R_sun              6.96342e10
 

@@ -18,35 +18,36 @@
 #define  FeHa4     -0.470
 
 #define  QUAD(x1,y1,x2,y2,x3,y3,x) (y1)*((x2)-(x))*((x3)-(x))/(((x2)-(x1))*((x3)-(x1))) \
-+(y2)*((x1)-(x))*((x3)-(x))/(((x1)-(x2))*((x3)-(x2))) \
-+(y3)*((x1)-(x))*((x2)-(x))/(((x1)-(x3))*((x2)-(x3)))
+    +(y2)*((x1)-(x))*((x3)-(x))/(((x1)-(x2))*((x3)-(x2)))               \
+    +(y3)*((x1)-(x))*((x2)-(x))/(((x1)-(x3))*((x2)-(x3)))
 
 
 #define CUBEINT(x1,y1,x2,y2,x3,y3,x4,y4,x) (x-x2)*(x-x3)*(x-x4)*y1/((x1-x2)*(x1-x3)*(x1-x4)) \
-+(x-x1)*(x-x3)*(x-x4)*y2/((x2-x1)*(x2-x3)*(x2-x4)) \
-+(x-x1)*(x-x2)*(x-x4)*y3/((x3-x1)*(x3-x2)*(x3-x4)) \
-+(x-x1)*(x-x2)*(x-x3)*y4/((x4-x1)*(x4-x2)*(x4-x3))
+    +(x-x1)*(x-x3)*(x-x4)*y2/((x2-x1)*(x2-x3)*(x2-x4))                  \
+    +(x-x1)*(x-x2)*(x-x4)*y3/((x3-x1)*(x3-x2)*(x3-x4))                  \
+    +(x-x1)*(x-x2)*(x-x3)*y4/((x4-x1)*(x4-x2)*(x4-x3))
 
 #define POLLIN(x1,y1,x2,y2,x) (x-x2)*y1/(x1-x2) +(x-x1)*y2/(x2-x1)
 
 #define SQR(x) (x)*(x)
 
-struct yyIsochrone {
-  double FeH;
-  double age;
-  double logAge;
-  double z;
-  //double y;
-  double mass[MAX_YY_ENTRIES];
-  int nEntries;
-  double mag[MAX_YY_ENTRIES][N_YY_FILTS];
-  double AgbTurnoffMass;
+struct yyIsochrone
+{
+    double FeH;
+    double age;
+    double logAge;
+    double z;
+    //double y;
+    double mass[MAX_YY_ENTRIES];
+    int nEntries;
+    double mag[MAX_YY_ENTRIES][N_YY_FILTS];
+    double AgbTurnoffMass;
 };
 
-void   loadYale(char *path, int filterSet);
-double deriveYYAgbTip(double newFeH, double newY, double newLogAge);
-double wdPrecLogAgeYY(double thisFeH, double thisY, double zamsMass);
-double getYaleMags(double zamsMass);
+void loadYale (char *path, int filterSet);
+double deriveYYAgbTip (double newFeH, double newY, double newLogAge);
+double wdPrecLogAgeYY (double thisFeH, double thisY, double zamsMass);
+double getYaleMags (double zamsMass);
 
 
 #endif

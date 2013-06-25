@@ -6,8 +6,8 @@
 //#define BERG_MASSES        11
 //#define MAX_BERG_ENTRIES   100
 
-void loadBergeron(char *path, int filterSet);
-void bergeronTeffToMags(double wdLogTeff, double wdLogG, int wdType);
+void loadBergeron (char *path, int filterSet);
+void bergeronTeffToMags (double wdLogTeff, double wdLogG, int wdType);
 
 #define BERG_N_DA_LOG_G     6
 #define BERG_N_DA_TEFF      57

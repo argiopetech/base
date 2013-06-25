@@ -38,8 +38,8 @@ extern "C"
         int nStars;
         int nFieldStars;
         int nBrownDwarfs;
-        int percentBinary; // Fraction * 100
-        int percentDB; // Fraction * 100
+        int percentBinary;              // Fraction * 100
+        int percentDB;          // Fraction * 100
     };
 
     struct ScatterClusterSettings
@@ -99,16 +99,18 @@ extern "C"
         struct ScatterClusterSettings scatterCluster;
     };
 
-    void makeSettings(char*, struct Settings*);
-    void zeroSettingPointers(struct Settings*);
-    void settingsFromCLI(int argc, char **argv, struct Settings *settings);
+    void makeSettings (char *, struct Settings *);
+    void zeroSettingPointers (struct Settings *);
+    void settingsFromCLI (int argc, char **argv, struct Settings *settings);
 
 #ifdef __cplusplus
 }
 
-template <typename T> T getDefault(YAML::Node&, std::string&&, T);
-template <typename T> T getOrDie(YAML::Node&, std::string&&);
-YAML::Node getNode(YAML::Node &n, std::string &&f);
-[[noreturn]] void exitWith (std::string&&);
+template < typename T > T getDefault (YAML::Node &, std::string &&, T);
+
+template < typename T > T getOrDie (YAML::Node &, std::string &&);
+YAML::Node getNode (YAML::Node & n, std::string && f);
+[[noreturn]]
+void exitWith (std::string &&);
 #endif
 #endif

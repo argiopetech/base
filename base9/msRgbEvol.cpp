@@ -24,40 +24,23 @@ To do so:
 ****************************************************************************************/
 
 //Static array of pointers to the individual functions
-static void (*loadMSRgbModelFunctions[])(char*, int) =
-        {
-    &loadGirardi,
-    &loadChaboyer,
-    &loadYale,
-    &loadDsed
-  };
+static void (*loadMSRgbModelFunctions[]) (char *, int) =
+{
+    &loadGirardi, &loadChaboyer, &loadYale, &loadDsed};
 
-static double (*deriveAgbTipMassFunctions[])(double, double, double) =
-        {
-    &deriveGirAgbTip,
-    &deriveChabAgbTip,
-    &deriveYYAgbTip,
-    &deriveDsedAgbTip
-  };
+static double (*deriveAgbTipMassFunctions[]) (double, double, double) =
+{
+    &deriveGirAgbTip, &deriveChabAgbTip, &deriveYYAgbTip, &deriveDsedAgbTip};
 
-static double (*getMagsFunctions[])(double) =
-        {
-    &getGirardiMags,
-    &getChaboyerMags,
-    &getYaleMags,
-    &getDsedMags
-  };
+static double (*getMagsFunctions[]) (double) =
+{
+    &getGirardiMags, &getChaboyerMags, &getYaleMags, &getDsedMags};
 
-static double (*wdPrecLogAgeFunctions[])(double, double, double) =
-        {
-    &wdPrecLogAgeGir,
-    &wdPrecLogAgeChaboyer,
-    &wdPrecLogAgeYY,
-    &wdPrecLogAgeDsed
-  };
+static double (*wdPrecLogAgeFunctions[]) (double, double, double) =
+{
+    &wdPrecLogAgeGir, &wdPrecLogAgeChaboyer, &wdPrecLogAgeYY, &wdPrecLogAgeDsed};
 
-double msRgbEvol(struct cluster *pCluster, double zamsMass)
-
+double msRgbEvol (struct cluster *pCluster, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -66,16 +49,15 @@ The former does 3-D interpolation of the Girardi isochrones.
 
 deriveAgbTipMass() needs to be called first
 ****************************************************************************************/
-
 {
-  double massNow=0.0;
-  massNow = (*getMagsFunctions[(pCluster->evoModels).mainSequenceEvol])(zamsMass);
-  return massNow;
+    double massNow = 0.0;
+
+    massNow = (*getMagsFunctions[(pCluster->evoModels).mainSequenceEvol]) (zamsMass);
+    return massNow;
 }
 
 
-void deriveAgbTipMass(struct cluster *pCluster)
-
+void deriveAgbTipMass (struct cluster *pCluster)
 /****************************************************************************************
 last update: 20jul07
 
@@ -85,34 +67,32 @@ Functions must return a double and have three double arguments (newFeH, newY, ne
 
 Array indices are defined in evolve.h
 ****************************************************************************************/
-
 {
 
-  //printf("%f %f %f\n",getParameter(pCluster,FEH),getParameter(pCluster,AGE),getParameter(pCluster,YYY));
-  /*
-        // If these haven't changed, there's no need to recalculate
-        if(fabs(lastFeH - getParameter(pCluster,FEH)) < EPS &&
-           fabs(lastLogAge - getParameter(pCluster,AGE)) < EPS &&
-           fabs(lastY - getParameter(pCluster,YYY)) < EPS){
-                return;
-        }
-*/
-        pCluster->AGBt_zmass = (*deriveAgbTipMassFunctions[(pCluster->evoModels).mainSequenceEvol])(getParameter(pCluster,FEH),  getParameter(pCluster,YYY), getParameter(pCluster,AGE));
-        /*
-        lastFeH = getParameter(pCluster,FEH);
-        lastLogAge = getParameter(pCluster,AGE);
-        lastY = getParameter(pCluster,YYY);
-        */
+    //printf("%f %f %f\n",getParameter(pCluster,FEH),getParameter(pCluster,AGE),getParameter(pCluster,YYY));
+    /*
+    // If these haven't changed, there's no need to recalculate
+    if(fabs(lastFeH - getParameter(pCluster,FEH)) < EPS &&
+    fabs(lastLogAge - getParameter(pCluster,AGE)) < EPS &&
+    fabs(lastY - getParameter(pCluster,YYY)) < EPS){
+    return;
+    }
+    */
+    pCluster->AGBt_zmass = (*deriveAgbTipMassFunctions[(pCluster->evoModels).mainSequenceEvol]) (getParameter (pCluster, FEH), getParameter (pCluster, YYY), getParameter (pCluster, AGE));
+    /*
+      lastFeH = getParameter(pCluster,FEH);
+      lastLogAge = getParameter(pCluster,AGE);
+      lastY = getParameter(pCluster,YYY);
+    */
 
 
-        return;
+    return;
 
 }
 
 
 
-double wdPrecLogAge(struct cluster *pCluster, double zamsMass)
-
+double wdPrecLogAge (struct cluster *pCluster, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -123,20 +103,20 @@ mass and age.
 Distributed most of the code to the respective subroutines, leaving only those to be
 modified for different model sets.
 ****************************************************************************************/
-
 {
-        double wdPrecLogAge=0.0;
-        wdPrecLogAge = (*wdPrecLogAgeFunctions[(pCluster->evoModels).mainSequenceEvol])(getParameter(pCluster,FEH),  getParameter(pCluster,YYY), zamsMass);
-        return wdPrecLogAge;
+    double wdPrecLogAge = 0.0;
+
+    wdPrecLogAge = (*wdPrecLogAgeFunctions[(pCluster->evoModels).mainSequenceEvol]) (getParameter (pCluster, FEH), getParameter (pCluster, YYY), zamsMass);
+    return wdPrecLogAge;
 }
 
 
-void loadMSRgbModels(struct cluster *pCluster, char *path, int needFS)
+void loadMSRgbModels (struct cluster *pCluster, char *path, int needFS)
 {
-        (*loadMSRgbModelFunctions[pCluster->evoModels.mainSequenceEvol])(path, pCluster->evoModels.filterSet);
+    (*loadMSRgbModelFunctions[pCluster->evoModels.mainSequenceEvol]) (path, pCluster->evoModels.filterSet);
 
-        // The Yale models have issues creating field stars in simCluster, so if you need field stars
-        // and you are using the Yale models, also load the DSED models to create the field stars
-        if(pCluster->evoModels.mainSequenceEvol == YALE && needFS)
-                (*loadMSRgbModelFunctions[DSED])(path, pCluster->evoModels.filterSet);
+    // The Yale models have issues creating field stars in simCluster, so if you need field stars
+    // and you are using the Yale models, also load the DSED models to create the field stars
+    if (pCluster->evoModels.mainSequenceEvol == YALE && needFS)
+        (*loadMSRgbModelFunctions[DSED]) (path, pCluster->evoModels.filterSet);
 }

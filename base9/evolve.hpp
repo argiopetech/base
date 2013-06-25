@@ -1,13 +1,13 @@
 #if defined( EVOLVE_H )
-  // the file has been included already
+// the file has been included already
 #else
 #define EVOLVE_H
 
 #include "structures.h"
 
-#define VERSION            4.8				// last update: 25aug09
+#define VERSION            4.8  // last update: 25aug09
 
-void evolve(struct cluster *the_cluster, struct star *stars, int index);
-void calcAbsCoeffs(int filterSet);
+void evolve (struct cluster *the_cluster, struct star *stars, int index);
+void calcAbsCoeffs (int filterSet);
 
 #endif

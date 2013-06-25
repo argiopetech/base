@@ -7,7 +7,7 @@
 #define N_BAR_MASSES      24
 #define N_BAR_FILTS        6
 
-void loadBaraffe(char *path);
-void getBaraffeMags(double logAge, double mass);
+void loadBaraffe (char *path);
+void getBaraffeMags (double logAge, double mass);
 
 #endif

@@ -1,6 +1,5 @@
-
 #ifdef BIN_SEARCH_H
-  /* the file has been included already */
+/* the file has been included already */
 #else
 #define BIN_SEARCH_H
 

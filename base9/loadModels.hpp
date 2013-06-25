@@ -1,5 +1,5 @@
 #if defined( LOAD_MODELS_H )
-  /* the file has been included already */
+/* the file has been included already */
 #else
 #define LOAD_MODELS_H
 
@@ -9,6 +9,6 @@
 #include "gBaraffeMag.h"
 #include "Settings.hpp"
 
-void loadModels(int needFS, struct cluster *theCluster, struct Settings*);
+void loadModels (int needFS, struct cluster *theCluster, struct Settings *);
 
 #endif

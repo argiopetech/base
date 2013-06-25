@@ -11,9 +11,9 @@
 #include "gYaleMag.h"
 #include "structures.h"
 
-void deriveAgbTipMass(struct cluster *pCluster);
-double msRgbEvol(struct cluster *pCluster, double zamsMass);
-double wdPrecLogAge(struct cluster *pCluster, double zamsMass);
-void loadMSRgbModels(struct cluster *pCluster, char *path, int needFS);
+void deriveAgbTipMass (struct cluster *pCluster);
+double msRgbEvol (struct cluster *pCluster, double zamsMass);
+double wdPrecLogAge (struct cluster *pCluster, double zamsMass);
+void loadMSRgbModels (struct cluster *pCluster, char *path, int needFS);
 
 #endif
