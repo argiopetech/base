@@ -12,8 +12,8 @@ extern int verbose, useFilt[FILTS], aFilt, needMassNow;
 extern double ltau[2];
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
-double globalMags[FILTS];
-double ageLimit[2];
+extern double globalMags[FILTS];
+extern double ageLimit[2];
 
 
 
