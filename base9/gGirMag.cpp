@@ -159,7 +159,7 @@ void loadGirardi (char *path, int filterSet)
 static void getFileName (char *path, int z, int filterSet)
 {
 
-    char fileNames[][5] = { "0\0", "0001\0", "0004\0", "001\0", "004\0", "008\0", "019\0", "030\0" };
+    char fileNames[][5] = { "0", "0001", "0004", "001", "004", "008", "019", "030" };
 
     strcpy (tempFile, "\0");
     strcat (tempFile, path);

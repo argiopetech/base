@@ -210,7 +210,7 @@ void loadDsed (char *path, int filterSet)
 static void getFileName (char *path, int z, int f, int filterSet)
 {
 
-    char fileNames[][4] = { "m25\0", "m20\0", "m15\0", "m10\0", "m05\0", "p00\0", "p02\0", "p03\0", "p05\0" };
+    char fileNames[][4] = { "m25", "m20", "m15", "m10", "m05", "p00", "p02", "p03", "p05" };
 
     strcpy (tempFile, "\0");
     strcat (tempFile, path);

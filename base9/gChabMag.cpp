@@ -149,8 +149,8 @@ void loadChaboyer (char *path, int filterSet)
 
 static void getFileName (char *path, int z, int y)
 {
-    char zString[][2] = { "0\0", "2\0", "4\0", "5\0" };
-    char yString[][3] = { "27\0", "30\0", "33\0", "36\0", "39\0" };
+    char zString[][2] = { "0", "2", "4", "5" };
+    char yString[][3] = { "27", "30", "33", "36", "39" };
     strcpy (tempFile, "\0");
     strcat (tempFile, path);
     strcat (tempFile, "cIso/feh0");
