@@ -123,7 +123,7 @@ int main (int argc, char *argv[])
     MPI_Type_commit (&obsStarType);
 
 
-    settings = malloc (sizeof (struct Settings));
+    settings = new struct Settings;
     zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
     if (settings->files.config)
@@ -191,10 +191,9 @@ int main (int argc, char *argv[])
     if (taskid == MASTER)
     {
         readCmdData (&mc, &ctrl);
-        if ((obs = calloc (mc.clust.nStars, sizeof (struct obsStar))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
-        if ((starStatus = calloc (mc.clust.nStars, sizeof (int))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
+
+        obs = new struct obsStar[mc.clust.nStars]();
+        starStatus = new int[mc.clust.nStars]();
 
         for (i = 0; i < mc.clust.nStars; i++)
         {
@@ -229,10 +228,8 @@ int main (int argc, char *argv[])
     MPI_Barrier (MPI_COMM_WORLD);
     if (taskid != MASTER)
     {
-        if ((obs = calloc (mc.clust.nStars, sizeof (struct obsStar))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
-        if ((starStatus = calloc (mc.clust.nStars, sizeof (int))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
+        obs = new struct obsStar[mc.clust.nStars]();
+        starStatus = new int[mc.clust.nStars]();
     }
 
     MPI_Bcast (starStatus, mc.clust.nStars, MPI_INT, MASTER, MPI_COMM_WORLD);
@@ -240,8 +237,7 @@ int main (int argc, char *argv[])
     if (taskid != MASTER)
     {
         /* initialize the stars array */
-        if ((mc.stars = calloc (mc.clust.nStars, sizeof (struct star))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
+        mc.stars = new struct star[mc.clust.nStars]();
 
         for (i = 0; i < mc.clust.nStars; i++)
         {
@@ -274,8 +270,7 @@ int main (int argc, char *argv[])
 
     // propClustWorker = mc.clust;
 
-    if ((logPostEachStar = calloc (mc.clust.nStars, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    logPostEachStar = new double[mc.clust.nStars]();
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
@@ -640,10 +635,13 @@ int main (int argc, char *argv[])
 
 
     /* clean up */
+    delete settings;
+    delete[] obs;
+    delete[] starStatus;
+
     freeGlobalIso (&isochrone);
     free (mc.stars);
-    free (obs);
-    free (starStatus);
+
     for (p = 0; p < NPARAMS; p++)
     {
         free (params[p]);
@@ -979,8 +977,7 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
     void *tempAlloc;            // temporary for allocation
 
     // why is this necessary???
-    if ((mc->stars = calloc (0, sizeof (struct star))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    mc->stars = nullptr;
 
     while (moreStars)
     {
