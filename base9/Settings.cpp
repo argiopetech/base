@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "yaml-cpp/yaml.hpp"
+#include "yaml-cpp/yaml.h"
 #include "Settings.hpp"
 
 using std::cerr;
