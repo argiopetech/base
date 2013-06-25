@@ -21,6 +21,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_statistics.h>
+#include <gsl/gsl_linalg.h>
 // #include "marg.c"
 
 int gsl_linalg_cholesky_decomp (gsl_matrix * A);
