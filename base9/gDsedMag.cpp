@@ -1,3 +1,5 @@
+#include <string>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -9,6 +11,8 @@
 #include "gDsedMag.hpp"
 #include "binSearch.hpp"
 #include "linInterp.hpp"
+
+using std::string;
 
 extern int verbose;
 extern int useFilt[FILTS];
@@ -57,12 +61,12 @@ static void initIso (struct dIsochrone *iso);
 //static void swapEntries(struct dIsochrone *iso, int n);
 //static void swapGlobalEntries(int n);
 static void calcCoeff (double a[], double b[], double x);
-static void getFileName (char *path, int z, int f, int filterSet);
+static void getFileName (string path, int z, int f, int filterSet);
 
 //static void outputIso(struct dIsochrone *iso, FILE *wPtr);
 
 
-void loadDsed (char *path, int filterSet)
+void loadDsed (string path, int filterSet)
 {
 
     FILE *pDsed;                        // = NULL;
@@ -207,13 +211,13 @@ void loadDsed (char *path, int filterSet)
 }
 
 
-static void getFileName (char *path, int z, int f, int filterSet)
+static void getFileName (string path, int z, int f, int filterSet)
 {
 
     char fileNames[][4] = { "m25", "m20", "m15", "m10", "m05", "p00", "p02", "p03", "p05" };
 
     strcpy (tempFile, "\0");
-    strcat (tempFile, path);
+    strcat (tempFile, path.c_str());
     if (filterSet == SDSS)
         strcat (tempFile, "sdss/feh\0");
     else

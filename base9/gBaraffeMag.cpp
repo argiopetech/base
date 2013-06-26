@@ -1,3 +1,7 @@
+#include <string>
+#include <fstream>
+#include <iostream>
+
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
@@ -7,6 +11,11 @@
 #include "linInterp.hpp"
 #include "gBaraffeMag.hpp"
 
+using std::ifstream;
+using std::string;
+using std::cerr;
+using std::endl;
+
 // Declared in parent program (simCluster or mcmc, or makeCMD)
 extern int verbose, useFilt[FILTS];
 extern double globalMags[FILTS];
@@ -15,27 +24,31 @@ static double barAge[N_BAR_AGES];
 static double barMass[N_BAR_MASSES];
 static double barMag[N_BAR_AGES][N_BAR_MASSES][N_BAR_FILTS];
 
-void loadBaraffe (char *path)
+void loadBaraffe (string path)
 {
 
     int m, a, mStart, filt;
-    FILE *pBaraffe;
-    char line[1000], tempFile[100] = "\0";
+    ifstream pBaraffe;
+    char line[1000];
+    string tempFile;
     char ind = '0';
     double tempAge;
+    float ignore;
 
-    strcat (tempFile, path);
-    strcat (tempFile, "COND03_spitzer_0.2-8.2Gyr");
+    tempFile = path + "COND03_spitzer_0.2-8.2Gyr";
 
-    if ((pBaraffe = fopen (tempFile, "r")) == NULL)
+    pBaraffe.open(tempFile);
+
+    if (!pBaraffe)
     {
-        printf ("\n\n file %s was not found - exiting\n", tempFile);
+        cerr << "\n\nFile " << tempFile << " was not found -- Exiting" << endl;
         exit (1);
     }
 
     //Skip header lines
     a = -1;
-    while (fgets (line, 1000, pBaraffe) != NULL)
+
+    while (pBaraffe.getline(line, 1000))
     {
         sscanf (line, " %c ", &ind);
         if (ind == 't')
@@ -43,7 +56,7 @@ void loadBaraffe (char *path)
             sscanf (line, "%*s %*s %*s %lf ", &tempAge);
             barAge[++a] = log10 (tempAge * 1e9);
             for (m = 0; m < 3; m++)
-                fgets (line, 1000, pBaraffe);
+                pBaraffe.getline(line, 1000);
             if (barAge[a] > log10 (3.6e9))
                 mStart = 2;
             else if (barAge[a] > log10 (1.4e9))
@@ -52,9 +65,9 @@ void loadBaraffe (char *path)
                 mStart = 0;
             for (m = mStart; m < N_BAR_MASSES; m++)
             {
-                fscanf (pBaraffe, "%lf %*f %*f %*f ", &barMass[m]);
+                pBaraffe >> barMass[m] >> ignore >> ignore >> ignore;
                 for (filt = 0; filt < N_BAR_FILTS; filt++)
-                    fscanf (pBaraffe, "%lf ", &(barMag[a][m][filt]));
+                    pBaraffe >> barMag[a][m][filt];
             }
         }
     }
@@ -67,7 +80,7 @@ void loadBaraffe (char *path)
         for (filt = 0; filt < N_BAR_FILTS; filt++)
             barMag[a][0][filt] = barMag[a][1][filt] + (barMag[a - 1][0][filt] - barMag[a - 1][1][filt]);
 
-    fclose (pBaraffe);
+    pBaraffe.close();
 
 }
 

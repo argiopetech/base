@@ -1,3 +1,5 @@
+#include <string>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -9,6 +11,8 @@
 #include "linInterp.hpp"
 #include "wdCooling.hpp"
 #include "binSearch.hpp"
+
+using std::string;
 
 static int nIso;
 static double *wdMasses;
@@ -28,7 +32,7 @@ struct renedoModel
     double mass;
 };
 
-void loadWDCool (char *path, int modelSet)
+void loadWDCool (string path, int modelSet)
 {
     static struct althausModel althaus[] = {
         {"T045_1E4.Z0", false, 0.45},
@@ -82,19 +86,12 @@ void loadWDCool (char *path, int modelSet)
 
     // Allocate memory for the cooling curves dynamically so that
     // any number of curves can be read in (up to limits of memory)
-    if ((wdCurves = (struct wdCoolingCurve *) calloc (1, sizeof (struct wdCoolingCurve))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    wdCurves = new struct wdCoolingCurve[1]();
+    wdCurves[0].wdCarbons = new double[1]();
+    wdCurves[0].carbonCurve = new struct wdCarbonCurve[1]();
+    wdMasses = new double[1]();
 
-    if ((wdCurves[0].wdCarbons = (double *) calloc (1, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-
-    if ((wdCurves[0].carbonCurve = (struct wdCarbonCurve *) calloc (1, sizeof (struct wdCarbonCurve))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-
-    if ((wdMasses = (double *) calloc (1, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-
-    strcat (tempFile, path);
+    strcat (tempFile, path.c_str());
 
     if (modelSet == WOOD)
     {
@@ -160,11 +157,8 @@ void loadWDCool (char *path, int modelSet)
                 else
                     wdCurves = (struct wdCoolingCurve *) tempAlloc;
 
-                if ((wdCurves[massCurves].wdCarbons = (double *) calloc (1, sizeof (double))) == NULL)
-                    perror ("MEMORY ALLOCATION ERROR \n");
-
-                if ((wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) calloc (1, sizeof (struct wdCarbonCurve))) == NULL)
-                    perror ("MEMORY ALLOCATION ERROR \n");
+                wdCurves[massCurves].wdCarbons = new double[1]();
+                wdCurves[massCurves].carbonCurve = new struct wdCarbonCurve[1]();
 
                 if ((tempAlloc = (void *) realloc (wdMasses, (massCurves + 1) * sizeof (double))) == NULL)
                     perror ("wdMasses memory allocation error \n");
@@ -208,7 +202,7 @@ void loadWDCool (char *path, int modelSet)
 
         while (althaus[i].filename != 0)        // Keep going till we hit the last record
         {
-            strcpy (tempFile, path);
+            strcpy (tempFile, path.c_str());
             strcat (tempFile, "althaus/");
             strcat (tempFile, althaus[i].filename);
 
@@ -227,11 +221,8 @@ void loadWDCool (char *path, int modelSet)
             else
                 wdCurves = (struct wdCoolingCurve *) tempAlloc;
 
-            if ((wdCurves[massCurves].wdCarbons = (double *) calloc (1, sizeof (double))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
-
-            if ((wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) calloc (1, sizeof (struct wdCarbonCurve))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
+            wdCurves[massCurves].wdCarbons = new double[1]();
+            wdCurves[massCurves].carbonCurve = new struct wdCarbonCurve[1]();
 
             if ((tempAlloc = (void *) realloc (wdMasses, (massCurves + 1) * sizeof (double))) == NULL)
                 perror ("wdMasses memory allocation error \n");
@@ -278,7 +269,7 @@ void loadWDCool (char *path, int modelSet)
 
         while (renedo[i].filename != 0) // Keep going till we hit the last record
         {
-            strcpy (tempFile, path);
+            strcpy (tempFile, path.c_str());
             strcat (tempFile, "renedo/");
             strcat (tempFile, renedo[i].filename);
 
@@ -297,11 +288,9 @@ void loadWDCool (char *path, int modelSet)
             else
                 wdCurves = (struct wdCoolingCurve *) tempAlloc;
 
-            if ((wdCurves[massCurves].wdCarbons = (double *) calloc (1, sizeof (double))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
 
-            if ((wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) calloc (1, sizeof (struct wdCarbonCurve))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
+            wdCurves[massCurves].wdCarbons = new double[1]();
+            wdCurves[massCurves].carbonCurve = new struct wdCarbonCurve[1]();
 
             if ((tempAlloc = (void *) realloc (wdMasses, (massCurves + 1) * sizeof (double))) == NULL)
                 perror ("wdMasses memory allocation error \n");

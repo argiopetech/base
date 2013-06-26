@@ -1,6 +1,8 @@
 #ifndef GYALEMAG_H
 #define GYALEMAG_H
 
+#include <string>
+
 const int N_YY_PARAMS    = 17;
 const int N_YY_Z         = 11;
 const int N_YY_AGES      = 41;
@@ -52,7 +54,7 @@ struct yyIsochrone
     double AgbTurnoffMass;
 };
 
-void loadYale (char *path, int filterSet);
+void loadYale (std::string path, int filterSet);
 double deriveYYAgbTip (double newFeH, double newY, double newLogAge);
 double wdPrecLogAgeYY (double thisFeH, double thisY, double zamsMass);
 double getYaleMags (double zamsMass);

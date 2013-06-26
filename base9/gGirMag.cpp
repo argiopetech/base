@@ -1,3 +1,5 @@
+#include <string>
+
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
@@ -7,6 +9,8 @@
 #include "linInterp.hpp"
 #include "binSearch.hpp"
 #include "gGirMag.hpp"
+
+using std::string;
 
 extern int verbose, useFilt[FILTS], needMassNow;
 extern double globalMags[FILTS];
@@ -20,10 +24,10 @@ static int iAge, iFeH;
 static double currentAge, currentFeH;
 
 static char tempFile[100];
-static void getFileName (char *path, int z, int filterSet);
+static void getFileName (string path, int z, int filterSet);
 
 
-void loadGirardi (char *path, int filterSet)
+void loadGirardi (string path, int filterSet)
 {
 
     /****************************************************************************
@@ -150,13 +154,13 @@ void loadGirardi (char *path, int filterSet)
 
 }
 
-static void getFileName (char *path, int z, int filterSet)
+static void getFileName (string path, int z, int filterSet)
 {
 
     char fileNames[][5] = { "0", "0001", "0004", "001", "004", "008", "019", "030" };
 
     strcpy (tempFile, "\0");
-    strcat (tempFile, path);
+    strcat (tempFile, path.c_str());
     if (filterSet == ACS)
         strcat (tempFile, "gIsoACS/iso_acs_z\0");
     else

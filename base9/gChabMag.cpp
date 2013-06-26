@@ -1,3 +1,5 @@
+#include <string>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -7,6 +9,8 @@
 #include "gChabMag.hpp"
 #include "binSearch.hpp"
 #include "linInterp.hpp"
+
+using std::string;
 
 extern int verbose;
 extern int useFilt[FILTS];
@@ -41,10 +45,10 @@ static void calcCoeff (double a[], double b[], double x);
 
 //static  void outputIso(struct cIsochrone *iso, FILE *wPtr);
 static void initIso (struct cIsochrone *iso);
-static void getFileName (char *path, int z, int y);
+static void getFileName (string path, int z, int y);
 static char tempFile[100];
 
-void loadChaboyer (char *path, int filterSet)
+void loadChaboyer (string path, int filterSet)
 {
 
     // ************************************************************************************
@@ -148,12 +152,12 @@ void loadChaboyer (char *path, int filterSet)
 
 
 
-static void getFileName (char *path, int z, int y)
+static void getFileName (string path, int z, int y)
 {
     char zString[][2] = { "0", "2", "4", "5" };
     char yString[][3] = { "27", "30", "33", "36", "39" };
     strcpy (tempFile, "\0");
-    strcat (tempFile, path);
+    strcat (tempFile, path.c_str());
     strcat (tempFile, "cIso/feh0");
     strcat (tempFile, zString[z]);
     strcat (tempFile, "y\0");

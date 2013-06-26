@@ -183,12 +183,11 @@ void lsqpolyw (double *x, double *y, double *w, int l, int d, double *c)
     double **N;                 //[d+1][d+1];
     double yvector[d + 1];
 
-    if ((N = (double **) calloc (d + 1, sizeof (double *))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    N = new double*[d+1]();
+
     for (j = 0; j < d + 1; j++)
     {
-        if ((N[j] = (double *) calloc (d + 1, sizeof (double))) == NULL)
-            perror ("MEMORY ALLOCATJON ERROR \n");
+        N[j] = new double[d+1]();
     }
 
     for (i = 0; i < d + 1; i++)
@@ -219,13 +218,13 @@ void lsqpoly (double *x, double *y, int l, int d, double *c)
     double **N;
     double yvector[d + 1];
 
-    if ((N = (double **) calloc (d + 1, sizeof (double *))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    N = new double*[d+1]();
+
     for (j = 0; j < d + 1; j++)
     {
-        if ((N[j] = (double *) calloc (d + 1, sizeof (double))) == NULL)
-            perror ("MEMORY ALLOCATJON ERROR \n");
+        N[j] = new double[d + 1]();
     }
+
     for (i = 0; i < d + 1; i++)
     {
         for (j = 0; j < d + 1; j++)

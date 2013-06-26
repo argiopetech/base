@@ -11,6 +11,8 @@ et al. atmospheres span a wider mass range than the Wood model WDs.)
 The appropriate magnitudes are put in globalMags[][].
 ********************************************************************************/
 
+#include <string>
+
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
@@ -19,6 +21,8 @@ The appropriate magnitudes are put in globalMags[][].
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "gBergMag.hpp"
+
+using std::string;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
 extern int verbose, useFilt[FILTS];
@@ -33,7 +37,7 @@ static double bHeLogG[BERG_N_DB_LOG_G];
 static double bHeMag[BERG_N_DB_TEFF][BERG_N_DB_LOG_G][BERG_NFILTS];
 static double bHeLogTeff[BERG_N_DB_TEFF];
 
-void loadBergeron (char *path, int filterSet)
+void loadBergeron (string path, int filterSet)
 {
 
     int l, t, f;
@@ -49,7 +53,7 @@ void loadBergeron (char *path, int filterSet)
 
     // Open the appropriate file for each mass
     //fscanf(pModelList,"%s",tempFile);
-    strcat (tempFile, path);
+    strcat (tempFile, path.c_str());
     strcat (tempFile, "bergeron/Table_DA.txt");
 
     if ((pBergeron = fopen (tempFile, "r")) == NULL)
@@ -81,7 +85,7 @@ void loadBergeron (char *path, int filterSet)
     //Still need to add He models
     // Open the appropriate file for each mass
     strcpy (tempFile, "\0");
-    strcat (tempFile, path);
+    strcat (tempFile, path.c_str());
     strcat (tempFile, "bergeron/Table_DB.txt");
 
     if ((pBergeron = fopen (tempFile, "r")) == NULL)
