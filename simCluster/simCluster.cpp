@@ -66,7 +66,6 @@ int main (int argc, char *argv[])
     for (filt = 8; filt < FILTS; filt++)
         useFilt[filt] = 1;              // but not the other crap
 
-    printf ("\n ***You are running simCluster version %.1f.***\n", VERSION);
     // clusY needed, but ignored unless modelSet = 3
     /* printf("\n Enter nSystems, WDMassUp, percentBinary, percentDB, (m-M)v, Av, logClusterAge, [Fe/H], Y, nFieldStars, nBrownDwarfs : "); */
     /* printf("(e.g., 1000 6.0 50 25 12.0 0.5 9.0 -0.3 0.27 100) : "); */
