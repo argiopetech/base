@@ -7,13 +7,6 @@
 #include "binSearch.hpp"
 #include "gGirMag.hpp"
 
-#define AGELO  0
-#define AGEHI  1
-#define MASSLO 0
-#define MASSHI 1
-#define FEHLO  0
-#define FEHHI  1
-
 extern int verbose, useFilt[FILTS], needMassNow;
 extern double globalMags[FILTS];
 extern double ageLimit[2];
@@ -257,10 +250,10 @@ Uses static variables iAge and iFeH.
     double modelAge[2], ageMassNow[2][2], ageMag[2][2][N_GIR_FILTS];
     double modelFeH[2], fehMassNow[2], fehMag[2][N_GIR_FILTS];
 
-    modelAge[AGELO] = gLogAge[0][iAge];
-    modelAge[AGEHI] = gLogAge[0][iAge + 1];
-    modelFeH[FEHLO] = gFeH[iFeH];
-    modelFeH[FEHHI] = gFeH[iFeH + 1];
+    modelAge[LOW] = gLogAge[0][iAge];
+    modelAge[HIGH] = gLogAge[0][iAge + 1];
+    modelFeH[LOW] = gFeH[iFeH];
+    modelFeH[HIGH] = gFeH[iFeH + 1];
 
     //logAge = 0;//currentAge;
     //FeH = 0;//currentFeH;
@@ -278,11 +271,11 @@ Uses static variables iAge and iFeH.
         {
             if (useFilt[filt] == 0)
                 continue;               // for speed, don't bother with this calculation
-            fehMag[f][filt] = linInterp (modelAge[AGELO], modelAge[AGEHI], ageMag[f][AGELO][filt], ageMag[f][AGEHI][filt], currentAge);
+            fehMag[f][filt] = linInterp (modelAge[LOW], modelAge[HIGH], ageMag[f][LOW][filt], ageMag[f][HIGH][filt], currentAge);
         }
         if (needMassNow)
         {                               // simCluster.c needs the resulting number
-            fehMassNow[f] = linInterp (modelAge[AGELO], modelAge[AGEHI], ageMassNow[f][AGELO], ageMassNow[f][AGEHI], currentAge);
+            fehMassNow[f] = linInterp (modelAge[LOW], modelAge[HIGH], ageMassNow[f][LOW], ageMassNow[f][HIGH], currentAge);
         }
         else
             fehMassNow[f] = 0.0;        // for speed, mcmc doesn't care about this value
@@ -293,11 +286,11 @@ Uses static variables iAge and iFeH.
     {
         if (useFilt[filt] == 0)
             continue;                   // for speed, don't bother with this calculation
-        globalMags[filt] = linInterp (modelFeH[FEHLO], modelFeH[FEHHI], fehMag[FEHLO][filt], fehMag[FEHHI][filt], currentFeH);
+        globalMags[filt] = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMag[LOW][filt], fehMag[HIGH][filt], currentFeH);
     }
     if (needMassNow)
     {                           // simCluster.c needs the resulting number
-        massNow = linInterp (modelFeH[FEHLO], modelFeH[FEHHI], fehMassNow[FEHLO], fehMassNow[FEHHI], currentFeH);
+        massNow = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMassNow[LOW], fehMassNow[HIGH], currentFeH);
     }
 
     return massNow;
@@ -359,27 +352,27 @@ double interpInMass (int whichAgeIndex, double zamsMass, int whichFeHIndex, doub
         }
     }
 
-    modelMass[MASSLO][ZAMS] = gIsoMass[ZAMS][whichFeHIndex][i];
-    modelMass[MASSHI][ZAMS] = gIsoMass[ZAMS][whichFeHIndex][i + 1];
-    modelMass[MASSLO][NOW] = gIsoMass[NOW][whichFeHIndex][i];
-    modelMass[MASSHI][NOW] = gIsoMass[NOW][whichFeHIndex][i + 1];
+    modelMass[LOW][ZAMS] = gIsoMass[ZAMS][whichFeHIndex][i];
+    modelMass[HIGH][ZAMS] = gIsoMass[ZAMS][whichFeHIndex][i + 1];
+    modelMass[LOW][NOW] = gIsoMass[NOW][whichFeHIndex][i];
+    modelMass[HIGH][NOW] = gIsoMass[NOW][whichFeHIndex][i + 1];
     for (filt = 0; filt < N_GIR_FILTS; filt++)
     {
         if (useFilt[filt] == 0)
             continue;                   // for speed, don't bother with this calculation
-        modelMag[MASSLO][filt] = gIsoMag[whichFeHIndex][filt][i];
-        modelMag[MASSHI][filt] = gIsoMag[whichFeHIndex][filt][i + 1];
+        modelMag[LOW][filt] = gIsoMag[whichFeHIndex][filt][i];
+        modelMag[HIGH][filt] = gIsoMag[whichFeHIndex][filt][i + 1];
     }
 
     for (filt = 0; filt < N_GIR_FILTS; filt++)
     {                           // grids. so move along age, i.e. interpolate first in mass)
         if (useFilt[filt] == 0)
             continue;                   // for speed, don't bother with this calculation
-        ageMag[filt] = linInterpExtrap (modelMass[MASSLO][ZAMS], modelMass[MASSHI][ZAMS], modelMag[MASSLO][filt], modelMag[MASSHI][filt], zamsMass);
+        ageMag[filt] = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMag[LOW][filt], modelMag[HIGH][filt], zamsMass);
     }
     if (needMassNow)
     {
-        tempMass = linInterpExtrap (modelMass[MASSLO][ZAMS], modelMass[MASSHI][ZAMS], modelMass[MASSLO][NOW], modelMass[MASSHI][NOW], zamsMass);
+        tempMass = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMass[LOW][NOW], modelMass[HIGH][NOW], zamsMass);
     }
 
     return tempMass;
