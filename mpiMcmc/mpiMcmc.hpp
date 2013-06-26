@@ -1,6 +1,9 @@
 #ifndef IFMRMCMC_H
 #define IFMRMCMC_H
 
+#include <string>
+#include <fstream>
+
 #include "evolve.hpp"
 
 const double MIN_MASS1    = 0.15;
@@ -20,9 +23,9 @@ struct obsStar
 
 struct ifmrMcmcControl
 {
-    FILE *rData;
-    FILE *wClusterFile[2];
-    char clusterFilename[300];
+    std::ifstream rData;
+    std::ofstream wClusterFile[2];
+    std::string clusterFilename;
     int fsSamplingOn;
     int sampleVarScale;
     int nIter;                  // number of post burn-in iterations

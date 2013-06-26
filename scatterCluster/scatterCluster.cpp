@@ -36,9 +36,8 @@ int main (int argc, char *argv[])
 
     struct Settings *settings = new struct Settings;
 
-    zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
-    if (settings->files.config)
+    if (!settings->files.config.empty())
     {
         makeSettings (settings->files.config, settings);
     }
@@ -51,7 +50,7 @@ int main (int argc, char *argv[])
 
     /* printf("\n Enter simulated cluster file name : "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.output);
+    strcpy (filename, settings->files.output.c_str());
     strcat (filename, ".sim.out");
     if ((r_ptr = fopen (filename, "r")) == NULL)
     {
@@ -119,7 +118,7 @@ int main (int argc, char *argv[])
 
     /* printf("\n Enter output file name : "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.output);
+    strcpy (filename, settings->files.output.c_str());
     strcat (filename, ".sim.scatter");
     if ((w_ptr = fopen (filename, "w")) == NULL)
     {

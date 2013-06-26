@@ -58,9 +58,8 @@ int main (int argc, char *argv[])
 
     struct Settings *settings = new struct Settings;
 
-    zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
-    if (settings->files.config)
+    if (!settings->files.config.empty())
     {
         makeSettings (settings->files.config, settings);
     }
@@ -77,9 +76,7 @@ int main (int argc, char *argv[])
     /////// Open files to read and write ///////
     ////////////////////////////////////////////
 
-    /* printf("Enter file name containing color/magnitude data:\n> "); */
-    /* scanf("%s",filename); */
-    strcpy (filename, settings->files.scatter);
+    strcpy (filename, settings->files.scatter.c_str());
     if ((rDataPtr = fopen (filename, "r")) == NULL)
     {
         printf ("***Error: file %s was not found.***\n", filename);
@@ -102,7 +99,7 @@ int main (int argc, char *argv[])
     /* printf("\n Enter mcmc file name : "); */
     /* scanf("%s",filename); */
     // This is a leftover from Base8 and may not work with the current cluster files
-    strcpy (filename, settings->files.output);
+    strcpy (filename, settings->files.output.c_str());
     openOutputFiles (&rClusterPtr, filename, CLUS_READ);
     openOutputFiles (&wClusterStatPtr, filename, CLUS_STAT_WRITE);
     openOutputFiles (&wCmdPtr, filename, CMD_FILE);
@@ -137,18 +134,12 @@ int main (int argc, char *argv[])
         exit (1);
     }
 
-    if ((stars = (struct star *) malloc (theCluster.nStars * sizeof (struct star))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    stars = new struct star[theCluster.nStars];
+    starName = new char*[theCluster.nStars]();
 
-    if ((starName = (char **) calloc (theCluster.nStars, sizeof (char *))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-    else
+    for (j = 0; j < theCluster.nStars; j++)
     {
-        for (j = 0; j < theCluster.nStars; j++)
-        {
-            if ((starName[j] = (char *) calloc (100, sizeof (char))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
-        }
+        starName[j] = new char[100]();
     }
 
     for (j = 0; j < theCluster.nStars; j++)
