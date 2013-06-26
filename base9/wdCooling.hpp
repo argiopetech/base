@@ -1,7 +1,7 @@
 #ifndef WDCOOL_H
 #define WDCOOL_H
 
-#define MAX_WD_MODEL        1000        // Renedo models have lots of entries
+const int MAX_WD_MODEL = 1000; // Renedo models have lots of entries
 
 struct wdCarbonCurve
 {
