@@ -1,18 +1,15 @@
-#ifdef IFMRMCMC_H
-#else
+#ifndef IFMRMCMC_H
 #define IFMRMCMC_H
-
-const int CLUS_FILE = 10;
-
-const int ALLOC_CHUNK = 5;
 
 #include "evolve.hpp"
 
-#define N_MS_MASS1        500
-#define N_MS_MASS_RATIO   20
-#define N_WD_MASS1        8000  /* evaluate white dwarfs on a finer grid? */
-#define MIN_MASS1         0.15
-#define MASTER            0     /* taskid of first process */
+const double MIN_MASS1    = 0.15;
+const int N_MS_MASS1      = 500;
+const int N_MS_MASS_RATIO = 20;
+const int N_WD_MASS1      = 8000;  /* evaluate white dwarfs on a finer grid? */
+const int MASTER          = 0;     /* taskid of first process */
+const int CLUS_FILE = 10;
+const int ALLOC_CHUNK = 5;
 
 struct obsStar
 {
