@@ -6,7 +6,7 @@
 #include "wdCooling.hpp"
 #include "structures.hpp"
 
-#define LOG_G_PLUS_LOG_M_SUN 26.12302173752
+const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
