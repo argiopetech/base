@@ -1,12 +1,10 @@
 /* densities.h */
 
-#ifdef DENSITIES_H
-/* the file has been included already */
-#else
+#ifndef DENSITIES_H
 #define DENSITIES_H
 
-#define DOF                  6.0
-#define GAMMA6              -2.0590305444197083417635   /* GAMMA for DOF=6 */
+const double DOF    = 6.0;
+const double GAMMA6 = -2.0590305444197083417635;   /* GAMMA for DOF=6 */
 
 double logPriorMass (struct star *p_Star, struct cluster *p_Clust);
 double logPriorClust (struct cluster *p_Clust);
