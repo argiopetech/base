@@ -1,59 +1,59 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define EPSILON     1.e-15
-#define EPS                0.000001
-#define FILTS              14   // UBVRIJHK, respectively
-#define MAG_LIST           26   // list length for mag vs. S/N
-#define MODEL_LIST         118  // age/Mv/V-I entries in WD model array
+const double EPSILON = 1.e-15;
+const double EPS     = 0.000001;
+const int FILTS      = 14;   // UBVRIJHK, respectively
+const int MAG_LIST   = 26;   // list length for mag vs. S/N
+const int MODEL_LIST = 118;  // age/Mv/V-I entries in WD model array
 
-#define MSRG               1    // Main-sequence or red giant
-#define WD                 3    // White dwarf
-#define NSBH               4    // Neutron star or black hole
-#define BD                 5    // Brown dwarf/planet
-#define DNE                9    // Does not exist (zams mass > 100 Msun or < 0.0001)
+const int MSRG       = 1;    // Main-sequence or red giant
+const int WD         = 3;    // White dwarf
+const int NSBH       = 4;    // Neutron star or black hole
+const int BD         = 5;    // Brown dwarf/planet
+const int DNE        = 9;    // Does not exist (zams mass > 100 Msun or < 0.0001)
 
-#define R_sun              6.96342e10
+const double R_sun   = 6.96342e10;
 
 // Filter sets
-#define UBVRIJHK           0
-#define ACS                1
-#define SDSS               2
+const int UBVRIJHK   = 0;
+const int ACS        = 1;
+const int SDSS       = 2;
 
 // Define model sets
 //Main sequence evolution
-#define GIR                                      0
-#define CHABHELIUM                   1
-#define YALE                             2
-#define DSED                             3
+const int GIR        = 0;
+const int CHABHELIUM = 1;
+const int YALE       = 2;
+const int DSED       = 3;
 
 //IFMR
-#define WEIDEMANN                      0
-#define WILLIAMS                       1
-#define SALARISLIN         2
-#define SALARISPW          3
-#define LINEAR             4
+const int WEIDEMANN  = 0;
+const int WILLIAMS   = 1;
+const int SALARISLIN = 2;
+const int SALARISPW  = 3;
+const int LINEAR     = 4;
 
 //WD Cooling
-#define WOOD               0
-#define MONTGOMERY         1
-#define ALTHAUS            2
-#define RENEDO             3
+const int WOOD       = 0;
+const int MONTGOMERY = 1;
+const int ALTHAUS    = 2;
+const int RENEDO     = 3;
 
 //WD Atmosphere
-#define BERGERON                       0
+const int BERGERON   = 0;
 
 //Brown Dwarf/Planet
-#define NONE               0
-#define BARAFFE            1
+const int NONE       = 0;
+const int BARAFFE    = 1;
 
-#define ZAMS               0
-#define NOW                1
+const int ZAMS       = 0;
+const int NOW        = 1;
 
-#define LOW                0
-#define HIGH               1
+const int LOW        = 0;
+const int HIGH       = 1;
 
-#define DA                 0
-#define DB                 1
+const int DA         = 0;
+const int DB         = 1;
 
 #endif
