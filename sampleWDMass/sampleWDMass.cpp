@@ -102,7 +102,7 @@ int mti = NN + 1;
 /* TEMPORARY - global variable */
 double dMass1 = 0.0005;
 
-struct Settings settings;
+Settings settings;
 
 int main (int argc, char *argv[])
 {
@@ -135,17 +135,17 @@ int main (int argc, char *argv[])
     MPI_Comm_rank (MPI_COMM_WORLD, &taskid);
     MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
     {
-        makeSettings (settings.files.config, settings);
+        settings.fromYaml (settings.files.config);
     }
     else
     {
-        makeSettings ("base9.yaml", settings);
+        settings.fromYaml ("base9.yaml");
     }
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
 
     MPI_Type_contiguous (7, MPI_DOUBLE, &clustParType);
     MPI_Type_commit (&clustParType);
@@ -546,7 +546,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
     seed = settings.seed;
     init_genrand (seed);
 
-    loadModels (0, &mc->clust, &settings);
+    loadModels (0, &mc->clust, settings);
 
     ctrl->priorMean[FEH] = settings.cluster.Fe_H;
     ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;

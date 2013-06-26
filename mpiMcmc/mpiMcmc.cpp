@@ -66,7 +66,7 @@ extern struct globalIso isochrone;
 
 int verbose = 0, needMassNow = 0, useFilt[FILTS], numFilts = 0;
 
-struct Settings settings;
+Settings settings;
 
 /* For random number generator (mt19937ar.c) */
 unsigned long mt[NN];
@@ -112,17 +112,17 @@ int main (int argc, char *argv[])
     MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
     MPI_Type_commit (&obsStarType);
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
     {
-        makeSettings (settings.files.config, settings);
+        settings.fromYaml (settings.files.config);
     }
     else
     {
-        makeSettings ("base9.yaml", settings);
+        settings.fromYaml ("base9.yaml");
     }
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
 
     initCluster (&(mc.clust));
     initCluster (&propClustWorker);
@@ -190,8 +190,6 @@ int main (int argc, char *argv[])
             }
             obs[i].clustStarPriorDens = mc.stars[i].clustStarPriorDens;
             starStatus[i] = mc.stars[i].status[0];
-            //printf("%d %lf\n",i,mc.stars[i].clustStarPriorDens);
-            //printf("%d %lf\n",i,obs[i].clustStarPriorDens);
         }
 
     }
@@ -234,8 +232,6 @@ int main (int argc, char *argv[])
             }
             mc.stars[i].clustStarPriorDens = obs[i].clustStarPriorDens;
             mc.stars[i].status[0] = starStatus[i];
-            //printf("%d %lf\n",i,mc.stars[i].clustStarPriorDens);
-            //printf("%d %lf\n",i,obs[i].clustStarPriorDens);
         }
     }
 
@@ -243,24 +239,18 @@ int main (int argc, char *argv[])
 
     for (i = 0; i < mc.clust.nStars; i++)
     {
-        // printf("star %d\n", i);
         mc.stars[i].isFieldStar = 0;
         mc.stars[i].boundsFlag = 0;
-        // printStar(&mc.stars[i]);
     }
-    // fflush(stdout);
 
     numworkers = numtasks - 1;
     minchunk = mc.clust.nStars / numworkers;
     extra = mc.clust.nStars % numworkers;
 
-    // propClustWorker = mc.clust;
-
     logPostEachStar = new double[mc.clust.nStars]();
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
-    // int filt;
     double logFieldStarLikelihood = 0.0;
 
     if (mc.clust.nStars > 1)
@@ -283,7 +273,7 @@ int main (int argc, char *argv[])
     /**************************** master task ************************************/
     if (taskid == MASTER)
     {
-        printf ("Bayesian analysis of stellar evolution\n");
+        cout << "Bayesian analysis of stellar evolution" << endl;
 
         /* open output files */
         ctrl.wClusterFile[0].open(ctrl.clusterFilename);
@@ -442,9 +432,9 @@ int main (int argc, char *argv[])
                     {
                         for (j = 0; j < nParamsUsed; j++)
                         {
-                            printf ("%g ", gsl_matrix_get (covMat, i, j));
+                            cout << gsl_matrix_get (covMat, i, j) << " ";
                         }
-                        printf ("\n");
+                        cout << endl;
                     }
                     fflush (stdout);
 
@@ -565,8 +555,7 @@ int main (int argc, char *argv[])
 
                             if (wd[j].boundsFlag)
                             {
-                                printf ("**wd[%d].boundsFlag\n", j);
-                                fflush (stdout);
+                                cerr <<"**wd[" << j << "].boundsFlag" << endl;
                             }
                             else
                             {
@@ -587,7 +576,6 @@ int main (int argc, char *argv[])
                     }
 
                     /* marginalize over field star status */
-//                    printf("%g %g %g\n", mc.stars[i].clustStarPriorDens, 1-fsLike, postClusterStar);
                     logPostEachStar[i] = log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
                 }
             }
@@ -720,7 +708,7 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     init_genrand (settings.seed);
 
     /* load models */
-    loadModels (0, &mc->clust, &settings);
+    loadModels (0, &mc->clust, settings);
 
     ctrl->priorMean[FEH] = settings.cluster.Fe_H;
     priorSigma = settings.cluster.sigma.Fe_H;
@@ -836,8 +824,8 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
 
     if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
     {
-        printf ("***Error: %d not a valid magnitude index.  Choose 0, 1,or 2.***\n", ctrl->iMag);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: " << ctrl->iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
@@ -869,8 +857,6 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
 
     //Parse the header of the file to determine which filters are being used
     ctrl->rData.getline(line, 300);     // Read in the header line
-
-    cerr << line << endl;
 
     pch = strtok (line, " ");   // split the string on these delimiters into "tokens"
 
@@ -913,8 +899,6 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
 
     // why is this necessary???
     mc->stars = nullptr;
-
-    cout << ctrl->numFilts << endl;
 
     while (moreStars)
     {
@@ -1030,39 +1014,41 @@ static void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
         mc->stars[j].clustStarProposalDens = mc->stars[j].clustStarPriorDens;   // Use prior prob of being clus star
         mc->stars[j].UStepSize = 0.001; // within factor of ~2 for most main sequence stars
         mc->stars[j].massRatioStepSize = 0.001;
+
         for (i = 0; i < NPARAMS; i++)
         {
             mc->stars[j].beta[i][0] = 0.0;
             mc->stars[j].beta[i][1] = 0.0;
         }
+
         mc->stars[j].betaMassRatio[0] = 0.0;
         mc->stars[j].betaMassRatio[1] = 0.0;
         mc->stars[j].meanU = 0.0;
         mc->stars[j].varU = 0.0;
+
         for (i = 0; i < 2; i++)
             mc->stars[j].wdType[i] = 0;
+
         for (i = 0; i < numFilts; i++)
         {
             mc->stars[j].photometry[i] = 0.0;
-            //mc->stars[j].variances[i]     = 0.0;
         }
+
         // find photometry for initial values of currentClust and mc->stars
         evolve (&mc->clust, mc->stars, j);
+
         if (mc->stars[j].status[0] == WD)
         {
             mc->stars[j].UStepSize = 0.05;      // use larger initial step size for white dwarfs
             mc->stars[j].massRatio = 0.0;
         }
     }
-}                               /* initChain */
+} /* initChain */
 
 
 
 static void propClustMarg (struct cluster *clust, const struct ifmrMcmcControl *ctrl, const int iteration)
 {
-    // clust->parameter[AGE] = gen_norm(clust->parameter[AGE], clust->stepSize[AGE]);
-    // clust->parameter[AGE] = clust->parameter[AGE] += clust->stepSize[AGE] * 2.0;
-
     if (iteration < ctrl->burnIter / 2)
     {
         propClustBigSteps (clust, ctrl);
@@ -1180,22 +1166,16 @@ static void printHeader (struct ifmrMcmcControl * const ctrl)
 
 static void initMassGrids (double *msMass1Grid, double *msMassRatioGrid, double *wdMass1Grid, const struct chain mc)
 {
-    // double minMass1 = 0.15;
     double maxMass1 = mc.clust.M_wd_up;
     double mass1, massRatio;
     double dMsMass1 = (maxMass1 - MIN_MASS1) / (double) N_MS_MASS1;
     double dMsMassRatio = 1.0 / (double) N_MS_MASS_RATIO;
     double dWdMass1 = (maxMass1 - MIN_MASS1) / (double) N_WD_MASS1;
 
-    // printf("%lf\n", dWdMass1);
-    // fflush(stdout);
-
     int i = 0;
 
     for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dMsMass1)
     {
-        // for (massRatio = dMsMassRatio; massRatio < 1.0; massRatio += dMsMassRatio) {
-        // for (massRatio = dMsMassRatio/2.0; massRatio < 1.0 - dMsMassRatio/2.0; massRatio += dMsMassRatio) {
         for (massRatio = 0.0; massRatio < 1.0; massRatio += dMsMassRatio)
         {
             msMass1Grid[i] = mass1;

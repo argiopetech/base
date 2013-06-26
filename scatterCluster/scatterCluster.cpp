@@ -34,19 +34,19 @@ int main (int argc, char *argv[])
     char filename[100], line[1000], aFilterName[10];
     FILE *r_ptr, *w_ptr;
 
-    struct Settings settings;
+    Settings settings;
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
     {
-        makeSettings (settings.files.config, settings);
+        settings.fromYaml (settings.files.config);
     }
     else
     {
-        makeSettings ("base9.yaml", settings);
+        settings.fromYaml ("base9.yaml");
     }
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
 
     /* printf("\n Enter simulated cluster file name : "); */
     /* scanf("%s",filename); */
@@ -82,17 +82,7 @@ int main (int argc, char *argv[])
 
     fgets (line, 1000, r_ptr);  // remove rest of header line
 
-    /* printf("\n Enter hours of exposure for noise model for each of "); */
-    /* for(filt=0;filt<FILTS;filt++) */
-    /*     printf("%s ",getFilterName(filt)); */
-    /* //else            printf("\n Enter hours of exposure for noise model for each of band1 band2 ... band8"); */
-    /* printf("\n                       e.g., 2.3 1.0 1.2 0. 0. 0. 0. 0."); */
-    /* printf("\n                       where 0. exposure time means unused band. "); */
-    /* scanf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", */
-    /*       &exptime[0],&exptime[1],&exptime[2],&exptime[3], &exptime[4],&exptime[5],&exptime[6],&exptime[7], */
-    /*       &exptime[8],&exptime[9],&exptime[10],&exptime[11],&exptime[12],&exptime[13]); */
-
-    memcpy (exptime, settings.scatterCluster.exposures, 14 * sizeof (double));
+    std::copy(settings.scatterCluster.exposures.begin(), settings.scatterCluster.exposures.end(), exptime);
 
     /* printf("\n Enter number of stars to keep, bright and faint and cut-off mags, and their filter: "); */
     /* scanf("%d %lf %lf %d",&nStars,&brightLimit, &faintLimit, &firstFilt);            // brightLimit primarily used to cut off RGB */

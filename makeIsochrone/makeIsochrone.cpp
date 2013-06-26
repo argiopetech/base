@@ -38,19 +38,19 @@ int main (int argc, char *argv[])
     struct cluster theCluster;
     struct star *stars;
 
-    struct Settings settings;
+    Settings settings;
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
     {
-        makeSettings (settings.files.config, settings);
+        settings.fromYaml (settings.files.config);
     }
     else
     {
-        makeSettings ("base9.yaml", settings);
+        settings.fromYaml ("base9.yaml");
     }
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
 
     initCluster (&theCluster);
 
@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
         verbose = 1;            /* give standard feedback if incorrectly specified */
 
 
-    loadModels (0, &theCluster, &settings);      /* read in stellar evol & WD models */
+    loadModels (0, &theCluster, settings);      /* read in stellar evol & WD models */
 
 
     /* read cluster parameters */

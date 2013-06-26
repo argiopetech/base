@@ -1,10 +1,12 @@
+#include <array>
+#include <string>
+#include <vector>
+
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>
 #include <iostream>
 #include <mpi.h>
-#include <string>
-#include <vector>
 
 #include "yaml-cpp/yaml.h"
 #include "Settings.hpp"
@@ -14,99 +16,102 @@ using std::endl;
 using std::istringstream;
 using std::string;
 using std::vector;
+using std::array;
 using YAML::Node;
 using YAML::LoadFile;
 
 // Forward declaration
 void printUsage ();
 
-void makeSettings (const string yamlFile, struct Settings &settings)
+void Settings::fromYaml (const string yamlFile)
 {
-    Node config;
+    Node configNode;
 
     try
     {
-        config = LoadFile (yamlFile);
+        configNode = LoadFile (yamlFile);
     }
     catch (YAML::BadFile e)
     {
         cerr << "Configuration file '" << yamlFile << "' not found." << endl;
-        abort ();
+        exit(1);
     }
 
-    Node general = getNode (config, "general");
-    Node files = getNode (general, "files");
-    Node mainSequence = getNode (general, "main_sequence");
-    Node whiteDwarfs = getNode (general, "white_dwarfs");
-    Node brownDwarfs = getNode (general, "brown_dwarfs");
-    Node cluster = getNode (general, "cluster");
-    Node priors = getNode (cluster, "priors");
-    Node sigmas = getNode (cluster, "sigmas");
-    Node mpiConf = getNode (config, "mpiMcmc");
-    Node cmdConf = getNode (config, "makeCMD");
-    Node simConf = getNode (config, "simCluster");
-    Node isoConf = getNode (config, "makeIsochrone");
-    Node scatterConf = getNode (config, "scatterCluster");
+    Node generalNode = getNode (configNode, "general");
+    Node filesNode = getNode (generalNode, "files");
+    Node mainSequenceNode = getNode (generalNode, "main_sequence");
+    Node whiteDwarfNode = getNode (generalNode, "white_dwarfs");
+    Node brownDwarfNode = getNode (generalNode, "brown_dwarfs");
+    Node clusterNode = getNode (generalNode, "cluster");
+    Node priorsNode = getNode (clusterNode, "priors");
+    Node sigmasNode = getNode (clusterNode, "sigmas");
+    Node mpiConfNode = getNode (configNode, "mpiMcmc");
+    Node cmdConfNode = getNode (configNode, "makeCMD");
+    Node simConfNode = getNode (configNode, "simCluster");
+    Node isoConfNode = getNode (configNode, "makeIsochrone");
+    Node scatterConfNode = getNode (configNode, "scatterCluster");
 
-    settings.mainSequence.filterSet = getOrDie<int>(mainSequence, "filterSet");
-    settings.mainSequence.msRgbModel = getOrDie<int>(mainSequence, "msRgbModel");
+    mainSequence.filterSet = getOrDie<int>(mainSequenceNode, "filterSet");
+    mainSequence.msRgbModel = getOrDie<int>(mainSequenceNode, "msRgbModel");
 
-    settings.whiteDwarf.ifmr = getOrDie<int>(whiteDwarfs, "ifmr");
-    settings.whiteDwarf.wdModel = getOrDie<int>(whiteDwarfs, "wdModel");
-    settings.whiteDwarf.carbonicity = getOrDie<double>(whiteDwarfs, "carbonicity");
-    settings.whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfs, "M_wd_up");
+    whiteDwarf.ifmr = getOrDie<int>(whiteDwarfNode, "ifmr");
+    whiteDwarf.wdModel = getOrDie<int>(whiteDwarfNode, "wdModel");
+    whiteDwarf.carbonicity = getOrDie<double>(whiteDwarfNode, "carbonicity");
+    whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfNode, "M_wd_up");
 
-    settings.brownDwarf.bdModel = getOrDie<int>(brownDwarfs, "bdModel");
+    brownDwarf.bdModel = getOrDie<int>(brownDwarfNode, "bdModel");
 
-    settings.cluster.Fe_H = getOrDie<double>(priors, "Fe_H");
-    settings.cluster.sigma.Fe_H = getOrDie<double>(sigmas, "Fe_H");
+    cluster.Fe_H = getOrDie<double>(priorsNode, "Fe_H");
+    cluster.sigma.Fe_H = getOrDie<double>(sigmasNode, "Fe_H");
 
-    settings.cluster.distMod = getOrDie<double>(priors, "distMod");
-    settings.cluster.sigma.distMod = getOrDie<double>(sigmas, "distMod");
+    cluster.distMod = getOrDie<double>(priorsNode, "distMod");
+    cluster.sigma.distMod = getOrDie<double>(sigmasNode, "distMod");
 
-    settings.cluster.Av = getOrDie<double>(priors, "Av");
-    settings.cluster.sigma.Av = getOrDie<double>(sigmas, "Av");
+    cluster.Av = getOrDie<double>(priorsNode, "Av");
+    cluster.sigma.Av = getOrDie<double>(sigmasNode, "Av");
 
-    settings.cluster.Y = getOrDie<double>(priors, "Y");
-    settings.cluster.sigma.Y = getOrDie<double>(sigmas, "Y");
+    cluster.Y = getOrDie<double>(priorsNode, "Y");
+    cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
 
-    settings.cluster.logClusAge = getOrDie<double>(cluster, "logClusAge");
+    cluster.logClusAge = getOrDie<double>(clusterNode, "logClusAge");
 
-    settings.cluster.minMag = getOrDie<double>(cluster, "minMag");
-    settings.cluster.maxMag = getOrDie<double>(cluster, "maxMag");
-    settings.cluster.index = getOrDie<int>(cluster, "index");
+    cluster.minMag = getOrDie<double>(clusterNode, "minMag");
+    cluster.maxMag = getOrDie<double>(clusterNode, "maxMag");
+    cluster.index = getOrDie<int>(clusterNode, "index");
 
-    settings.mpiMcmc.burnIter = getOrDie<int>(mpiConf, "burnIter");
-    settings.mpiMcmc.maxIter = getOrDie<int>(mpiConf, "runIter");
-    settings.mpiMcmc.thin = getOrDie<int>(mpiConf, "thin");
+    mpiMcmc.burnIter = getOrDie<int>(mpiConfNode, "burnIter");
+    mpiMcmc.maxIter = getOrDie<int>(mpiConfNode, "runIter");
+    mpiMcmc.thin = getOrDie<int>(mpiConfNode, "thin");
 
-    settings.simCluster.nStars = getOrDie<int>(simConf, "nStars");
-    settings.simCluster.percentBinary = getOrDie<int>(simConf, "percentBinary");
-    settings.simCluster.percentDB = getOrDie<int>(simConf, "percentDB");
-    settings.simCluster.nFieldStars = getOrDie<int>(simConf, "nFieldStars");
-    settings.simCluster.nBrownDwarfs = getOrDie<int>(simConf, "nBrownDwarfs");
+    simCluster.nStars = getOrDie<int>(simConfNode, "nStars");
+    simCluster.percentBinary = getOrDie<int>(simConfNode, "percentBinary");
+    simCluster.percentDB = getOrDie<int>(simConfNode, "percentDB");
+    simCluster.nFieldStars = getOrDie<int>(simConfNode, "nFieldStars");
+    simCluster.nBrownDwarfs = getOrDie<int>(simConfNode, "nBrownDwarfs");
 
-    settings.scatterCluster.brightLimit = getOrDie<double>(scatterConf, "brightLimit");
-    settings.scatterCluster.faintLimit = getOrDie<double>(scatterConf, "faintLimit");
-    settings.scatterCluster.relevantFilt = getOrDie<int>(scatterConf, "relevantFilt");
-    settings.scatterCluster.limitS2N = getOrDie<double>(scatterConf, "limitS2N");
+    scatterCluster.brightLimit = getOrDie<double>(scatterConfNode, "brightLimit");
+    scatterCluster.faintLimit = getOrDie<double>(scatterConfNode, "faintLimit");
+    scatterCluster.relevantFilt = getOrDie<int>(scatterConfNode, "relevantFilt");
+    scatterCluster.limitS2N = getOrDie<double>(scatterConfNode, "limitS2N");
 
-    memcpy (settings.scatterCluster.exposures, static_cast<const void *>(getOrDie<vector<double>>(scatterConf, "exposures").data ()), 14 * sizeof (double));
 
-    settings.seed = getOrDie<int>(general, "seed");
-    settings.verbose = getOrDie<int>(general, "verbose");
+    auto temp = getOrDie<vector<double>>(scatterConfNode, "exposures");
+    std::copy(temp.begin(), temp.end(), scatterCluster.exposures.begin());
+
+    seed = getOrDie<int>(generalNode, "seed");
+    verbose = getOrDie<int>(generalNode, "verbose");
 
     // When we switch to C++11, we can change these to std::string and remove most of the cruft
-    settings.files.phot = getOrDie<string> (files, "photFile");
+    files.phot = getOrDie<string>(filesNode, "photFile");
 
-    settings.files.output = getOrDie<string> (files, "outputFileBase");
+    files.output = getOrDie<string>(filesNode, "outputFileBase");
 
-    settings.files.scatter = getOrDie<string> (files, "scatterFile");
+    files.scatter = getOrDie<string>(filesNode, "scatterFile");
 
-    settings.files.models = getOrDie<string> (files, "modelDirectory");
+    files.models = getOrDie<string>(filesNode, "modelDirectory");
 }
 
-void settingsFromCLI (int argc, char **argv, struct Settings &settings)
+void Settings::fromCLI (int argc, char **argv)
 {
     char *t_argv[argc];
 
@@ -119,7 +124,7 @@ void settingsFromCLI (int argc, char **argv, struct Settings &settings)
 
     static struct option long_options[] = {
         // Thie one just sets a flag outright
-        {"verbose", no_argument, &(settings.verbose), 1},
+        {"verbose", no_argument, &(verbose), 1},
 
         // These all have to be parsed
         {"filterSet", required_argument, 0, 0xFF},
@@ -182,147 +187,147 @@ void settingsFromCLI (int argc, char **argv, struct Settings &settings)
                 break;
 
             case 0xFF:
-                istringstream (string (optarg)) >> settings.mainSequence.filterSet;
+                istringstream (string (optarg)) >> mainSequence.filterSet;
                 break;
 
             case 0xFE:
-                istringstream (string (optarg)) >> settings.mainSequence.msRgbModel;
+                istringstream (string (optarg)) >> mainSequence.msRgbModel;
                 break;
 
             case 0xFD:
-                istringstream (string (optarg)) >> settings.whiteDwarf.ifmr;
+                istringstream (string (optarg)) >> whiteDwarf.ifmr;
                 break;
 
             case 0xFC:
-                istringstream (string (optarg)) >> settings.whiteDwarf.wdModel;
+                istringstream (string (optarg)) >> whiteDwarf.wdModel;
                 break;
 
             case 0xFB:
-                istringstream (string (optarg)) >> settings.whiteDwarf.carbonicity;
+                istringstream (string (optarg)) >> whiteDwarf.carbonicity;
                 break;
 
             case 0xFA:
-                istringstream (string (optarg)) >> settings.whiteDwarf.M_wd_up;
+                istringstream (string (optarg)) >> whiteDwarf.M_wd_up;
                 break;
 
             case 0xF9:
-                istringstream (string (optarg)) >> settings.brownDwarf.bdModel;
+                istringstream (string (optarg)) >> brownDwarf.bdModel;
                 break;
 
             case 0xF8:
-                istringstream (string (optarg)) >> settings.cluster.Fe_H;
+                istringstream (string (optarg)) >> cluster.Fe_H;
                 break;
 
             case 0xF7:
-                istringstream (string (optarg)) >> settings.cluster.sigma.Fe_H;
+                istringstream (string (optarg)) >> cluster.sigma.Fe_H;
                 break;
 
             case 0xF6:
-                istringstream (string (optarg)) >> settings.cluster.distMod;
+                istringstream (string (optarg)) >> cluster.distMod;
                 break;
 
             case 0xF5:
-                istringstream (string (optarg)) >> settings.cluster.sigma.distMod;
+                istringstream (string (optarg)) >> cluster.sigma.distMod;
                 break;
 
             case 0xF4:
-                istringstream (string (optarg)) >> settings.cluster.Av;
+                istringstream (string (optarg)) >> cluster.Av;
                 break;
 
             case 0xF3:
-                istringstream (string (optarg)) >> settings.cluster.sigma.Av;
+                istringstream (string (optarg)) >> cluster.sigma.Av;
                 break;
 
             case 0xF2:
-                istringstream (string (optarg)) >> settings.cluster.Y;
+                istringstream (string (optarg)) >> cluster.Y;
                 break;
 
             case 0xF1:
-                istringstream (string (optarg)) >> settings.cluster.sigma.Y;
+                istringstream (string (optarg)) >> cluster.sigma.Y;
                 break;
 
             case 0xF0:
-                istringstream (string (optarg)) >> settings.cluster.logClusAge;
+                istringstream (string (optarg)) >> cluster.logClusAge;
                 break;
 
             case 0xEF:
-                istringstream (string (optarg)) >> settings.cluster.minMag;
+                istringstream (string (optarg)) >> cluster.minMag;
                 break;
 
             case 0xEE:
-                istringstream (string (optarg)) >> settings.cluster.maxMag;
+                istringstream (string (optarg)) >> cluster.maxMag;
                 break;
 
             case 0xED:
-                istringstream (string (optarg)) >> settings.cluster.index;
+                istringstream (string (optarg)) >> cluster.index;
                 break;
 
             case 0xEC:
-                istringstream (string (optarg)) >> settings.mpiMcmc.burnIter;
+                istringstream (string (optarg)) >> mpiMcmc.burnIter;
                 break;
 
             case 0xEB:
-                istringstream (string (optarg)) >> settings.mpiMcmc.maxIter;
+                istringstream (string (optarg)) >> mpiMcmc.maxIter;
                 break;
 
             case 0xEA:
-                istringstream (string (optarg)) >> settings.mpiMcmc.thin;
+                istringstream (string (optarg)) >> mpiMcmc.thin;
                 break;
 
             case 0xE9:
-                istringstream (string (optarg)) >> settings.simCluster.nStars;
+                istringstream (string (optarg)) >> simCluster.nStars;
                 break;
 
             case 0xE8:
-                istringstream (string (optarg)) >> settings.simCluster.percentBinary;
+                istringstream (string (optarg)) >> simCluster.percentBinary;
                 break;
 
             case 0xE7:
-                istringstream (string (optarg)) >> settings.simCluster.percentDB;
+                istringstream (string (optarg)) >> simCluster.percentDB;
                 break;
 
             case 0xE6:
-                istringstream (string (optarg)) >> settings.simCluster.nFieldStars;
+                istringstream (string (optarg)) >> simCluster.nFieldStars;
                 break;
 
             case 0xE5:
-                istringstream (string (optarg)) >> settings.simCluster.nBrownDwarfs;
+                istringstream (string (optarg)) >> simCluster.nBrownDwarfs;
                 break;
 
             case 0xE4:
-                istringstream (string (optarg)) >> settings.scatterCluster.brightLimit;
+                istringstream (string (optarg)) >> scatterCluster.brightLimit;
                 break;
 
             case 0xE3:
-                istringstream (string (optarg)) >> settings.scatterCluster.faintLimit;
+                istringstream (string (optarg)) >> scatterCluster.faintLimit;
                 break;
 
             case 0xE2:
-                istringstream (string (optarg)) >> settings.scatterCluster.relevantFilt;
+                istringstream (string (optarg)) >> scatterCluster.relevantFilt;
                 break;
 
             case 0xE1:
-                istringstream (string (optarg)) >> settings.scatterCluster.limitS2N;
+                istringstream (string (optarg)) >> scatterCluster.limitS2N;
                 break;
 
             case 0xE0:
-                istringstream (string (optarg)) >> settings.seed;
+                istringstream (string (optarg)) >> seed;
                 break;
 
             case 0xDF:
-                settings.files.phot = optarg;
+                files.phot = optarg;
                 break;
 
             case 0xDE:
-                settings.files.scatter = optarg;
+                files.scatter = optarg;
                 break;
 
             case 0xDD:
-                settings.files.output = optarg;
+                files.output = optarg;
                 break;
 
             case 0xDC:
-                settings.files.config = optarg;
+                files.config = optarg;
                 break;
 
             case 0xDB:                  // --help
@@ -331,7 +336,7 @@ void settingsFromCLI (int argc, char **argv, struct Settings &settings)
                 exit (EXIT_SUCCESS);
 
             case 0xDA:
-                settings.files.models = optarg;
+                files.models = optarg;
                 break;
 
             case '?':
@@ -356,7 +361,7 @@ void settingsFromCLI (int argc, char **argv, struct Settings &settings)
     }
 }
 
-template<typename T> T getDefault (Node & n, string && f, T def)
+template<typename T> T Settings::getDefault (Node & n, string && f, T def)
 {
     if (n[f])
     {
@@ -368,7 +373,7 @@ template<typename T> T getDefault (Node & n, string && f, T def)
     }
 }
 
-template<typename T> T getOrDie (Node & n, string && f)
+template<typename T> T Settings::getOrDie (Node & n, string && f)
 {
     if (n[f])
     {
@@ -380,7 +385,7 @@ template<typename T> T getOrDie (Node & n, string && f)
     }
 }
 
-Node getNode (Node & n, string && f)
+Node Settings::getNode (Node & n, string && f)
 {
     if (n[f])
     {
@@ -392,13 +397,13 @@ Node getNode (Node & n, string && f)
     }
 }
 
-[[noreturn]] void exitWith (string && s)
+[[noreturn]] void Settings::exitWith (string && s)
 {
     cerr << s << endl;
     abort ();
 }
 
-void printUsage ()
+void Settings::printUsage ()
 {
     int taskId;
 

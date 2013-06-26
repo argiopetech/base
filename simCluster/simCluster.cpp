@@ -43,19 +43,19 @@ int main (int argc, char *argv[])
     double genrand_res53 (void);
     void updateCount (struct star *pStar, int cmpnt);
 
-    struct Settings settings;
+    Settings settings;
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
     {
-        makeSettings (settings.files.config, settings);
+        settings.fromYaml (settings.files.config);
     }
     else
     {
-        makeSettings ("base9.yaml", settings);
+        settings.fromYaml ("base9.yaml");
     }
 
-    settingsFromCLI (argc, argv, settings);
+    settings.fromCLI (argc, argv);
 
     //macros defined in structures.h
     initCluster (&theCluster);
@@ -87,7 +87,7 @@ int main (int argc, char *argv[])
     if (verbose < 0 || verbose > 2)
         verbose = 1;            // give standard feedback if incorrectly specified
 
-    loadModels (nFieldStars, &theCluster, &settings);
+    loadModels (nFieldStars, &theCluster, settings);
 
     if (theCluster.evoModels.mainSequenceEvol == YALE)
         minMass = 0.4;

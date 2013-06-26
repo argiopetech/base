@@ -13,11 +13,11 @@
 // Declared in parent program (mcmc, simCluster, makeCMD)
 extern int verbose;
 
-void loadModels (int needFS, struct cluster *theCluster, struct Settings *settings)
+void loadModels (int needFS, struct cluster *theCluster, Settings &settings)
 {
     char path[100] = "models/\0";
 
-    theCluster->evoModels.mainSequenceEvol = settings->mainSequence.msRgbModel;
+    theCluster->evoModels.mainSequenceEvol = settings.mainSequence.msRgbModel;
 
     if (theCluster->evoModels.mainSequenceEvol < 0 || theCluster->evoModels.mainSequenceEvol > 3)
     {
@@ -26,7 +26,7 @@ void loadModels (int needFS, struct cluster *theCluster, struct Settings *settin
         exit (1);
     }
 
-    theCluster->evoModels.filterSet = settings->mainSequence.filterSet;
+    theCluster->evoModels.filterSet = settings.mainSequence.filterSet;
 
     if (theCluster->evoModels.filterSet < 0 || theCluster->evoModels.filterSet > 2)
     {
@@ -37,9 +37,9 @@ void loadModels (int needFS, struct cluster *theCluster, struct Settings *settin
 
     setFilterNames (theCluster->evoModels.filterSet);
 
-    theCluster->evoModels.IFMR = settings->whiteDwarf.ifmr;
+    theCluster->evoModels.IFMR = settings.whiteDwarf.ifmr;
 
-    theCluster->evoModels.WDcooling = settings->whiteDwarf.wdModel;
+    theCluster->evoModels.WDcooling = settings.whiteDwarf.wdModel;
 
     if (theCluster->evoModels.WDcooling < 0 || theCluster->evoModels.WDcooling > 3)
     {
@@ -48,9 +48,9 @@ void loadModels (int needFS, struct cluster *theCluster, struct Settings *settin
         exit (1);
     }
 
-    theCluster->carbonicity = settings->whiteDwarf.carbonicity;
+    theCluster->carbonicity = settings.whiteDwarf.carbonicity;
 
-    theCluster->evoModels.brownDwarfEvol = settings->brownDwarf.bdModel;
+    theCluster->evoModels.brownDwarfEvol = settings.brownDwarf.bdModel;
 
     if (theCluster->evoModels.brownDwarfEvol == BARAFFE)
         loadBaraffe (path);
