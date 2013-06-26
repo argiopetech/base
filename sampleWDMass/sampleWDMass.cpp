@@ -1,10 +1,11 @@
 /*** Last update: 19jun06 ***/
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
 #include <mpi.h>
+#include <unistd.h>
+
 #include "evolve.hpp"
 #include "loadModels.hpp"
 #include "msRgbEvol.hpp"
@@ -16,17 +17,17 @@
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
 
-#define ALLOC_CHUNK   5
+const int ALLOC_CHUNK = 5;
 
-#define N_AGE     30
-#define N_FEH     1
-#define N_MOD     1
-#define N_ABS     1
-#define N_Y       1
-#define N_IFMR_INT   10
-#define N_IFMR_SLOPE 10
-#define N_GRID    (N_AGE * N_FEH * N_MOD * N_ABS * N_Y * N_IFMR_INT * N_IFMR_SLOPE)
-#define MASTER          0       /* taskid of first process */
+const int N_AGE = 30;
+const int N_FEH = 1;
+const int N_MOD = 1;
+const int N_ABS = 1;
+const int N_Y = 1;
+const int N_IFMR_INT = 10;
+const int N_IFMR_SLOPE = 10;
+const int N_GRID = (N_AGE * N_FEH * N_MOD * N_ABS * N_Y * N_IFMR_INT * N_IFMR_SLOPE);
+const int MASTER = 0;       /* taskid of first process */
 
 
 struct ifmrGridControl
@@ -74,7 +75,7 @@ typedef struct
 
 static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl);
 static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl);
-static void readSampledParams (struct chain *mc, struct ifmrGridControl *ctrl, clustPar ** sampledPars);
+static void readSampledParams (struct chain *mc, struct ifmrGridControl *ctrl, clustPar **sampledPars);
 static void initChain (struct chain *mc, const struct ifmrGridControl *ctrl);
 
 double margEvolveWithBinary (struct cluster *pCluster, struct star *pStar);
