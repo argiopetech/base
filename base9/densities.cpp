@@ -1,15 +1,19 @@
-/******* Density Routines *******/
-/******* last update:  29jun06      *******/
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "constants.hpp"
 #include "evolve.hpp"
 #include "structures.hpp"
 #include "densities.hpp"
 
-#define  SQR(z) ((z)*(z))
+constexpr double sqr(double a)
+{
+    return a * a;
+}
+
+static_assert(M_PI >= 3.14, "M_PI is defined and and at least 3.14");
+static_assert(M_PI <  4.00, "M_PI is defined and less than 4.0");
 
 static double logMassNorm = 0.0;
 static int calcMassNorm = 0;
@@ -21,8 +25,9 @@ double logPriorMass (struct star *pStar, struct cluster *pCluster)
 // Compute log prior density
 {
     const double mf_sigma = 0.67729, mf_mu = -1.02;
-    double mass1, log_m1, /*mass2, */ logPrior = 0.0;
-    double loglog10 = log (log (10));
+    const double loglog10 = log (log (10));
+
+    double mass1, log_m1, logPrior = 0.0;
 
     if (pStar->status[0] == BD)
         return 0.0;
@@ -45,7 +50,6 @@ double logPriorMass (struct star *pStar, struct cluster *pCluster)
     }
 
     mass1 = getMass1 (pStar, pCluster);
-//  mass2 = getMass2(pStar,pCluster);
 
     if (mass1 > 0.1 && mass1 <= pCluster->M_wd_up)
     {
@@ -59,7 +63,7 @@ double logPriorMass (struct star *pStar, struct cluster *pCluster)
         else
         {
             log_m1 = log10 (mass1);
-            logPrior = logMassNorm + -0.5 * SQR (log_m1 - mf_mu) / (SQR (mf_sigma)) - log (mass1) - loglog10;
+            logPrior = logMassNorm + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
             return logPrior;
         }
     }
@@ -109,13 +113,13 @@ double logPriorClust (struct cluster *pCluster)
     if (getParameter (pCluster, ABS) < 0.0)
         return -HUGE_VAL;
     if (pCluster->priorVar[FEH] > EPSILON)
-        prior += (-0.5) * SQR (getParameter (pCluster, FEH) - pCluster->priorMean[FEH]) / pCluster->priorVar[FEH];
+        prior += (-0.5) * sqr (getParameter (pCluster, FEH) - pCluster->priorMean[FEH]) / pCluster->priorVar[FEH];
     if (pCluster->priorVar[MOD] > EPSILON)
-        prior += (-0.5) * SQR (getParameter (pCluster, MOD) - pCluster->priorMean[MOD]) / pCluster->priorVar[MOD];
+        prior += (-0.5) * sqr (getParameter (pCluster, MOD) - pCluster->priorMean[MOD]) / pCluster->priorVar[MOD];
     if (pCluster->priorVar[ABS] > EPSILON)
-        prior += (-0.5) * SQR (getParameter (pCluster, ABS) - pCluster->priorMean[ABS]) / pCluster->priorVar[ABS];
+        prior += (-0.5) * sqr (getParameter (pCluster, ABS) - pCluster->priorMean[ABS]) / pCluster->priorVar[ABS];
     if (pCluster->priorVar[YYY] > EPSILON)
-        prior += (-0.5) * SQR (getParameter (pCluster, YYY) - pCluster->priorMean[YYY]) / pCluster->priorVar[YYY];
+        prior += (-0.5) * sqr (getParameter (pCluster, YYY) - pCluster->priorMean[YYY]) / pCluster->priorVar[YYY];
 
     return prior;
 }
@@ -141,7 +145,7 @@ double logLikelihood (int numFilts, struct star *pStar)
         else
         {
             if (pStar->variance[i] > 1e-9)
-                likelihood -= 0.5 * (log (2 * M_PI * pStar->variance[i]) + (SQR (pStar->photometry[i] - pStar->obsPhot[i]) / pStar->variance[i]));
+                likelihood -= 0.5 * (log (2 * M_PI * pStar->variance[i]) + (sqr (pStar->photometry[i] - pStar->obsPhot[i]) / pStar->variance[i]));
         }
     }
     return likelihood;
@@ -174,7 +178,7 @@ double tLogLikelihood (int numFilts, struct star *pStar)
         {
             if (pStar->variance[i] > 1e-9)
             {
-                quadratic_sum += SQR (pStar->photometry[i] - pStar->obsPhot[i]) / pStar->variance[i];
+                quadratic_sum += sqr (pStar->photometry[i] - pStar->obsPhot[i]) / pStar->variance[i];
                 likelihood -= 0.5 * (log (M_PI * pStar->variance[i]));
             }
         }
@@ -206,17 +210,11 @@ double scaledLogLike (int numFilts, struct star *pStar, double varScale)
         {
             if (pStar->variance[i] > 1e-9)
             {
-                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar->variance[i]) + (SQR (pStar->photometry[i] - pStar->obsPhot[i]) / (varScale * pStar->variance[i])));
-                // printf("%f %d %f %f ",pStar->U,i,pStar->photometry[i],pStar->obsPhot[i]);
-                // printf("*******likelihood = %lf*******\n", likelihood);
-                // fflush(stdout);
-
+                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar->variance[i]) + (sqr (pStar->photometry[i] - pStar->obsPhot[i]) / (varScale * pStar->variance[i])));
             }
 
         }
     }
-    // printf("%f\n", likelihood);
-    // fflush(stdout);
     return likelihood;
 }
 
@@ -227,12 +225,15 @@ double logPost1Star (struct star *pStar, struct cluster *pCluster)
     double likelihood = 0.0, logPrior = 0.0;
 
     logPrior = logPriorMass (pStar, pCluster);
+
     if (fabs (logPrior + HUGE_VAL) < EPSILON)
         return (logPrior);
+
     likelihood = scaledLogLike (pCluster->evoModels.numFilts, pStar, pCluster->varScale);
-    //likelihood = tLogLikelihood(pCluster->evoModels.numFilts, pStar);
+
     if (fabs (likelihood + HUGE_VAL) < EPSILON)
         return (likelihood);
+
     return (logPrior + likelihood);
 }
 
@@ -245,6 +246,7 @@ double Phi (double x)
 
     while (s != t)
         s = (t = s) + (b *= q / (i += 2));
+
     return 0.5 + s * exp (-0.5 * q - 0.91893853320467274178L);
 }
 
@@ -254,15 +256,9 @@ double logTDens (double x, double mean, double var, double nu)
     double logp = 0;
     double s;
 
-    //if(fabs(nu-6.0)<EPSILON){
     s = sqrt (DOF / (var * (DOF - 2)));
+
     logp = log (s) + GAMMA6 - 3.5 * log (1 + pow (s * (x - mean), 2) / DOF);
-    //}
-    /*
-      else{
-      s = sqrt(nu/(var*(nu-2)));
-      logp = log(s) + gammln((nu+1)/2) - gammln(nu/2) - 0.5*log(nu*M_PI) - ((nu+1)/2)*log(1+pow(s*(x-mean),2)/nu);
-      }
-    */
+
     return logp;
 }

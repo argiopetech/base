@@ -1,4 +1,4 @@
-#ifndef( EVOLVE_H )
+#ifndef EVOLVE_H
 #define EVOLVE_H
 
 #include "structures.hpp"
