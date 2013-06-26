@@ -1,7 +1,8 @@
-#include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstddef>
+#include <cstdlib>
+#include <cmath>
+
 #include "solve.hpp"
 
 typedef char* FREE_ARG;

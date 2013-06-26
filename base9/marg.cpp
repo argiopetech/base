@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+
 #include "evolve.hpp"
 #include "msRgbEvol.hpp"
 #include "gBaraffeMag.hpp"
@@ -34,11 +35,7 @@ double margEvolveWithBinary (struct cluster *pCluster, struct star *pStar)
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
-    // if(fabs(isochrone.FeH - getParameter(pCluster,FEH)) > EPS ||
-    //     fabs(isochrone.logAge - getParameter(pCluster,AGE)) > EPS ||
-    //     fabs(isochrone.Y - getParameter(pCluster,YYY)) > EPS){
     deriveAgbTipMass (pCluster);        // determine AGBt ZAMS mass, to find evol state
-    // }
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster->AGBt_zmass < EPS)
@@ -54,15 +51,10 @@ double margEvolveWithBinary (struct cluster *pCluster, struct star *pStar)
     int m;
     double dMass;
 
-    // double dMassRatio = 1.0 / (nMassRatios + 1.0);
-    // double massRatio = 0;
     double dIsoMass = 0.0;
     double k = 0.0;
 
-    // double isoIncrem = 20.0; /* ok for YY models for Hyades */
     double isoIncrem = 80.0;    /* ok for YY models? */
-
-    // double isoIncrem = 60.0; /* needed for DSED */
 
     for (m = 0; m < isochrone.nEntries - 2; m++)
     {
@@ -83,7 +75,6 @@ double margEvolveWithBinary (struct cluster *pCluster, struct star *pStar)
     }
     if (post > 0.0)
     {
-        // return post * dMassRatio;
         return post;
     }
     else
@@ -184,10 +175,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
 
     setMags (mag, cmpnt, mass, pCluster, pStar);
 
-    // double massRatio;
     double tmpLogPost, tmpPost;
-
-    // double dMassRatio = 1.0 / (nMassRatios + 1.0);
 
     /* first try 0.0 massRatio */
     cmpnt = 1;
@@ -209,7 +197,6 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
 
 
     /**** now see if any binary companions are OK ****/
-    // if (0) {
     double magLower;
     double magUpper;
     double nSD = 4.0;           /* num of st dev from obs that will contribute to likelihood */
@@ -262,8 +249,6 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
     {
         if (okMass[i])
         {
-            // printf("okMass: %lf\n", isochrone.mass[i]);
-            // fflush(stdout);
             cmpnt = 1;
             pStar->massRatio = mass[0] / isochrone.mass[i];
             for (filt = 0; filt < FILTS; filt++)
@@ -278,49 +263,13 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
             /* now have magnitudes, want posterior probability */
             tmpLogPost = logPost1Star (pStar, pCluster);
             tmpLogPost += log (dMass);
-            tmpLogPost += log ((isochrone.mass[i + 1] - isochrone.mass[i]) / mass[0]);  /* dMass2 */
-            // printf("after %lf\n", tmpLogPost);
+            tmpLogPost += log ((isochrone.mass[i + 1] - isochrone.mass[i]) / mass[0]);
             tmpPost = exp (tmpLogPost);
 
-            // printf("%lf %lf %lf\n", mass[0], massRatio, tmpLogPost);
-
-            // if (tmpPost > 0.0) printf("after2 %lf\n", log(tmpPost));
-            // fflush(stdout);
             (*post) += tmpPost;
 
         }
     }
-    // } /* end if (0) */
-
-    // massRatio = 0.0;
-    // for (massRatio = 0.0; massRatio < 1.0; massRatio += dMassRatio) {
-    //   cmpnt = 1;
-    //   mass[1] = mass[0] * massRatio;
-    //   pStar->massRatio = massRatio;
-    //
-    //   for(filt=0;filt < FILTS;filt++) if(useFilt[filt]) globalMags[filt] = 99.999;
-    //   pStar->massNow[cmpnt]   = 0.0;
-    //   ltau[cmpnt]             = 0.0;                      // may not be a WD, so no precursor age,
-    //   pStar->wdLogTeff[cmpnt] = 0.0;                      // no WD Teff,
-    //
-    //   setMags(mag, cmpnt, mass, pCluster, pStar);
-    //
-    //   // can now derive combined mags
-    //   deriveCombinedMags(mag, clusterAv, flux, pCluster, pStar);
-    //
-    //   /* now have magnitudes, want posterior probability */
-    //   tmpLogPost = logPost1Star(pStar, pCluster);
-    //   tmpLogPost += log(dMass);
-    //   // tmpLogPost += log(dMassRatio);
-    //   // printf("after %lf\n", tmpLogPost);
-    //   tmpPost = exp(tmpLogPost);
-    //
-    //   // printf("%lf %lf %lf\n", mass[0], massRatio, tmpLogPost);
-    //
-    //   // if (tmpPost > 0.0) printf("after2 %lf\n", log(tmpPost));
-    //   // fflush(stdout);
-    //   (*post) += tmpPost;
-    // }
 }
 
 
@@ -365,31 +314,3 @@ void calcAbsCoeffsForMarg (int filterSet)
         exit (1);
     }
 }
-
-/* easier in the no binary case - can get explicit expressions in terms of
-   CDF of normal distribution */
-// double margEvolveNoBinary(struct cluster *pCluster, struct star *pStar)
-// {
-//   int    filt, i, cmpnt, j, numStars = 1;
-//   double mag[3][FILTS], mass[2], flux, clusterAv;
-//
-//   double logPost = 0.0;
-//
-//   //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
-//   //were last time through
-//   if(fabs(isochrone.FeH - getParameter(pCluster,FEH)) > EPS ||
-//     fabs(isochrone.logAge - getParameter(pCluster,AGE)) > EPS ||
-//     fabs(isochrone.Y - getParameter(pCluster,YYY)) > EPS){
-//     deriveAgbTipMass(pCluster);                          // determine AGBt ZAMS mass, to find evol state
-//  }
-//
-//   // AGBt_zmass never set because age and/or metallicity out of range of models.
-//   if(pCluster->AGBt_zmass < EPS){
-//     pStar->boundsFlag = 1;
-//     return -HUGE_VAL;
-//   }
-//
-//   clusterAv   = getParameter(pCluster,ABS);
-//   if(fabs(clusterAbs[0]) < EPS) calcAbsCoeffs(pCluster->evoModels.filterSet);
-//
-// }

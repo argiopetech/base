@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
+
 #include "mt19937ar.hpp"
 
 extern int verbose;
 
-double drawFromIMF ()
 /*****************************************************************************************
 last update: 28sep05
 
@@ -14,6 +14,7 @@ Mo.  (Resetting and recalculating the constants each time this subroutine is cal
 inefficient, but more calcuation time will be spent drawing the Gaussian random deviate
 (typically done 2+ times per function call) and calculating the final inverse log.)
 *****************************************************************************************/
+double drawFromIMF ()
 {
 
     double logMass, zamsMass;

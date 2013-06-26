@@ -1,12 +1,11 @@
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
+
 #include "linInterp.hpp"
 
 const double EPS = 1e-6;
 
 /*****************************************************************************************
-last update: 15sep05
-
 For a given grid with values x1, y1 and x2, y2 with a value of interest, xActual, linearly
 interpolate to determine yActual.
 *****************************************************************************************/

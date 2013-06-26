@@ -1,30 +1,9 @@
-/*
-  25aug10      - changed to output sigma instead of variance
-  20jul10      - updated to work with different filter sets
-  26jun08      - updated to new noise model based on scaling KPNO 4m
-  28may08      - use apparent instead of absolute mag's
-  28sep07      - cosmetic update
-  13sep06      - update to add simulated field stars
-  13jun06      - update to handle MS+MS binaries
-  11dec05      - change output probability from FS prob to CS prob, i.e. 0 -> 1
-  03dec05      - add filters used to header, making assumption it is just BVI for now
-  12nov05      - output flag (=0) to indicate probability that object is a field star
-  07oct05      - output stage of MS/RGB, WD star and N_WD for ease of compiling stats later
-  28sep05      - change gasdev call to gennorm call
-  28feb05      - temporary kludge - reject stars below 0.25 Mo - no age info and don't want
-  to create too many objects that could hop below the 0.15 Mo model limit
-  14sep04      - modify to work on binaries, not object 1; pass in brightLimit cut-off
-  29feb04      - make variance realistic and magnitude dependent as per HST/ACS
-  09dec03      - update gasdev call
-  04nov03      - modify output format
-  scatterCluster.c  30oct03  tvh - keep a subset of the output of simCluster.c and scatter the photometry.
-*/
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
 #include <unistd.h>
-#include <math.h>
-#include <string.h>
+
 #include "mt19937ar.hpp"
 #include "evolve.hpp"
 #include "structures.hpp"

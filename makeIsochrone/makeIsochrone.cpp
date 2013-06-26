@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
 #include <unistd.h>
 
 #include "evolve.hpp"
@@ -28,11 +28,6 @@ static void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 
 int main (int argc, char *argv[])
 {
-
-    /////////////////////////////////
-    /////// Declare Variables ///////
-    /////////////////////////////////
-
     int j, filt, iMag;
     double minMag, maxMag;
     char line[240], filename[100];

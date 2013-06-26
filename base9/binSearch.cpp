@@ -1,9 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 /*
-// last update, 18sep05
-//
 // performs a binary search for interpolation
 // returns the lower index of search
 // higher index is simply (lower+1)

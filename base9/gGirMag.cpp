@@ -1,7 +1,8 @@
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "binSearch.hpp"

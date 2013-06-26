@@ -11,10 +11,11 @@ et al. atmospheres span a wider mass range than the Wood model WDs.)
 The appropriate magnitudes are put in globalMags[][].
 ********************************************************************************/
 
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "gBergMag.hpp"

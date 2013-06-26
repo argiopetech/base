@@ -1,17 +1,13 @@
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "binSearch.hpp"
 #include "gYaleMag.hpp"
 #include "binSearch.hpp"
-
-// Fortran functions found in YYinterp.f
-//extern void loadyyf_();
-//extern void deriveiso_(double *FeH, double *age, double masses[],
-//                       int *numM, double yy[][N_YY_FILTS], int *flag);
 
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
@@ -47,11 +43,7 @@ static void intpolAge (int iAge, double newAge);
 
 void loadYale (char *path, int filterSet)
 {
-
-    //loadyyf_();
-    //exit(1);
-
-    FILE *pYY;                  // = NULL;
+    FILE *pYY;
     int z, a, n, p;
     char line[500], temp[50], *lineCopy = 0;
     int m = 0, im = 0, ii = 0;

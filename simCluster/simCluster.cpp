@@ -1,11 +1,12 @@
 // last update, 26jun08
 
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include "mt19937ar.hpp"
 #include "evolve.hpp"
 #include "structures.hpp"
@@ -66,13 +67,6 @@ int main (int argc, char *argv[])
     for (filt = 8; filt < FILTS; filt++)
         useFilt[filt] = 1;              // but not the other crap
 
-    // clusY needed, but ignored unless modelSet = 3
-    /* printf("\n Enter nSystems, WDMassUp, percentBinary, percentDB, (m-M)v, Av, logClusterAge, [Fe/H], Y, nFieldStars, nBrownDwarfs : "); */
-    /* printf("(e.g., 1000 6.0 50 25 12.0 0.5 9.0 -0.3 0.27 100) : "); */
-    /* scanf("%d %lf %lf %lf %lf %lf %lf %lf %lf %d %d", &theCluster.nStars, &theCluster.M_wd_up,&fractionBinary,&fractionDB, */
-    /*       &theCluster.parameter[MOD],&theCluster.parameter[ABS],&theCluster.parameter[AGE], */
-    /*       &theCluster.parameter[FEH],&theCluster.parameter[YYY], &nFieldStars, &nBrownDwarfs); */
-
     theCluster.nStars = settings->simCluster.nStars;
     theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
     fractionBinary = settings->simCluster.percentBinary;
@@ -88,12 +82,8 @@ int main (int argc, char *argv[])
     fractionBinary /= 100.;     // input as percentages, use as fractions
     fractionDB /= 100.;
 
-    /* printf("\n Enter an integer seed: "); */
-    /* scanf("%ld",&seed); */
     seed = settings->seed;
 
-    /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
-    /* scanf("%d",&verbose); */
     verbose = settings->verbose;
     if (verbose < 0 || verbose > 2)
         verbose = 1;            // give standard feedback if incorrectly specified
@@ -105,8 +95,6 @@ int main (int argc, char *argv[])
     if (theCluster.evoModels.mainSequenceEvol == DSED)
         minMass = 0.25;
 
-    /* printf("\n Enter CM diag output file name : "); */
-    /* scanf("%s",w_file); */
     strcpy (w_file, settings->files.output);
     strcat (w_file, ".sim.out");
     if ((w_ptr = fopen (w_file, "w")) == NULL)
@@ -114,7 +102,6 @@ int main (int argc, char *argv[])
         printf ("\n\n file %s was not available for writing - exiting ", w_file);
         exit (1);
     }
-    /* printf("\n\n"); */
 
     nStars = 0;
     massTotal = 0.0;
@@ -273,11 +260,9 @@ int main (int argc, char *argv[])
 
     theCluster.nStars = nFieldStars;
     tempMod = theCluster.parameter[MOD];
-//   tempAbs = theCluster.parameter[ABS];
     if (theCluster.evoModels.mainSequenceEvol == YALE)
         theCluster.evoModels.mainSequenceEvol = DSED;
 
-//     setModels(&theCluster, DARTMOUTH); // Because the Yale models have trouble making field stars
     if (theCluster.evoModels.mainSequenceEvol == DSED)
     {
         minFeH = -2.5;
@@ -311,12 +296,6 @@ int main (int argc, char *argv[])
             // Determine a new distance, weighted so
             // there are more stars behind than in front
             theCluster.parameter[MOD] = tempMod - 12.0 + log10 (pow (10, (pow (pow (26.0, 3.0) * genrand_res53 (), 1.0 / 3.0))));
-            //printf("%f\n",log10(pow(10,(pow(pow(5000.0,1.0)*genrand_res53(),1.0/1.0)))));
-
-
-            // Calculate absorption based on rough galactic approximation and the distance.
-            //theCluster.parameter[ABS] = 4*genrand_res53()*pow(10,theCluster.parameter[MOD]/5.0-2);
-            //if(theCluster.parameter[ABS] < 0.0) theCluster.parameter[ABS] = 0.0;
 
             evolve (&theCluster, &theStar, 0);
 

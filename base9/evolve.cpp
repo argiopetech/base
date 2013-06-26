@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+
 #include "evolve.hpp"
 #include "msRgbEvol.hpp"
 #include "gBaraffeMag.hpp"

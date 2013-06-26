@@ -1,8 +1,8 @@
 /*** Decides whether to accept proposed Metropolis-Hastings steps ***/
-/*** last update:    29jun06     ***/
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
+
 #include "samplers.hpp"
 #include "densities.hpp"
 #include "decide.hpp"

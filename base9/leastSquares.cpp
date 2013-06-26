@@ -1,9 +1,10 @@
 /*** last update:   29aug10  ***/
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstddef>
+
 #include "leastSquares.hpp"
 #include "poly.hpp"
 #include "solve.hpp"

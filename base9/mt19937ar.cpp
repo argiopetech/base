@@ -41,7 +41,7 @@
    email: matumoto@math.keio.ac.jp
 */
 
-#include <stdio.h>
+#include <cstdio>
 #include "mt19937ar.hpp"
 
 extern unsigned long mt[NN];

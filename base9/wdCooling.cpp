@@ -1,13 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+#include <cassert>
+#include <mpi.h>
+
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "wdCooling.hpp"
 #include "binSearch.hpp"
-#include <mpi.h>
-#include <assert.h>
 
 static int nIso;
 static double *wdMasses;

@@ -1,4 +1,5 @@
-#include <math.h>
+#include <cmath>
+
 #include "poly.hpp"
 
 // Calculates the polynomial c[0] + c[1]*x + c[2]*x^2... c[n]*x^n

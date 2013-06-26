@@ -1,14 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+#include <gsl/gsl_errno.h>      // need these two lines for gnu interpolation -- TvH
+#include <gsl/gsl_spline.h>
+
 #include "evolve.hpp"
 #include "gDsedMag.hpp"
 #include "binSearch.hpp"
 #include "linInterp.hpp"
-#include <gsl/gsl_errno.h>      // need these two lines for gnu interpolation -- TvH
-#include <gsl/gsl_spline.h>
-
 
 extern int verbose;
 extern int useFilt[FILTS];

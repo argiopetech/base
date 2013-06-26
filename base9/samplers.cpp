@@ -1,9 +1,10 @@
 /*** Proposes new star properties ***/
 /*** last update:          ***/
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+
 #include "samplers.hpp"
 #include "densities.hpp"
 #include "mt19937ar.hpp"
@@ -21,7 +22,6 @@ void propFieldStar (struct star *inputStar)
         (*inputStar).isFieldStar = 0;
 
 }
-
 
 void propMass (struct star *inputStar)
 {

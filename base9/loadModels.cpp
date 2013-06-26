@@ -1,7 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+
 #include "evolve.hpp"
 #include "loadModels.hpp"
 #include "msRgbEvol.hpp"
@@ -13,27 +14,8 @@
 extern int verbose;
 
 void loadModels (int needFS, struct cluster *theCluster, struct Settings *settings)
-// **************************************************************************************
-// last update: 20jul10
-//
-// Query the user for model set #.
-//
-// Call appropriate function to load that module's models
-//
-// Returns the number of the model set.
-// **************************************************************************************
 {
-
-    //int  modelSet;
     char path[100] = "models/\0";
-
-    /* printf("Choose a main sequence isochrone set:\n"); */
-    /* printf("\t0. Girardi\n"); */
-    /* printf("\t1. Chaboyer-Dotter (w/helium sampling)\n"); */
-    /* printf("\t2. Yonsei-Yale\n"); */
-    /* printf("\t3. DSED\n"); */
-    /* printf("> "); */
-    /* scanf("%d",&(theCluster->evoModels.mainSequenceEvol)); */
 
     theCluster->evoModels.mainSequenceEvol = settings->mainSequence.msRgbModel;
 
@@ -43,13 +25,6 @@ void loadModels (int needFS, struct cluster *theCluster, struct Settings *settin
         printf ("[Exiting...]\n");
         exit (1);
     }
-
-    /* printf("Choose a filter set:\n"); */
-    /* printf("\t0. Standard (UBVRIJHK)\n"); */
-    /* printf("\t1. ACS\n"); */
-    /* printf("\t2. SDSS (ugriz) + 2Mass (JHK)\n"); */
-    /* printf("> "); */
-    /* scanf("%d",&(theCluster->evoModels.filterSet)); */
 
     theCluster->evoModels.filterSet = settings->mainSequence.filterSet;
 
@@ -62,21 +37,7 @@ void loadModels (int needFS, struct cluster *theCluster, struct Settings *settin
 
     setFilterNames (theCluster->evoModels.filterSet);
 
-    /* printf("Choose an initial-final mass relation:\n"); */
-    /* printf("\t0. Weidemann\n"); */
-    /* printf("\t1. Williams\n"); */
-    /* printf("\t2. Salaris Linear\n"); */
-    /* printf("\t3. Salaris Piecewise Linear\n"); */
-    /* printf("> "); */
-    /* scanf("%d",&(theCluster->evoModels.IFMR)); */
-
     theCluster->evoModels.IFMR = settings->whiteDwarf.ifmr;
-
-    /* printf("Choose a white dwarf filter set:\n"); */
-    /* printf("\t0. Wood \n"); */
-    /* printf("\t1. Montgomery \n"); */
-    /* printf("> "); */
-    /* scanf("%d",&(theCluster->evoModels.WDcooling)); */
 
     theCluster->evoModels.WDcooling = settings->whiteDwarf.wdModel;
 
@@ -87,18 +48,7 @@ void loadModels (int needFS, struct cluster *theCluster, struct Settings *settin
         exit (1);
     }
 
-    /* printf("Choose a white dwarf carbonicity (between 0.0 and 1.0):\n"); */
-    /* printf("> "); */
-    /* scanf("%lf",&(theCluster->carbonicity)); */
-
     theCluster->carbonicity = settings->whiteDwarf.carbonicity;
-
-    /* printf("Choose a brown dwarf model set:\n"); */
-    /* printf("\t0. None\n"); */
-    /* printf("\t1. Baraffe\n"); */
-    /* printf("> "); */
-    /* scanf("%d",&(theCluster->evoModels.brownDwarfEvol)); */
-    //printf("*** %d ***\n",theCluster->evoModels.brownDwarfEvol);
 
     theCluster->evoModels.brownDwarfEvol = settings->brownDwarf.bdModel;
 
@@ -109,7 +59,6 @@ void loadModels (int needFS, struct cluster *theCluster, struct Settings *settin
 
     printf ("\nReading models...\n");
 
-    //setModels(theCluster, modelSet);
     loadMSRgbModels (theCluster, path, needFS);
     loadWDCool (path, theCluster->evoModels.WDcooling);
     loadBergeron (path, theCluster->evoModels.filterSet);

@@ -1,7 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+
 #include "evolve.hpp"
 #include "gChabMag.hpp"
 #include "binSearch.hpp"

@@ -1,8 +1,9 @@
-#include <stdio.h>
-#include <math.h>
-#include "linInterp.hpp"
-#include <stdlib.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+
 #include "evolve.hpp"
+#include "linInterp.hpp"
 
 double weidemannIFMR (double zamsMass);
 double williamsIFMR (double zamsMass);
@@ -16,22 +17,6 @@ double linearIFMRedit (struct cluster *pCluster, double zamsMass);
 double quadraticIFMRshift (struct cluster *pCluster, double zamsMass);
 double quadraticIFMRrotate (struct cluster *pCluster, double zamsMass);
 double piecewiseLinearIFMR (struct cluster *pCluster, double zamsMass);
-
-/*static double (*ifmrFunctions[4])(double) =
-  {
-  &weidemannIFMR,
-  &williamsIFMR,
-  &salarisLinearIFMR,
-  &salarisPiecewiseIFMR
-  };*/
-
-
-// double intlFinalMassReln(double zamsMass, int IFMR)
-// {
-//  double wdMass = 0.0;
-//  wdMass = ifmrFunctions[IFMR](zamsMass);
-//  return wdMass;
-// }
 
 double intlFinalMassReln (struct cluster *pCluster, double zamsMass)
 {
