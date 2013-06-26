@@ -1,35 +1,44 @@
-#if defined( GYALEMAG_H )
-
-#else
+#ifndef GYALEMAG_H
 #define GYALEMAG_H
 
-#define N_YY_PARAMS        17
-#define N_YY_Z             11
-#define N_YY_AGES          41
-#define N_YY_FILTS         8
-#define MAX_YY_ENTRIES     140
+const int N_YY_PARAMS    = 17;
+const int N_YY_Z         = 11;
+const int N_YY_AGES      = 41;
+const int N_YY_FILTS     = 8;
+const int MAX_YY_ENTRIES = 140;
 
-#define  dydz       2.0
-#define  yp         0.23
-#define  zp         0.0
-#define  Zsun       0.0181
-#define  Xsun       0.7148705
-#define  FeHa2     -0.217
-#define  FeHa4     -0.470
+const double dydz  =  2.0;
+const double yp    =  0.23;
+const double zp    =  0.0;
+const double Zsun  =  0.0181;
+const double Xsun  =  0.7148705;
+const double FeHa2 = -0.217;
+const double FeHa4 = -0.470;
 
-#define  QUAD(x1,y1,x2,y2,x3,y3,x) (y1)*((x2)-(x))*((x3)-(x))/(((x2)-(x1))*((x3)-(x1))) \
-    +(y2)*((x1)-(x))*((x3)-(x))/(((x1)-(x2))*((x3)-(x2)))               \
-    +(y3)*((x1)-(x))*((x2)-(x))/(((x1)-(x3))*((x2)-(x3)))
+constexpr double QUAD(double x1, double y1, double x2, double y2, double x3, double y3, double x)
+{
+    return  y1 * (x2 - x) * (x3 - x) / ((x2 - x1) * (x3 - x1))       \
+        + y2 * (x1 - x) * (x3 - x) / ((x1 - x2) * (x3 - x2))         \
+        + y3 * (x1 - x) * (x2 - x) / ((x1 - x3) * (x2 - x3));
+}
 
+constexpr double CUBEINT(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x)
+{
+    return (x-x2)*(x-x3)*(x-x4)*y1/((x1-x2)*(x1-x3)*(x1-x4))            \
+        +(x-x1)*(x-x3)*(x-x4)*y2/((x2-x1)*(x2-x3)*(x2-x4))              \
+        +(x-x1)*(x-x2)*(x-x4)*y3/((x3-x1)*(x3-x2)*(x3-x4))              \
+        +(x-x1)*(x-x2)*(x-x3)*y4/((x4-x1)*(x4-x2)*(x4-x3));
+}
 
-#define CUBEINT(x1,y1,x2,y2,x3,y3,x4,y4,x) (x-x2)*(x-x3)*(x-x4)*y1/((x1-x2)*(x1-x3)*(x1-x4)) \
-    +(x-x1)*(x-x3)*(x-x4)*y2/((x2-x1)*(x2-x3)*(x2-x4))                  \
-    +(x-x1)*(x-x2)*(x-x4)*y3/((x3-x1)*(x3-x2)*(x3-x4))                  \
-    +(x-x1)*(x-x2)*(x-x3)*y4/((x4-x1)*(x4-x2)*(x4-x3))
+constexpr double POLLIN(double x1, double y1, double x2, double y2, double x)
+{
+    return (x - x2) * y1 / (x1-x2) + (x-x1) * y2 / (x2 - x1);
+}
 
-#define POLLIN(x1,y1,x2,y2,x) (x-x2)*y1/(x1-x2) +(x-x1)*y2/(x2-x1)
-
-#define SQR(x) (x)*(x)
+constexpr double SQR(double x)
+{
+    return x * x;
+}
 
 struct yyIsochrone
 {
@@ -37,7 +46,6 @@ struct yyIsochrone
     double age;
     double logAge;
     double z;
-    //double y;
     double mass[MAX_YY_ENTRIES];
     int nEntries;
     double mag[MAX_YY_ENTRIES][N_YY_FILTS];
