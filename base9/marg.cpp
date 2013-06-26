@@ -6,7 +6,7 @@
 #include "gBaraffeMag.hpp"
 #include "densities.hpp"
 
-#define MAX_ENTRIES 370
+const int MAX_ENTRIES = 370;
 
 extern int verbose, useFilt[FILTS], aFilt, needMassNow;
 extern double ltau[2];
@@ -14,11 +14,6 @@ extern double ltau[2];
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
 extern double globalMags[FILTS];
 extern double ageLimit[2];
-
-
-
-/* HACK global var */
-// double nMassRatios = 10.0;
 
 extern struct globalIso isochrone;
 static double clusterAbs[FILTS] = { 0 };
