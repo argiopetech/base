@@ -7,20 +7,19 @@
 
 //Be careful adding new sample types.  Their order is important.
 //There are a few places in the code that test for SAMPLE_TYPE > or <.
-#define MASS                -2
-#define AGE_DURING_WANDER   -1  // age sampling during AGE_WANDER (defined in samplers.h)
-#define AGE                      0      // age sampling
-#define YYY                            1        // helium sampling
-#define FEH                      2      // metallicity sampling
-#define MOD                      3      // modulus sampling
-#define ABS                  4  // absorption sampling;
-#define IFMR_INTERCEPT       5
-#define IFMR_SLOPE           6
-#define IFMR_QUADCOEF        7
+const int MASS              = -2;
+const int AGE_DURING_WANDER = -1;  // age sampling during AGE_WANDER (defined in samplers.h)
 
+const int AGE               =  0;  // age sampling
+const int YYY               =  1;  // helium sampling
+const int FEH               =  2;  // metallicity sampling
+const int MOD               =  3;  // modulus sampling
+const int ABS               =  4;  // absorption sampling;
+const int IFMR_INTERCEPT    =  5;
+const int IFMR_SLOPE        =  6;
+const int IFMR_QUADCOEF     =  7;
 
-//#define NPARAMS              5
-#define NPARAMS              9
+const int NPARAMS            = 9;
 
 /*** Define a structure model that houses information about the evolution model ***/
 struct model
