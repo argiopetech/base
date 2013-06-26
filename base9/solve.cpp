@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include "solve.hpp"
-#define NR_END 1
-#define FREE_ARG char*
-#ifndef TINY
-#define TINY 1.0e-20;
-#endif
+
+typedef char* FREE_ARG;
+
+const int NR_END = 1;
+const double TINY = 1.0e-20;
 
 void solve (double **N, double *yvector, int n)
 {
