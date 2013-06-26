@@ -38,12 +38,12 @@ int main (int argc, char *argv[])
     struct cluster theCluster;
     struct star *stars;
 
-    struct Settings *settings = new struct Settings;
+    struct Settings settings;
 
     settingsFromCLI (argc, argv, settings);
-    if (!settings->files.config.empty())
+    if (!settings.files.config.empty())
     {
-        makeSettings (settings->files.config, settings);
+        makeSettings (settings.files.config, settings);
     }
     else
     {
@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
 
     /* printf("Enter file name containing color/magnitude data:\n> "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.phot.c_str());
+    strcpy (filename, settings.files.phot.c_str());
     if ((rDataPtr = fopen (filename, "r")) == NULL)
     {
         printf ("***Error: file %s was not found.***\n", filename);
@@ -70,9 +70,9 @@ int main (int argc, char *argv[])
 
     /* printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> "); */
     /* scanf("%lf %lf %d", &minMag, &maxMag,&iMag); */
-    minMag = settings->cluster.minMag;
-    maxMag = settings->cluster.maxMag;
-    iMag = settings->cluster.index;
+    minMag = settings.cluster.minMag;
+    maxMag = settings.cluster.maxMag;
+    iMag = settings.cluster.index;
     if (iMag < 0 || iMag > 2)
     {
         printf ("***Error: %d not a valid magnitude index.  Choose 0,1,or 2.***\n", iMag);
@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
     // char outfilename[100];
     /* printf("\n Enter isochrone file name : "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.output.c_str());  // File ending gets added in openOutputFiles
+    strcpy (filename, settings.files.output.c_str());  // File ending gets added in openOutputFiles
     openOutputFiles (&wDebugPtr, filename, DEBUG_FILE);
 
     ////////////////////////////////////////////
@@ -109,28 +109,28 @@ int main (int argc, char *argv[])
     ///// Read in other variables /////
     ///////// and load models /////////
     ///////////////////////////////////
-    theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
+    theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
 
-    verbose = settings->verbose;
+    verbose = settings.verbose;
     if (verbose < 0 || verbose > 2)
         verbose = 1;            /* give standard feedback if incorrectly specified */
 
 
-    loadModels (0, &theCluster, settings);      /* read in stellar evol & WD models */
+    loadModels (0, &theCluster, &settings);      /* read in stellar evol & WD models */
 
 
     /* read cluster parameters */
-    theCluster.parameter[AGE] = settings->cluster.logClusAge;
+    theCluster.parameter[AGE] = settings.cluster.logClusAge;
 
-    theCluster.parameter[FEH] = settings->cluster.Fe_H;
+    theCluster.parameter[FEH] = settings.cluster.Fe_H;
 
-    theCluster.parameter[MOD] = settings->cluster.distMod;
+    theCluster.parameter[MOD] = settings.cluster.distMod;
 
-    theCluster.parameter[ABS] = settings->cluster.Av;
+    theCluster.parameter[ABS] = settings.cluster.Av;
 
     if (theCluster.evoModels.mainSequenceEvol == CHABHELIUM)
     {
-        theCluster.parameter[YYY] = settings->cluster.Y;
+        theCluster.parameter[YYY] = settings.cluster.Y;
     }
     else
     {
@@ -218,8 +218,6 @@ int main (int argc, char *argv[])
 
     fclose (wDebugPtr);
     free (stars);
-
-    delete settings;
 
     return (0);
 }

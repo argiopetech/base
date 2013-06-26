@@ -66,7 +66,7 @@ extern struct globalIso isochrone;
 
 int verbose = 0, needMassNow = 0, useFilt[FILTS], numFilts = 0;
 
-struct Settings *settings;
+struct Settings settings;
 
 /* For random number generator (mt19937ar.c) */
 unsigned long mt[NN];
@@ -112,11 +112,10 @@ int main (int argc, char *argv[])
     MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
     MPI_Type_commit (&obsStarType);
 
-    settings = new struct Settings;
     settingsFromCLI (argc, argv, settings);
-    if (!settings->files.config.empty())
+    if (!settings.files.config.empty())
     {
-        makeSettings (settings->files.config, settings);
+        makeSettings (settings.files.config, settings);
     }
     else
     {
@@ -143,7 +142,7 @@ int main (int argc, char *argv[])
     /* /\*** broadcast control parameters to other processes ***\/ */
     if (taskid != MASTER)
     {
-        init_genrand (settings->seed);
+        init_genrand (settings.seed);
     }
 
     MPI_Bcast (&mc.clust.evoModels.WDcooling, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
@@ -158,10 +157,10 @@ int main (int argc, char *argv[])
     if (taskid != MASTER)
     {                           /* already loaded in the MASTER task */
         if (mc.clust.evoModels.brownDwarfEvol == BARAFFE)
-            loadBaraffe (settings->files.models);
-        loadMSRgbModels (&mc.clust, settings->files.models, 0);
-        loadWDCool (settings->files.models, mc.clust.evoModels.WDcooling);
-        loadBergeron (settings->files.models, mc.clust.evoModels.filterSet);
+            loadBaraffe (settings.files.models);
+        loadMSRgbModels (&mc.clust, settings.files.models, 0);
+        loadWDCool (settings.files.models, mc.clust.evoModels.WDcooling);
+        loadBergeron (settings.files.models, mc.clust.evoModels.filterSet);
     }
 
     MPI_Bcast (ctrl.priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
@@ -614,7 +613,6 @@ int main (int argc, char *argv[])
 
 
     /* clean up */
-    delete settings;
     delete[] obs;
     delete[] starStatus;
 
@@ -719,13 +717,13 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
         ctrl->useFilt[ii] = 0;
 
     /* Read number of steps, burn-in details, random seed */
-    init_genrand (settings->seed);
+    init_genrand (settings.seed);
 
     /* load models */
-    loadModels (0, &mc->clust, settings);
+    loadModels (0, &mc->clust, &settings);
 
-    ctrl->priorMean[FEH] = settings->cluster.Fe_H;
-    priorSigma = settings->cluster.sigma.Fe_H;
+    ctrl->priorMean[FEH] = settings.cluster.Fe_H;
+    priorSigma = settings.cluster.sigma.Fe_H;
 
     if (priorSigma < 0.0)
     {
@@ -733,8 +731,8 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     }
     ctrl->priorVar[FEH] = priorSigma * priorSigma;
 
-    ctrl->priorMean[MOD] = settings->cluster.distMod;
-    priorSigma = settings->cluster.sigma.distMod;
+    ctrl->priorMean[MOD] = settings.cluster.distMod;
+    priorSigma = settings.cluster.sigma.distMod;
 
     if (priorSigma < 0.0)
     {
@@ -742,8 +740,8 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     }
     ctrl->priorVar[MOD] = priorSigma * priorSigma;
 
-    ctrl->priorMean[ABS] = settings->cluster.Av;
-    priorSigma = settings->cluster.sigma.Av;
+    ctrl->priorMean[ABS] = settings.cluster.Av;
+    priorSigma = settings.cluster.sigma.Av;
 
     if (priorSigma < 0.0)
     {
@@ -751,7 +749,7 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     }
     ctrl->priorVar[ABS] = priorSigma * priorSigma;
 
-    ctrl->initialAge = settings->cluster.logClusAge;
+    ctrl->initialAge = settings.cluster.logClusAge;
     ctrl->priorVar[AGE] = 1.0;
 
     if (mc->clust.evoModels.IFMR <= 3)
@@ -816,14 +814,14 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     priorMean[YYY] = ctrl->priorMean[YYY];
 
     /* read burnIter and nIter */
-    ctrl->burnIter = settings->mpiMcmc.burnIter;
-    ctrl->nIter = settings->mpiMcmc.maxIter;
-    ctrl->thin = settings->mpiMcmc.thin;
+    ctrl->burnIter = settings.mpiMcmc.burnIter;
+    ctrl->nIter = settings.mpiMcmc.maxIter;
+    ctrl->thin = settings.mpiMcmc.thin;
 
     /* open files for reading (data) and writing */
     string filename;
 
-    filename = settings->files.phot;
+    filename = settings.files.phot;
     ctrl->rData.open(filename);
     if (!ctrl->rData)
     {
@@ -832,9 +830,9 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
         exit (1);
     }
 
-    ctrl->minMag = settings->cluster.minMag;
-    ctrl->maxMag = settings->cluster.maxMag;
-    ctrl->iMag = settings->cluster.index;
+    ctrl->minMag = settings.cluster.minMag;
+    ctrl->maxMag = settings.cluster.maxMag;
+    ctrl->iMag = settings.cluster.index;
 
     if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
     {
@@ -843,7 +841,7 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
         exit (1);
     }
 
-    ctrl->clusterFilename = settings->files.output + ".res";
+    ctrl->clusterFilename = settings.files.output + ".res";
 
     ctrl->iStart = 0;
 

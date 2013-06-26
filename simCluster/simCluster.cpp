@@ -43,12 +43,12 @@ int main (int argc, char *argv[])
     double genrand_res53 (void);
     void updateCount (struct star *pStar, int cmpnt);
 
-    struct Settings *settings = new struct Settings;
+    struct Settings settings;
 
     settingsFromCLI (argc, argv, settings);
-    if (!settings->files.config.empty())
+    if (!settings.files.config.empty())
     {
-        makeSettings (settings->files.config, settings);
+        makeSettings (settings.files.config, settings);
     }
     else
     {
@@ -66,35 +66,35 @@ int main (int argc, char *argv[])
     for (filt = 8; filt < FILTS; filt++)
         useFilt[filt] = 1;              // but not the other crap
 
-    theCluster.nStars = settings->simCluster.nStars;
-    theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
-    fractionBinary = settings->simCluster.percentBinary;
-    fractionDB = settings->simCluster.percentDB;
-    theCluster.parameter[MOD] = settings->cluster.distMod;
-    theCluster.parameter[ABS] = settings->cluster.Av;
-    theCluster.parameter[AGE] = settings->cluster.logClusAge;
-    theCluster.parameter[FEH] = settings->cluster.Fe_H;
-    theCluster.parameter[YYY] = settings->cluster.Y;
-    nFieldStars = settings->simCluster.nFieldStars;
-    nBrownDwarfs = settings->simCluster.nBrownDwarfs;
+    theCluster.nStars = settings.simCluster.nStars;
+    theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
+    fractionBinary = settings.simCluster.percentBinary;
+    fractionDB = settings.simCluster.percentDB;
+    theCluster.parameter[MOD] = settings.cluster.distMod;
+    theCluster.parameter[ABS] = settings.cluster.Av;
+    theCluster.parameter[AGE] = settings.cluster.logClusAge;
+    theCluster.parameter[FEH] = settings.cluster.Fe_H;
+    theCluster.parameter[YYY] = settings.cluster.Y;
+    nFieldStars = settings.simCluster.nFieldStars;
+    nBrownDwarfs = settings.simCluster.nBrownDwarfs;
 
     fractionBinary /= 100.;     // input as percentages, use as fractions
     fractionDB /= 100.;
 
-    seed = settings->seed;
+    seed = settings.seed;
 
-    verbose = settings->verbose;
+    verbose = settings.verbose;
     if (verbose < 0 || verbose > 2)
         verbose = 1;            // give standard feedback if incorrectly specified
 
-    loadModels (nFieldStars, &theCluster, settings);
+    loadModels (nFieldStars, &theCluster, &settings);
 
     if (theCluster.evoModels.mainSequenceEvol == YALE)
         minMass = 0.4;
     if (theCluster.evoModels.mainSequenceEvol == DSED)
         minMass = 0.25;
 
-    strcpy (w_file, settings->files.output.c_str());
+    strcpy (w_file, settings.files.output.c_str());
     strcat (w_file, ".sim.out");
     if ((w_ptr = fopen (w_file, "w")) == NULL)
     {
@@ -319,8 +319,6 @@ int main (int argc, char *argv[])
     }
 
     fclose (w_ptr);
-
-    delete settings;
 
     return (0);
 }

@@ -34,12 +34,12 @@ int main (int argc, char *argv[])
     char filename[100], line[1000], aFilterName[10];
     FILE *r_ptr, *w_ptr;
 
-    struct Settings *settings = new struct Settings;
+    struct Settings settings;
 
     settingsFromCLI (argc, argv, settings);
-    if (!settings->files.config.empty())
+    if (!settings.files.config.empty())
     {
-        makeSettings (settings->files.config, settings);
+        makeSettings (settings.files.config, settings);
     }
     else
     {
@@ -50,7 +50,7 @@ int main (int argc, char *argv[])
 
     /* printf("\n Enter simulated cluster file name : "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.output.c_str());
+    strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".sim.out");
     if ((r_ptr = fopen (filename, "r")) == NULL)
     {
@@ -92,33 +92,33 @@ int main (int argc, char *argv[])
     /*       &exptime[0],&exptime[1],&exptime[2],&exptime[3], &exptime[4],&exptime[5],&exptime[6],&exptime[7], */
     /*       &exptime[8],&exptime[9],&exptime[10],&exptime[11],&exptime[12],&exptime[13]); */
 
-    memcpy (exptime, settings->scatterCluster.exposures, 14 * sizeof (double));
+    memcpy (exptime, settings.scatterCluster.exposures, 14 * sizeof (double));
 
     /* printf("\n Enter number of stars to keep, bright and faint and cut-off mags, and their filter: "); */
     /* scanf("%d %lf %lf %d",&nStars,&brightLimit, &faintLimit, &firstFilt);            // brightLimit primarily used to cut off RGB */
 
-    nStars = settings->simCluster.nStars;
-    brightLimit = settings->scatterCluster.brightLimit;
-    faintLimit = settings->scatterCluster.faintLimit;
-    firstFilt = settings->scatterCluster.relevantFilt;
+    nStars = settings.simCluster.nStars;
+    brightLimit = settings.scatterCluster.brightLimit;
+    faintLimit = settings.scatterCluster.faintLimit;
+    firstFilt = settings.scatterCluster.relevantFilt;
 
     /* printf("\n Enter limiting signal-to-noise (e.g. 15) : "); */
     /* scanf("%lf",&limitSigToNoise); */
-    limitSigToNoise = settings->scatterCluster.limitS2N;
+    limitSigToNoise = settings.scatterCluster.limitS2N;
 
     /* printf("\n Enter number of field stars to include (e.g. 0): "); */
     /* scanf("%d",&nFieldStars); */
-    nFieldStars = settings->simCluster.nFieldStars;
+    nFieldStars = settings.simCluster.nFieldStars;
     if (nFieldStars < 0)
         nFieldStars = 0;
 
     /* printf("\n Enter an integer seed: "); */
     /* scanf("%ld",&seed); */
-    seed = settings->seed;
+    seed = settings.seed;
 
     /* printf("\n Enter output file name : "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.output.c_str());
+    strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".sim.scatter");
     if ((w_ptr = fopen (filename, "w")) == NULL)
     {
@@ -249,8 +249,6 @@ int main (int argc, char *argv[])
 
     fclose (r_ptr);
     fclose (w_ptr);
-
-    delete settings;
 
     return (0);
 }

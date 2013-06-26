@@ -102,7 +102,7 @@ int mti = NN + 1;
 /* TEMPORARY - global variable */
 double dMass1 = 0.0005;
 
-struct Settings *settings;
+struct Settings settings;
 
 int main (int argc, char *argv[])
 {
@@ -135,11 +135,10 @@ int main (int argc, char *argv[])
     MPI_Comm_rank (MPI_COMM_WORLD, &taskid);
     MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
 
-    settings = new struct Settings;
     settingsFromCLI (argc, argv, settings);
-    if (!settings->files.config.empty())
+    if (!settings.files.config.empty())
     {
-        makeSettings (settings->files.config, settings);
+        makeSettings (settings.files.config, settings);
     }
     else
     {
@@ -183,10 +182,10 @@ int main (int argc, char *argv[])
     if (taskid != MASTER) /* already loaded in the MASTER task */
     {
         if (mc.clust.evoModels.brownDwarfEvol == BARAFFE)
-            loadBaraffe (settings->files.models);
-        loadMSRgbModels (&mc.clust, settings->files.models, 0);
-        loadWDCool (settings->files.models, mc.clust.evoModels.WDcooling);
-        loadBergeron (settings->files.models, mc.clust.evoModels.filterSet);
+            loadBaraffe (settings.files.models);
+        loadMSRgbModels (&mc.clust, settings.files.models, 0);
+        loadWDCool (settings.files.models, mc.clust.evoModels.WDcooling);
+        loadBergeron (settings.files.models, mc.clust.evoModels.filterSet);
     }
 
 
@@ -522,8 +521,6 @@ int main (int argc, char *argv[])
     delete[] (starStatus);
     delete[] mc.stars;
 
-    delete settings;
-
     MPI_Type_free (&clustParType);
     MPI_Type_free (&obsStarType);
     MPI_Finalize ();
@@ -546,33 +543,33 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
         ctrl->useFilt[ii] = 0;
     }
 
-    seed = settings->seed;
+    seed = settings.seed;
     init_genrand (seed);
 
-    loadModels (0, &mc->clust, settings);
+    loadModels (0, &mc->clust, &settings);
 
-    ctrl->priorMean[FEH] = settings->cluster.Fe_H;
-    ctrl->priorVar[FEH] = settings->cluster.sigma.Fe_H;
+    ctrl->priorMean[FEH] = settings.cluster.Fe_H;
+    ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;
     if (ctrl->priorVar[FEH] < 0.0)
     {
         ctrl->priorVar[FEH] = 0.0;
     }
 
-    ctrl->priorMean[MOD] = settings->cluster.distMod;
-    ctrl->priorVar[MOD] = settings->cluster.sigma.distMod;
+    ctrl->priorMean[MOD] = settings.cluster.distMod;
+    ctrl->priorVar[MOD] = settings.cluster.sigma.distMod;
     if (ctrl->priorVar[MOD] < 0.0)
     {
         ctrl->priorVar[MOD] = 0.0;
     }
 
-    ctrl->priorMean[ABS] = settings->cluster.Av;
-    ctrl->priorVar[ABS] = settings->cluster.sigma.Av;
+    ctrl->priorMean[ABS] = settings.cluster.Av;
+    ctrl->priorVar[ABS] = settings.cluster.sigma.Av;
     if (ctrl->priorVar[ABS] < 0.0)
     {
         ctrl->priorVar[ABS] = 0.0;
     }
 
-    ctrl->initialAge = settings->cluster.logClusAge;
+    ctrl->initialAge = settings.cluster.logClusAge;
     ctrl->priorVar[AGE] = 1.0;
 
     ctrl->priorVar[IFMR_INTERCEPT] = 1.0;
@@ -626,7 +623,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
 
     char filename[100];
 
-    strcpy (filename, settings->files.phot.c_str());
+    strcpy (filename, settings.files.phot.c_str());
 
     if ((ctrl->rData = fopen (filename, "r")) == NULL)
     {
@@ -635,7 +632,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
         exit (1);
     }
 
-    strcpy (filename, settings->files.output.c_str());
+    strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".res");
     if ((ctrl->rSampledParamFile = fopen (filename, "r")) == NULL)
     {
@@ -644,9 +641,9 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
         exit (1);
     }
 
-    ctrl->minMag = settings->cluster.minMag;
-    ctrl->maxMag = settings->cluster.maxMag;
-    ctrl->iMag = settings->cluster.index;
+    ctrl->minMag = settings.cluster.minMag;
+    ctrl->maxMag = settings.cluster.maxMag;
+    ctrl->iMag = settings.cluster.index;
     if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
     {
         printf ("***Error: %d not a valid magnitude index.  Choose 0, 1,or 2.***\n", ctrl->iMag);
@@ -654,7 +651,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
         exit (1);
     }
 
-    strcpy (filename, settings->files.output.c_str());
+    strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".massSamples");
     if ((ctrl->wMassSampleFile = fopen (filename, "w")) == NULL)
     {

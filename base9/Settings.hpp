@@ -97,11 +97,11 @@ struct Settings
     struct ScatterClusterSettings scatterCluster;
 };
 
-void makeSettings (const std::string, struct Settings *);
-void settingsFromCLI (int argc, char **argv, struct Settings *settings);
+void makeSettings (const std::string, struct Settings &);
+void settingsFromCLI (int, char **, struct Settings &);
 
 template <typename T> T getDefault (YAML::Node &, std::string &&, T);
 template <typename T> T getOrDie (YAML::Node &, std::string &&);
-YAML::Node getNode (YAML::Node & n, std::string && f);
+YAML::Node getNode (YAML::Node &, std::string &&);
 [[noreturn]] void exitWith (std::string &&);
 #endif

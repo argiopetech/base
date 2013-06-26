@@ -56,12 +56,12 @@ int main (int argc, char *argv[])
     struct cluster theCluster;
     struct star *stars;
 
-    struct Settings *settings = new struct Settings;
+    struct Settings settings;
 
     settingsFromCLI (argc, argv, settings);
-    if (!settings->files.config.empty())
+    if (!settings.files.config.empty())
     {
-        makeSettings (settings->files.config, settings);
+        makeSettings (settings.files.config, settings);
     }
     else
     {
@@ -76,7 +76,7 @@ int main (int argc, char *argv[])
     /////// Open files to read and write ///////
     ////////////////////////////////////////////
 
-    strcpy (filename, settings->files.scatter.c_str());
+    strcpy (filename, settings.files.scatter.c_str());
     if ((rDataPtr = fopen (filename, "r")) == NULL)
     {
         printf ("***Error: file %s was not found.***\n", filename);
@@ -85,9 +85,9 @@ int main (int argc, char *argv[])
     }
 
     /* printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> "); */
-    minMag = settings->cluster.minMag;
-    maxMag = settings->cluster.maxMag;
-    iMag = settings->cluster.index;
+    minMag = settings.cluster.minMag;
+    maxMag = settings.cluster.maxMag;
+    iMag = settings.cluster.index;
 
     if (iMag < 0 || iMag > 2)
     {
@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
     /* printf("\n Enter mcmc file name : "); */
     /* scanf("%s",filename); */
     // This is a leftover from Base8 and may not work with the current cluster files
-    strcpy (filename, settings->files.output.c_str());
+    strcpy (filename, settings.files.output.c_str());
     openOutputFiles (&rClusterPtr, filename, CLUS_READ);
     openOutputFiles (&wClusterStatPtr, filename, CLUS_STAT_WRITE);
     openOutputFiles (&wCmdPtr, filename, CMD_FILE);
@@ -193,13 +193,13 @@ int main (int argc, char *argv[])
 
     /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
     /* scanf("%d",&verbose); */
-    theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
-    verbose = settings->verbose;
+    theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
+    verbose = settings.verbose;
 
     if (verbose < 0 || verbose > 2)
         verbose = 1;            // give standard feedback if incorrectly specified
 
-    loadModels (0, &theCluster, settings);      // read in stellar evol & WD models
+    loadModels (0, &theCluster, &settings);      // read in stellar evol & WD models
 
 
     //////////////////////////////
@@ -509,8 +509,6 @@ int main (int argc, char *argv[])
     fclose (rMassPtr[0]);
     fclose (rMassPtr[1]);
     fclose (wCmdPtr);
-
-    delete settings;
 
     return (0);
 }
