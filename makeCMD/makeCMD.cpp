@@ -3,19 +3,20 @@
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
+
 #include "evolve.hpp"
 #include "structures.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
 
-#define  COL_MAX        1000    // max number of cluster stars
-#define  FS_NUM          0.0    // mcmc outputs negative mass for field star
-#define  CLUS_READ         9
-#define  CLUS_STAT_WRITE  10
-#define  MASS1_FILE       11
-#define  MASS2_FILE       12
-#define  CMD_FILE         13
-#define  DEBUG_FILE       16
+const double  FS_NUM       = 0.0;    // mcmc outputs negative mass for field star
+const int  COL_MAX         = 1000;    // max number of cluster stars
+const int  CLUS_READ       = 9;
+const int  CLUS_STAT_WRITE = 10;
+const int  MASS1_FILE      = 11;
+const int  MASS2_FILE      = 12;
+const int  CMD_FILE        = 13;
+const int  DEBUG_FILE      = 16;
 
 // Used by evolve.c
 double ltau[2], wdLogTeff[2];
