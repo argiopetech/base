@@ -1,7 +1,7 @@
-#if defined(MSRGBEVOL_H )
-/* the file has already been defined */
-#else
+#ifndef MSRGBEVOL_H
 #define MSRGBEVOL_H
+
+#include <string>
 
 #include "evolve.hpp"
 #include "msRgbEvol.hpp"
@@ -14,6 +14,6 @@
 void deriveAgbTipMass (struct cluster *pCluster);
 double msRgbEvol (struct cluster *pCluster, double zamsMass);
 double wdPrecLogAge (struct cluster *pCluster, double zamsMass);
-void loadMSRgbModels (struct cluster *pCluster, char *path, int needFS);
+void loadMSRgbModels (struct cluster *pCluster, std::string path, int needFS);
 
 #endif

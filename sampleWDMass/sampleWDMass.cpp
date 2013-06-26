@@ -136,9 +136,8 @@ int main (int argc, char *argv[])
     MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
 
     settings = new struct Settings;
-    zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
-    if (settings->files.config)
+    if (!settings->files.config.empty())
     {
         makeSettings (settings->files.config, settings);
     }
@@ -627,7 +626,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
 
     char filename[100];
 
-    strcpy (filename, settings->files.phot);
+    strcpy (filename, settings->files.phot.c_str());
 
     if ((ctrl->rData = fopen (filename, "r")) == NULL)
     {
@@ -636,7 +635,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
         exit (1);
     }
 
-    strcpy (filename, settings->files.output);
+    strcpy (filename, settings->files.output.c_str());
     strcat (filename, ".res");
     if ((ctrl->rSampledParamFile = fopen (filename, "r")) == NULL)
     {
@@ -655,7 +654,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
         exit (1);
     }
 
-    strcpy (filename, settings->files.output);
+    strcpy (filename, settings->files.output.c_str());
     strcat (filename, ".massSamples");
     if ((ctrl->wMassSampleFile = fopen (filename, "w")) == NULL)
     {

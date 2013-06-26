@@ -362,23 +362,17 @@ void allocateGlobalIso (struct globalIso *newIso)
         return;
     }
 
-    if ((newIso->mass = (double *) calloc (newIso->nEntries, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-
-    if ((newIso->massNow = (double *) calloc (newIso->nEntries, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-
-    if ((newIso->eep = (int *) calloc (newIso->nEntries, sizeof (int))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    newIso->mass = new double[newIso->nEntries]();
+    newIso->massNow = new double[newIso->nEntries]();
+    newIso->eep = new int[newIso->nEntries]();
 
     int j = 0;
 
-    if ((newIso->mag = (double **) calloc (newIso->nEntries, sizeof (double *))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    newIso->mag = new double*[newIso->nEntries]();
+
     for (j = 0; j < newIso->nEntries; j++)
     {
-        if ((newIso->mag[j] = (double *) calloc (newIso->nFilts, sizeof (double))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
+        newIso->mag[j] = new double[newIso->nFilts]();
     }
 }
 

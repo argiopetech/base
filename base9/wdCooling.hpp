@@ -1,6 +1,8 @@
 #ifndef WDCOOL_H
 #define WDCOOL_H
 
+#include <string>
+
 const int MAX_WD_MODEL = 1000; // Renedo models have lots of entries
 
 struct wdCarbonCurve
@@ -21,7 +23,7 @@ struct wdCoolingCurve
     struct wdCarbonCurve *carbonCurve;
 };
 
-void loadWDCool (char *path, int modelSet);
+void loadWDCool (std::string path, int modelSet);
 double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double *thisWDLogRadius);
 double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wdMass, double *thisWDLogRadius);
 double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double *thisWDLogRadius);

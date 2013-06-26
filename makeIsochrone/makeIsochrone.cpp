@@ -40,9 +40,8 @@ int main (int argc, char *argv[])
 
     struct Settings *settings = new struct Settings;
 
-    zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
-    if (settings->files.config)
+    if (!settings->files.config.empty())
     {
         makeSettings (settings->files.config, settings);
     }
@@ -61,7 +60,7 @@ int main (int argc, char *argv[])
 
     /* printf("Enter file name containing color/magnitude data:\n> "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.phot);
+    strcpy (filename, settings->files.phot.c_str());
     if ((rDataPtr = fopen (filename, "r")) == NULL)
     {
         printf ("***Error: file %s was not found.***\n", filename);
@@ -84,7 +83,7 @@ int main (int argc, char *argv[])
     // char outfilename[100];
     /* printf("\n Enter isochrone file name : "); */
     /* scanf("%s",filename); */
-    strcpy (filename, settings->files.output);  // File ending gets added in openOutputFiles
+    strcpy (filename, settings->files.output.c_str());  // File ending gets added in openOutputFiles
     openOutputFiles (&wDebugPtr, filename, DEBUG_FILE);
 
     ////////////////////////////////////////////
@@ -110,13 +109,8 @@ int main (int argc, char *argv[])
     ///// Read in other variables /////
     ///////// and load models /////////
     ///////////////////////////////////
-
-    /* printf("\n Enter M_wd_up : "); */
-    /* scanf("%lf", &theCluster.M_wd_up); */
     theCluster.M_wd_up = settings->whiteDwarf.M_wd_up;
 
-    /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
-    /* scanf("%d",&verbose); */
     verbose = settings->verbose;
     if (verbose < 0 || verbose > 2)
         verbose = 1;            /* give standard feedback if incorrectly specified */
@@ -126,26 +120,16 @@ int main (int argc, char *argv[])
 
 
     /* read cluster parameters */
-    /* printf("\n Enter cluster log(age) : "); */
-    /* scanf("%lf", &theCluster.parameter[AGE]); */
     theCluster.parameter[AGE] = settings->cluster.logClusAge;
 
-    /* printf("\n Enter cluster [Fe/H] : "); */
-    /* scanf("%lf", &theCluster.parameter[FEH]); */
     theCluster.parameter[FEH] = settings->cluster.Fe_H;
 
-    /* printf("\n Enter cluster distance modulus : "); */
-    /* scanf("%lf", &theCluster.parameter[MOD]); */
     theCluster.parameter[MOD] = settings->cluster.distMod;
 
-    /* printf("\n Enter cluster absorption : "); */
-    /* scanf("%lf", &theCluster.parameter[ABS]); */
     theCluster.parameter[ABS] = settings->cluster.Av;
 
     if (theCluster.evoModels.mainSequenceEvol == CHABHELIUM)
     {
-        /* printf("\n Enter cluster [He/H] : "); */
-        /* scanf("%lf", &theCluster.parameter[YYY]); */
         theCluster.parameter[YYY] = settings->cluster.Y;
     }
     else
@@ -153,25 +137,11 @@ int main (int argc, char *argv[])
         theCluster.parameter[YYY] = 0.0;
     }
 
-    // // Create a simulated cluster based on the cluster stats and output for comparison
-    // theCluster.nStars = (int)(theCluster.M_wd_up * 1000) + 1;
-    //
-    // if((stars = (struct star *) malloc(theCluster.nStars * sizeof(struct star))) == NULL)
-    //    perror("MEMORY ALLOCATION ERROR \n");
-    // for(j = 0; j < theCluster.nStars; j++) initStar(&(stars[j]));
-    //
-    // for(j=0;j<theCluster.nStars;j++){
-    //   stars[j].U = j*.001;
-    //   stars[j].massRatio = 0.0;
-    // }
-    //
-    // evolve(&theCluster,stars,-1);
-
     // Create a simulated cluster based on the cluster stats and output for comparison
     theCluster.nStars = 1;
 
-    if ((stars = (struct star *) malloc (theCluster.nStars * sizeof (struct star))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    stars = new struct star[theCluster.nStars];
+
     for (j = 0; j < theCluster.nStars; j++)
         initStar (&(stars[j]));
 

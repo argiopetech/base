@@ -45,9 +45,8 @@ int main (int argc, char *argv[])
 
     struct Settings *settings = new struct Settings;
 
-    zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
-    if (settings->files.config)
+    if (!settings->files.config.empty())
     {
         makeSettings (settings->files.config, settings);
     }
@@ -95,7 +94,7 @@ int main (int argc, char *argv[])
     if (theCluster.evoModels.mainSequenceEvol == DSED)
         minMass = 0.25;
 
-    strcpy (w_file, settings->files.output);
+    strcpy (w_file, settings->files.output.c_str());
     strcat (w_file, ".sim.out");
     if ((w_ptr = fopen (w_file, "w")) == NULL)
     {

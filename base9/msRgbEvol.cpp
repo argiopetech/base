@@ -1,8 +1,12 @@
+#include <string>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
 
 #include "msRgbEvol.hpp"
+
+using std::string;
 
 /****************************************************************************************
 last update: 20jul10
@@ -25,7 +29,7 @@ To do so:
 ****************************************************************************************/
 
 //Static array of pointers to the individual functions
-static void (*loadMSRgbModelFunctions[]) (char *, int) =
+static void (*loadMSRgbModelFunctions[]) (string, int) =
 {
     &loadGirardi, &loadChaboyer, &loadYale, &loadDsed};
 
@@ -112,7 +116,7 @@ modified for different model sets.
 }
 
 
-void loadMSRgbModels (struct cluster *pCluster, char *path, int needFS)
+void loadMSRgbModels (struct cluster *pCluster, string path, int needFS)
 {
     (*loadMSRgbModelFunctions[pCluster->evoModels.mainSequenceEvol]) (path, pCluster->evoModels.filterSet);
 

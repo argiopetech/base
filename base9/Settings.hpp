@@ -75,11 +75,11 @@ struct ClusterSettings
 
 struct Files
 {
-    char *phot;
-    char *output;
-    char *scatter;
-    char *config;
-    char *models;
+    std::string phot;
+    std::string output;
+    std::string scatter;
+    std::string config;
+    std::string models;
 };
 
 struct Settings
@@ -97,13 +97,11 @@ struct Settings
     struct ScatterClusterSettings scatterCluster;
 };
 
-void makeSettings (const char *, struct Settings *);
-void zeroSettingPointers (struct Settings *);
+void makeSettings (const std::string, struct Settings *);
 void settingsFromCLI (int argc, char **argv, struct Settings *settings);
 
-template < typename T > T getDefault (YAML::Node &, std::string &&, T);
-
-template < typename T > T getOrDie (YAML::Node &, std::string &&);
+template <typename T> T getDefault (YAML::Node &, std::string &&, T);
+template <typename T> T getOrDie (YAML::Node &, std::string &&);
 YAML::Node getNode (YAML::Node & n, std::string && f);
 [[noreturn]] void exitWith (std::string &&);
 #endif

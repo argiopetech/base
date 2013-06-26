@@ -1,3 +1,5 @@
+#include <string>
+
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
@@ -8,6 +10,8 @@
 #include "binSearch.hpp"
 #include "gYaleMag.hpp"
 #include "binSearch.hpp"
+
+using std::string;
 
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
@@ -31,7 +35,7 @@ static double coeff[6][8];
 
 //Static funtions
 static void initIso (struct yyIsochrone *newIso);
-static void getFileName (char *path, int z);
+static void getFileName (string path, int z);
 static void eepset (double x[], double y[], int nstep, int igrd, double *slope);
 static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorder);
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS]);
@@ -39,9 +43,7 @@ static double feh2z (double FeH);
 static void intpolZ (int iZ, int iAge, double newZ);
 static void intpolAge (int iAge, double newAge);
 
-//static void   outputYYIso(struct yyIsochrone *iso, FILE *ptr, int byMag);
-
-void loadYale (char *path, int filterSet)
+void loadYale (string path, int filterSet)
 {
     FILE *pYY;
     int z, a, n, p;
@@ -191,7 +193,7 @@ void loadYale (char *path, int filterSet)
     /////////////////////////////////////////////////////////////////////
 
     // Open coeff file for reading
-    strcpy (tempFile, path);
+    strcpy (tempFile, path.c_str());
     strcat (tempFile, "YYiso/yyAGBtcoeff.dat\0");
 
     //fscanf(pModelList,"%s",tempFile);
@@ -532,7 +534,7 @@ static void initIso (struct yyIsochrone *newIso)
   }
 
 */
-static void getFileName (char *path, int z)
+static void getFileName (string path, int z)
 {
 
     char fileNames[][19] = {
@@ -550,7 +552,7 @@ static void getFileName (char *path, int z)
     };
 
     strcpy (tempFile, "\0");
-    strcat (tempFile, path);
+    strcat (tempFile, path.c_str());
     strcat (tempFile, "YYiso/yy00l.x");
     strcat (tempFile, fileNames[z]);
 

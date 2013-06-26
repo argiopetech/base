@@ -1,9 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <math.h>
-#include <string.h>
+#include <string>
+#include <fstream>
+#include <iostream>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+
 #include <mpi.h>
+#include <unistd.h>
+#include <boost/format.hpp>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_eigen.h>
+#include <gsl/gsl_statistics.h>
+#include <gsl/gsl_linalg.h>
+
 #include "constants.hpp"
 #include "mpiMcmc.hpp"
 #include "evolve.hpp"
@@ -17,12 +29,11 @@
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
 #include "Settings.hpp"
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_eigen.h>
-#include <gsl/gsl_statistics.h>
-#include <gsl/gsl_linalg.h>
-// #include "marg.c"
+
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 int gsl_linalg_cholesky_decomp (gsl_matrix * A);
 
@@ -38,15 +49,10 @@ static void propClustIndep (struct cluster *clust, const struct ifmrMcmcControl 
 static void propClustCorrelated (struct cluster *clust, const struct ifmrMcmcControl *ctrl);
 static int acceptClustMarg (double logPostCurr, double logPostProp);
 
-// static void propIfmr(struct cluster *clust, const struct ifmrMcmcControl *ctrl);
-// static int acceptIfmr(double logPostCurr, double logPostProp);
-
-static void printHeader (const struct ifmrMcmcControl *ctrl);
+static void printHeader (struct ifmrMcmcControl * const ctrl);
 static void initMassGrids (double *msMass1Grid, double *msMassRatioGrid, double *wdMass1Grid, const struct chain mc);
 
-
 /*** global variables ***/
-
 /* Used by evolve.c */
 double ltau[2];
 int aFilt = -1;
@@ -66,37 +72,22 @@ struct Settings *settings;
 unsigned long mt[NN];
 int mti = NN + 1;
 
-int taskid;
-
-/*******************************************
-********************************************
-** MAIN FUNCTION
-********************************************
-*******************************************/
 int main (int argc, char *argv[])
 {
-    /*    { */
-/*         int i = 0; */
-/*         char hostname[256]; */
-/*         gethostname(hostname, sizeof(hostname)); */
-/*         printf("PID %d on %s ready for attach\n", getpid(), hostname); */
-/*         fflush(stdout); */
-/* //        while (0 == i) */
-/* //            sleep(5); */
-/*     } */
-
     int i, j, p, filt, iteration, numtasks,     /* total number of MPI process in partitiion */
         numworkers,                     /* number of worker tasks */
-//        taskid,                               /* task identifier */
+        taskid,
         dest,                   /* destination task id to send message */
         index,                  /* index into the array */
         source,                 /* origin task id of message */
         chunksize,                      /* for partitioning the array of stars */
         extra, minchunk, accept = 0, reject = 0, doAccept;
+
     double logPostCurr;
     double logPostProp;
     double *logPostEachStar;
     double postClusterStar;
+
     struct chain mc;
     struct ifmrMcmcControl ctrl;
     struct cluster propClustMaster;
@@ -112,8 +103,6 @@ int main (int argc, char *argv[])
     /* arrays to evolve all copies of each star simultaneously */
     struct star wd[N_WD_MASS1];
 
-    // struct star ms[N_MS_MASS1 * N_MS_MASS_RATIO];
-
     MPI_Datatype obsStarType;
     MPI_Status status;
 
@@ -123,11 +112,9 @@ int main (int argc, char *argv[])
     MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
     MPI_Type_commit (&obsStarType);
 
-
     settings = new struct Settings;
-    zeroSettingPointers (settings);
     settingsFromCLI (argc, argv, settings);
-    if (settings->files.config)
+    if (!settings->files.config.empty())
     {
         makeSettings (settings->files.config, settings);
     }
@@ -167,7 +154,6 @@ int main (int argc, char *argv[])
     MPI_Bcast (&mc.clust.carbonicity, 1, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
     mc.clust.evoModels.WDatm = BERGERON;
-    // mc.clust.evoModels.IFMR = LINEAR;
 
     if (taskid != MASTER)
     {                           /* already loaded in the MASTER task */
@@ -301,23 +287,23 @@ int main (int argc, char *argv[])
         printf ("Bayesian analysis of stellar evolution\n");
 
         /* open output files */
-        if ((ctrl.wClusterFile[0] = fopen (ctrl.clusterFilename, "w")) == NULL)
+        ctrl.wClusterFile[0].open(ctrl.clusterFilename);
+        if (!ctrl.wClusterFile[0])
         {
-            printf ("***Error: File %s was not available for writing.***\n", ctrl.clusterFilename);
-            printf ("[Exiting...]\n");
+            cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+            cerr << "[Exiting...]" << endl;
             exit (1);
         }
-        strcat (ctrl.clusterFilename, ".burnin");
-        if ((ctrl.wClusterFile[1] = fopen (ctrl.clusterFilename, "w")) == NULL)
+
+        ctrl.clusterFilename += ".burnin";
+        ctrl.wClusterFile[1].open(ctrl.clusterFilename);
+        if (!ctrl.wClusterFile[1])
         {
-            printf ("***Error: File %s was not available for writing.***\n", ctrl.clusterFilename);
-            printf ("[Exiting...]\n");
+            cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+            cerr << "[Exiting...]" << endl;
             exit (1);
         }
         printHeader (&ctrl);
-
-        setvbuf (ctrl.wClusterFile[0], 0, _IOLBF, 150);
-        setvbuf (ctrl.wClusterFile[1], 0, _IOLBF, 150);
     }
 
     /* set current log posterior to -HUGE_VAL */
@@ -331,16 +317,11 @@ int main (int argc, char *argv[])
     int increment = ctrl.burnIter / (2 * nSave);
     double **params;
 
-    if ((params = (double **) calloc (NPARAMS, sizeof (double *))) == NULL)
-    {
-        perror ("MEMORY ALLOCATION ERROR \n");
-    }
+    params = new double*[NPARAMS]();
+
     for (p = 0; p < NPARAMS; p++)
     {
-        if ((params[p] = (double *) calloc (nSave, sizeof (double))) == NULL)
-        {
-            perror ("MEMORY ALLOCATION ERROR \n");
-        }
+        params[p] = new double[nSave]();
     }
     double cov;
 
@@ -521,27 +502,24 @@ int main (int argc, char *argv[])
             {
                 for (p = 0; p < NPARAMS; p++)
                 {
-                    //if (ctrl.priorVar[p] > EPS) {
                     if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        fprintf (ctrl.wClusterFile[1], "%10.6f ", mc.clust.parameter[p]);
+                        ctrl.wClusterFile[1] << boost::format("%10.6f ") % mc.clust.parameter[p];
                     }
                 }
-                fprintf (ctrl.wClusterFile[1], "%10.6f\n", logPostCurr);
-                fflush (ctrl.wClusterFile[1]);
+
+                ctrl.wClusterFile[1] << boost::format("%10.6f") % logPostCurr << endl;
             }
             else if (iteration % ctrl.thin == 0)
             {
                 for (p = 0; p < NPARAMS; p++)
                 {
-                    //if (ctrl.priorVar[p] > EPS) {
                     if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        fprintf (ctrl.wClusterFile[0], "%10.6f ", mc.clust.parameter[p]);
+                        ctrl.wClusterFile[0] << boost::format("%10.6f ") % mc.clust.parameter[p];
                     }
                 }
-                fprintf (ctrl.wClusterFile[0], "%10.6f\n", logPostCurr);
-                // fflush(ctrl.wClusterFile[0]);
+                ctrl.wClusterFile[0] << boost::format("%10.6f") % logPostCurr << endl;
             }
         }
         else
@@ -629,9 +607,9 @@ int main (int argc, char *argv[])
 
     if (taskid == MASTER)
     {
-        fclose (ctrl.wClusterFile[0]);
-        fclose (ctrl.wClusterFile[1]);
-        printf ("Acceptance ratio: %lf\n", (double) accept / (accept + reject));
+        ctrl.wClusterFile[0].close();
+        ctrl.wClusterFile[1].close();
+        cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
     }
 
 
@@ -740,34 +718,11 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     for (ii = 0; ii < FILTS; ii++)
         ctrl->useFilt[ii] = 0;
 
-    // char infilename[100] = "ifmrMcmc.in";
-    // FILE *infile;
-    // if((infile = fopen(infilename,"r")) == NULL) {
-    //   printf("***Error: file %s was not found.***\n",infilename);
-    //   printf("[Exiting...]\n");
-    //   exit(1);
-    // }
-
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings->seed);
 
     /* load models */
-    // fscanf(infile, "%d", &ctrl->modelSet);
-    // setModels(&mc->clust, ctrl->modelSet);
-    //
-    // /* for IFMR sampling*/
-    // mc->clust.evoModels.IFMR = LINEAR;
-    //
-    // char path[100] = "models/";
-    // loadMSRgbModels(&mc->clust, path, 0);
-    // loadWDCool(path, mc->clust.evoModels.WDcooling);
-    // loadBergeron(path, mc->clust.evoModels.filterSet);
-
     loadModels (0, &mc->clust, settings);
-
-
-    // fscanf(infile, "%lf %lf",&ctrl->priorMean[FEH],&ctrl->priorVar[FEH]);
-    /* scanf("%lf %lf",&ctrl->priorMean[FEH],&priorSigma); */
 
     ctrl->priorMean[FEH] = settings->cluster.Fe_H;
     priorSigma = settings->cluster.sigma.Fe_H;
@@ -778,9 +733,6 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     }
     ctrl->priorVar[FEH] = priorSigma * priorSigma;
 
-    // fscanf(infile,"%lf %lf",&ctrl->priorMean[MOD],&ctrl->priorVar[MOD]);
-    /* scanf("%lf %lf",&ctrl->priorMean[MOD],&priorSigma); */
-
     ctrl->priorMean[MOD] = settings->cluster.distMod;
     priorSigma = settings->cluster.sigma.distMod;
 
@@ -790,9 +742,6 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     }
     ctrl->priorVar[MOD] = priorSigma * priorSigma;
 
-    // fscanf(infile,"%lf %lf",&ctrl->priorMean[ABS],&ctrl->priorVar[ABS]);
-    /* scanf("%lf %lf",&ctrl->priorMean[ABS],&priorSigma); */
-
     ctrl->priorMean[ABS] = settings->cluster.Av;
     priorSigma = settings->cluster.sigma.Av;
 
@@ -801,9 +750,6 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
         priorSigma = 0.0;
     }
     ctrl->priorVar[ABS] = priorSigma * priorSigma;
-
-    // fscanf(infile,"%lf",&ctrl->initialAge);
-    /* scanf("%lf",&ctrl->initialAge); */
 
     ctrl->initialAge = settings->cluster.logClusAge;
     ctrl->priorVar[AGE] = 1.0;
@@ -852,13 +798,10 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     priorMean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
 
     /* open model file, choose model set, and load models */
-
-    // loadModels(0, &mc->clust);
-
     if (mc->clust.evoModels.mainSequenceEvol == CHABHELIUM)
     {
-        // fscanf(infile,"%lf %lf", &ctrl->priorMean[YYY], &ctrl->priorVar[YYY]);
         scanf ("%lf %lf", &ctrl->priorMean[YYY], &ctrl->priorVar[YYY]);
+
         if (ctrl->priorVar[YYY] < 0.0)
         {
             ctrl->priorVar[YYY] = 0.0;
@@ -878,17 +821,14 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
     ctrl->thin = settings->mpiMcmc.thin;
 
     /* open files for reading (data) and writing */
+    string filename;
 
-    char filename[100];
-
-    // fscanf(infile, "%s", filename);
-    /* scanf("%s", filename); */
-
-    strcpy (filename, settings->files.phot);
-    if ((ctrl->rData = fopen (filename, "r")) == NULL)
+    filename = settings->files.phot;
+    ctrl->rData.open(filename);
+    if (!ctrl->rData)
     {
-        printf ("***Error: Photometry file %s was not found.***\n", filename);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
@@ -903,17 +843,11 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
         exit (1);
     }
 
-    /* read output filename */
-    // fscanf(infile, "%s", ctrl->clusterFilename);
-    /* scanf("%s", ctrl->clusterFilename); */
-
-    strcpy (ctrl->clusterFilename, settings->files.output);
-    strcat (ctrl->clusterFilename, ".res");
+    ctrl->clusterFilename = settings->files.output + ".res";
 
     ctrl->iStart = 0;
 
     /* Initialize filter prior mins and maxes */
-
     int j;
 
     for (j = 0; j < FILTS; j++)
@@ -933,10 +867,12 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
     char line[300];
     double tempSigma;
     int filt, i;
-    char *pch, sig[] = "sig\0", comp[] = "   \0";
+    char *pch, sig[] = "sig", comp[] = "   ";
 
     //Parse the header of the file to determine which filters are being used
-    fgets (line, 300, ctrl->rData);     // Read in the header line
+    ctrl->rData.getline(line, 300);     // Read in the header line
+
+    cerr << line << endl;
 
     pch = strtok (line, " ");   // split the string on these delimiters into "tokens"
 
@@ -973,16 +909,17 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
 
     // This loop reads in photometry data
     // It also reads a best guess for the mass
-    int nr, j = 0;
+    int j = 0;
     int moreStars = 1;          // true
     void *tempAlloc;            // temporary for allocation
 
     // why is this necessary???
     mc->stars = nullptr;
 
+    cout << ctrl->numFilts << endl;
+
     while (moreStars)
     {
-//        puts("moreStars");
         if ((j % ALLOC_CHUNK) == 0)
         {
             if ((tempAlloc = (void *) realloc (mc->stars, (j + ALLOC_CHUNK) * sizeof (struct star))) == NULL)
@@ -990,24 +927,27 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
             else
                 mc->stars = (struct star *) tempAlloc;
         }
-        nr = fscanf (ctrl->rData, "%*s");
-        if (nr == EOF)
+
+        ctrl->rData >> line;
+
+        if (ctrl->rData.eof())
             break;
-//        printf("%d %d\n", ctrl->numFilts, mc->clust.evoModels.numFilts);
+
         for (i = 0; i < ctrl->numFilts; i++)
         {
-//            printf("%d %g %g before, in %d\n", i, ctrl->filterPriorMax[i], ctrl->filterPriorMin[i], taskid);
-            fscanf (ctrl->rData, "%lf", &(mc->stars[j].obsPhot[i]));
+            ctrl->rData >> mc->stars[j].obsPhot[i];
+
             if (mc->stars[j].obsPhot[i] < ctrl->filterPriorMin[i])
             {
                 ctrl->filterPriorMin[i] = mc->stars[j].obsPhot[i];
             }
+
             if (mc->stars[j].obsPhot[i] > ctrl->filterPriorMax[i])
             {
                 ctrl->filterPriorMax[i] = mc->stars[j].obsPhot[i];
             }
-//            printf("%g %g after, in %d\n", ctrl->filterPriorMax[i], ctrl->filterPriorMin[i], taskid);
         }
+
         // copy to global variables
         for (i = 0; i < ctrl->numFilts; i++)
         {
@@ -1016,13 +956,13 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
         }
         for (i = 0; i < ctrl->numFilts; i++)
         {
-            fscanf (ctrl->rData, "%lf", &tempSigma);
+            ctrl->rData >> tempSigma;
             mc->stars[j].variance[i] = tempSigma * fabs (tempSigma);
             // The fabs() keeps the sign of the variance the same as that input by the user for sigma
             // Negative sigma (variance) is used to signal "don't count this band for this star"
         }
 
-        fscanf (ctrl->rData, "%lf %lf %d %lf %d", &(mc->stars[j].U), &(mc->stars[j].massRatio), &(mc->stars[j].status[0]), &(mc->stars[j].clustStarPriorDens), &(mc->stars[j].useDuringBurnIn));
+        ctrl->rData >> mc->stars[j].U >> mc->stars[j].massRatio >> mc->stars[j].status[0] >> mc->stars[j].clustStarPriorDens >> mc->stars[j].useDuringBurnIn;
 
         if (mc->stars[j].status[0] == 3 || (mc->stars[j].obsPhot[ctrl->iMag] >= ctrl->minMag && mc->stars[j].obsPhot[ctrl->iMag] <= ctrl->maxMag))
         {
@@ -1042,7 +982,7 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
         useFilt[i] = ctrl->useFilt[i];
     }
     numFilts = ctrl->numFilts;
-}                               /* readCmdData */
+} /* readCmdData */
 
 
 
@@ -1213,7 +1153,7 @@ static void propClustCorrelated (struct cluster *clust, const struct ifmrMcmcCon
 }
 
 
-static void printHeader (const struct ifmrMcmcControl *ctrl)
+static void printHeader (struct ifmrMcmcControl * const ctrl)
 {
     const char *paramNames[] = { "    logAge",
                                  "         Y",
@@ -1228,15 +1168,14 @@ static void printHeader (const struct ifmrMcmcControl *ctrl)
 
     for (p = 0; p < NPARAMS; p++)
     {
-        //if(ctrl->priorVar[p] > EPSILON) {
         if (ctrl->priorVar[p] > EPSILON || p == MOD || p == FEH || p == ABS)
         {
-            fprintf (ctrl->wClusterFile[0], "%s ", paramNames[p]);
-            fprintf (ctrl->wClusterFile[1], "%s ", paramNames[p]);
+            ctrl->wClusterFile[0] << paramNames[p] << ' ';
+            ctrl->wClusterFile[1] << paramNames[p] << ' ';
         }
     }
-    fprintf (ctrl->wClusterFile[0], "logPost\n");
-    fprintf (ctrl->wClusterFile[1], "logPost\n");
+    ctrl->wClusterFile[0] << "logPost" << endl;
+    ctrl->wClusterFile[1] << "logPost" << endl;
 }
 
 

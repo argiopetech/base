@@ -2,7 +2,6 @@
 #include <cstring>
 #include <getopt.h>
 #include <iostream>
-#include <memory>
 #include <mpi.h>
 #include <string>
 #include <vector>
@@ -14,7 +13,6 @@ using std::cerr;
 using std::endl;
 using std::istringstream;
 using std::string;
-using std::unique_ptr;
 using std::vector;
 using YAML::Node;
 using YAML::LoadFile;
@@ -22,16 +20,7 @@ using YAML::LoadFile;
 // Forward declaration
 void printUsage ();
 
-void zeroSettingPointers (struct Settings *settings)
-{
-    settings->files.phot = nullptr;
-    settings->files.output = nullptr;
-    settings->files.scatter = nullptr;
-    settings->files.config = nullptr;
-    settings->files.models = nullptr;
-}
-
-void makeSettings (const char *yamlFile, struct Settings *settings)
+void makeSettings (const string yamlFile, struct Settings *settings)
 {
     Node config;
 
@@ -59,73 +48,69 @@ void makeSettings (const char *yamlFile, struct Settings *settings)
     Node isoConf = getNode (config, "makeIsochrone");
     Node scatterConf = getNode (config, "scatterCluster");
 
-    settings->mainSequence.filterSet = getOrDie < int >(mainSequence, "filterSet");
-    settings->mainSequence.msRgbModel = getOrDie < int >(mainSequence, "msRgbModel");
+    settings->mainSequence.filterSet = getOrDie<int>(mainSequence, "filterSet");
+    settings->mainSequence.msRgbModel = getOrDie<int>(mainSequence, "msRgbModel");
 
-    settings->whiteDwarf.ifmr = getOrDie < int >(whiteDwarfs, "ifmr");
-    settings->whiteDwarf.wdModel = getOrDie < int >(whiteDwarfs, "wdModel");
-    settings->whiteDwarf.carbonicity = getOrDie < double >(whiteDwarfs, "carbonicity");
-    settings->whiteDwarf.M_wd_up = getOrDie < double >(whiteDwarfs, "M_wd_up");
+    settings->whiteDwarf.ifmr = getOrDie<int>(whiteDwarfs, "ifmr");
+    settings->whiteDwarf.wdModel = getOrDie<int>(whiteDwarfs, "wdModel");
+    settings->whiteDwarf.carbonicity = getOrDie<double>(whiteDwarfs, "carbonicity");
+    settings->whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfs, "M_wd_up");
 
-    settings->brownDwarf.bdModel = getOrDie < int >(brownDwarfs, "bdModel");
+    settings->brownDwarf.bdModel = getOrDie<int>(brownDwarfs, "bdModel");
 
-    settings->cluster.Fe_H = getOrDie < double >(priors, "Fe_H");
-    settings->cluster.sigma.Fe_H = getOrDie < double >(sigmas, "Fe_H");
+    settings->cluster.Fe_H = getOrDie<double>(priors, "Fe_H");
+    settings->cluster.sigma.Fe_H = getOrDie<double>(sigmas, "Fe_H");
 
-    settings->cluster.distMod = getOrDie < double >(priors, "distMod");
-    settings->cluster.sigma.distMod = getOrDie < double >(sigmas, "distMod");
+    settings->cluster.distMod = getOrDie<double>(priors, "distMod");
+    settings->cluster.sigma.distMod = getOrDie<double>(sigmas, "distMod");
 
-    settings->cluster.Av = getOrDie < double >(priors, "Av");
-    settings->cluster.sigma.Av = getOrDie < double >(sigmas, "Av");
+    settings->cluster.Av = getOrDie<double>(priors, "Av");
+    settings->cluster.sigma.Av = getOrDie<double>(sigmas, "Av");
 
-    settings->cluster.Y = getOrDie < double >(priors, "Y");
-    settings->cluster.sigma.Y = getOrDie < double >(sigmas, "Y");
+    settings->cluster.Y = getOrDie<double>(priors, "Y");
+    settings->cluster.sigma.Y = getOrDie<double>(sigmas, "Y");
 
-    settings->cluster.logClusAge = getOrDie < double >(cluster, "logClusAge");
+    settings->cluster.logClusAge = getOrDie<double>(cluster, "logClusAge");
 
-    settings->cluster.minMag = getOrDie < double >(cluster, "minMag");
-    settings->cluster.maxMag = getOrDie < double >(cluster, "maxMag");
-    settings->cluster.index = getOrDie < int >(cluster, "index");
+    settings->cluster.minMag = getOrDie<double>(cluster, "minMag");
+    settings->cluster.maxMag = getOrDie<double>(cluster, "maxMag");
+    settings->cluster.index = getOrDie<int>(cluster, "index");
 
-    settings->mpiMcmc.burnIter = getOrDie < int >(mpiConf, "burnIter");
-    settings->mpiMcmc.maxIter = getOrDie < int >(mpiConf, "runIter");
-    settings->mpiMcmc.thin = getOrDie < int >(mpiConf, "thin");
+    settings->mpiMcmc.burnIter = getOrDie<int>(mpiConf, "burnIter");
+    settings->mpiMcmc.maxIter = getOrDie<int>(mpiConf, "runIter");
+    settings->mpiMcmc.thin = getOrDie<int>(mpiConf, "thin");
 
-    settings->simCluster.nStars = getOrDie < int >(simConf, "nStars");
-    settings->simCluster.percentBinary = getOrDie < int >(simConf, "percentBinary");
-    settings->simCluster.percentDB = getOrDie < int >(simConf, "percentDB");
-    settings->simCluster.nFieldStars = getOrDie < int >(simConf, "nFieldStars");
-    settings->simCluster.nBrownDwarfs = getOrDie < int >(simConf, "nBrownDwarfs");
+    settings->simCluster.nStars = getOrDie<int>(simConf, "nStars");
+    settings->simCluster.percentBinary = getOrDie<int>(simConf, "percentBinary");
+    settings->simCluster.percentDB = getOrDie<int>(simConf, "percentDB");
+    settings->simCluster.nFieldStars = getOrDie<int>(simConf, "nFieldStars");
+    settings->simCluster.nBrownDwarfs = getOrDie<int>(simConf, "nBrownDwarfs");
 
-    settings->scatterCluster.brightLimit = getOrDie < double >(scatterConf, "brightLimit");
-    settings->scatterCluster.faintLimit = getOrDie < double >(scatterConf, "faintLimit");
-    settings->scatterCluster.relevantFilt = getOrDie < int >(scatterConf, "relevantFilt");
-    settings->scatterCluster.limitS2N = getOrDie < double >(scatterConf, "limitS2N");
+    settings->scatterCluster.brightLimit = getOrDie<double>(scatterConf, "brightLimit");
+    settings->scatterCluster.faintLimit = getOrDie<double>(scatterConf, "faintLimit");
+    settings->scatterCluster.relevantFilt = getOrDie<int>(scatterConf, "relevantFilt");
+    settings->scatterCluster.limitS2N = getOrDie<double>(scatterConf, "limitS2N");
 
-    memcpy (settings->scatterCluster.exposures, static_cast < const void *>(getOrDie < vector < double >>(scatterConf, "exposures").data ()), 14 * sizeof (double));
+    memcpy (settings->scatterCluster.exposures, static_cast<const void *>(getOrDie<vector<double>>(scatterConf, "exposures").data ()), 14 * sizeof (double));
 
-    settings->seed = getOrDie < int >(general, "seed");
-    settings->verbose = getOrDie < int >(general, "verbose");
+    settings->seed = getOrDie<int>(general, "seed");
+    settings->verbose = getOrDie<int>(general, "verbose");
 
     // When we switch to C++11, we can change these to std::string and remove most of the cruft
-    settings->files.phot = new char[100];
-    strcpy (settings->files.phot, const_cast < char *>(getOrDie < string > (files, "photFile").c_str ()));
+    settings->files.phot = getOrDie<string> (files, "photFile");
 
-    settings->files.output = new char[100];
-    strcpy (settings->files.output, const_cast < char *>(getOrDie < string > (files, "outputFileBase").c_str ()));
+    settings->files.output = getOrDie<string> (files, "outputFileBase");
 
-    settings->files.scatter = new char[100];
-    strcpy (settings->files.scatter, const_cast < char *>(getOrDie < string > (files, "scatterFile").c_str ()));
+    settings->files.scatter = getOrDie<string> (files, "scatterFile");
 
-    settings->files.models = new char[100];
-    strcpy (settings->files.models, const_cast < char *>(getOrDie < string > (files, "modelDirectory").c_str ()));
+    settings->files.models = getOrDie<string> (files, "modelDirectory");
 }
 
 void settingsFromCLI (int argc, char **argv, struct Settings *settings)
 {
     char *t_argv[argc];
 
-    for (int i = 0; i < argc; i++)
+    for (int i = 0; i<argc; i++)
     {
         t_argv[i] = new char[strlen (argv[i]) + 1];
 
@@ -325,51 +310,19 @@ void settingsFromCLI (int argc, char **argv, struct Settings *settings)
                 break;
 
             case 0xDF:
-                if (settings->files.phot)       // Already something here...
-                {
-                    delete[]settings->files.phot;
-                }
-
-                assert (optarg);                // This is a required parameter, so it should never be null
-
-                settings->files.phot = new char[strlen (optarg) + 1];
-
-                strcpy (settings->files.phot, optarg);
+                settings->files.phot = optarg;
                 break;
 
             case 0xDE:
-                if (settings->files.scatter)    // Already something here...
-                {
-                    delete[]settings->files.scatter;
-                }
-
-                assert (optarg);                // This is a required parameter, so it should never be null
-
-                settings->files.scatter = new char[strlen (optarg) + 1];
-
-                strcpy (settings->files.scatter, optarg);
+                settings->files.scatter = optarg;
                 break;
 
             case 0xDD:
-                if (settings->files.output)     // Already something here...
-                {
-                    delete[]settings->files.output;
-                }
-
-                assert (optarg);                // This is a required parameter, so it should never be null
-
-                settings->files.output = new char[100];
-
-                strcpy (settings->files.output, optarg);
-
+                settings->files.output = optarg;
                 break;
 
             case 0xDC:
-                assert (optarg);                // This is a required parameter, so it should never be null
-
-                settings->files.config = new char[100];
-
-                strcpy (settings->files.config, optarg);
+                settings->files.config = optarg;
                 break;
 
             case 0xDB:                  // --help
@@ -378,17 +331,7 @@ void settingsFromCLI (int argc, char **argv, struct Settings *settings)
                 exit (EXIT_SUCCESS);
 
             case 0xDA:
-                if (settings->files.models)     // Already something here...
-                {
-                    delete[]settings->files.models;
-                }
-
-                assert (optarg);                // This is a required parameter, so it should never be null
-
-                settings->files.models = new char[100];
-
-                strcpy (settings->files.models, optarg);
-
+                settings->files.models = optarg;
                 break;
 
             case '?':
@@ -407,17 +350,17 @@ void settingsFromCLI (int argc, char **argv, struct Settings *settings)
     if (optind < argc)
     {
         cerr << "Unrecognized options: ";
-        while (optind < argc)
+        while (optind<argc)
             cerr << argv[optind++];
         cerr << endl;
     }
 }
 
-template < typename T > T getDefault (Node & n, string && f, T def)
+template<typename T> T getDefault (Node & n, string && f, T def)
 {
     if (n[f])
     {
-        return n[f].as < T > ();
+        return n[f].as<T> ();
     }
     else
     {
@@ -425,11 +368,11 @@ template < typename T > T getDefault (Node & n, string && f, T def)
     }
 }
 
-template < typename T > T getOrDie (Node & n, string && f)
+template<typename T> T getOrDie (Node & n, string && f)
 {
     if (n[f])
     {
-        return n[f].as < T > ();
+        return n[f].as<T> ();
     }
     else
     {
@@ -449,8 +392,7 @@ Node getNode (Node & n, string && f)
     }
 }
 
-[[noreturn]]
-void exitWith (string && s)
+[[noreturn]] void exitWith (string && s)
 {
     cerr << s << endl;
     abort ();
