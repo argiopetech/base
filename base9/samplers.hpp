@@ -1,15 +1,10 @@
-/* samplers.h */
-
-#ifdef SAMPLERS_H
-/* the file has been included already */
-#else
-
+#ifndef SAMPLERS_H
 #define SAMPLERS_H
 
-#define AGEPROPSTEPSIZE         0.02
-#define AGE_WANDER               100
-
 #include "structures.hpp"
+
+const double AGEPROPSTEPSIZE = 0.02;
+const int AGE_WANDER         = 100;
 
 void propFieldStar (struct star *inputStar);
 void propMass (struct star *inputstar);
