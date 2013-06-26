@@ -21,13 +21,9 @@
 //=                            subroutine                                   =
 //===========================================================================
 
-#include <math.h>               // Needed for sqrt() and log()
+#include <cmath>               // Needed for sqrt() and log()
+
 #include "mt19937ar.hpp"
-
-#define PI         3.14159265   // The value of pi
-
-//----- Function prototypes -------------------------------------------------
-double gen_norm (double mean, double std_dev);  // Returns a normal rv
 
 //===========================================================================
 //=  Function to generate normally distributed random variable using the    =
@@ -52,7 +48,7 @@ double gen_norm (double mean, double std_dev)
     // Generate theta
     theta = 0.0;
     while (theta == 0.0)
-        theta = 2.0 * PI * genrand_res53 ();
+        theta = 2.0 * M_PI * genrand_res53 ();
 
     // Generate x value
     x = r * cos (theta);
