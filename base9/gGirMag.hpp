@@ -1,12 +1,10 @@
-#if defined( GGIRMAG_H )
-
-#else
+#ifndef GGIRMAG_H
 #define GGIRMAG_H
 
-#define N_GIR_Z            8    /* number of metallicities in Girardi isochrones */
-#define N_GIR_AGES         50   /* number of ages in Girardi isochonres */
-#define N_GIR_FILTS        8
-#define MAX_GIR_ENTRIES    10000        /* max Girardi entries for given Z */
+const int N_GIR_Z         = 8;    /* number of metallicities in Girardi isochrones */
+const int N_GIR_AGES      = 50;   /* number of ages in Girardi isochonres */
+const int N_GIR_FILTS     = 8;
+const int MAX_GIR_ENTRIES = 10000;        /* max Girardi entries for given Z */
 
 void loadGirardi (char *path, int filterSet);
 double getGirardiMags (double zamsMass);
