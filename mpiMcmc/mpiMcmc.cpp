@@ -8,7 +8,6 @@
 #include <cmath>
 #include <cstring>
 
-// #include <mpi.h>
 #include <unistd.h>
 #include <boost/format.hpp>
 #include <gsl/gsl_blas.h>
@@ -92,22 +91,13 @@ int main (int argc, char *argv[])
 
     double fsLike;
     struct obsStar *obs = 0;    //initialized *obs to 0
-    int *starStatus = 0;                //initialized to 0
+    int *starStatus = 0;        //initialized to 0
     double msMass1Grid[N_MS_MASS1 * N_MS_MASS_RATIO];
     double msMassRatioGrid[N_MS_MASS1 * N_MS_MASS_RATIO];
     double wdMass1Grid[N_WD_MASS1];
 
     /* arrays to evolve all copies of each star simultaneously */
     vector<struct star> wd(N_WD_MASS1);
-
-    // MPI_Datatype obsStarType;
-    // MPI_Status status;
-
-    // MPI_Init (&argc, &argv);
-    // MPI_Comm_rank (MPI_COMM_WORLD, &taskid);
-    // MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
-    // MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
-    // MPI_Type_commit (&obsStarType);
 
     settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
@@ -125,44 +115,9 @@ int main (int argc, char *argv[])
     initCluster (&propClust);
     initStepSizes (&mc.clust);
 
-    // if (taskid == MASTER)
-    // {
     initIfmrMcmcControl (&mc, &ctrl);
-    // }
-    // else
-    // {
-    //     ctrl.verbose = 0;
-    //     ctrl.iStart = 0;
-    // }
-
-    /* /\*** broadcast control parameters to other processes ***\/ */
-    // if (taskid != MASTER)
-    // {
-    //     init_genrand (settings.seed);
-    // }
-
-    // MPI_Bcast (&mc.clust.evoModels.WDcooling, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&mc.clust.evoModels.mainSequenceEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&mc.clust.evoModels.filterSet, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&mc.clust.evoModels.brownDwarfEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&mc.clust.evoModels.IFMR, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&mc.clust.carbonicity, 1, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
     mc.clust.evoModels.WDatm = BERGERON;
-
-    // if (taskid != MASTER)
-    // {                           /* already loaded in the MASTER task */
-    //     if (mc.clust.evoModels.brownDwarfEvol == BARAFFE)
-    //         loadBaraffe (settings.files.models);
-    //     loadMSRgbModels (&mc.clust, settings.files.models, 0);
-    //     loadWDCool (settings.files.models, mc.clust.evoModels.WDcooling);
-    //     loadBergeron (settings.files.models, mc.clust.evoModels.filterSet);
-    // }
-
-    // MPI_Bcast (ctrl.priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (ctrl.priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
     for (p = 0; p < NPARAMS; p++)
     {
@@ -170,8 +125,6 @@ int main (int argc, char *argv[])
         mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
-    // if (taskid == MASTER)
-    // {
     readCmdData (&mc, &ctrl);
 
     obs = new struct obsStar[mc.clust.nStars]();
@@ -188,48 +141,8 @@ int main (int argc, char *argv[])
         starStatus[i] = mc.stars[i].status[0];
     }
 
-    // }
-
-    // MPI_Bcast (&ctrl.numFilts, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (ctrl.useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
     mc.clust.evoModels.numFilts = ctrl.numFilts;
     numFilts = ctrl.numFilts;
-    // MPI_Bcast (ctrl.filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (ctrl.filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&mc.clust.nStars, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&ctrl.burnIter, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&ctrl.nIter, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (&ctrl.thin, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-
-
-    // MPI_Barrier (MPI_COMM_WORLD);
-    // if (taskid != MASTER)
-    // {
-    //     obs = new struct obsStar[mc.clust.nStars]();
-    //     starStatus = new int[mc.clust.nStars]();
-    // }
-
-    // MPI_Bcast (starStatus, mc.clust.nStars, MPI_INT, MASTER, MPI_COMM_WORLD);
-    // MPI_Bcast (obs, mc.clust.nStars, obsStarType, MASTER, MPI_COMM_WORLD);
-    // if (taskid != MASTER)
-    // {
-    //     /* initialize the stars array */
-    //     mc.stars = vector<struct star>(mc.clust.nStars);
-
-    //     for (i = 0; i < mc.clust.nStars; i++)
-    //     {
-    //         for (filt = 0; filt < ctrl.numFilts; filt++)
-    //         {
-    //             mc.stars[i].obsPhot[filt] = obs[i].obsPhot[filt];
-    //             mc.stars[i].variance[filt] = obs[i].variance[filt];
-    //         }
-    //         mc.stars[i].clustStarPriorDens = obs[i].clustStarPriorDens;
-    //         mc.stars[i].status[0] = starStatus[i];
-    //     }
-    // }
 
     initChain (&mc, &ctrl);
 
@@ -238,10 +151,6 @@ int main (int argc, char *argv[])
         mc.stars[i].isFieldStar = 0;
         mc.stars[i].boundsFlag = 0;
     }
-
-    // numworkers = numtasks - 1;
-    // minchunk = mc.clust.nStars / numworkers;
-    // extra = mc.clust.nStars % numworkers;
 
     logPostEachStar = new double[mc.clust.nStars]();
 
@@ -265,9 +174,6 @@ int main (int argc, char *argv[])
 
     initCluster (&propClust);
 
-    /**************************** master task ************************************/
-    // if (taskid == MASTER)
-    // {
     cout << "Bayesian analysis of stellar evolution" << endl;
 
     /* open output files */
@@ -288,13 +194,10 @@ int main (int argc, char *argv[])
         exit (1);
     }
     printHeader (&ctrl);
-    // }
 
     /* set current log posterior to -HUGE_VAL */
     /* will cause random starting value */
     logPostCurr = -HUGE_VAL;
-
-    // MPI_Barrier (MPI_COMM_WORLD);
 
     /* estimate covariance matrix for more efficient Metropolis updates */
     int nSave = 10;             /*changed from 100 to 10 */
@@ -425,8 +328,6 @@ int main (int argc, char *argv[])
 
                 double cholScale = 1000;    /* for numerical stability */
 
-//                    exit(0);
-
                 for (i = 0; i < NPARAMS; i++)
                 {
                     if (ctrl.priorVar[i] > EPSILON)
@@ -459,7 +360,6 @@ int main (int argc, char *argv[])
                     }
                     cout << endl;
                 }
-                fflush (stdout);
 
                 /* Cholesky decomposition */
                 gsl_linalg_cholesky_decomp (covMat);
@@ -532,16 +432,11 @@ int main (int argc, char *argv[])
             ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
         }
     }
-    /********* END MAIN LOOP *********/
 
 
-    // if (taskid == MASTER)
-    // {
-        ctrl.resFile.close();
-        ctrl.burninFile.close();
-        cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
-    // }
-
+    ctrl.resFile.close();
+    ctrl.burninFile.close();
+    cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
 
     /* clean up */
     delete[] obs;
@@ -554,10 +449,7 @@ int main (int argc, char *argv[])
         free (params[p]);
     }
     free (params);
-    // MPI_Type_free(&clustParType);
-    // MPI_Type_free (&obsStarType);
     free (logPostEachStar);
-    // MPI_Finalize ();
 
     return 0;
 }
@@ -570,12 +462,6 @@ int main (int argc, char *argv[])
 
 void initStepSizes (struct cluster *clust)
 {
-    // clust->stepSize[AGE]    = 0.08;
-    // clust->stepSize[FEH]    = 0.02;
-    // clust->stepSize[MOD]    = 0.02;
-    // clust->stepSize[ABS]    = 0.004;
-    // clust->stepSize[YYY]    = 0.002;
-
     clust->stepSize[AGE] = 0.005;
     clust->stepSize[FEH] = 0.005;
     clust->stepSize[MOD] = 0.005;
@@ -583,16 +469,7 @@ void initStepSizes (struct cluster *clust)
     clust->stepSize[YYY] = 0.002;
     clust->stepSize[IFMR_INTERCEPT] = 0.01;
     clust->stepSize[IFMR_SLOPE] = 0.008;
-    clust->stepSize[IFMR_QUADCOEF] = 0.008;     // ?
-
-    /*clust->stepSize[AGE]    = 0.005;
-      clust->stepSize[FEH]    = 0.01;
-      clust->stepSize[MOD]    = 0.02;
-      clust->stepSize[ABS]    = 0.01;
-      clust->stepSize[YYY]    = 0.001;
-      clust->stepSize[IFMR_INTERCEPT]  = 0.02;
-      clust->stepSize[IFMR_SLOPE]      = 0.03;
-    */
+    clust->stepSize[IFMR_QUADCOEF] = 0.008;
 }
 
 
@@ -783,8 +660,7 @@ void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
         ctrl->filterPriorMin[j] = 1000;
         ctrl->filterPriorMax[j] = -1000;
     }
-
-}                               /* initIfmrMcmcControl */
+} /* initIfmrMcmcControl */
 
 
 /*
@@ -915,8 +791,6 @@ void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
     {
         mc->acceptClust[p] = mc->rejectClust[p] = 0;
     }
-
-    // mc->eigenAllocated = 0;
 
     mc->clust.parameter[FEH] = ctrl->priorMean[FEH];
     mc->clust.parameter[MOD] = ctrl->priorMean[MOD];
