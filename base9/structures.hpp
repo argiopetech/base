@@ -1,7 +1,7 @@
-#ifdef STRUCT_H
-/* the file has been included already */
-#else
+#ifndef STRUCT_H
 #define STRUCT_H
+
+#include <vector>
 
 #include "constants.hpp"
 
@@ -105,7 +105,7 @@ struct globalIso
 struct chain
 {
     struct cluster clust;
-    struct star *stars;
+    std::vector<struct star> stars;
     double temperature;
     int acceptClust[NPARAMS];
     int rejectClust[NPARAMS];

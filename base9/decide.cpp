@@ -1,5 +1,7 @@
 /*** Decides whether to accept proposed Metropolis-Hastings steps ***/
 
+#include <vector>
+
 #include <cmath>
 #include <cstdio>
 
@@ -10,22 +12,22 @@
 #include "evolve.hpp"
 #include "structures.hpp"
 
-//extern int    numFilts;
+using std::vector;
 
 /*** Decides whether to accept a proposed jump between field star and cluster star models ***/
 void decideFieldStar (struct star stars1[], struct cluster *pCluster, FILE * wFile)
 {
     int j;
     double u, alpha, post1, post2;
-    struct star stars2[pCluster->nStars];
+    vector<struct star> stars2(pCluster->nStars);
 
     for (j = 0; j < pCluster->nStars; j++)
     {                           // For each star,
-        stars2[j] = stars1[j];  // copy stars to new array,
-        propFieldStar (&(stars2[j]));   // propose a new field star status,
+        stars2.at(j) = stars1[j];  // copy stars to new array,
+        propFieldStar (&(stars2.at(j)));   // propose a new field star status,
 
         post1 = logPost1Star (&(stars1[j]), pCluster);
-        post2 = logPost1Star (&(stars2[j]), pCluster);
+        post2 = logPost1Star (&(stars2.at(j)), pCluster);
 
         if (fabs (post2 + HUGE_VAL) < EPS)
             continue;                   // Proposed star no good.  Leave stars1 alone.
@@ -38,19 +40,19 @@ void decideFieldStar (struct star stars1[], struct cluster *pCluster, FILE * wFi
                 post1 += log (1 - stars1[j].clustStarPriorDens);
             else
                 post1 += log (stars1[j].clustStarPriorDens);
-            if (stars2[j].isFieldStar)
-                post2 += log (1 - stars2[j].clustStarPriorDens);
+            if (stars2.at(j).isFieldStar)
+                post2 += log (1 - stars2.at(j).clustStarPriorDens);
             else
-                post2 += log (stars2[j].clustStarPriorDens);
+                post2 += log (stars2.at(j).clustStarPriorDens);
             // Divide by proposal densities
             if (stars1[j].isFieldStar)
                 post1 -= log (1 - stars1[j].clustStarProposalDens);
             else
                 post1 -= log (stars1[j].clustStarProposalDens);
-            if (stars2[j].isFieldStar)
-                post2 -= log (1 - stars2[j].clustStarProposalDens);
+            if (stars2.at(j).isFieldStar)
+                post2 -= log (1 - stars2.at(j).clustStarProposalDens);
             else
-                post2 -= log (stars2[j].clustStarProposalDens);
+                post2 -= log (stars2.at(j).clustStarProposalDens);
         }
 
         alpha = post2 - post1;
@@ -60,7 +62,7 @@ void decideFieldStar (struct star stars1[], struct cluster *pCluster, FILE * wFi
         u = log (u);
 
         if (u < alpha)
-            stars1[j].isFieldStar = stars2[j].isFieldStar;      // Accept proposed star (copy back to the stars1 array)
+            stars1[j].isFieldStar = stars2.at(j).isFieldStar;      // Accept proposed star (copy back to the stars1 array)
     }
 }
 
@@ -69,33 +71,31 @@ void decideMass (struct chain *mc)
 {
     int j;
     double u, alpha, post1, post2;
-    struct star stars2[mc->clust.nStars];
+    vector<struct star> stars2(mc->clust.nStars);
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // For each star,
-        stars2[j] = mc->stars[j];       // copy stars to new array,
-        propMass (&stars2[j]);  // propose a new mass,
-        stars2[j].boundsFlag = 0;       // and set the boundsFlag to zero
+        stars2.at(j) = mc->stars.at(j);       // copy stars to new array,
+        propMass (&stars2.at(j));  // propose a new mass,
+        stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
     evolve (&mc->clust, stars2, -1);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // Accept or reject each star individually
-        if (stars2[j].boundsFlag || getMass1 (&stars2[j], &mc->clust) < EPS)
+        if (stars2.at(j).boundsFlag || getMass1 (&stars2.at(j), &mc->clust) < EPS)
             mc->rejectMass[j]++;        // Proposed star no good.  Leave stars1 alone.
         else
         {
-            post2 = logPost1Star (&stars2[j], &mc->clust);
+            post2 = logPost1Star (&stars2.at(j), &mc->clust);
             if (fabs (post2 + HUGE_VAL) < EPS)
                 mc->rejectMass[j]++;    // Proposed star no good.  Leave stars1 alone.
             else
             {
-                post1 = logPost1Star (&mc->stars[j], &mc->clust);
+                post1 = logPost1Star (&mc->stars.at(j), &mc->clust);
                 alpha = post2;
-                //        alpha += log(getMass1(&stars2[j],pCluster));
                 alpha -= post1;
-                //        alpha -= log(getMass1(&stars1[j],pCluster));
 
                 u = genrand_res53 ();
                 if (u < 1.e-15)
@@ -105,7 +105,7 @@ void decideMass (struct chain *mc)
                 if (u < alpha)
                 {
                     mc->acceptMass[j]++;        // Accept proposed star
-                    mc->stars[j] = stars2[j];   // And copy back to the stars1 array
+                    mc->stars.at(j) = stars2.at(j);   // And copy back to the stars1 array
                 }
                 else
                     mc->rejectMass[j]++;        // Proposed star no good.  Leave stars1 alone.
@@ -120,36 +120,33 @@ void decideMassRatio (struct chain *mc)
     double u, alpha, post1, post2;
     int j;
 
-    struct star stars2[mc->clust.nStars];
+    vector<struct star> stars2(mc->clust.nStars);
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // For each star,
-        stars2[j] = mc->stars[j];       // copy stars to new array,
-        propMassRatio (&stars2[j]);     // propose a new mass ratio,
-        stars2[j].boundsFlag = 0;       // and set the boundsFlag to zero
+        stars2.at(j) = mc->stars.at(j);       // copy stars to new array,
+        propMassRatio (&stars2.at(j));     // propose a new mass ratio,
+        stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
     evolve (&mc->clust, stars2, -1);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // Accept or reject each star individually
-        //if(mc->stars[j].status[0] == WD || mc->stars[j].status[0] != BD) mc->rejectMassRatio[j]++;
-        if (stars2[j].boundsFlag || getMass1 (&stars2[j], &mc->clust) < EPS)
+        if (stars2.at(j).boundsFlag || getMass1 (&stars2.at(j), &mc->clust) < EPS)
             mc->rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
-        else if (stars2[j].massRatio > 1.0 || stars2[j].massRatio < 0.0)
+        else if (stars2.at(j).massRatio > 1.0 || stars2.at(j).massRatio < 0.0)
             mc->rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
         else
         {
-            post2 = logPost1Star (&stars2[j], &mc->clust);
+            post2 = logPost1Star (&stars2.at(j), &mc->clust);
             if (fabs (post2 + HUGE_VAL) < EPS)
                 mc->rejectMassRatio[j]++;       // Proposed star no good.  Leave stars1 alone.
             else
             {
-                post1 = logPost1Star (&mc->stars[j], &mc->clust);
+                post1 = logPost1Star (&mc->stars.at(j), &mc->clust);
                 alpha = post2;
-                //        alpha += log(getMass1(&stars2[j],pCluster));
                 alpha -= post1;
-                //        alpha -= log(getMass1(&stars1[j],pCluster));
 
                 u = genrand_res53 ();
                 if (u < 1.e-15)
@@ -159,7 +156,7 @@ void decideMassRatio (struct chain *mc)
                 if (u < alpha)
                 {
                     mc->acceptMassRatio[j]++;   // Accept proposed star
-                    mc->stars[j] = stars2[j];   // And copy back to the stars1 array
+                    mc->stars.at(j) = stars2.at(j);   // And copy back to the stars1 array
                 }
                 else
                     mc->rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
@@ -174,7 +171,7 @@ struct cluster decideClust (struct cluster clust1, struct star stars1[], const i
     int j;
     double u, alpha, post1 = 0.0, post2 = 0.0;
 
-    struct star stars2[clust1.nStars];
+    vector<struct star> stars2(clust1.nStars);
     struct cluster clust2;
 
     clust2 = clust1;
@@ -196,15 +193,15 @@ struct cluster decideClust (struct cluster clust1, struct star stars1[], const i
             (*reject)++;
             return clust1;
         }
-        stars2[j] = stars1[j];
-        stars2[j].boundsFlag = 0;
+        stars2.at(j) = stars1[j];
+        stars2.at(j).boundsFlag = 0;
     }
 
     evolve (&clust2, stars2, -1);
 
     for (j = 0; j < clust1.nStars; j++)
     {
-        if (stars2[j].boundsFlag)
+        if (stars2.at(j).boundsFlag)
         {
             (*reject)++;
             return clust1;
@@ -213,7 +210,7 @@ struct cluster decideClust (struct cluster clust1, struct star stars1[], const i
         {
 
             post1 += logPost1Star (&(stars1[j]), &clust1);
-            post2 += logPost1Star (&(stars2[j]), &clust2);
+            post2 += logPost1Star (&(stars2.at(j)), &clust2);
 
             if (fabs (post2 + HUGE_VAL) < EPS)
             {
@@ -232,7 +229,7 @@ struct cluster decideClust (struct cluster clust1, struct star stars1[], const i
     if (u < alpha)
     {
         for (j = 0; j < clust1.nStars; j++)
-            stars1[j] = stars2[j];
+            stars1[j] = stars2.at(j);
         (*accept)++;
         return clust2;
     }

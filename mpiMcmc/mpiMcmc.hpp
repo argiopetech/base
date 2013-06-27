@@ -24,7 +24,8 @@ struct obsStar
 struct ifmrMcmcControl
 {
     std::ifstream rData;
-    std::ofstream wClusterFile[2];
+    std::ofstream resFile;
+    std::ofstream burninFile;
     std::string clusterFilename;
     int fsSamplingOn;
     int sampleVarScale;

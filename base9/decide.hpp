@@ -1,9 +1,4 @@
-/* decide.h */
-
-#ifdef DECIDE_H
-/* the file has been included already */
-#else
-
+#ifndef DECIDE_H
 #define DECIDE_H
 
 void decideFieldStar (struct star stars1[], struct cluster *pCluster, FILE * wFile);

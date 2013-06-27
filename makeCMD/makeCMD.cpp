@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
+
 #include <cmath>
 #include <cstring>
 #include <unistd.h>
@@ -8,6 +10,8 @@
 #include "structures.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
+
+using std::vector;
 
 const double  FS_NUM       = 0.0;    // mcmc outputs negative mass for field star
 const int  COL_MAX         = 1000;    // max number of cluster stars
@@ -54,7 +58,7 @@ int main (int argc, char *argv[])
     FILE *wClusterStatPtr, *wCmdPtr, *wDebugPtr;
 
     struct cluster theCluster;
-    struct star *stars;
+    vector<struct star> stars;
 
     Settings settings;
 
@@ -134,7 +138,8 @@ int main (int argc, char *argv[])
         exit (1);
     }
 
-    stars = new struct star[theCluster.nStars];
+    stars.resize(theCluster.nStars);
+
     starName = new char*[theCluster.nStars]();
 
     for (j = 0; j < theCluster.nStars; j++)
@@ -143,7 +148,7 @@ int main (int argc, char *argv[])
     }
 
     for (j = 0; j < theCluster.nStars; j++)
-        initStar (&(stars[j]));
+        initStar (&(stars.at(j)));
 
     ////////////////////////////////////////
     //// Determine which parameters are ////
@@ -290,12 +295,12 @@ int main (int argc, char *argv[])
             {
                 fscanf (rDataPtr, "%s ", starName[j]);
                 for (p = 0; p < theCluster.evoModels.numFilts; p++)
-                    fscanf (rDataPtr, "%lf ", &(stars[j].obsPhot[p]));
+                    fscanf (rDataPtr, "%lf ", &(stars.at(j).obsPhot[p]));
                 for (p = 0; p < theCluster.evoModels.numFilts; p++)
                     fscanf (rDataPtr, "%*f ");
-                fscanf (rDataPtr, "%*f %*f %d ", &stars[j].status[0]);
+                fscanf (rDataPtr, "%*f %*f %d ", &stars.at(j).status[0]);
                 fgets (line, 240, rDataPtr);
-            } while (stars[j].status[0] == MSRG && (stars[j].obsPhot[iMag] < minMag || stars[j].obsPhot[iMag] > maxMag));
+            } while (stars.at(j).status[0] == MSRG && (stars.at(j).obsPhot[iMag] < minMag || stars.at(j).obsPhot[iMag] > maxMag));
         }
         if (nr == EOF)
             break;
@@ -354,8 +359,8 @@ int main (int argc, char *argv[])
                     prevMass[m][j] = mass[m][j];
                     isClusterMember[m][j]++;    // Keep track of how many iterations we're averaging for each star
 
-                    stars[j].U = mass[0][j];
-                    stars[j].massRatio = mass[1][j] / mass[0][j];
+                    stars.at(j).U = mass[0][j];
+                    stars.at(j).massRatio = mass[1][j] / mass[0][j];
                 }
             }
         }
@@ -366,8 +371,8 @@ int main (int argc, char *argv[])
             {                           // if it is a cluster star
                 for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
                 {
-                    sumPhot[j][filt] += stars[j].photometry[filt];
-                    sumSquaresPhot[j][filt] += stars[j].photometry[filt] * stars[j].photometry[filt];
+                    sumPhot[j][filt] += stars.at(j).photometry[filt];
+                    sumSquaresPhot[j][filt] += stars.at(j).photometry[filt] * stars.at(j).photometry[filt];
                 }
             }
         }
@@ -406,7 +411,7 @@ int main (int argc, char *argv[])
             fprintf (wCmdPtr, "%11.5f %9.5f %10.5f %10.5f %6d  %8.6f  ", meanMass[m][j], sigma, minMass[m][j], maxMass[m][j], stuckMass[m][j], meanStepSizeMass[m][j]);
             if (m == 0)
             {
-                if (stars[j].status[0] == WD)
+                if (stars.at(j).status[0] == WD)
                     // fprintf(wCmdPtr,"%10.5f  %9.3e  ", intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR),
                     //         intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR) -
                     //         intlFinalMassReln(meanMass[m][j] - sigma, theCluster.evoModels.IFMR));
@@ -451,17 +456,12 @@ int main (int argc, char *argv[])
     for (p = 0; p < NPARAMS; p++)
         theCluster.parameter[p] = meanParam[p];
 
-    void *tempAlloc;            // temporary for allocation
-
-    if ((tempAlloc = (void *) realloc (stars, theCluster.nStars * sizeof (struct star))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-    else
-        stars = (struct star *) tempAlloc;
+    stars.resize(theCluster.nStars);
 
     for (j = 0; j < theCluster.nStars; j++)
     {
-        stars[j].U = j * .01;
-        stars[j].massRatio = 0.0;
+        stars.at(j).U = j * .01;
+        stars.at(j).massRatio = 0.0;
     }
 
     evolve (&theCluster, stars, -1);
@@ -476,17 +476,17 @@ int main (int argc, char *argv[])
 
     for (j = 0; j < theCluster.nStars; j++)
     {
-        if (stars[j].photometry[0] < 90)
+        if (stars.at(j).photometry[0] < 90)
         {
-            if (stars[j].status[0] == MSRG)
+            if (stars.at(j).status[0] == MSRG)
             {
-                if (prevV > stars[j].photometry[0])
+                if (prevV > stars.at(j).photometry[0])
                 {
-                    fprintf (wDebugPtr, "%5.2f %6d ", stars[j].U, stars[j].status[0]);
+                    fprintf (wDebugPtr, "%5.2f %6d ", stars.at(j).U, stars.at(j).status[0]);
                     for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
-                        fprintf (wDebugPtr, "%10f ", stars[j].photometry[filt]);
+                        fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                     fprintf (wDebugPtr, "\n");
-                    prevV = stars[j].photometry[0];
+                    prevV = stars.at(j).photometry[0];
                 }
                 else
                 {
@@ -496,9 +496,9 @@ int main (int argc, char *argv[])
             }
             else
             {
-                fprintf (wDebugPtr, "%5.2f %3d ", stars[j].U, stars[j].status[0]);
+                fprintf (wDebugPtr, "%5.2f %3d ", stars.at(j).U, stars.at(j).status[0]);
                 for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
-                    fprintf (wDebugPtr, "%10f ", stars[j].photometry[filt]);
+                    fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                 fprintf (wDebugPtr, "\n");
             }
         }

@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
@@ -5,6 +7,8 @@
 #include "evolve.hpp"
 #include "msRgbEvol.hpp"
 #include "gBaraffeMag.hpp"
+
+using std::vector;
 
 extern int verbose, useFilt[FILTS], aFilt, needMassNow;
 extern double ltau[2];
@@ -20,7 +24,7 @@ static double clusterAbs[FILTS] = { 0 };
 double wdEvol (struct cluster *pCluster, struct star *pStar, int cmpnt);
 void calcAbsCoeffs (int filterSet);
 
-void evolve (struct cluster *pCluster, struct star *stars, int index)
+void evolve (struct cluster *pCluster, vector<struct star> &stars, int index)
 /**************************************************************************************
 last update: 25Aug10
 
@@ -77,7 +81,7 @@ get the photometry of a single star. -- SD
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster->AGBt_zmass < EPS)
     {
-        stars[0].boundsFlag = 1;
+        stars.at(0).boundsFlag = 1;
         return;
     }
 
@@ -87,10 +91,10 @@ get the photometry of a single star. -- SD
 
     for (j = index; j < index + numStars; j++)
     {
-        mass[0] = getMass1 (&stars[j], pCluster);
-        mass[1] = getMass2 (&stars[j], pCluster);
+        mass[0] = getMass1 (&stars.at(j), pCluster);
+        mass[1] = getMass2 (&stars.at(j), pCluster);
 
-        if (stars[j].status[0] == BD)
+        if (stars.at(j).status[0] == BD)
         {
             getBaraffeMags (getParameter (pCluster, AGE), mass[0]);
             for (filt = 0; filt < 8; filt++)
@@ -111,29 +115,29 @@ get the photometry of a single star. -- SD
                 for (filt = 0; filt < FILTS; filt++)
                     if (useFilt[filt])
                         globalMags[filt] = 99.999;
-                stars[j].massNow[cmpnt] = 0.0;
+                stars.at(j).massNow[cmpnt] = 0.0;
                 ltau[cmpnt] = 0.0;      // may not be a WD, so no precursor age,
-                stars[j].wdLogTeff[cmpnt] = 0.0;        // no WD Teff,
+                stars.at(j).wdLogTeff[cmpnt] = 0.0;        // no WD Teff,
 
                 if (mass[cmpnt] <= 0.0001)
                 {                       // for non-existent secondary stars
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = 99.999;
-                    stars[j].status[cmpnt] = DNE;
-                    stars[j].massNow[cmpnt] = 0.0;
+                    stars.at(j).status[cmpnt] = DNE;
+                    stars.at(j).massNow[cmpnt] = 0.0;
                 }
                 else if (mass[cmpnt] <= pCluster->AGBt_zmass)
                 {                       // for main seq or giant star
-                    stars[j].massNow[cmpnt] = msRgbEvol (pCluster, mass[cmpnt]);
+                    stars.at(j).massNow[cmpnt] = msRgbEvol (pCluster, mass[cmpnt]);
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = globalMags[filt];
-                    stars[j].status[cmpnt] = MSRG;      // keep track of evolutionary state
+                    stars.at(j).status[cmpnt] = MSRG;      // keep track of evolutionary state
                 }
                 else if (mass[cmpnt] <= pCluster->M_wd_up)
                 {                       // for white dwarf
-                    ltau[cmpnt] = wdEvol (pCluster, &(stars[j]), cmpnt);
+                    ltau[cmpnt] = wdEvol (pCluster, &(stars.at(j)), cmpnt);
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = globalMags[filt];
@@ -143,7 +147,7 @@ get the photometry of a single star. -- SD
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = 99.999;
-                    stars[j].status[cmpnt] = NSBH;
+                    stars.at(j).status[cmpnt] = NSBH;
                 }
                 else
                 {
@@ -152,7 +156,7 @@ get the photometry of a single star. -- SD
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = 99.999;
-                    stars[j].status[cmpnt] = DNE;
+                    stars.at(j).status[cmpnt] = DNE;
                 }
             }
 
@@ -183,7 +187,7 @@ get the photometry of a single star. -- SD
             {
                 mag[2][filt] += getParameter (pCluster, MOD);
                 mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;   // add A_[u-k] (standard defn of modulus already includes Av)
-                stars[j].photometry[i++] = mag[2][filt];
+                stars.at(j).photometry[i++] = mag[2][filt];
                 //i++;
             }
         }

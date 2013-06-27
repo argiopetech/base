@@ -17,8 +17,6 @@
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
 
-const int ALLOC_CHUNK = 5;
-
 const int N_AGE = 30;
 const int N_FEH = 1;
 const int N_MOD = 1;
@@ -29,6 +27,7 @@ const int N_IFMR_SLOPE = 10;
 const int N_GRID = (N_AGE * N_FEH * N_MOD * N_ABS * N_Y * N_IFMR_INT * N_IFMR_SLOPE);
 const int MASTER = 0;       /* taskid of first process */
 
+const int ALLOC_CHUNK = 1;
 
 struct ifmrGridControl
 {
@@ -209,11 +208,11 @@ int main (int argc, char *argv[])
         {
             for (filt = 0; filt < ctrl.numFilts; filt++)
             {
-                obs[i].obsPhot[filt] = mc.stars[i].obsPhot[filt];
-                obs[i].variance[filt] = mc.stars[i].variance[filt];
+                obs[i].obsPhot[filt] = mc.stars.at(i).obsPhot[filt];
+                obs[i].variance[filt] = mc.stars.at(i).variance[filt];
             }
-            obs[i].clustStarPriorDens = mc.stars[i].clustStarPriorDens;
-            starStatus[i] = mc.stars[i].status[0];
+            obs[i].clustStarPriorDens = mc.stars.at(i).clustStarPriorDens;
+            starStatus[i] = mc.stars.at(i).status[0];
 
             if (starStatus[i] == WD)
             {
@@ -247,17 +246,17 @@ int main (int argc, char *argv[])
     if (taskid != MASTER)
     {
         /* initialize the stars array */
-        mc.stars = new star[mc.clust.nStars]();
+        mc.stars.resize(mc.clust.nStars);
 
         for (i = 0; i < mc.clust.nStars; i++)
         {
             for (filt = 0; filt < ctrl.numFilts; filt++)
             {
-                mc.stars[i].obsPhot[filt] = obs[i].obsPhot[filt];
-                mc.stars[i].variance[filt] = obs[i].variance[filt];
+                mc.stars.at(i).obsPhot[filt] = obs[i].obsPhot[filt];
+                mc.stars.at(i).variance[filt] = obs[i].variance[filt];
             }
-            mc.stars[i].clustStarPriorDens = obs[i].clustStarPriorDens;
-            mc.stars[i].status[0] = starStatus[i];
+            mc.stars.at(i).clustStarPriorDens = obs[i].clustStarPriorDens;
+            mc.stars.at(i).status[0] = starStatus[i];
             if (starStatus[i] == WD)
             {
                 nWDs++;
@@ -269,8 +268,8 @@ int main (int argc, char *argv[])
 
     for (i = 0; i < mc.clust.nStars; i++)
     {
-        mc.stars[i].isFieldStar = 0;
-        mc.stars[i].boundsFlag = 0;
+        mc.stars.at(i).isFieldStar = 0;
+        mc.stars.at(i).boundsFlag = 0;
     }
 
     double logFieldStarLikelihood = 0.0;
@@ -384,7 +383,7 @@ int main (int argc, char *argv[])
 
         for (j = 0; j < mc.clust.nStars; j++)
         {
-            if (mc.stars[j].status[0] == WD)
+            if (mc.stars.at(j).status[0] == WD)
             {
 
                 postClusterStar = 0.0;
@@ -393,13 +392,13 @@ int main (int argc, char *argv[])
                 for (mass1 = 0.15; mass1 < mc.clust.M_wd_up; mass1 += dMass1)
                 {
                     /* condition on WD being cluster star */
-                    mc.stars[j].U = mass1;
-                    mc.stars[j].massRatio = 0.0;
+                    mc.stars.at(j).U = mass1;
+                    mc.stars.at(j).massRatio = 0.0;
                     evolve (&mc.clust, mc.stars, j);
 
-                    if (!mc.stars[j].boundsFlag)
+                    if (!mc.stars.at(j).boundsFlag)
                     {
-                        wdLogPost[im] = logPost1Star (&mc.stars[j], &mc.clust);
+                        wdLogPost[im] = logPost1Star (&mc.stars.at(j), &mc.clust);
                         postClusterStar += exp (wdLogPost[im]);
                     }
                     else
@@ -446,7 +445,7 @@ int main (int argc, char *argv[])
 
                 postClusterStar *= (mc.clust.M_wd_up - 0.15);
 
-                clusMemPost[m * nWDs + iWD] = mc.stars[j].clustStarPriorDens * postClusterStar / (mc.stars[j].clustStarPriorDens * postClusterStar + (1.0 - mc.stars[j].clustStarPriorDens) * fsLike);
+                clusMemPost[m * nWDs + iWD] = mc.stars.at(j).clustStarPriorDens * postClusterStar / (mc.stars.at(j).clustStarPriorDens * postClusterStar + (1.0 - mc.stars.at(j).clustStarPriorDens) * fsLike);
             }
         }
     }
@@ -519,7 +518,6 @@ int main (int argc, char *argv[])
 
     delete[] (obs);
     delete[] (starStatus);
-    delete[] mc.stars;
 
     MPI_Type_free (&clustParType);
     MPI_Type_free (&obsStarType);
@@ -739,20 +737,11 @@ static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl)
     // It also reads a best guess for the mass
     int nr, j = 0;
     int moreStars = 1;          // true
-    void *tempAlloc;            // temporary for allocation
-
-    // why is this necessary???
-    mc->stars = nullptr;
 
     while (moreStars)
     {
-        if ((j % ALLOC_CHUNK) == 0)
-        {
-            if ((tempAlloc = (void *) realloc (mc->stars, (j + ALLOC_CHUNK) * sizeof (struct star))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
-            else
-                mc->stars = (struct star *) tempAlloc;
-        }
+        mc->stars.emplace_back();
+
         nr = fscanf (ctrl->rData, "%*s");
 
         if (nr == EOF)
@@ -760,13 +749,13 @@ static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl)
 
         for (i = 0; i < ctrl->numFilts; i++)
         {
-            fscanf (ctrl->rData, "%lf", &(mc->stars[j].obsPhot[i]));
+            fscanf (ctrl->rData, "%lf", &(mc->stars.at(j).obsPhot[i]));
 
-            if (mc->stars[j].obsPhot[i] < ctrl->filterPriorMin[i])
-                ctrl->filterPriorMin[i] = mc->stars[j].obsPhot[i];
+            if (mc->stars.at(j).obsPhot[i] < ctrl->filterPriorMin[i])
+                ctrl->filterPriorMin[i] = mc->stars.at(j).obsPhot[i];
 
-            if (mc->stars[j].obsPhot[i] > ctrl->filterPriorMax[i])
-                ctrl->filterPriorMax[i] = mc->stars[j].obsPhot[i];
+            if (mc->stars.at(j).obsPhot[i] > ctrl->filterPriorMax[i])
+                ctrl->filterPriorMax[i] = mc->stars.at(j).obsPhot[i];
         }
 
         // copy to global variables
@@ -779,14 +768,14 @@ static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl)
         for (i = 0; i < ctrl->numFilts; i++)
         {
             fscanf (ctrl->rData, "%lf", &tempSigma);
-            mc->stars[j].variance[i] = tempSigma * fabs (tempSigma);
+            mc->stars.at(j).variance[i] = tempSigma * fabs (tempSigma);
             // The fabs() keeps the sign of the variance the same as that input by the user for sigma
             // Negative sigma (variance) is used to signal "don't count this band for this star"
         }
 
-        fscanf (ctrl->rData, "%lf %lf %d %lf %d", &(mc->stars[j].U), &(mc->stars[j].massRatio), &(mc->stars[j].status[0]), &(mc->stars[j].clustStarPriorDens), &(mc->stars[j].useDuringBurnIn));
+        fscanf (ctrl->rData, "%lf %lf %d %lf %d", &(mc->stars.at(j).U), &(mc->stars.at(j).massRatio), &(mc->stars.at(j).status[0]), &(mc->stars.at(j).clustStarPriorDens), &(mc->stars.at(j).useDuringBurnIn));
 
-        if (mc->stars[j].status[0] == 3 || (mc->stars[j].obsPhot[ctrl->iMag] >= ctrl->minMag && mc->stars[j].obsPhot[ctrl->iMag] <= ctrl->maxMag))
+        if (mc->stars.at(j).status[0] == 3 || (mc->stars.at(j).obsPhot[ctrl->iMag] >= ctrl->minMag && mc->stars.at(j).obsPhot[ctrl->iMag] <= ctrl->maxMag))
         {
             j++;
         }
@@ -795,7 +784,7 @@ static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl)
 
     for (j = 0; j < mc->clust.nStars; j++)
     {
-        mc->stars[j].massRatio = 0.0;
+        mc->stars.at(j).massRatio = 0.0;
     }
 
     // copy to global values
@@ -901,35 +890,35 @@ static void initChain (struct chain *mc, const struct ifmrGridControl *ctrl)
 
     for (j = 0; j < mc->clust.nStars; j++)
     {
-        mc->stars[j].meanMassRatio = 0.0;
-        mc->stars[j].isFieldStar = 0;
-        mc->stars[j].clustStarProposalDens = mc->stars[j].clustStarPriorDens;   // Use prior prob of being clus star
-        mc->stars[j].UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-        mc->stars[j].massRatioStepSize = 0.001;
+        mc->stars.at(j).meanMassRatio = 0.0;
+        mc->stars.at(j).isFieldStar = 0;
+        mc->stars.at(j).clustStarProposalDens = mc->stars.at(j).clustStarPriorDens;   // Use prior prob of being clus star
+        mc->stars.at(j).UStepSize = 0.001; // within factor of ~2 for most main sequence stars
+        mc->stars.at(j).massRatioStepSize = 0.001;
 
         for (i = 0; i < NPARAMS; i++)
         {
-            mc->stars[j].beta[i][0] = 0.0;
-            mc->stars[j].beta[i][1] = 0.0;
+            mc->stars.at(j).beta[i][0] = 0.0;
+            mc->stars.at(j).beta[i][1] = 0.0;
         }
-        mc->stars[j].betaMassRatio[0] = 0.0;
-        mc->stars[j].betaMassRatio[1] = 0.0;
-        mc->stars[j].meanU = 0.0;
-        mc->stars[j].varU = 0.0;
+        mc->stars.at(j).betaMassRatio[0] = 0.0;
+        mc->stars.at(j).betaMassRatio[1] = 0.0;
+        mc->stars.at(j).meanU = 0.0;
+        mc->stars.at(j).varU = 0.0;
 
         for (i = 0; i < 2; i++)
-            mc->stars[j].wdType[i] = DA;
+            mc->stars.at(j).wdType[i] = DA;
 
         for (i = 0; i < numFilts; i++)
         {
-            mc->stars[j].photometry[i] = 0.0;
+            mc->stars.at(j).photometry[i] = 0.0;
         }
 
         // find photometry for initial values of currentClust and mc->stars
-        if (mc->stars[j].status[0] == WD)
+        if (mc->stars.at(j).status[0] == WD)
         {
-            mc->stars[j].UStepSize = 0.05;      // use larger initial step size for white dwarfs
-            mc->stars[j].massRatio = 0.0;
+            mc->stars.at(j).UStepSize = 0.05;      // use larger initial step size for white dwarfs
+            mc->stars.at(j).massRatio = 0.0;
         }
     }
 

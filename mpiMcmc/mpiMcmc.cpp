@@ -1,6 +1,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
@@ -34,6 +35,7 @@ using std::string;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::vector;
 
 int gsl_linalg_cholesky_decomp (gsl_matrix * A);
 
@@ -101,7 +103,7 @@ int main (int argc, char *argv[])
     double wdMass1Grid[N_WD_MASS1];
 
     /* arrays to evolve all copies of each star simultaneously */
-    struct star wd[N_WD_MASS1];
+    vector<struct star> wd(N_WD_MASS1);
 
     MPI_Datatype obsStarType;
     MPI_Status status;
@@ -221,7 +223,7 @@ int main (int argc, char *argv[])
     if (taskid != MASTER)
     {
         /* initialize the stars array */
-        mc.stars = new struct star[mc.clust.nStars]();
+        mc.stars = vector<struct star>(mc.clust.nStars);
 
         for (i = 0; i < mc.clust.nStars; i++)
         {
@@ -276,8 +278,8 @@ int main (int argc, char *argv[])
         cout << "Bayesian analysis of stellar evolution" << endl;
 
         /* open output files */
-        ctrl.wClusterFile[0].open(ctrl.clusterFilename);
-        if (!ctrl.wClusterFile[0])
+        ctrl.resFile.open(ctrl.clusterFilename);
+        if (!ctrl.resFile)
         {
             cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
             cerr << "[Exiting...]" << endl;
@@ -285,8 +287,8 @@ int main (int argc, char *argv[])
         }
 
         ctrl.clusterFilename += ".burnin";
-        ctrl.wClusterFile[1].open(ctrl.clusterFilename);
-        if (!ctrl.wClusterFile[1])
+        ctrl.burninFile.open(ctrl.clusterFilename);
+        if (!ctrl.burninFile)
         {
             cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
             cerr << "[Exiting...]" << endl;
@@ -493,11 +495,11 @@ int main (int argc, char *argv[])
                 {
                     if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        ctrl.wClusterFile[1] << boost::format("%10.6f ") % mc.clust.parameter[p];
+                        ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
                     }
                 }
 
-                ctrl.wClusterFile[1] << boost::format("%10.6f") % logPostCurr << endl;
+                ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
             }
             else if (iteration % ctrl.thin == 0)
             {
@@ -505,10 +507,10 @@ int main (int argc, char *argv[])
                 {
                     if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        ctrl.wClusterFile[0] << boost::format("%10.6f ") % mc.clust.parameter[p];
+                        ctrl.resFile << boost::format("%10.6f ") % mc.clust.parameter[p];
                     }
                 }
-                ctrl.wClusterFile[0] << boost::format("%10.6f") % logPostCurr << endl;
+                ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
             }
         }
         else
@@ -594,8 +596,8 @@ int main (int argc, char *argv[])
 
     if (taskid == MASTER)
     {
-        ctrl.wClusterFile[0].close();
-        ctrl.wClusterFile[1].close();
+        ctrl.resFile.close();
+        ctrl.burninFile.close();
         cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
     }
 
@@ -605,7 +607,6 @@ int main (int argc, char *argv[])
     delete[] starStatus;
 
     freeGlobalIso (&isochrone);
-    free (mc.stars);
 
     for (p = 0; p < NPARAMS; p++)
     {
@@ -895,20 +896,13 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
     // It also reads a best guess for the mass
     int j = 0;
     int moreStars = 1;          // true
-    void *tempAlloc;            // temporary for allocation
 
     // why is this necessary???
-    mc->stars = nullptr;
+    mc->stars.clear();
 
     while (moreStars)
     {
-        if ((j % ALLOC_CHUNK) == 0)
-        {
-            if ((tempAlloc = (void *) realloc (mc->stars, (j + ALLOC_CHUNK) * sizeof (struct star))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
-            else
-                mc->stars = (struct star *) tempAlloc;
-        }
+        mc->stars.emplace_back();
 
         ctrl->rData >> line;
 
@@ -1154,12 +1148,12 @@ static void printHeader (struct ifmrMcmcControl * const ctrl)
     {
         if (ctrl->priorVar[p] > EPSILON || p == MOD || p == FEH || p == ABS)
         {
-            ctrl->wClusterFile[0] << paramNames[p] << ' ';
-            ctrl->wClusterFile[1] << paramNames[p] << ' ';
+            ctrl->resFile << paramNames[p] << ' ';
+            ctrl->burninFile << paramNames[p] << ' ';
         }
     }
-    ctrl->wClusterFile[0] << "logPost" << endl;
-    ctrl->wClusterFile[1] << "logPost" << endl;
+    ctrl->resFile << "logPost" << endl;
+    ctrl->burninFile << "logPost" << endl;
 }
 
 

@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -7,6 +9,8 @@
 #include "evolve.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
+
+using std::vector;
 
 const int CLUS_READ       =  9;
 const int CLUS_STAT_WRITE = 10;
@@ -36,7 +40,7 @@ int main (int argc, char *argv[])
     FILE *wDebugPtr;
 
     struct cluster theCluster;
-    struct star *stars;
+    vector<struct star> stars;
 
     Settings settings;
 
@@ -140,14 +144,14 @@ int main (int argc, char *argv[])
     // Create a simulated cluster based on the cluster stats and output for comparison
     theCluster.nStars = 1;
 
-    stars = new struct star[theCluster.nStars];
+    stars.resize(theCluster.nStars);
 
     for (j = 0; j < theCluster.nStars; j++)
-        initStar (&(stars[j]));
+        initStar (&(stars.at(j)));
 
 
-    stars[0].U = 1.0;
-    stars[0].massRatio = 0.0;
+    stars.at(0).U = 1.0;
+    stars.at(0).massRatio = 0.0;
 
     evolve (&theCluster, stars, -1);
 
@@ -155,27 +159,22 @@ int main (int argc, char *argv[])
 
     theCluster.nStars = isochrone.nEntries + nWD;
 
-    void *tempAlloc;            // temporary for allocation
-
-    if ((tempAlloc = (void *) realloc (stars, theCluster.nStars * sizeof (struct star))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-    else
-        stars = (struct star *) tempAlloc;
+    stars.resize(theCluster.nStars);
 
     double dMass = (theCluster.M_wd_up - isochrone.mass[isochrone.nEntries]) / (double) nWD;
 
     for (j = 0; j < theCluster.nStars; j++)
     {
-        initStar (&(stars[j]));
+        initStar (&(stars.at(j)));
         if (j < isochrone.nEntries)
         {
-            stars[j].U = isochrone.mass[j];
+            stars.at(j).U = isochrone.mass[j];
         }
         else
         {
-            stars[j].U = stars[j - 1].U + dMass;
+            stars.at(j).U = stars.at(j - 1).U + dMass;
         }
-        stars[j].massRatio = 0.0;
+        stars.at(j).massRatio = 0.0;
     }
     evolve (&theCluster, stars, -1);
 
@@ -190,16 +189,16 @@ int main (int argc, char *argv[])
     for (j = 0; j < theCluster.nStars; j++)
     {
 
-        if (stars[j].photometry[0] < 90)
+        if (stars.at(j).photometry[0] < 90)
         {
-            if (stars[j].status[0] == MSRG)
+            if (stars.at(j).status[0] == MSRG)
             {
-                // if(prevV > stars[j].photometry[0]){
-                fprintf (wDebugPtr, "%lf %6d ", stars[j].U, stars[j].status[0]);
+                // if(prevV > stars.at(j).photometry[0]){
+                fprintf (wDebugPtr, "%lf %6d ", stars.at(j).U, stars.at(j).status[0]);
                 for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
-                    fprintf (wDebugPtr, "%10f ", stars[j].photometry[filt]);
+                    fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                 fprintf (wDebugPtr, "\n");
-//           prevV = stars[j].photometry[0];
+//           prevV = stars.at(j).photometry[0];
                 // }
                 // else{
                 //   prevV = 0.0;
@@ -208,16 +207,15 @@ int main (int argc, char *argv[])
             }
             else
             {
-                fprintf (wDebugPtr, "%5.2f %3d ", stars[j].U, stars[j].status[0]);
+                fprintf (wDebugPtr, "%5.2f %3d ", stars.at(j).U, stars.at(j).status[0]);
                 for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
-                    fprintf (wDebugPtr, "%10f ", stars[j].photometry[filt]);
+                    fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                 fprintf (wDebugPtr, "\n");
             }
         }
     }
 
     fclose (wDebugPtr);
-    free (stars);
 
     return (0);
 }
