@@ -1,3 +1,4 @@
+#include <array>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -30,11 +31,13 @@
 #include "mt19937ar.hpp"
 #include "Settings.hpp"
 
+using std::array;
 using std::string;
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::vector;
+using std::ofstream;
 
 int gsl_linalg_cholesky_decomp (gsl_matrix * A);
 
@@ -45,14 +48,13 @@ void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl);
 void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl);
 void initStepSizes (struct cluster *clust);
 
-void propClustMarg (struct cluster &clust, const struct ifmrMcmcControl &ctrl, const int iteration);
-void propClustBigSteps (struct cluster &clust, const struct ifmrMcmcControl &ctrl);
-void propClustIndep (struct cluster &clust, const struct ifmrMcmcControl &ctrl);
-void propClustCorrelated (struct cluster &clust, const struct ifmrMcmcControl &ctrl);
+void propClustBigSteps (struct cluster &clust, struct ifmrMcmcControl const &ctrl);
+void propClustIndep (struct cluster &clust, struct ifmrMcmcControl const &ctrl);
+void propClustCorrelated (struct cluster &clust, struct ifmrMcmcControl const &ctrl);
 
 int acceptClustMarg (double logPostCurr, double logPostProp);
 
-void printHeader (struct ifmrMcmcControl * const ctrl);
+void printHeader (ofstream &file, array<double, NPARAMS> const &priors);
 void initMassGrids (double *msMass1Grid, double *msMassRatioGrid, double *wdMass1Grid, const struct chain mc);
 
 /*** global variables ***/
@@ -82,7 +84,7 @@ int main (int argc, char *argv[])
 
     double logPostCurr;
     double logPostProp;
-    double *logPostEachStar;
+    // double *logPostEachStar;
     double postClusterStar;
 
     struct chain mc;
@@ -152,7 +154,7 @@ int main (int argc, char *argv[])
         mc.stars[i].boundsFlag = 0;
     }
 
-    logPostEachStar = new double[mc.clust.nStars]();
+    // logPostEachStar = new double[mc.clust.nStars]();
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
@@ -176,25 +178,6 @@ int main (int argc, char *argv[])
 
     cout << "Bayesian analysis of stellar evolution" << endl;
 
-    /* open output files */
-    ctrl.resFile.open(ctrl.clusterFilename);
-    if (!ctrl.resFile)
-    {
-        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    ctrl.clusterFilename += ".burnin";
-    ctrl.burninFile.open(ctrl.clusterFilename);
-    if (!ctrl.burninFile)
-    {
-        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-    printHeader (&ctrl);
-
     /* set current log posterior to -HUGE_VAL */
     /* will cause random starting value */
     logPostCurr = -HUGE_VAL;
@@ -210,8 +193,8 @@ int main (int argc, char *argv[])
     {
         params[p] = new double[nSave]();
     }
-    double cov;
 
+    double cov;
     int nParamsUsed = 0;
 
     for (p = 0; p < NPARAMS; p++)
@@ -222,22 +205,245 @@ int main (int argc, char *argv[])
         }
     }
 
-    /********* MAIN LOOP *********/
-    for (iteration = 0; iteration < ctrl.burnIter + ctrl.nIter * ctrl.thin; iteration++)
+    // Run Burnin
+    ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
+    if (!ctrl.burninFile)
+    {
+        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    printHeader (ctrl.burninFile, ctrl.priorVar);
+
+    for (iteration = 0; iteration < ctrl.burnIter; iteration++)
     {
         propClust = mc.clust;
 
-        /* propose and broadcast new value */
-        propClustMarg (propClust, ctrl, iteration);
+        if (iteration < ctrl.burnIter / 2)
+        {
+            propClustBigSteps (propClust, ctrl);
+        }
+        else
+        {
+            propClustIndep (propClust, ctrl);
+        }
+
+
+        if (ctrl.priorVar[ABS] > EPSILON)
+        {
+            propClust.parameter[ABS] = fabs (propClust.parameter[ABS]);
+        }
+        if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
+        {
+            propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
+        }
+
         logPostProp = logPriorClust (&propClust);
 
         if (fabs (logPostProp + HUGE_VAL) < EPS)
         {
-            /* don't bother computing, already know this cluster will be rejected */
+            logPostProp = -HUGE_VAL;
+        }
+        else
+        {
+            /* loop over assigned stars */
             for (i = 0; i < mc.clust.nStars; i++)
             {
-                logPostEachStar[i] = -HUGE_VAL;
+                /* loop over all (mass1, mass ratio) pairs */
+                if (mc.stars[i].status[0] == WD)
+                {
+
+                    postClusterStar = 0.0;
+                    double tmpLogPost;
+
+                    for (j = 0; j < N_WD_MASS1; j++)
+                    {
+                        wd[j] = mc.stars[i];
+                        wd[j].boundsFlag = 0;
+                        wd[j].isFieldStar = 0;
+                        wd[j].U = wdMass1Grid[j];
+                        wd[j].massRatio = 0.0;
+
+                        evolve (&propClust, wd, j);
+
+                        if (wd[j].boundsFlag)
+                        {
+                            cerr <<"**wd[" << j << "].boundsFlag" << endl;
+                        }
+                        else
+                        {
+                            tmpLogPost = logPost1Star (&wd[j], &propClust);
+                            tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
+
+                            postClusterStar += exp (tmpLogPost);
+                        }
+                    }
+                }
+                else
+                {
+                    /* marginalize over isochrone */
+                    postClusterStar = margEvolveWithBinary (&propClust, &mc.stars[i]);
+                }
+
+                postClusterStar *= mc.stars[i].clustStarPriorDens;
+
+                /* marginalize over field star status */
+                logPostProp += log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
             }
+        }
+
+        /* accept/reject */
+        if (acceptClustMarg (logPostCurr, logPostProp))
+        {
+            mc.clust = propClust;
+            logPostCurr = logPostProp;
+            accept++;
+        }
+        else
+        {
+            reject++;
+        }
+        /* save draws to estimate covariance matrix for more efficient Metropolis */
+        if (iteration >= ctrl.burnIter / 2 && iteration < ctrl.burnIter)
+        {
+            if (iteration % increment == 0)
+            {
+                /* save draws */
+                for (p = 0; p < NPARAMS; p++)
+                {
+                    if (ctrl.priorVar[p] > EPSILON)
+                    {
+                        params[p][(iteration - ctrl.burnIter / 2) / increment] = mc.clust.parameter[p];
+                    }
+                }
+            }
+        }
+
+        /* Write output */
+        for (p = 0; p < NPARAMS; p++)
+        {
+            if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+            {
+                ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
+            }
+        }
+
+        ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
+    }
+
+    ctrl.burninFile.close();
+
+    // Create Cholesky Decomp
+    {
+        /* compute Cholesky decomposition of covariance matrix */
+        int h, k;
+        gsl_matrix *covMat = gsl_matrix_alloc (nParamsUsed, nParamsUsed);
+
+        h = 0;
+
+        double cholScale = 1000;    /* for numerical stability */
+
+        for (i = 0; i < NPARAMS; i++)
+        {
+            if (ctrl.priorVar[i] > EPSILON)
+            {
+                k = 0;
+                for (j = 0; j < NPARAMS; j++)
+                {
+                    if (ctrl.priorVar[j] > EPSILON)
+                    {
+                        cov = gsl_stats_covariance (params[i], 1, params[j], 1, nSave);
+                        gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
+
+                        if (h != k)
+                        {
+                            gsl_matrix_set (covMat, k, h, cov * cholScale * cholScale);
+                        }
+
+                        k++;
+                    }
+                }
+                h++;
+            }
+        }
+
+        for (i = 0; i < nParamsUsed; i++)
+        {
+            for (j = 0; j < nParamsUsed; j++)
+            {
+                cout << gsl_matrix_get (covMat, i, j) << " ";
+            }
+            cout << endl;
+        }
+
+        /* Cholesky decomposition */
+        gsl_linalg_cholesky_decomp (covMat);
+
+        /* compute proposal matrix from Cholesky factor */
+
+        /* Gelman, Roberts, Gilks scale */
+        double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
+
+        h = 0;
+        for (i = 0; i < NPARAMS; i++)
+        {
+            if (ctrl.priorVar[i] > EPSILON)
+            {
+                k = 0;
+                for (j = 0; j < NPARAMS; j++)
+                {
+                    if (ctrl.priorVar[j] > EPSILON)
+                    {
+                        if (j <= i)
+                        {
+                            ctrl.propMatrix[i][j] = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
+                        }
+                        else
+                        {
+                            ctrl.propMatrix[i][j] = 0.0;
+                        }
+                        k++;
+                    }
+                    else
+                    {
+                        ctrl.propMatrix[i][j] = 0.0;
+                    }
+                }
+                h++;
+            }
+            else
+            {
+                for (j = 0; j < NPARAMS; j++)
+                {
+                    ctrl.propMatrix[i][j] = 0.0;
+                }
+            }
+        }
+    }
+
+    // Main run
+    ctrl.resFile.open(ctrl.clusterFilename);
+    if (!ctrl.resFile)
+    {
+        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    printHeader (ctrl.resFile, ctrl.priorVar);
+
+    for (iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
+    {
+        propClust = mc.clust;
+
+        propClustCorrelated (propClust, ctrl);
+
+        logPostProp = logPriorClust (&propClust);
+
+        if (fabs (logPostProp + HUGE_VAL) < EPS)
+        {
+            logPostProp = -HUGE_VAL;
         }
         else
         {
@@ -284,13 +490,8 @@ int main (int argc, char *argv[])
 
 
                 /* marginalize over field star status */
-                logPostEachStar[i] = log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
+                logPostProp += log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
             }
-        }
-
-        for (i = 0; i < mc.clust.nStars; i++)
-        {
-            logPostProp += logPostEachStar[i];
         }
 
         /* accept/reject */
@@ -304,123 +505,8 @@ int main (int argc, char *argv[])
         {
             reject++;
         }
-        /* save draws to estimate covariance matrix for more efficient Metropolis */
-        if (iteration >= ctrl.burnIter / 2 && iteration < ctrl.burnIter)
-        {
-            if (iteration % increment == 0)
-            {
-                /* save draws */
-                for (p = 0; p < NPARAMS; p++)
-                {
-                    if (ctrl.priorVar[p] > EPSILON)
-                    {
-                        params[p][(iteration - ctrl.burnIter / 2) / increment] = mc.clust.parameter[p];
-                    }
-                }
-            }
-            if (iteration == ctrl.burnIter - 1)
-            {
-                /* compute Cholesky decomposition of covariance matrix */
-                int h, k;
-                gsl_matrix *covMat = gsl_matrix_alloc (nParamsUsed, nParamsUsed);
 
-                h = 0;
-
-                double cholScale = 1000;    /* for numerical stability */
-
-                for (i = 0; i < NPARAMS; i++)
-                {
-                    if (ctrl.priorVar[i] > EPSILON)
-                    {
-                        k = 0;
-                        for (j = 0; j < NPARAMS; j++)
-                        {
-                            if (ctrl.priorVar[j] > EPSILON)
-                            {
-                                cov = gsl_stats_covariance (params[i], 1, params[j], 1, nSave);
-                                gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
-
-                                if (h != k)
-                                {
-                                    gsl_matrix_set (covMat, k, h, cov * cholScale * cholScale);
-                                }
-
-                                k++;
-                            }
-                        }
-                        h++;
-                    }
-                }
-
-                for (i = 0; i < nParamsUsed; i++)
-                {
-                    for (j = 0; j < nParamsUsed; j++)
-                    {
-                        cout << gsl_matrix_get (covMat, i, j) << " ";
-                    }
-                    cout << endl;
-                }
-
-                /* Cholesky decomposition */
-                gsl_linalg_cholesky_decomp (covMat);
-
-                /* compute proposal matrix from Cholesky factor */
-
-                /* Gelman, Roberts, Gilks scale */
-                double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
-
-                h = 0;
-                for (i = 0; i < NPARAMS; i++)
-                {
-                    if (ctrl.priorVar[i] > EPSILON)
-                    {
-                        k = 0;
-                        for (j = 0; j < NPARAMS; j++)
-                        {
-                            if (ctrl.priorVar[j] > EPSILON)
-                            {
-                                if (j <= i)
-                                {
-                                    ctrl.propMatrix[i][j] = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
-                                }
-                                else
-                                {
-                                    ctrl.propMatrix[i][j] = 0.0;
-                                }
-                                k++;
-                            }
-                            else
-                            {
-                                ctrl.propMatrix[i][j] = 0.0;
-                            }
-                        }
-                        h++;
-                    }
-                    else
-                    {
-                        for (j = 0; j < NPARAMS; j++)
-                        {
-                            ctrl.propMatrix[i][j] = 0.0;
-                        }
-                    }
-                }
-            }
-        }
-
-        /* Write output */
-        if (iteration < ctrl.burnIter)
-        {
-            for (p = 0; p < NPARAMS; p++)
-            {
-                if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
-                {
-                    ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
-                }
-            }
-
-            ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
-        }
-        else if (iteration % ctrl.thin == 0)
+        if (iteration % ctrl.thin == 0)
         {
             for (p = 0; p < NPARAMS; p++)
             {
@@ -435,7 +521,6 @@ int main (int argc, char *argv[])
 
 
     ctrl.resFile.close();
-    ctrl.burninFile.close();
     cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
 
     /* clean up */
@@ -446,10 +531,10 @@ int main (int argc, char *argv[])
 
     for (p = 0; p < NPARAMS; p++)
     {
-        free (params[p]);
+        delete[] (params[p]);
     }
-    free (params);
-    free (logPostEachStar);
+
+    delete[] params;
 
     return 0;
 }
@@ -856,36 +941,7 @@ void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
 
 
 
-void propClustMarg (struct cluster &clust, const struct ifmrMcmcControl &ctrl, const int iteration)
-{
-    if (iteration < ctrl.burnIter / 2)
-    {
-        propClustBigSteps (clust, ctrl);
-    }
-    else if (iteration < ctrl.burnIter)
-    {
-        propClustIndep (clust, ctrl);
-    }
-    else
-    {
-        propClustCorrelated (clust, ctrl);
-    }
-
-    /* reflect */
-    if (iteration < ctrl.burnIter)
-    {
-        if (ctrl.priorVar[ABS] > EPSILON)
-        {
-            clust.parameter[ABS] = fabs (clust.parameter[ABS]);
-        }
-        if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
-        {
-            clust.parameter[IFMR_SLOPE] = fabs (clust.parameter[IFMR_SLOPE]);
-        }
-    }
-}
-
-void propClustBigSteps (struct cluster &clust, const struct ifmrMcmcControl &ctrl)
+void propClustBigSteps (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     double scale = 5.0;
@@ -900,7 +956,7 @@ void propClustBigSteps (struct cluster &clust, const struct ifmrMcmcControl &ctr
     }
 }
 
-void propClustIndep (struct cluster &clust, const struct ifmrMcmcControl &ctrl)
+void propClustIndep (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     int p;
@@ -914,7 +970,7 @@ void propClustIndep (struct cluster &clust, const struct ifmrMcmcControl &ctrl)
     }
 }
 
-void propClustCorrelated (struct cluster &clust, const struct ifmrMcmcControl &ctrl)
+void propClustCorrelated (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     double indepProps[NPARAMS] = { 0.0 };
@@ -946,7 +1002,7 @@ void propClustCorrelated (struct cluster &clust, const struct ifmrMcmcControl &c
 }
 
 
-void printHeader (struct ifmrMcmcControl * const ctrl)
+void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 {
     const char *paramNames[] = { "    logAge",
                                  "         Y",
@@ -957,18 +1013,15 @@ void printHeader (struct ifmrMcmcControl * const ctrl)
                                  "   IFMRlin",
                                  "  IFMRquad"
     };
-    int p;
 
-    for (p = 0; p < NPARAMS; p++)
+    for (int p = 0; p < NPARAMS; p++)
     {
-        if (ctrl->priorVar[p] > EPSILON || p == MOD || p == FEH || p == ABS)
+        if (priors.at(p) > EPSILON || p == MOD || p == FEH || p == ABS)
         {
-            ctrl->resFile << paramNames[p] << ' ';
-            ctrl->burninFile << paramNames[p] << ' ';
+            file << paramNames[p] << ' ';
         }
     }
-    ctrl->resFile << "logPost" << endl;
-    ctrl->burninFile << "logPost" << endl;
+    file << "logPost" << endl;
 }
 
 

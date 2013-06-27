@@ -34,7 +34,7 @@ struct ifmrMcmcControl
     int thin;
     int modelSet;
     double priorMean[NPARAMS];
-    double priorVar[NPARAMS];
+    std::array<double, NPARAMS> priorVar;
     double initialAge;
     double minMag;
     double maxMag;
