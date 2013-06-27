@@ -8,7 +8,7 @@
 #include <cmath>
 #include <cstring>
 
-#include <mpi.h>
+// #include <mpi.h>
 #include <unistd.h>
 #include <boost/format.hpp>
 #include <gsl/gsl_blas.h>
@@ -41,18 +41,20 @@ int gsl_linalg_cholesky_decomp (gsl_matrix * A);
 
 double margEvolveWithBinary (struct cluster *pCluster, struct star *pStar);
 
-static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl);
-static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl);
-static void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl);
-static void initStepSizes (struct cluster *clust);
-static void propClustMarg (struct cluster *clust, const struct ifmrMcmcControl *ctrl, const int iteration);
-static void propClustBigSteps (struct cluster *clust, const struct ifmrMcmcControl *ctrl);
-static void propClustIndep (struct cluster *clust, const struct ifmrMcmcControl *ctrl);
-static void propClustCorrelated (struct cluster *clust, const struct ifmrMcmcControl *ctrl);
-static int acceptClustMarg (double logPostCurr, double logPostProp);
+void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl);
+void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl);
+void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl);
+void initStepSizes (struct cluster *clust);
 
-static void printHeader (struct ifmrMcmcControl * const ctrl);
-static void initMassGrids (double *msMass1Grid, double *msMassRatioGrid, double *wdMass1Grid, const struct chain mc);
+void propClustMarg (struct cluster &clust, const struct ifmrMcmcControl &ctrl, const int iteration);
+void propClustBigSteps (struct cluster &clust, const struct ifmrMcmcControl &ctrl);
+void propClustIndep (struct cluster &clust, const struct ifmrMcmcControl &ctrl);
+void propClustCorrelated (struct cluster &clust, const struct ifmrMcmcControl &ctrl);
+
+int acceptClustMarg (double logPostCurr, double logPostProp);
+
+void printHeader (struct ifmrMcmcControl * const ctrl);
+void initMassGrids (double *msMass1Grid, double *msMassRatioGrid, double *wdMass1Grid, const struct chain mc);
 
 /*** global variables ***/
 /* Used by evolve.c */
@@ -76,14 +78,8 @@ int mti = NN + 1;
 
 int main (int argc, char *argv[])
 {
-    int i, j, p, filt, iteration, numtasks,     /* total number of MPI process in partitiion */
-        numworkers,                     /* number of worker tasks */
-        taskid,
-        dest,                   /* destination task id to send message */
-        index,                  /* index into the array */
-        source,                 /* origin task id of message */
-        chunksize,                      /* for partitioning the array of stars */
-        extra, minchunk, accept = 0, reject = 0, doAccept;
+    int i, j, p, filt, iteration,
+        accept = 0, reject = 0;
 
     double logPostCurr;
     double logPostProp;
@@ -92,8 +88,7 @@ int main (int argc, char *argv[])
 
     struct chain mc;
     struct ifmrMcmcControl ctrl;
-    struct cluster propClustMaster;
-    struct cluster propClustWorker;
+    struct cluster propClust;
 
     double fsLike;
     struct obsStar *obs = 0;    //initialized *obs to 0
@@ -105,14 +100,14 @@ int main (int argc, char *argv[])
     /* arrays to evolve all copies of each star simultaneously */
     vector<struct star> wd(N_WD_MASS1);
 
-    MPI_Datatype obsStarType;
-    MPI_Status status;
+    // MPI_Datatype obsStarType;
+    // MPI_Status status;
 
-    MPI_Init (&argc, &argv);
-    MPI_Comm_rank (MPI_COMM_WORLD, &taskid);
-    MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
-    MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
-    MPI_Type_commit (&obsStarType);
+    // MPI_Init (&argc, &argv);
+    // MPI_Comm_rank (MPI_COMM_WORLD, &taskid);
+    // MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
+    // MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
+    // MPI_Type_commit (&obsStarType);
 
     settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
@@ -127,48 +122,47 @@ int main (int argc, char *argv[])
     settings.fromCLI (argc, argv);
 
     initCluster (&(mc.clust));
-    initCluster (&propClustWorker);
-    initCluster (&propClustMaster);
+    initCluster (&propClust);
     initStepSizes (&mc.clust);
 
-    if (taskid == MASTER)
-    {
-        initIfmrMcmcControl (&mc, &ctrl);
-    }
-    else
-    {
-        ctrl.verbose = 0;
-        ctrl.iStart = 0;
-    }
+    // if (taskid == MASTER)
+    // {
+    initIfmrMcmcControl (&mc, &ctrl);
+    // }
+    // else
+    // {
+    //     ctrl.verbose = 0;
+    //     ctrl.iStart = 0;
+    // }
 
     /* /\*** broadcast control parameters to other processes ***\/ */
-    if (taskid != MASTER)
-    {
-        init_genrand (settings.seed);
-    }
+    // if (taskid != MASTER)
+    // {
+    //     init_genrand (settings.seed);
+    // }
 
-    MPI_Bcast (&mc.clust.evoModels.WDcooling, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.evoModels.mainSequenceEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.evoModels.filterSet, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.evoModels.brownDwarfEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.evoModels.IFMR, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.carbonicity, 1, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&mc.clust.evoModels.WDcooling, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&mc.clust.evoModels.mainSequenceEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&mc.clust.evoModels.filterSet, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&mc.clust.evoModels.brownDwarfEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&mc.clust.evoModels.IFMR, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&mc.clust.carbonicity, 1, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
     mc.clust.evoModels.WDatm = BERGERON;
 
-    if (taskid != MASTER)
-    {                           /* already loaded in the MASTER task */
-        if (mc.clust.evoModels.brownDwarfEvol == BARAFFE)
-            loadBaraffe (settings.files.models);
-        loadMSRgbModels (&mc.clust, settings.files.models, 0);
-        loadWDCool (settings.files.models, mc.clust.evoModels.WDcooling);
-        loadBergeron (settings.files.models, mc.clust.evoModels.filterSet);
-    }
+    // if (taskid != MASTER)
+    // {                           /* already loaded in the MASTER task */
+    //     if (mc.clust.evoModels.brownDwarfEvol == BARAFFE)
+    //         loadBaraffe (settings.files.models);
+    //     loadMSRgbModels (&mc.clust, settings.files.models, 0);
+    //     loadWDCool (settings.files.models, mc.clust.evoModels.WDcooling);
+    //     loadBergeron (settings.files.models, mc.clust.evoModels.filterSet);
+    // }
 
-    MPI_Bcast (ctrl.priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (ctrl.priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (ctrl.priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (ctrl.priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 
     for (p = 0; p < NPARAMS; p++)
     {
@@ -176,66 +170,66 @@ int main (int argc, char *argv[])
         mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
-    if (taskid == MASTER)
+    // if (taskid == MASTER)
+    // {
+    readCmdData (&mc, &ctrl);
+
+    obs = new struct obsStar[mc.clust.nStars]();
+    starStatus = new int[mc.clust.nStars]();
+
+    for (i = 0; i < mc.clust.nStars; i++)
     {
-        readCmdData (&mc, &ctrl);
-
-        obs = new struct obsStar[mc.clust.nStars]();
-        starStatus = new int[mc.clust.nStars]();
-
-        for (i = 0; i < mc.clust.nStars; i++)
+        for (filt = 0; filt < ctrl.numFilts; filt++)
         {
-            for (filt = 0; filt < ctrl.numFilts; filt++)
-            {
-                obs[i].obsPhot[filt] = mc.stars[i].obsPhot[filt];
-                obs[i].variance[filt] = mc.stars[i].variance[filt];
-            }
-            obs[i].clustStarPriorDens = mc.stars[i].clustStarPriorDens;
-            starStatus[i] = mc.stars[i].status[0];
+            obs[i].obsPhot[filt] = mc.stars[i].obsPhot[filt];
+            obs[i].variance[filt] = mc.stars[i].variance[filt];
         }
-
+        obs[i].clustStarPriorDens = mc.stars[i].clustStarPriorDens;
+        starStatus[i] = mc.stars[i].status[0];
     }
 
-    MPI_Bcast (&ctrl.numFilts, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (ctrl.useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // }
+
+    // MPI_Bcast (&ctrl.numFilts, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (ctrl.useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
     mc.clust.evoModels.numFilts = ctrl.numFilts;
     numFilts = ctrl.numFilts;
-    MPI_Bcast (ctrl.filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (ctrl.filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.nStars, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&ctrl.burnIter, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&ctrl.nIter, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&ctrl.thin, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (ctrl.filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (ctrl.filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&mc.clust.nStars, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&ctrl.burnIter, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&ctrl.nIter, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (&ctrl.thin, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
 
 
-    MPI_Barrier (MPI_COMM_WORLD);
-    if (taskid != MASTER)
-    {
-        obs = new struct obsStar[mc.clust.nStars]();
-        starStatus = new int[mc.clust.nStars]();
-    }
+    // MPI_Barrier (MPI_COMM_WORLD);
+    // if (taskid != MASTER)
+    // {
+    //     obs = new struct obsStar[mc.clust.nStars]();
+    //     starStatus = new int[mc.clust.nStars]();
+    // }
 
-    MPI_Bcast (starStatus, mc.clust.nStars, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (obs, mc.clust.nStars, obsStarType, MASTER, MPI_COMM_WORLD);
-    if (taskid != MASTER)
-    {
-        /* initialize the stars array */
-        mc.stars = vector<struct star>(mc.clust.nStars);
+    // MPI_Bcast (starStatus, mc.clust.nStars, MPI_INT, MASTER, MPI_COMM_WORLD);
+    // MPI_Bcast (obs, mc.clust.nStars, obsStarType, MASTER, MPI_COMM_WORLD);
+    // if (taskid != MASTER)
+    // {
+    //     /* initialize the stars array */
+    //     mc.stars = vector<struct star>(mc.clust.nStars);
 
-        for (i = 0; i < mc.clust.nStars; i++)
-        {
-            for (filt = 0; filt < ctrl.numFilts; filt++)
-            {
-                mc.stars[i].obsPhot[filt] = obs[i].obsPhot[filt];
-                mc.stars[i].variance[filt] = obs[i].variance[filt];
-            }
-            mc.stars[i].clustStarPriorDens = obs[i].clustStarPriorDens;
-            mc.stars[i].status[0] = starStatus[i];
-        }
-    }
+    //     for (i = 0; i < mc.clust.nStars; i++)
+    //     {
+    //         for (filt = 0; filt < ctrl.numFilts; filt++)
+    //         {
+    //             mc.stars[i].obsPhot[filt] = obs[i].obsPhot[filt];
+    //             mc.stars[i].variance[filt] = obs[i].variance[filt];
+    //         }
+    //         mc.stars[i].clustStarPriorDens = obs[i].clustStarPriorDens;
+    //         mc.stars[i].status[0] = starStatus[i];
+    //     }
+    // }
 
     initChain (&mc, &ctrl);
 
@@ -245,9 +239,9 @@ int main (int argc, char *argv[])
         mc.stars[i].boundsFlag = 0;
     }
 
-    numworkers = numtasks - 1;
-    minchunk = mc.clust.nStars / numworkers;
-    extra = mc.clust.nStars % numworkers;
+    // numworkers = numtasks - 1;
+    // minchunk = mc.clust.nStars / numworkers;
+    // extra = mc.clust.nStars % numworkers;
 
     logPostEachStar = new double[mc.clust.nStars]();
 
@@ -269,39 +263,38 @@ int main (int argc, char *argv[])
         fsLike = 0;
     }
 
-    initCluster (&propClustWorker);
-    initCluster (&propClustMaster);
+    initCluster (&propClust);
 
     /**************************** master task ************************************/
-    if (taskid == MASTER)
+    // if (taskid == MASTER)
+    // {
+    cout << "Bayesian analysis of stellar evolution" << endl;
+
+    /* open output files */
+    ctrl.resFile.open(ctrl.clusterFilename);
+    if (!ctrl.resFile)
     {
-        cout << "Bayesian analysis of stellar evolution" << endl;
-
-        /* open output files */
-        ctrl.resFile.open(ctrl.clusterFilename);
-        if (!ctrl.resFile)
-        {
-            cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-            cerr << "[Exiting...]" << endl;
-            exit (1);
-        }
-
-        ctrl.clusterFilename += ".burnin";
-        ctrl.burninFile.open(ctrl.clusterFilename);
-        if (!ctrl.burninFile)
-        {
-            cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-            cerr << "[Exiting...]" << endl;
-            exit (1);
-        }
-        printHeader (&ctrl);
+        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
     }
+
+    ctrl.clusterFilename += ".burnin";
+    ctrl.burninFile.open(ctrl.clusterFilename);
+    if (!ctrl.burninFile)
+    {
+        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+    printHeader (&ctrl);
+    // }
 
     /* set current log posterior to -HUGE_VAL */
     /* will cause random starting value */
     logPostCurr = -HUGE_VAL;
 
-    MPI_Barrier (MPI_COMM_WORLD);
+    // MPI_Barrier (MPI_COMM_WORLD);
 
     /* estimate covariance matrix for more efficient Metropolis updates */
     int nSave = 10;             /*changed from 100 to 10 */
@@ -329,277 +322,225 @@ int main (int argc, char *argv[])
     /********* MAIN LOOP *********/
     for (iteration = 0; iteration < ctrl.burnIter + ctrl.nIter * ctrl.thin; iteration++)
     {
-        propClustMaster = mc.clust;
-        // propClustWorker = mc.clust;
-        if (taskid == MASTER)
+        propClust = mc.clust;
+
+        /* propose and broadcast new value */
+        propClustMarg (propClust, ctrl, iteration);
+        logPostProp = logPriorClust (&propClust);
+
+        if (fabs (logPostProp + HUGE_VAL) < EPS)
         {
-            /* propose and broadcast new value */
-            propClustMarg (&propClustMaster, &ctrl, iteration);
-            logPostProp = logPriorClust (&propClustMaster);
-
-            /**************************** master task ************************************/
-            /* send assignments to workers */
-            /* send which star */
-            index = 0;
-            for (dest = 1; dest <= numworkers; dest++)
-            {
-                if (dest <= extra)
-                    chunksize = minchunk + 1;
-                else
-                    chunksize = minchunk;
-
-                MPI_Send (&index, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-                MPI_Send (&chunksize, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-                MPI_Send (&propClustMaster.parameter, NPARAMS, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
-
-                index = index + chunksize;
-            }
-            /* receive calculated logPosts */
-            for (i = 1; i <= numworkers; i++)
-            {
-                source = i;
-                MPI_Recv (&index, 1, MPI_INT, source, 1, MPI_COMM_WORLD, &status);
-                MPI_Recv (&chunksize, 1, MPI_INT, source, 1, MPI_COMM_WORLD, &status);
-                MPI_Recv (&logPostEachStar[index], chunksize, MPI_DOUBLE, source, 1, MPI_COMM_WORLD, &status);
-            }
+            /* don't bother computing, already know this cluster will be rejected */
             for (i = 0; i < mc.clust.nStars; i++)
             {
-                logPostProp += logPostEachStar[i];
+                logPostEachStar[i] = -HUGE_VAL;
             }
-
-            /* accept/reject */
-            doAccept = acceptClustMarg (logPostCurr, logPostProp);
-            if (doAccept)
+        }
+        else
+        {
+            /* loop over assigned stars */
+            for (i = 0; i < mc.clust.nStars; i++)
             {
-//                puts("Accepted");
-                mc.clust = propClustMaster;
-                logPostCurr = logPostProp;
-                accept++;
-            }
-            else
-            {
-                reject++;
-            }
-            /* save draws to estimate covariance matrix for more efficient Metropolis */
-            if (iteration >= ctrl.burnIter / 2 && iteration < ctrl.burnIter)
-            {
-                if (iteration % increment == 0)
+                /* loop over all (mass1, mass ratio) pairs */
+                if (mc.stars[i].status[0] == WD)
                 {
-                    /* save draws */
-                    for (p = 0; p < NPARAMS; p++)
+
+                    postClusterStar = 0.0;
+                    double tmpLogPost;
+
+                    for (j = 0; j < N_WD_MASS1; j++)
                     {
-                        if (ctrl.priorVar[p] > EPSILON)
+                        wd[j] = mc.stars[i];
+                        wd[j].boundsFlag = 0;
+                        wd[j].isFieldStar = 0;
+                        wd[j].U = wdMass1Grid[j];
+                        wd[j].massRatio = 0.0;
+
+                        evolve (&propClust, wd, j);
+
+                        if (wd[j].boundsFlag)
                         {
-                            params[p][(iteration - ctrl.burnIter / 2) / increment] = mc.clust.parameter[p];
+                            cerr <<"**wd[" << j << "].boundsFlag" << endl;
+                        }
+                        else
+                        {
+                            tmpLogPost = logPost1Star (&wd[j], &propClust);
+                            tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
+
+                            postClusterStar += exp (tmpLogPost);
                         }
                     }
                 }
-                if (iteration == ctrl.burnIter - 1)
+                else
                 {
-                    /* compute Cholesky decomposition of covariance matrix */
-                    int h, k;
-                    gsl_matrix *covMat = gsl_matrix_alloc (nParamsUsed, nParamsUsed);
+                    /* marginalize over isochrone */
+                    postClusterStar = margEvolveWithBinary (&propClust, &mc.stars[i]);
+                }
 
-                    h = 0;
+                postClusterStar *= mc.stars[i].clustStarPriorDens;
 
-                    double cholScale = 1000;    /* for numerical stability */
+
+                /* marginalize over field star status */
+                logPostEachStar[i] = log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
+            }
+        }
+
+        for (i = 0; i < mc.clust.nStars; i++)
+        {
+            logPostProp += logPostEachStar[i];
+        }
+
+        /* accept/reject */
+        if (acceptClustMarg (logPostCurr, logPostProp))
+        {
+            mc.clust = propClust;
+            logPostCurr = logPostProp;
+            accept++;
+        }
+        else
+        {
+            reject++;
+        }
+        /* save draws to estimate covariance matrix for more efficient Metropolis */
+        if (iteration >= ctrl.burnIter / 2 && iteration < ctrl.burnIter)
+        {
+            if (iteration % increment == 0)
+            {
+                /* save draws */
+                for (p = 0; p < NPARAMS; p++)
+                {
+                    if (ctrl.priorVar[p] > EPSILON)
+                    {
+                        params[p][(iteration - ctrl.burnIter / 2) / increment] = mc.clust.parameter[p];
+                    }
+                }
+            }
+            if (iteration == ctrl.burnIter - 1)
+            {
+                /* compute Cholesky decomposition of covariance matrix */
+                int h, k;
+                gsl_matrix *covMat = gsl_matrix_alloc (nParamsUsed, nParamsUsed);
+
+                h = 0;
+
+                double cholScale = 1000;    /* for numerical stability */
 
 //                    exit(0);
 
-                    for (i = 0; i < NPARAMS; i++)
+                for (i = 0; i < NPARAMS; i++)
+                {
+                    if (ctrl.priorVar[i] > EPSILON)
                     {
-                        if (ctrl.priorVar[i] > EPSILON)
+                        k = 0;
+                        for (j = 0; j < NPARAMS; j++)
                         {
-                            k = 0;
-                            for (j = 0; j < NPARAMS; j++)
+                            if (ctrl.priorVar[j] > EPSILON)
                             {
-                                if (ctrl.priorVar[j] > EPSILON)
+                                cov = gsl_stats_covariance (params[i], 1, params[j], 1, nSave);
+                                gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
+
+                                if (h != k)
                                 {
-                                    cov = gsl_stats_covariance (params[i], 1, params[j], 1, nSave);
-                                    gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
-
-                                    if (h != k)
-                                    {
-                                        gsl_matrix_set (covMat, k, h, cov * cholScale * cholScale);
-                                    }
-
-                                    k++;
+                                    gsl_matrix_set (covMat, k, h, cov * cholScale * cholScale);
                                 }
+
+                                k++;
                             }
-                            h++;
                         }
+                        h++;
                     }
+                }
 
-                    for (i = 0; i < nParamsUsed; i++)
+                for (i = 0; i < nParamsUsed; i++)
+                {
+                    for (j = 0; j < nParamsUsed; j++)
                     {
-                        for (j = 0; j < nParamsUsed; j++)
-                        {
-                            cout << gsl_matrix_get (covMat, i, j) << " ";
-                        }
-                        cout << endl;
+                        cout << gsl_matrix_get (covMat, i, j) << " ";
                     }
-                    fflush (stdout);
+                    cout << endl;
+                }
+                fflush (stdout);
 
-                    /* Cholesky decomposition */
-                    gsl_linalg_cholesky_decomp (covMat);
+                /* Cholesky decomposition */
+                gsl_linalg_cholesky_decomp (covMat);
 
-                    /* compute proposal matrix from Cholesky factor */
+                /* compute proposal matrix from Cholesky factor */
 
-                    /* Gelman, Roberts, Gilks scale */
-                    double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
+                /* Gelman, Roberts, Gilks scale */
+                double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
 
-                    h = 0;
-                    for (i = 0; i < NPARAMS; i++)
+                h = 0;
+                for (i = 0; i < NPARAMS; i++)
+                {
+                    if (ctrl.priorVar[i] > EPSILON)
                     {
-                        if (ctrl.priorVar[i] > EPSILON)
+                        k = 0;
+                        for (j = 0; j < NPARAMS; j++)
                         {
-                            k = 0;
-                            for (j = 0; j < NPARAMS; j++)
+                            if (ctrl.priorVar[j] > EPSILON)
                             {
-                                if (ctrl.priorVar[j] > EPSILON)
+                                if (j <= i)
                                 {
-                                    if (j <= i)
-                                    {
-                                        ctrl.propMatrix[i][j] = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
-                                    }
-                                    else
-                                    {
-                                        ctrl.propMatrix[i][j] = 0.0;
-                                    }
-                                    k++;
+                                    ctrl.propMatrix[i][j] = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
                                 }
                                 else
                                 {
                                     ctrl.propMatrix[i][j] = 0.0;
                                 }
+                                k++;
                             }
-                            h++;
-                        }
-                        else
-                        {
-                            for (j = 0; j < NPARAMS; j++)
+                            else
                             {
                                 ctrl.propMatrix[i][j] = 0.0;
                             }
                         }
-                    }
-
-                    MPI_Bcast (&(ctrl.propMatrix[0][0]), NPARAMS * NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-                }
-            }
-
-            /* Write output */
-            if (iteration < ctrl.burnIter)
-            {
-                for (p = 0; p < NPARAMS; p++)
-                {
-                    if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
-                    {
-                        ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
-                    }
-                }
-
-                ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
-            }
-            else if (iteration % ctrl.thin == 0)
-            {
-                for (p = 0; p < NPARAMS; p++)
-                {
-                    if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
-                    {
-                        ctrl.resFile << boost::format("%10.6f ") % mc.clust.parameter[p];
-                    }
-                }
-                ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
-            }
-        }
-        else
-        {
-            /**************************** worker task ************************************/
-            /* receive assigned observed star and cluster parameter values */
-            propClustWorker = mc.clust;
-
-            source = MASTER;
-            MPI_Recv (&index, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-            MPI_Recv (&chunksize, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-            MPI_Recv (&propClustWorker.parameter, NPARAMS, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, &status);
-
-
-            logPostProp = logPriorClust (&propClustWorker);
-            if (fabs (logPostProp + HUGE_VAL) < EPS)
-            {
-                /* don't bother computing, already know this cluster will be rejected */
-                for (i = index; i < index + chunksize; i++)
-                {
-                    logPostEachStar[i] = -HUGE_VAL;
-                }
-            }
-            else
-            {
-                /* loop over assigned stars */
-                for (i = index; i < index + chunksize; i++)
-                {
-                    /* loop over all (mass1, mass ratio) pairs */
-                    if (mc.stars[i].status[0] == WD)
-                    {
-
-                        postClusterStar = 0.0;
-                        double tmpLogPost;
-
-                        for (j = 0; j < N_WD_MASS1; j++)
-                        {
-                            wd[j] = mc.stars[i];
-                            wd[j].boundsFlag = 0;
-                            wd[j].isFieldStar = 0;
-                            wd[j].U = wdMass1Grid[j];
-                            wd[j].massRatio = 0.0;
-                            evolve (&propClustWorker, wd, j);
-
-                            if (wd[j].boundsFlag)
-                            {
-                                cerr <<"**wd[" << j << "].boundsFlag" << endl;
-                            }
-                            else
-                            {
-                                tmpLogPost = logPost1Star (&wd[j], &propClustWorker);
-                                tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
-
-                                postClusterStar += exp (tmpLogPost);
-                            }
-                        }
-
-                        postClusterStar *= mc.stars[i].clustStarPriorDens;
+                        h++;
                     }
                     else
                     {
-                        /* marginalize over isochrone */
-                        postClusterStar = margEvolveWithBinary (&propClustWorker, &mc.stars[i]);
-                        postClusterStar *= mc.stars[i].clustStarPriorDens;
+                        for (j = 0; j < NPARAMS; j++)
+                        {
+                            ctrl.propMatrix[i][j] = 0.0;
+                        }
                     }
+                }
+            }
+        }
 
-                    /* marginalize over field star status */
-                    logPostEachStar[i] = log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
+        /* Write output */
+        if (iteration < ctrl.burnIter)
+        {
+            for (p = 0; p < NPARAMS; p++)
+            {
+                if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+                {
+                    ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
                 }
             }
 
-
-            /* Send results back to the master task */
-            MPI_Send (&index, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD);
-            MPI_Send (&chunksize, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD);
-            /* return log posterior */
-            MPI_Send (&logPostEachStar[index], chunksize, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD);
-
-        }         /********** end worker task *********/
+            ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
+        }
+        else if (iteration % ctrl.thin == 0)
+        {
+            for (p = 0; p < NPARAMS; p++)
+            {
+                if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+                {
+                    ctrl.resFile << boost::format("%10.6f ") % mc.clust.parameter[p];
+                }
+            }
+            ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
+        }
     }
     /********* END MAIN LOOP *********/
 
 
-    if (taskid == MASTER)
-    {
+    // if (taskid == MASTER)
+    // {
         ctrl.resFile.close();
         ctrl.burninFile.close();
         cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
-    }
+    // }
 
 
     /* clean up */
@@ -614,9 +555,9 @@ int main (int argc, char *argv[])
     }
     free (params);
     // MPI_Type_free(&clustParType);
-    MPI_Type_free (&obsStarType);
+    // MPI_Type_free (&obsStarType);
     free (logPostEachStar);
-    MPI_Finalize ();
+    // MPI_Finalize ();
 
     return 0;
 }
@@ -627,7 +568,7 @@ int main (int argc, char *argv[])
 ********************************************
 *******************************************/
 
-static void initStepSizes (struct cluster *clust)
+void initStepSizes (struct cluster *clust)
 {
     // clust->stepSize[AGE]    = 0.08;
     // clust->stepSize[FEH]    = 0.02;
@@ -657,7 +598,7 @@ static void initStepSizes (struct cluster *clust)
 
 
 /* Decides whether to accept a proposed cluster property */
-static int acceptClustMarg (double logPostCurr, double logPostProp)
+int acceptClustMarg (double logPostCurr, double logPostProp)
 {
     if (isinf (logPostProp))
     {
@@ -692,7 +633,7 @@ static int acceptClustMarg (double logPostCurr, double logPostProp)
 /*
  * read control parameters from input stream
  */
-static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
+void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
 {
 
     double priorSigma;
@@ -849,7 +790,7 @@ static void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
 /*
  * Read data
  */
-static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
+void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
 {
     char line[300];
     double tempSigma;
@@ -966,7 +907,7 @@ static void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
 /*
  * Initialize chain
  */
-static void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
+void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
 {
     int p;
 
@@ -1041,13 +982,13 @@ static void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
 
 
 
-static void propClustMarg (struct cluster *clust, const struct ifmrMcmcControl *ctrl, const int iteration)
+void propClustMarg (struct cluster &clust, const struct ifmrMcmcControl &ctrl, const int iteration)
 {
-    if (iteration < ctrl->burnIter / 2)
+    if (iteration < ctrl.burnIter / 2)
     {
         propClustBigSteps (clust, ctrl);
     }
-    else if (iteration < ctrl->burnIter)
+    else if (iteration < ctrl.burnIter)
     {
         propClustIndep (clust, ctrl);
     }
@@ -1057,20 +998,20 @@ static void propClustMarg (struct cluster *clust, const struct ifmrMcmcControl *
     }
 
     /* reflect */
-    if (iteration < ctrl->burnIter)
+    if (iteration < ctrl.burnIter)
     {
-        if (ctrl->priorVar[ABS] > EPSILON)
+        if (ctrl.priorVar[ABS] > EPSILON)
         {
-            clust->parameter[ABS] = fabs (clust->parameter[ABS]);
+            clust.parameter[ABS] = fabs (clust.parameter[ABS]);
         }
-        if (ctrl->priorVar[IFMR_SLOPE] > EPSILON)
+        if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
         {
-            clust->parameter[IFMR_SLOPE] = fabs (clust->parameter[IFMR_SLOPE]);
+            clust.parameter[IFMR_SLOPE] = fabs (clust.parameter[IFMR_SLOPE]);
         }
     }
 }
 
-static void propClustBigSteps (struct cluster *clust, const struct ifmrMcmcControl *ctrl)
+void propClustBigSteps (struct cluster &clust, const struct ifmrMcmcControl &ctrl)
 {
     /* DOF defined in densities.h */
     double scale = 5.0;
@@ -1078,28 +1019,28 @@ static void propClustBigSteps (struct cluster *clust, const struct ifmrMcmcContr
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl->priorVar[p] > EPSILON)
+        if (ctrl.priorVar[p] > EPSILON)
         {
-            clust->parameter[p] += sampleT (scale * scale * clust->stepSize[p] * clust->stepSize[p], DOF);
+            clust.parameter[p] += sampleT (scale * scale * clust.stepSize[p] * clust.stepSize[p], DOF);
         }
     }
 }
 
-static void propClustIndep (struct cluster *clust, const struct ifmrMcmcControl *ctrl)
+void propClustIndep (struct cluster &clust, const struct ifmrMcmcControl &ctrl)
 {
     /* DOF defined in densities.h */
     int p;
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl->priorVar[p] > EPSILON)
+        if (ctrl.priorVar[p] > EPSILON)
         {
-            clust->parameter[p] += sampleT (clust->stepSize[p] * clust->stepSize[p], DOF);
+            clust.parameter[p] += sampleT (clust.stepSize[p] * clust.stepSize[p], DOF);
         }
     }
 }
 
-static void propClustCorrelated (struct cluster *clust, const struct ifmrMcmcControl *ctrl)
+void propClustCorrelated (struct cluster &clust, const struct ifmrMcmcControl &ctrl)
 {
     /* DOF defined in densities.h */
     double indepProps[NPARAMS] = { 0.0 };
@@ -1109,29 +1050,29 @@ static void propClustCorrelated (struct cluster *clust, const struct ifmrMcmcCon
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl->priorVar[p] > EPSILON)
+        if (ctrl.priorVar[p] > EPSILON)
         {
             indepProps[p] = sampleT (1.0, DOF);
         }
     }
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl->priorVar[p] > EPSILON)
+        if (ctrl.priorVar[p] > EPSILON)
         {
             for (k = 0; k <= p; k++)
             {                           /* propMatrix is lower diagonal */
-                if (ctrl->priorVar[k] > EPSILON)
+                if (ctrl.priorVar[k] > EPSILON)
                 {
-                    corrProps[p] += ctrl->propMatrix[p][k] * indepProps[k];
+                    corrProps[p] += ctrl.propMatrix[p][k] * indepProps[k];
                 }
             }
-            clust->parameter[p] += corrProps[p];
+            clust.parameter[p] += corrProps[p];
         }
     }
 }
 
 
-static void printHeader (struct ifmrMcmcControl * const ctrl)
+void printHeader (struct ifmrMcmcControl * const ctrl)
 {
     const char *paramNames[] = { "    logAge",
                                  "         Y",
@@ -1158,7 +1099,7 @@ static void printHeader (struct ifmrMcmcControl * const ctrl)
 
 
 
-static void initMassGrids (double *msMass1Grid, double *msMassRatioGrid, double *wdMass1Grid, const struct chain mc)
+void initMassGrids (double *msMass1Grid, double *msMassRatioGrid, double *wdMass1Grid, const struct chain mc)
 {
     double maxMass1 = mc.clust.M_wd_up;
     double mass1, massRatio;
