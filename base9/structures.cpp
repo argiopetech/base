@@ -380,17 +380,17 @@ void allocateGlobalIso (struct globalIso *newIso)
 //NOTE: nEntries and nFilts need to be set in the calling program before this will work properly.
 void freeGlobalIso (struct globalIso *newIso)
 {
-    free (newIso->mass);
-    free (newIso->massNow);
-    free (newIso->eep);
+    delete[] (newIso->mass);
+    delete[] (newIso->massNow);
+    delete[] (newIso->eep);
 
     int j = 0;
 
     for (j = 0; j < newIso->nEntries; j++)
     {
-        free (newIso->mag[j]);
+        delete[] (newIso->mag[j]);
     }
-    free (newIso->mag);
+    delete[] (newIso->mag);
 }
 
 
@@ -399,7 +399,8 @@ void swapGlobalEntries (struct globalIso *thisIso, int n, int useFilt[FILTS])
 {
 
     int filt, tempEep;
-    double tempMass, tempMag[thisIso->nFilts];
+    double tempMass;
+    double tempMag[thisIso->nFilts];
 
     tempMass = thisIso->mass[n];
     tempEep = thisIso->eep[n];
