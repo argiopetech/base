@@ -1,5 +1,6 @@
 #include <array>
 #include <iostream>
+#include <vector>
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_math.h>
@@ -7,10 +8,14 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_linalg.h>
 
+#include "densities.hpp"
+#include "marg.hpp"
 #include "mpiMcmc.hpp"
 
 using std::array;
+using std::vector;
 using std::cout;
+using std::cerr;
 using std::endl;
 
 // Create Cholesky Decomp
@@ -20,7 +25,6 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, double **params)
     int nParamsUsed = 0;
 
     int nSave = 10;             /*changed from 100 to 10 */
-    int increment = ctrl.burnIter / (2 * nSave);
 
     for (int p = 0; p < NPARAMS; p++)
     {
@@ -114,4 +118,63 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, double **params)
             }
         }
     }
+}
+
+double logPostStep(struct chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, struct cluster &propClust, double fsLike)
+{
+    vector<struct star> wd(N_WD_MASS1);
+    double postClusterStar = 0.0;
+
+    double logPostProp = logPriorClust (&propClust);
+
+    if (isfinite(logPostProp))
+    {
+        /* loop over assigned stars */
+        for (int i = 0; i < mc.clust.nStars; i++)
+        {
+            /* loop over all (mass1, mass ratio) pairs */
+            if (mc.stars[i].status[0] == WD)
+            {
+
+                postClusterStar = 0.0;
+                double tmpLogPost;
+
+                for (int j = 0; j < N_WD_MASS1; j++)
+                {
+                    wd[j] = mc.stars[i];
+                    wd[j].boundsFlag = 0;
+                    wd[j].isFieldStar = 0;
+                    wd[j].U = wdMass1Grid[j];
+                    wd[j].massRatio = 0.0;
+
+                    evolve (&propClust, wd, j);
+
+                    if (wd[j].boundsFlag)
+                    {
+                        cerr <<"**wd[" << j << "].boundsFlag" << endl;
+                    }
+                    else
+                    {
+                        tmpLogPost = logPost1Star (&wd[j], &propClust);
+                        tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
+
+                        postClusterStar += exp (tmpLogPost);
+                    }
+                }
+            }
+            else
+            {
+                /* marginalize over isochrone */
+                postClusterStar = margEvolveWithBinary (&propClust, &mc.stars[i]);
+            }
+
+            postClusterStar *= mc.stars[i].clustStarPriorDens;
+
+
+            /* marginalize over field star status */
+            logPostProp += log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
+        }
+    }
+
+    return logPostProp;
 }

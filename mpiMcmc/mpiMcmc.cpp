@@ -36,24 +36,6 @@ using std::vector;
 using std::ofstream;
 using std::isfinite;
 
-double margEvolveWithBinary (struct cluster *pCluster, struct star *pStar);
-
-// void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl);
-// void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl);
-// void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl);
-// void initStepSizes (struct cluster *clust);
-
-// void propClustBigSteps (struct cluster &clust, struct ifmrMcmcControl const &ctrl);
-// void propClustIndep (struct cluster &clust, struct ifmrMcmcControl const &ctrl);
-// void propClustCorrelated (struct cluster &clust, struct ifmrMcmcControl const &ctrl);
-
-// int acceptClustMarg (double logPostCurr, double logPostProp);
-
-// void printHeader (ofstream &file, array<double, NPARAMS> const &priors);
-// void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, struct chain const mc);
-
-// double logPostStep(struct chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, struct cluster &propClust, double fsLike);
-
 /*** global variables ***/
 /* Used by evolve.c */
 double ltau[2];
@@ -75,64 +57,6 @@ unsigned long mt[NN];
 int mti = NN + 1;
 
 
-double logPostStep(struct chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, struct cluster &propClust, double fsLike)
-{
-    vector<struct star> wd(N_WD_MASS1);
-    double postClusterStar = 0.0;
-
-    double logPostProp = logPriorClust (&propClust);
-
-    if (isfinite(logPostProp))
-    {
-        /* loop over assigned stars */
-        for (int i = 0; i < mc.clust.nStars; i++)
-        {
-            /* loop over all (mass1, mass ratio) pairs */
-            if (mc.stars[i].status[0] == WD)
-            {
-
-                postClusterStar = 0.0;
-                double tmpLogPost;
-
-                for (int j = 0; j < N_WD_MASS1; j++)
-                {
-                    wd[j] = mc.stars[i];
-                    wd[j].boundsFlag = 0;
-                    wd[j].isFieldStar = 0;
-                    wd[j].U = wdMass1Grid[j];
-                    wd[j].massRatio = 0.0;
-
-                    evolve (&propClust, wd, j);
-
-                    if (wd[j].boundsFlag)
-                    {
-                        cerr <<"**wd[" << j << "].boundsFlag" << endl;
-                    }
-                    else
-                    {
-                        tmpLogPost = logPost1Star (&wd[j], &propClust);
-                        tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
-
-                        postClusterStar += exp (tmpLogPost);
-                    }
-                }
-            }
-            else
-            {
-                /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (&propClust, &mc.stars[i]);
-            }
-
-            postClusterStar *= mc.stars[i].clustStarPriorDens;
-
-
-            /* marginalize over field star status */
-            logPostProp += log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
-        }
-    }
-
-    return logPostProp;
-}
 
 void initStepSizes (struct cluster *clust)
 {
