@@ -59,9 +59,6 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    //macros defined in structures.h
-    initStar (&theStar);
-
     for (filt = 0; filt < 8; filt++)
         useFilt[filt] = 1;              // calculate all of U-K
     for (filt = 8; filt < FILTS; filt++)

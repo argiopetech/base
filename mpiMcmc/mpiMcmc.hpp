@@ -7,9 +7,6 @@
 
 #include "evolve.hpp"
 
-template <class T, unsigned I, unsigned J>
-using Matrix = std::array<std::array<T, J>, I>;
-
 const double MIN_MASS1    = 0.15;
 const int N_MS_MASS1      = 500;
 const int N_MS_MASS_RATIO = 20;

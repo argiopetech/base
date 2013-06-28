@@ -110,7 +110,6 @@ struct block
 
 
 // Helper functions for star and cluster structures.
-void initStar (Star *pStar);
 void readStar (FILE * pFile, Star *pStar);
 void writeStar (FILE * pFile, Star *pStar);
 double getMass1 (Star *pStar, Cluster *pCluster);

@@ -145,9 +145,6 @@ int main (int argc, char *argv[])
         starName[j] = new char[100]();
     }
 
-    for (j = 0; j < theCluster.nStars; j++)
-        initStar (&(stars.at(j)));
-
     ////////////////////////////////////////
     //// Determine which parameters are ////
     //// included in the .cluster file /////

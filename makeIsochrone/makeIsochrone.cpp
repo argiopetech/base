@@ -144,10 +144,6 @@ int main (int argc, char *argv[])
 
     stars.resize(theCluster.nStars);
 
-    for (j = 0; j < theCluster.nStars; j++)
-        initStar (&(stars.at(j)));
-
-
     stars.at(0).U = 1.0;
     stars.at(0).massRatio = 0.0;
 
@@ -163,7 +159,6 @@ int main (int argc, char *argv[])
 
     for (j = 0; j < theCluster.nStars; j++)
     {
-        initStar (&(stars.at(j)));
         if (j < isochrone.nEntries)
         {
             stars.at(j).U = isochrone.mass[j];

@@ -1,20 +1,24 @@
+#include <cstdio>
 
-void readClust (FILE * pFile)
+#include "Cluster.hpp"
+
+void Cluster::readClust (FILE * pFile)
 {
     int p;
 
     for (p = 0; p < NPARAMS; p++)
-        fscanf (pFile, "%lg %lg %lg", &(pCluster->parameter[p]), &(pCluster->mean[p]), &(pCluster->stepSize[p]));
+        fscanf (pFile, "%lg %lg %lg", &(parameter[p]), &(mean[p]), &(stepSize[p]));
 
-    fscanf (pFile, "%lf %lf %lf", &(pCluster->betamabs), &(pCluster->betaFabs), &(pCluster->betaFY));
+    fscanf (pFile, "%lf %lf %lf", &(betamabs), &(betaFabs), &(betaFY));
 }
 
 
-void writeClust (FILE * pFile)
+void Cluster::writeClust (FILE * pFile)
 {
     int p;
 
     for (p = 0; p < NPARAMS; p++)
-        fprintf (pFile, " %11.3e %11.3e %11.3e", pCluster->parameter[p], pCluster->mean[p], pCluster->stepSize[p]);
-    fprintf (pFile, " %8.3f %8.3f %8.3f\n", pCluster->betamabs, pCluster->betaFabs, pCluster->betaFY);
+        fprintf (pFile, " %11.3e %11.3e %11.3e", parameter[p], mean[p], stepSize[p]);
+
+    fprintf (pFile, " %8.3f %8.3f %8.3f\n", betamabs, betaFabs, betaFY);
 }

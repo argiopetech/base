@@ -39,44 +39,6 @@ void initModels (struct model *models)
     models->numFilts = 0;
 };
 
-void initStar (Star *pStar)
-{
-
-    int i;
-
-    for (i = 0; i < FILTS; i++)
-    {
-        pStar->obsPhot[i] = 0.0;
-        pStar->photometry[i] = 0.0;
-        pStar->variance[i] = 0.0;
-    }
-    for (i = 0; i < 2; i++)
-    {
-        pStar->status[i] = 0;
-        pStar->massNow[i] = 0.0;
-        pStar->wdLogTeff[i] = 0.0;
-        pStar->wdType[i] = 0;
-        pStar->betaMassRatio[i] = 0.0;
-    }
-    for (i = 0; i < NPARAMS; i++)
-    {
-        pStar->beta[i][0] = 0.0;
-        pStar->beta[i][1] = 0.0;
-    }
-    pStar->U = 0.0;
-    pStar->massRatio = 0.0;
-    pStar->isFieldStar = 0;
-    pStar->useDuringBurnIn = 0;
-    pStar->clustStarPriorDens = 0.0;
-    pStar->clustStarProposalDens = 0.0;
-    pStar->meanMassRatio = 0.0;
-    pStar->varMassRatio = 0.0;
-    pStar->UStepSize = 0.0;
-    pStar->massRatioStepSize = 0.0;
-    pStar->meanU = 0.0;
-    pStar->varU = 0.0;
-    pStar->boundsFlag = 0;
-}
 
 double getMass1 (Star *pStar, Cluster *pCluster)
 {
