@@ -528,8 +528,6 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
     file << "logPost" << endl;
 }
 
-
-
 int main (int argc, char *argv[])
 {
     int accept = 0, reject = 0;
@@ -547,6 +545,10 @@ int main (int argc, char *argv[])
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
     array<double, N_WD_MASS1> wdMass1Grid;
 
+    int increment;
+
+    Matrix<double, NPARAMS, nSave> params;
+
     settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
     {
@@ -558,6 +560,8 @@ int main (int argc, char *argv[])
     }
 
     settings.fromCLI (argc, argv);
+
+    increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
     initCluster (&mc.clust);
     initCluster (&propClust);
@@ -611,18 +615,6 @@ int main (int argc, char *argv[])
     /* set current log posterior to -HUGE_VAL */
     /* will cause random starting value */
     logPostCurr = -HUGE_VAL;
-
-    /* estimate covariance matrix for more efficient Metropolis updates */
-    int nSave = 10;             /*changed from 100 to 10 */
-    int increment = ctrl.burnIter / (2 * nSave);
-    double **params;
-
-    params = new double*[NPARAMS]();
-
-    for (int p = 0; p < NPARAMS; p++)
-    {
-        params[p] = new double[nSave]();
-    }
 
     // Run Burnin
     ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
@@ -680,7 +672,7 @@ int main (int argc, char *argv[])
                 {
                     if (ctrl.priorVar[p] > EPSILON)
                     {
-                        params[p][(iteration - ctrl.burnIter / 2) / increment] = mc.clust.parameter[p];
+                        params.at(p).at((iteration - ctrl.burnIter / 2) / increment) = mc.clust.parameter[p];
                     }
                 }
             }
@@ -747,18 +739,10 @@ int main (int argc, char *argv[])
 
     ctrl.resFile.close();
 
-
     cout << "\nAcceptance ratio: " << (double) accept / (accept + reject) << endl;
 
     /* clean up */
     freeGlobalIso (&isochrone);
-
-    for (int p = 0; p < NPARAMS; p++)
-    {
-        delete[] (params[p]);
-    }
-
-    delete[] params;
 
     return 0;
 }

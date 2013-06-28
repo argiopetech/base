@@ -20,7 +20,7 @@ using std::cerr;
 using std::endl;
 
 // Create Cholesky Decomp
-void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, double **params)
+void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, nSave> &params)
 {
     double cov;
     int nParamsUsed = 0;
@@ -52,7 +52,7 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, double **params)
             {
                 if (ctrl.priorVar[j] > EPSILON)
                 {
-                    cov = gsl_stats_covariance (params[i], 1, params[j], 1, nSave);
+                    cov = gsl_stats_covariance (params.at(i).data(), 1, params.at(j).data(), 1, nSave);
                     gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
 
                     if (h != k)
