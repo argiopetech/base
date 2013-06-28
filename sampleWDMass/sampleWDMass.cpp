@@ -95,8 +95,7 @@ extern double ageLimit[2];      /* Defined in evolve.c, set in the appropriate m
 int verbose = 0, needMassNow = 0, useFilt[FILTS], numFilts = 0;
 
 /* For random number generator (mt19937ar.c) */
-unsigned long mt[NN], seed;
-int mti = NN + 1;
+unsigned long seed;
 
 /* TEMPORARY - global variable */
 double dMass1 = 0.0005;

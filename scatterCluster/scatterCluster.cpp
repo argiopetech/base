@@ -9,9 +9,7 @@
 #include "structures.hpp"
 #include "Settings.hpp"
 
-unsigned long mt[NN];
 unsigned long seed = 0;
-int mti = NN + 1;
 
 static double mass1, mass2, phot[FILTS], exptime[FILTS], sigma[FILTS];
 static int stage1, stage2, starID;

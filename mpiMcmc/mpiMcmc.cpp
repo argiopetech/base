@@ -52,12 +52,6 @@ int verbose = 0, needMassNow = 0, useFilt[FILTS], numFilts = 0;
 
 Settings settings;
 
-/* For random number generator (mt19937ar.c) */
-// unsigned long mt[NN];
-// int mti = NN + 1;
-
-
-
 /*
  * Initialize chain
  */

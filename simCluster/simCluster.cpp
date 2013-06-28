@@ -29,8 +29,7 @@ int aFilt = 0;
 int verbose, needMassNow = 1, useFilt[FILTS];
 
 // For random # generator (mt19937ar.c)
-unsigned long mt[NN], seed = 0;
-int mti = NN + 1;
+unsigned long seed = 0;
 
 int main (int argc, char *argv[])
 {
