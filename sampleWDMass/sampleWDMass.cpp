@@ -72,10 +72,10 @@ typedef struct
     double clustStarPriorDens;  /* cluster membership prior probability */
 } obsStar;
 
-static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl);
-static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl);
-static void readSampledParams (struct chain *mc, struct ifmrGridControl *ctrl, clustPar **sampledPars);
-static void initChain (struct chain *mc, const struct ifmrGridControl *ctrl);
+static void initIfmrGridControl (Chain *mc, struct ifmrGridControl *ctrl);
+static void readCmdData (Chain *mc, struct ifmrGridControl *ctrl);
+static void readSampledParams (Chain *mc, struct ifmrGridControl *ctrl, clustPar **sampledPars);
+static void initChain (Chain *mc, const struct ifmrGridControl *ctrl);
 
 double margEvolveWithBinary (Cluster *pCluster, Star *pStar);
 
@@ -112,7 +112,7 @@ int main (int argc, char *argv[])
         chunksize,                      /* for partitioning the array */
         extra, minchunk, nWDs = 0, nWDLogPosts;
 
-    struct chain mc;
+    Chain mc;
     struct ifmrGridControl ctrl;
 
     double *wdMass;
@@ -526,7 +526,7 @@ int main (int argc, char *argv[])
 /*
  * read control parameters from input stream
  */
-static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
+static void initIfmrGridControl (Chain *mc, struct ifmrGridControl *ctrl)
 {
     ctrl->verbose = 0;
     ctrl->numFilts = 0;
@@ -678,7 +678,7 @@ static void initIfmrGridControl (struct chain *mc, struct ifmrGridControl *ctrl)
 /*
  * Read CMD data
  */
-static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl)
+static void readCmdData (Chain *mc, struct ifmrGridControl *ctrl)
 {
     char line[300];
     double tempSigma;
@@ -799,7 +799,7 @@ static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl)
 /*
  * Read sampled params
  */
-static void readSampledParams (struct chain *mc, struct ifmrGridControl *ctrl, clustPar ** sampledPars)
+static void readSampledParams (Chain *mc, struct ifmrGridControl *ctrl, clustPar ** sampledPars)
 {
     int nr, j = 0;
     int morePars = 1;           // true
@@ -854,7 +854,7 @@ static void readSampledParams (struct chain *mc, struct ifmrGridControl *ctrl, c
 /*
  * Initialize chain
  */
-static void initChain (struct chain *mc, const struct ifmrGridControl *ctrl)
+static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 {
     int p;
 

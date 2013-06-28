@@ -6,6 +6,7 @@
 #include "constants.hpp"
 #include "Cluster.hpp"
 #include "Star.hpp"
+#include "Chain.hpp"
 
 //Be careful adding new sample types.  Their order is important.
 //There are a few places in the code that test for SAMPLE_TYPE > or <.
@@ -37,22 +38,7 @@ struct globalIso
     int *eep;
 };
 
-struct chain
-{
-    Cluster clust;
-    std::vector<Star> stars;
-    double temperature;
-    int acceptClust[NPARAMS];
-    int rejectClust[NPARAMS];
-    int *acceptMass;
-    int *rejectMass;
-    int *acceptMassRatio;
-    int *rejectMassRatio;
-    int *isFieldStarNow;
-    int *isClusterStarNow;
-};
-
-enum blockType
+enum class blockType
 {
     INITIAL_WANDER_BLOCK,
     MASS_RATIO_BLOCK,
@@ -104,7 +90,7 @@ struct mcmcControl
 struct block
 {
     enum blockType type;
-    void (*run) (int *iter, int nIter, struct chain * mc, struct mcmcControl * ctrl);
+    void (*run) (int *iter, int nIter, Chain * mc, struct mcmcControl * ctrl);
     int nIter;
 };
 

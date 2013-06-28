@@ -55,7 +55,7 @@ Settings settings;
 /*
  * Initialize chain
  */
-void initChain (struct chain &mc, const struct ifmrMcmcControl &ctrl)
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl)
 {
     int p;
 
@@ -131,7 +131,7 @@ void initChain (struct chain &mc, const struct ifmrMcmcControl &ctrl)
 /*
  * read control parameters from input stream
  */
-void initIfmrMcmcControl (struct chain &mc, struct ifmrMcmcControl &ctrl)
+void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl)
 {
 
     double priorSigma;
@@ -285,7 +285,7 @@ void initIfmrMcmcControl (struct chain &mc, struct ifmrMcmcControl &ctrl)
 
 
 
-void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, struct chain const &mc)
+void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc)
 {
     double maxMass1 = mc.clust.M_wd_up;
     double mass1, massRatio;
@@ -332,7 +332,7 @@ void initStepSizes (Cluster &clust)
 /*
  * Read data
  */
-void readCmdData (struct chain &mc, struct ifmrMcmcControl &ctrl)
+void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl)
 {
     char line[300];
     double tempSigma;
@@ -537,7 +537,7 @@ int main (int argc, char *argv[])
     double logPostProp;
     double fsLike;
 
-    struct chain mc;
+    Chain mc;
     struct ifmrMcmcControl ctrl;
     Cluster propClust;
 

@@ -67,7 +67,7 @@ void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile)
 }
 
 /*** Decides whether to accept a proposed mass ***/
-void decideMass (struct chain *mc)
+void decideMass (Chain *mc)
 {
     int j;
     double u, alpha, post1, post2;
@@ -115,7 +115,7 @@ void decideMass (struct chain *mc)
 }
 
 /*** Decides whether to accept a proposed mass ratio ***/
-void decideMassRatio (struct chain *mc)
+void decideMassRatio (Chain *mc)
 {
     double u, alpha, post1, post2;
     int j;

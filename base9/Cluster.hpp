@@ -39,7 +39,7 @@ class Cluster
     double betaFY = 0.0;
     double AGBt_zmass = 0.0;
     double varScale = 1.0;
-    double carbonicity = 0.0;
+    double carbonicity = 0.38; // Good default value, per Mike Montgomery
 };
 
 #endif
