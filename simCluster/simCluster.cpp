@@ -60,7 +60,6 @@ int main (int argc, char *argv[])
     settings.fromCLI (argc, argv);
 
     //macros defined in structures.h
-    initCluster (&theCluster);
     initStar (&theStar);
 
     for (filt = 0; filt < 8; filt++)

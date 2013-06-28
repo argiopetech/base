@@ -74,8 +74,6 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    initCluster (&theCluster);
-
     ////////////////////////////////////////////
     /////// Open files to read and write ///////
     ////////////////////////////////////////////

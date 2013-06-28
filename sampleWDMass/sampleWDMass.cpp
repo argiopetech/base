@@ -150,8 +150,6 @@ int main (int argc, char *argv[])
     MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
     MPI_Type_commit (&obsStarType);
 
-    initCluster (&mc.clust);
-
     if (taskid == MASTER)
     {
         initIfmrGridControl (&mc, &ctrl);

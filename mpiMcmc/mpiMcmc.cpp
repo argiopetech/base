@@ -561,8 +561,6 @@ int main (int argc, char *argv[])
 
     increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
-    initCluster (&mc.clust);
-    initCluster (&propClust);
     initStepSizes (mc.clust);
 
     initIfmrMcmcControl (mc, ctrl);

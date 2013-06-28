@@ -15,6 +15,8 @@ const int DNE        = 9;    // Does not exist (zams mass > 100 Msun or < 0.0001
 
 const double R_sun   = 6.96342e10;
 
+const int NPARAMS            = 9;
+
 // Filter sets
 const int UBVRIJHK   = 0;
 const int ACS        = 1;

@@ -26,28 +26,6 @@ static void (*setThisParameter[NPARAMS]) (Cluster *, double) =
 {
     &setAge, &setY, &setFeH, &setMod, &setAbs,};
 
-void initCluster (Cluster *pCluster)
-{
-    int p;
-
-    pCluster->nStars = 0;
-    pCluster->M_wd_up = 8.0;
-    pCluster->betamabs = 0.0;
-    pCluster->betaFabs = 0.0;
-    pCluster->betaFY = 0.0;
-    pCluster->AGBt_zmass = 0.0;
-    pCluster->carbonicity = 0.0;
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        pCluster->stepSize[p] = 0.0;
-        pCluster->mean[p] = 0.0;
-        pCluster->parameter[p] = 0.0;
-    }
-    pCluster->varScale = 1.0;
-    initModels (&pCluster->evoModels);
-}
-
 void initModels (struct model *models)
 {
     models->evoModel = 0;

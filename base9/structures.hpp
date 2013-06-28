@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "constants.hpp"
+#include "Cluster.hpp"
 
 //Be careful adding new sample types.  Their order is important.
 //There are a few places in the code that test for SAMPLE_TYPE > or <.
@@ -18,45 +19,6 @@ const int ABS               =  4;  // absorption sampling;
 const int IFMR_INTERCEPT    =  5;
 const int IFMR_SLOPE        =  6;
 const int IFMR_QUADCOEF     =  7;
-
-const int NPARAMS            = 9;
-
-/*** Define a structure model that houses information about the evolution model ***/
-struct model
-{
-    int evoModel;
-    int brownDwarfEvol;
-    int mainSequenceEvol;
-    int IFMR;
-    int WDcooling;
-    int WDatm;
-    int filterSet;
-    int numFilts;
-};
-
-class Cluster
-{
-  public:
-//    Cluster();
-//    ~Cluster();
-
-    int nStars;
-    int photometrySet;
-    double M_wd_up;
-    double parameter[NPARAMS];
-    double stepSize[NPARAMS];
-    double mean[NPARAMS];
-    double priorVar[NPARAMS];
-    double priorMean[NPARAMS];
-    double betamabs;
-    double betaFabs;
-    double betaFY;
-    double betaAgeMod[3];
-    double AGBt_zmass;
-    double varScale;
-    struct model evoModels;
-    double carbonicity;
-};
 
 // Define a structure star that houses all star properties
 struct star
@@ -158,8 +120,6 @@ struct mcmcControl
     int runBurnIn;
     int outputBurnIn;
     int thin;
-    //double priorMean[NPARAMS];
-    //double priorVar[NPARAMS];
     double initialAge;
     double minMag;
     double maxMag;
@@ -169,7 +129,6 @@ struct mcmcControl
     double filterPriorMax[FILTS];
     int verbose;
     int useFilt[FILTS];
-    //int numFilts;
     enum blockType currentBlock;
 };
 
@@ -183,12 +142,8 @@ struct block
 
 // Helper functions for star and cluster structures.
 void initStar (struct star *pStar);
-void initCluster (Cluster *pCluster);
-void initModels (struct model *models);
 void readStar (FILE * pFile, struct star *pStar);
 void writeStar (FILE * pFile, struct star *pStar);
-void readClust (FILE * pFile, Cluster *pCluster);
-void writeClust (FILE * pFile, Cluster *pCluster);
 double getMass1 (struct star *pStar, Cluster *pCluster);
 double getMass2 (struct star *pStar, Cluster *pCluster);
 void setMass1 (struct star *pStar, Cluster *pCluster, double newMass);
