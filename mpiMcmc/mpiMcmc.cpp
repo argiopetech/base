@@ -531,21 +531,19 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 int main (int argc, char *argv[])
 {
     int accept = 0, reject = 0;
+    int increment;
 
     double logPostCurr;
     double logPostProp;
+    double fsLike;
 
     struct chain mc;
     struct ifmrMcmcControl ctrl;
     struct cluster propClust;
 
-    double fsLike;
-
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
     array<double, N_WD_MASS1> wdMass1Grid;
-
-    int increment;
 
     Matrix<double, NPARAMS, nSave> params;
 
@@ -607,8 +605,6 @@ int main (int argc, char *argv[])
         logFieldStarLikelihood = -HUGE_VAL;
         fsLike = 0;
     }
-
-    initCluster (&propClust);
 
     cout << "Bayesian analysis of stellar evolution" << endl;
 
