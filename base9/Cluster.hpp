@@ -19,6 +19,9 @@ class Cluster
     }
     ~Cluster() {;}
 
+    void readClust (FILE * pFile);
+    void writeClust (FILE * pFile);
+
     struct model evoModels;
 
     std::array<double, 3> betaAgeMod;
@@ -38,9 +41,6 @@ class Cluster
     double varScale = 1.0;
     double carbonicity = 0.0;
 };
-
-void readClust (FILE * pFile, Cluster *pCluster);
-void writeClust (FILE * pFile, Cluster *pCluster);
 
 #endif
 
