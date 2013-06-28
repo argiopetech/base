@@ -11,6 +11,7 @@
 #include "densities.hpp"
 #include "marg.hpp"
 #include "mpiMcmc.hpp"
+#include "mt19937ar.hpp"
 
 using std::array;
 using std::vector;
@@ -177,4 +178,36 @@ double logPostStep(struct chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, str
     }
 
     return logPostProp;
+}
+
+/* Decides whether to accept a proposed cluster property */
+int acceptClustMarg (double logPostCurr, double logPostProp)
+{
+    if (isinf (logPostProp))
+    {
+        puts ("-Inf posterior proposed and rejected");
+        return 0;
+    }
+
+    double alpha = logPostProp - logPostCurr;
+
+    if (alpha >= 0)             // Short circuit exit to the MH algorithm
+    {
+        return 1;
+    }
+
+    double u = genrand_res53 ();
+
+    if (u < 1.e-15)
+        u = 1.e-15;
+    u = log (u);
+
+    if (u < alpha)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }

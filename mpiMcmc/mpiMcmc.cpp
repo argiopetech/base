@@ -58,51 +58,80 @@ int mti = NN + 1;
 
 
 
-void initStepSizes (struct cluster *clust)
+/*
+ * Initialize chain
+ */
+void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
 {
-    clust->stepSize[AGE] = 0.005;
-    clust->stepSize[FEH] = 0.005;
-    clust->stepSize[MOD] = 0.005;
-    clust->stepSize[ABS] = 0.002;
-    clust->stepSize[YYY] = 0.002;
-    clust->stepSize[IFMR_INTERCEPT] = 0.01;
-    clust->stepSize[IFMR_SLOPE] = 0.008;
-    clust->stepSize[IFMR_QUADCOEF] = 0.008;
-}
+    int p;
 
-
-
-/* Decides whether to accept a proposed cluster property */
-int acceptClustMarg (double logPostCurr, double logPostProp)
-{
-    if (isinf (logPostProp))
+    for (p = 0; p < NPARAMS; p++)
     {
-        puts ("-Inf posterior proposed and rejected");
-        return 0;
+        mc->acceptClust[p] = mc->rejectClust[p] = 0;
     }
 
-    double alpha = logPostProp - logPostCurr;
+    mc->clust.parameter[FEH] = ctrl->priorMean[FEH];
+    mc->clust.parameter[MOD] = ctrl->priorMean[MOD];
+    mc->clust.parameter[ABS] = ctrl->priorMean[ABS];
+    mc->clust.parameter[YYY] = ctrl->priorMean[YYY];
+    mc->clust.parameter[AGE] = ctrl->initialAge;
+    mc->clust.mean[AGE] = ctrl->initialAge;
+    mc->clust.mean[YYY] = ctrl->priorMean[YYY];
+    mc->clust.mean[MOD] = ctrl->priorMean[MOD];
+    mc->clust.mean[FEH] = ctrl->priorMean[FEH];
+    mc->clust.mean[ABS] = ctrl->priorMean[ABS];
+    mc->clust.betamabs = 0.0;
+    mc->clust.betaFabs = 0.0;
 
-    if (alpha >= 0)             // Short circuit exit to the MH algorithm
+    /* IFMR parameters */
+    mc->clust.parameter[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
+    mc->clust.parameter[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
+    mc->clust.parameter[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+    mc->clust.mean[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
+    mc->clust.mean[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
+    mc->clust.mean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+
+
+    int i, j;
+
+    for (j = 0; j < mc->clust.nStars; j++)
     {
-        return 1;
-    }
+        mc->stars[j].meanMassRatio = 0.0;
+        mc->stars[j].isFieldStar = 0;
+        mc->stars[j].clustStarProposalDens = mc->stars[j].clustStarPriorDens;   // Use prior prob of being clus star
+        mc->stars[j].UStepSize = 0.001; // within factor of ~2 for most main sequence stars
+        mc->stars[j].massRatioStepSize = 0.001;
 
-    double u = genrand_res53 ();
+        for (i = 0; i < NPARAMS; i++)
+        {
+            mc->stars[j].beta[i][0] = 0.0;
+            mc->stars[j].beta[i][1] = 0.0;
+        }
 
-    if (u < 1.e-15)
-        u = 1.e-15;
-    u = log (u);
+        mc->stars[j].betaMassRatio[0] = 0.0;
+        mc->stars[j].betaMassRatio[1] = 0.0;
+        mc->stars[j].meanU = 0.0;
+        mc->stars[j].varU = 0.0;
 
-    if (u < alpha)
-    {
-        return 1;
+        for (i = 0; i < 2; i++)
+            mc->stars[j].wdType[i] = 0;
+
+        for (i = 0; i < numFilts; i++)
+        {
+            mc->stars[j].photometry[i] = 0.0;
+        }
+
+        // find photometry for initial values of currentClust and mc->stars
+        evolve (&mc->clust, mc->stars, j);
+
+        if (mc->stars[j].status[0] == WD)
+        {
+            mc->stars[j].UStepSize = 0.05;      // use larger initial step size for white dwarfs
+            mc->stars[j].massRatio = 0.0;
+        }
     }
-    else
-    {
-        return 0;
-    }
-}
+} /* initChain */
+
 
 
 /*
@@ -261,6 +290,51 @@ void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
 } /* initIfmrMcmcControl */
 
 
+
+void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, struct chain const mc)
+{
+    double maxMass1 = mc.clust.M_wd_up;
+    double mass1, massRatio;
+    double dMsMass1 = (maxMass1 - MIN_MASS1) / (double) N_MS_MASS1;
+    double dMsMassRatio = 1.0 / (double) N_MS_MASS_RATIO;
+    double dWdMass1 = (maxMass1 - MIN_MASS1) / (double) N_WD_MASS1;
+
+    int i = 0;
+
+    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dMsMass1)
+    {
+        for (massRatio = 0.0; massRatio < 1.0; massRatio += dMsMassRatio)
+        {
+            msMass1Grid[i] = mass1;
+            msMassRatioGrid[i] = massRatio;
+            i++;
+        }
+    }
+
+    i = 0;
+    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dWdMass1)
+    {
+        wdMass1Grid[i] = mass1;
+        i++;
+    }
+}
+
+
+
+void initStepSizes (struct cluster *clust)
+{
+    clust->stepSize[AGE] = 0.005;
+    clust->stepSize[FEH] = 0.005;
+    clust->stepSize[MOD] = 0.005;
+    clust->stepSize[ABS] = 0.002;
+    clust->stepSize[YYY] = 0.002;
+    clust->stepSize[IFMR_INTERCEPT] = 0.01;
+    clust->stepSize[IFMR_SLOPE] = 0.008;
+    clust->stepSize[IFMR_QUADCOEF] = 0.008;
+}
+
+
+
 /*
  * Read data
  */
@@ -377,83 +451,6 @@ void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
 
 
 
-
-/*
- * Initialize chain
- */
-void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
-{
-    int p;
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        mc->acceptClust[p] = mc->rejectClust[p] = 0;
-    }
-
-    mc->clust.parameter[FEH] = ctrl->priorMean[FEH];
-    mc->clust.parameter[MOD] = ctrl->priorMean[MOD];
-    mc->clust.parameter[ABS] = ctrl->priorMean[ABS];
-    mc->clust.parameter[YYY] = ctrl->priorMean[YYY];
-    mc->clust.parameter[AGE] = ctrl->initialAge;
-    mc->clust.mean[AGE] = ctrl->initialAge;
-    mc->clust.mean[YYY] = ctrl->priorMean[YYY];
-    mc->clust.mean[MOD] = ctrl->priorMean[MOD];
-    mc->clust.mean[FEH] = ctrl->priorMean[FEH];
-    mc->clust.mean[ABS] = ctrl->priorMean[ABS];
-    mc->clust.betamabs = 0.0;
-    mc->clust.betaFabs = 0.0;
-
-    /* IFMR parameters */
-    mc->clust.parameter[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.parameter[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.parameter[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
-    mc->clust.mean[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.mean[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.mean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
-
-
-    int i, j;
-
-    for (j = 0; j < mc->clust.nStars; j++)
-    {
-        mc->stars[j].meanMassRatio = 0.0;
-        mc->stars[j].isFieldStar = 0;
-        mc->stars[j].clustStarProposalDens = mc->stars[j].clustStarPriorDens;   // Use prior prob of being clus star
-        mc->stars[j].UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-        mc->stars[j].massRatioStepSize = 0.001;
-
-        for (i = 0; i < NPARAMS; i++)
-        {
-            mc->stars[j].beta[i][0] = 0.0;
-            mc->stars[j].beta[i][1] = 0.0;
-        }
-
-        mc->stars[j].betaMassRatio[0] = 0.0;
-        mc->stars[j].betaMassRatio[1] = 0.0;
-        mc->stars[j].meanU = 0.0;
-        mc->stars[j].varU = 0.0;
-
-        for (i = 0; i < 2; i++)
-            mc->stars[j].wdType[i] = 0;
-
-        for (i = 0; i < numFilts; i++)
-        {
-            mc->stars[j].photometry[i] = 0.0;
-        }
-
-        // find photometry for initial values of currentClust and mc->stars
-        evolve (&mc->clust, mc->stars, j);
-
-        if (mc->stars[j].status[0] == WD)
-        {
-            mc->stars[j].UStepSize = 0.05;      // use larger initial step size for white dwarfs
-            mc->stars[j].massRatio = 0.0;
-        }
-    }
-} /* initChain */
-
-
-
 void propClustBigSteps (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
@@ -538,33 +535,6 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 }
 
 
-void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, struct chain const mc)
-{
-    double maxMass1 = mc.clust.M_wd_up;
-    double mass1, massRatio;
-    double dMsMass1 = (maxMass1 - MIN_MASS1) / (double) N_MS_MASS1;
-    double dMsMassRatio = 1.0 / (double) N_MS_MASS_RATIO;
-    double dWdMass1 = (maxMass1 - MIN_MASS1) / (double) N_WD_MASS1;
-
-    int i = 0;
-
-    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dMsMass1)
-    {
-        for (massRatio = 0.0; massRatio < 1.0; massRatio += dMsMassRatio)
-        {
-            msMass1Grid[i] = mass1;
-            msMassRatioGrid[i] = massRatio;
-            i++;
-        }
-    }
-
-    i = 0;
-    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dWdMass1)
-    {
-        wdMass1Grid[i] = mass1;
-        i++;
-    }
-}
 
 int main (int argc, char *argv[])
 {
