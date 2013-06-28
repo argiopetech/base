@@ -543,9 +543,6 @@ int main (int argc, char *argv[])
 
     double fsLike;
 
-    struct obsStar *obs = 0;
-    int *starStatus = 0;
-
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
     array<double, N_WD_MASS1> wdMass1Grid;
@@ -577,20 +574,6 @@ int main (int argc, char *argv[])
     }
 
     readCmdData (mc, ctrl);
-
-    obs = new struct obsStar[mc.clust.nStars]();
-    starStatus = new int[mc.clust.nStars]();
-
-    for (int i = 0; i < mc.clust.nStars; i++)
-    {
-        for (int filt = 0; filt < ctrl.numFilts; filt++)
-        {
-            obs[i].obsPhot[filt] = mc.stars[i].obsPhot[filt];
-            obs[i].variance[filt] = mc.stars[i].variance[filt];
-        }
-        obs[i].clustStarPriorDens = mc.stars[i].clustStarPriorDens;
-        starStatus[i] = mc.stars[i].status[0];
-    }
 
     mc.clust.evoModels.numFilts = ctrl.numFilts;
     numFilts = ctrl.numFilts;
@@ -763,12 +746,11 @@ int main (int argc, char *argv[])
     }
 
     ctrl.resFile.close();
-    cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
+
+
+    cout << "\nAcceptance ratio: " << (double) accept / (accept + reject) << endl;
 
     /* clean up */
-    delete[] obs;
-    delete[] starStatus;
-
     freeGlobalIso (&isochrone);
 
     for (int p = 0; p < NPARAMS; p++)
