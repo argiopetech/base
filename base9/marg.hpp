@@ -1,1 +1,1 @@
-double margEvolveWithBinary (Cluster *pCluster, struct star *pStar);
+double margEvolveWithBinary (Cluster *pCluster, Star *pStar);

@@ -21,10 +21,10 @@ struct globalIso isochrone;
 
 static double clusterAbs[FILTS] = { 0 };
 
-double wdEvol (Cluster *pCluster, struct star *pStar, int cmpnt);
+double wdEvol (Cluster *pCluster, Star *pStar, int cmpnt);
 void calcAbsCoeffs (int filterSet);
 
-void evolve (Cluster *pCluster, vector<struct star> &stars, int index)
+void evolve (Cluster *pCluster, vector<Star> &stars, int index)
 /**************************************************************************************
 last update: 25Aug10
 

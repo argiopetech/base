@@ -58,7 +58,7 @@ int main (int argc, char *argv[])
     FILE *wClusterStatPtr, *wCmdPtr, *wDebugPtr;
 
     Cluster theCluster;
-    vector<struct star> stars;
+    vector<Star> stars;
 
     Settings settings;
 

@@ -10,7 +10,7 @@
 #include "mt19937ar.hpp"
 #include "evolve.hpp"
 
-void propFieldStar (struct star *inputStar)
+void propFieldStar (Star *inputStar)
 {
     double rand1;
 
@@ -23,7 +23,7 @@ void propFieldStar (struct star *inputStar)
 
 }
 
-void propMass (struct star *inputStar)
+void propMass (Star *inputStar)
 {
     double rand1;
 
@@ -31,7 +31,7 @@ void propMass (struct star *inputStar)
     (*inputStar).U += rand1;
 }
 
-void propMassRatio (struct star *inputStar)
+void propMassRatio (Star *inputStar)
 {
     double rand1;
 

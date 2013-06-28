@@ -21,7 +21,7 @@ static int calcMassNorm = 0;
 extern double filterPriorMin[FILTS], filterPriorMax[FILTS];
 extern double ageLimit[2];
 
-double logPriorMass (struct star *pStar, Cluster *pCluster)
+double logPriorMass (Star *pStar, Cluster *pCluster)
 // Compute log prior density
 {
     const double mf_sigma = 0.67729, mf_mu = -1.02;
@@ -124,7 +124,7 @@ double logPriorClust (Cluster *pCluster)
     return prior;
 }
 
-double logLikelihood (int numFilts, struct star *pStar)
+double logLikelihood (int numFilts, Star *pStar)
 // Computes log likelihood
 {
     int i;
@@ -151,7 +151,7 @@ double logLikelihood (int numFilts, struct star *pStar)
     return likelihood;
 }
 
-double tLogLikelihood (int numFilts, struct star *pStar)
+double tLogLikelihood (int numFilts, Star *pStar)
 // Computes log likelihood
 {
     int i;
@@ -188,7 +188,7 @@ double tLogLikelihood (int numFilts, struct star *pStar)
     return likelihood;
 }
 
-double scaledLogLike (int numFilts, struct star *pStar, double varScale)
+double scaledLogLike (int numFilts, Star *pStar, double varScale)
 // Computes log likelihood
 {
     int i;
@@ -219,7 +219,7 @@ double scaledLogLike (int numFilts, struct star *pStar, double varScale)
 }
 
 
-double logPost1Star (struct star *pStar, Cluster *pCluster)
+double logPost1Star (Star *pStar, Cluster *pCluster)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;

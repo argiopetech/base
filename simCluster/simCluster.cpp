@@ -38,12 +38,12 @@ int main (int argc, char *argv[])
     char w_file[100];
     FILE *w_ptr;
     Cluster theCluster;
-    vector <struct star> stars(1);
-    struct star theStar = stars.front();
+    vector <Star> stars(1);
+    Star theStar = stars.front();
 
     double drawFromIMF (void);
     double genrand_res53 (void);
-    void updateCount (struct star *pStar, int cmpnt);
+    void updateCount (Star *pStar, int cmpnt);
 
     Settings settings;
 
@@ -324,7 +324,7 @@ int main (int argc, char *argv[])
     return (0);
 }
 
-void updateCount (struct star *pStar, int cmpnt)
+void updateCount (Star *pStar, int cmpnt)
 {
 
     switch (pStar->status[cmpnt])

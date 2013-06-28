@@ -40,7 +40,7 @@ int main (int argc, char *argv[])
     FILE *wDebugPtr;
 
     Cluster theCluster;
-    vector<struct star> stars;
+    vector<Star> stars;
 
     Settings settings;
 

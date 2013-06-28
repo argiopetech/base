@@ -77,7 +77,7 @@ static void readCmdData (struct chain *mc, struct ifmrGridControl *ctrl);
 static void readSampledParams (struct chain *mc, struct ifmrGridControl *ctrl, clustPar **sampledPars);
 static void initChain (struct chain *mc, const struct ifmrGridControl *ctrl);
 
-double margEvolveWithBinary (Cluster *pCluster, struct star *pStar);
+double margEvolveWithBinary (Cluster *pCluster, Star *pStar);
 
 /* declare global variables */
 double filterPriorMin[FILTS];

@@ -19,16 +19,16 @@ extern double ageLimit[2];
 extern struct globalIso isochrone;
 static double clusterAbs[FILTS] = { 0 };
 
-double wdEvol (Cluster *pCluster, struct star *pStar, int cmpnt);
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, struct star *pStar);
-void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster *pCluster, struct star *pStar);
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, struct star *pStar);
+double wdEvol (Cluster *pCluster, Star *pStar, int cmpnt);
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, Star *pStar);
+void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster *pCluster, Star *pStar);
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, Star *pStar);
 
 void calcAbsCoeffsForMarg (int filterSet);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate
    the integral */
-double margEvolveWithBinary (Cluster *pCluster, struct star *pStar)
+double margEvolveWithBinary (Cluster *pCluster, Star *pStar)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
     double post = 0.0;
@@ -83,7 +83,7 @@ double margEvolveWithBinary (Cluster *pCluster, struct star *pStar)
     }
 }
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, struct star *pStar)
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, Star *pStar)
 {
     int filt;
 
@@ -128,7 +128,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, s
     }
 }
 
-void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster *pCluster, struct star *pStar)
+void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster *pCluster, Star *pStar)
 {
     int filt;
 
@@ -167,7 +167,7 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
 }
 
 
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, struct star *pStar)
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, Star *pStar)
 {
     setMass1 (pStar, pCluster, mass[0]);
 

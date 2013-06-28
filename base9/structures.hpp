@@ -5,6 +5,7 @@
 
 #include "constants.hpp"
 #include "Cluster.hpp"
+#include "Star.hpp"
 
 //Be careful adding new sample types.  Their order is important.
 //There are a few places in the code that test for SAMPLE_TYPE > or <.
@@ -19,38 +20,6 @@ const int ABS               =  4;  // absorption sampling;
 const int IFMR_INTERCEPT    =  5;
 const int IFMR_SLOPE        =  6;
 const int IFMR_QUADCOEF     =  7;
-
-// Define a structure star that houses all star properties
-struct star
-{
-    double obsPhot[FILTS];
-    double photometry[FILTS];
-    double variance[FILTS];
-    double useFilt[FILTS];
-    double U;
-    double massRatio;           // massRatio = secondary mass / primary mass (between 0 and 1)
-    int status[2];
-    int wdType[2];
-
-    int isFieldStar;
-    int useDuringBurnIn;                // switch whether to use star to burn in cluster parameters
-    double clustStarPriorDens;  // prior probability that the star is a cluster star
-    double clustStarProposalDens;       // proposal density for steps to the cluster star model
-
-    double beta[NPARAMS][2];
-    double betaMassRatio[2];
-    double meanU;
-    double varU;
-    double meanMassRatio;
-    double varMassRatio;
-
-    double UStepSize;
-    double massRatioStepSize;
-    int boundsFlag;
-    double wdLogTeff[2];
-    double massNow[2];          // Actual current masses of each component (i.e. not zams_mass)
-};
-
 
 struct globalIso
 {
@@ -71,7 +40,7 @@ struct globalIso
 struct chain
 {
     Cluster clust;
-    std::vector<struct star> stars;
+    std::vector<Star> stars;
     double temperature;
     int acceptClust[NPARAMS];
     int rejectClust[NPARAMS];
@@ -141,14 +110,14 @@ struct block
 
 
 // Helper functions for star and cluster structures.
-void initStar (struct star *pStar);
-void readStar (FILE * pFile, struct star *pStar);
-void writeStar (FILE * pFile, struct star *pStar);
-double getMass1 (struct star *pStar, Cluster *pCluster);
-double getMass2 (struct star *pStar, Cluster *pCluster);
-void setMass1 (struct star *pStar, Cluster *pCluster, double newMass);
-void setMass2 (struct star *pStar, Cluster *pCluster, double newMass);
-void quickCopy (struct star *pStarFrom, struct star *pStarTo);
+void initStar (Star *pStar);
+void readStar (FILE * pFile, Star *pStar);
+void writeStar (FILE * pFile, Star *pStar);
+double getMass1 (Star *pStar, Cluster *pCluster);
+double getMass2 (Star *pStar, Cluster *pCluster);
+void setMass1 (Star *pStar, Cluster *pCluster, double newMass);
+void setMass2 (Star *pStar, Cluster *pCluster, double newMass);
+void quickCopy (Star *pStarFrom, Star *pStarTo);
 double getParameter (Cluster *pCluster, int TYPE);
 void setParameter (Cluster *pCluster, int TYPE, double newValue);
 void setFilterNames (int filterSet);

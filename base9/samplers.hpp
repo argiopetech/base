@@ -6,9 +6,9 @@
 const double AGEPROPSTEPSIZE = 0.02;
 const int AGE_WANDER         = 100;
 
-void propFieldStar (struct star *inputStar);
-void propMass (struct star *inputstar);
-void propMassRatio (struct star *inputstar);
+void propFieldStar (Star *inputStar);
+void propMass (Star *inputstar);
+void propMassRatio (Star *inputstar);
 void propClustParam (Cluster *clust, int TYPE);
 double gen_norm (double mean, double std_dev);
 double sampleT (double var, double nu);

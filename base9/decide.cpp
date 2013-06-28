@@ -15,11 +15,11 @@
 using std::vector;
 
 /*** Decides whether to accept a proposed jump between field star and cluster star models ***/
-void decideFieldStar (struct star stars1[], Cluster *pCluster, FILE * wFile)
+void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile)
 {
     int j;
     double u, alpha, post1, post2;
-    vector<struct star> stars2(pCluster->nStars);
+    vector<Star> stars2(pCluster->nStars);
 
     for (j = 0; j < pCluster->nStars; j++)
     {                           // For each star,
@@ -71,7 +71,7 @@ void decideMass (struct chain *mc)
 {
     int j;
     double u, alpha, post1, post2;
-    vector<struct star> stars2(mc->clust.nStars);
+    vector<Star> stars2(mc->clust.nStars);
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // For each star,
@@ -120,7 +120,7 @@ void decideMassRatio (struct chain *mc)
     double u, alpha, post1, post2;
     int j;
 
-    vector<struct star> stars2(mc->clust.nStars);
+    vector<Star> stars2(mc->clust.nStars);
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // For each star,
@@ -166,12 +166,12 @@ void decideMassRatio (struct chain *mc)
 }
 
 // Decides whether to accept a proposed cluster property
-Cluster decideClust (Cluster clust1, struct star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr)
+Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr)
 {
     int j;
     double u, alpha, post1 = 0.0, post2 = 0.0;
 
-    vector<struct star> stars2(clust1.nStars);
+    vector<Star> stars2(clust1.nStars);
     Cluster clust2;
 
     clust2 = clust1;
@@ -242,7 +242,7 @@ Cluster decideClust (Cluster clust1, struct star stars1[], const int FS_ON_STATE
 
 // Draw a new varScale from a scaled Inv-gamma distribution.
 // This assumes that the prior distribution for the varScale parameter is Inv-chisq(prior_df)
-void updateVarScale (struct star stars[], Cluster *pCluster)
+void updateVarScale (Star stars[], Cluster *pCluster)
 {
     int nClustStars = 0, i, j;
     double scale = 0.0;

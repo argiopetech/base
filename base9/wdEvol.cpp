@@ -17,7 +17,7 @@ double wdPrecLogAge (Cluster *pCluster, double zamsMass);
 // double intlFinalMassReln(double zamsMass, int IFMR);
 double intlFinalMassReln (Cluster *pCluster, double zamsMass);
 
-double wdEvol (Cluster *pCluster, struct star *pStar, int cmpnt)
+double wdEvol (Cluster *pCluster, Star *pStar, int cmpnt)
 /****************************************************************************************
 last update: 02dec07
 

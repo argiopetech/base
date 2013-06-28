@@ -39,7 +39,7 @@ void initModels (struct model *models)
     models->numFilts = 0;
 };
 
-void initStar (struct star *pStar)
+void initStar (Star *pStar)
 {
 
     int i;
@@ -78,7 +78,7 @@ void initStar (struct star *pStar)
     pStar->boundsFlag = 0;
 }
 
-double getMass1 (struct star *pStar, Cluster *pCluster)
+double getMass1 (Star *pStar, Cluster *pCluster)
 {
 
     double mass;
@@ -89,7 +89,7 @@ double getMass1 (struct star *pStar, Cluster *pCluster)
 
 }
 
-double getMass2 (struct star *pStar, Cluster *pCluster)
+double getMass2 (Star *pStar, Cluster *pCluster)
 {
 
     double mass2;
@@ -99,21 +99,21 @@ double getMass2 (struct star *pStar, Cluster *pCluster)
 
 }
 
-void setMass1 (struct star *pStar, Cluster *pCluster, double newMass)
+void setMass1 (Star *pStar, Cluster *pCluster, double newMass)
 {
 
     pStar->U = newMass - (pStar->beta[AGE][0] * (getParameter (pCluster, AGE) - pCluster->mean[AGE]) + pStar->beta[MOD][0] * (getParameter (pCluster, MOD) - pCluster->mean[MOD]) + pStar->beta[FEH][0] * (getParameter (pCluster, FEH) - pCluster->mean[FEH]) + pStar->beta[YYY][0] * (getParameter (pCluster, YYY) - pCluster->mean[YYY]) + pStar->betaMassRatio[0] * pow (pStar->massRatio, pStar->betaMassRatio[1]));
 
 }
 
-void setMass2 (struct star *pStar, Cluster *pCluster, double newMass)
+void setMass2 (Star *pStar, Cluster *pCluster, double newMass)
 {
     pStar->massRatio = newMass / getMass1 (pStar, pCluster);
 
 }
 
 
-void writeStar (FILE * pFile, struct star *pStar)
+void writeStar (FILE * pFile, Star *pStar)
 {
 
     int p;
@@ -126,7 +126,7 @@ void writeStar (FILE * pFile, struct star *pStar)
 
 }
 
-void printStar (struct star *pStar)
+void printStar (Star *pStar)
 {
     //int p;
 
@@ -135,7 +135,7 @@ void printStar (struct star *pStar)
     printf ("%lf %lf %lf\n", pStar->variance[0], pStar->variance[1], pStar->variance[2]);
 }
 
-void readStar (FILE * pFile, struct star *pStar)
+void readStar (FILE * pFile, Star *pStar)
 {
 
     int p;
@@ -150,7 +150,7 @@ void readStar (FILE * pFile, struct star *pStar)
 
 // Copies the relevant portions of pStarFrom into pStarTo
 // after a call to evolve and an accept by mcmc
-void quickCopy (struct star *pStarFrom, struct star *pStarTo)
+void quickCopy (Star *pStarFrom, Star *pStarTo)
 {
 
     int i = 0;

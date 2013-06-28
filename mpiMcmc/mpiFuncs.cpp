@@ -125,7 +125,7 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
 
 double logPostStep(struct chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike)
 {
-    vector<struct star> wd(N_WD_MASS1);
+    vector<Star> wd(N_WD_MASS1);
     double postClusterStar = 0.0;
 
     double logPostProp = logPriorClust (&propClust);
