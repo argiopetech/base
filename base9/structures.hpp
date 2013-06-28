@@ -34,8 +34,12 @@ struct model
     int numFilts;
 };
 
-struct cluster
+class Cluster
 {
+  public:
+//    Cluster();
+//    ~Cluster();
+
     int nStars;
     int photometrySet;
     double M_wd_up;
@@ -104,7 +108,7 @@ struct globalIso
 
 struct chain
 {
-    struct cluster clust;
+    Cluster clust;
     std::vector<struct star> stars;
     double temperature;
     int acceptClust[NPARAMS];
@@ -179,19 +183,19 @@ struct block
 
 // Helper functions for star and cluster structures.
 void initStar (struct star *pStar);
-void initCluster (struct cluster *pCluster);
+void initCluster (Cluster *pCluster);
 void initModels (struct model *models);
 void readStar (FILE * pFile, struct star *pStar);
 void writeStar (FILE * pFile, struct star *pStar);
-void readClust (FILE * pFile, struct cluster *pCluster);
-void writeClust (FILE * pFile, struct cluster *pCluster);
-double getMass1 (struct star *pStar, struct cluster *pCluster);
-double getMass2 (struct star *pStar, struct cluster *pCluster);
-void setMass1 (struct star *pStar, struct cluster *pCluster, double newMass);
-void setMass2 (struct star *pStar, struct cluster *pCluster, double newMass);
+void readClust (FILE * pFile, Cluster *pCluster);
+void writeClust (FILE * pFile, Cluster *pCluster);
+double getMass1 (struct star *pStar, Cluster *pCluster);
+double getMass2 (struct star *pStar, Cluster *pCluster);
+void setMass1 (struct star *pStar, Cluster *pCluster, double newMass);
+void setMass2 (struct star *pStar, Cluster *pCluster, double newMass);
 void quickCopy (struct star *pStarFrom, struct star *pStarTo);
-double getParameter (struct cluster *pCluster, int TYPE);
-void setParameter (struct cluster *pCluster, int TYPE, double newValue);
+double getParameter (Cluster *pCluster, int TYPE);
+void setParameter (Cluster *pCluster, int TYPE, double newValue);
 void setFilterNames (int filterSet);
 char *getFilterName (int index);
 void allocateGlobalIso (struct globalIso *newIso);

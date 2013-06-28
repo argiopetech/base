@@ -39,7 +39,7 @@ int main (int argc, char *argv[])
     FILE *rDataPtr;
     FILE *wDebugPtr;
 
-    struct cluster theCluster;
+    Cluster theCluster;
     vector<struct star> stars;
 
     Settings settings;

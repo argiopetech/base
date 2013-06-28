@@ -57,7 +57,7 @@ void propMassRatio (struct star *inputStar)
     }
 }
 
-void propClustParam (struct cluster *clust, int TYPE)
+void propClustParam (Cluster *clust, int TYPE)
 {
     if (TYPE == AGE_DURING_WANDER)
     {

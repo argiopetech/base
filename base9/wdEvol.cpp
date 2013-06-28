@@ -12,12 +12,12 @@ const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
 
-double wdPrecLogAge (struct cluster *pCluster, double zamsMass);
+double wdPrecLogAge (Cluster *pCluster, double zamsMass);
 
 // double intlFinalMassReln(double zamsMass, int IFMR);
-double intlFinalMassReln (struct cluster *pCluster, double zamsMass);
+double intlFinalMassReln (Cluster *pCluster, double zamsMass);
 
-double wdEvol (struct cluster *pCluster, struct star *pStar, int cmpnt)
+double wdEvol (Cluster *pCluster, struct star *pStar, int cmpnt)
 /****************************************************************************************
 last update: 02dec07
 

@@ -315,7 +315,7 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
 
 
 
-void initStepSizes (struct cluster &clust)
+void initStepSizes (Cluster &clust)
 {
     clust.stepSize[AGE] = 0.005;
     clust.stepSize[FEH] = 0.005;
@@ -445,7 +445,7 @@ void readCmdData (struct chain &mc, struct ifmrMcmcControl &ctrl)
 
 
 
-void propClustBigSteps (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
+void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     double scale = 5.0;
@@ -460,7 +460,7 @@ void propClustBigSteps (struct cluster &clust, struct ifmrMcmcControl const &ctr
     }
 }
 
-void propClustIndep (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
+void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     int p;
@@ -474,7 +474,7 @@ void propClustIndep (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
     }
 }
 
-void propClustCorrelated (struct cluster &clust, struct ifmrMcmcControl const &ctrl)
+void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     double indepProps[NPARAMS] = { 0.0 };
@@ -539,7 +539,7 @@ int main (int argc, char *argv[])
 
     struct chain mc;
     struct ifmrMcmcControl ctrl;
-    struct cluster propClust;
+    Cluster propClust;
 
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;

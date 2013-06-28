@@ -37,7 +37,7 @@ int main (int argc, char *argv[])
     double fractionBinary, tempU, massTotal, fractionDB, tempMod, minV, maxV, minMass = 0.15;
     char w_file[100];
     FILE *w_ptr;
-    struct cluster theCluster;
+    Cluster theCluster;
     vector <struct star> stars(1);
     struct star theStar = stars.front();
 

@@ -15,7 +15,7 @@
 using std::vector;
 
 /*** Decides whether to accept a proposed jump between field star and cluster star models ***/
-void decideFieldStar (struct star stars1[], struct cluster *pCluster, FILE * wFile)
+void decideFieldStar (struct star stars1[], Cluster *pCluster, FILE * wFile)
 {
     int j;
     double u, alpha, post1, post2;
@@ -166,13 +166,13 @@ void decideMassRatio (struct chain *mc)
 }
 
 // Decides whether to accept a proposed cluster property
-struct cluster decideClust (struct cluster clust1, struct star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr)
+Cluster decideClust (Cluster clust1, struct star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr)
 {
     int j;
     double u, alpha, post1 = 0.0, post2 = 0.0;
 
     vector<struct star> stars2(clust1.nStars);
-    struct cluster clust2;
+    Cluster clust2;
 
     clust2 = clust1;
     propClustParam (&clust2, SAMPLE_TYPE);      // propose a new value
@@ -242,7 +242,7 @@ struct cluster decideClust (struct cluster clust1, struct star stars1[], const i
 
 // Draw a new varScale from a scaled Inv-gamma distribution.
 // This assumes that the prior distribution for the varScale parameter is Inv-chisq(prior_df)
-void updateVarScale (struct star stars[], struct cluster *pCluster)
+void updateVarScale (struct star stars[], Cluster *pCluster)
 {
     int nClustStars = 0, i, j;
     double scale = 0.0;

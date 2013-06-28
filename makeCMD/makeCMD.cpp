@@ -32,7 +32,7 @@ int verbose, needMassNow = 1, useFilt[FILTS];   //, numFilts;
 void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 
 // double intlFinalMassReln(double zamsMass, int IFMR);
-double intlFinalMassReln (struct cluster *pCluster, double zamsMass);
+double intlFinalMassReln (Cluster *pCluster, double zamsMass);
 
 int main (int argc, char *argv[])
 {
@@ -57,7 +57,7 @@ int main (int argc, char *argv[])
     FILE *rMassPtr[2], *rClusterPtr, *rDataPtr;
     FILE *wClusterStatPtr, *wCmdPtr, *wDebugPtr;
 
-    struct cluster theCluster;
+    Cluster theCluster;
     vector<struct star> stars;
 
     Settings settings;

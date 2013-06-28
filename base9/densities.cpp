@@ -21,7 +21,7 @@ static int calcMassNorm = 0;
 extern double filterPriorMin[FILTS], filterPriorMax[FILTS];
 extern double ageLimit[2];
 
-double logPriorMass (struct star *pStar, struct cluster *pCluster)
+double logPriorMass (struct star *pStar, Cluster *pCluster)
 // Compute log prior density
 {
     const double mf_sigma = 0.67729, mf_mu = -1.02;
@@ -72,7 +72,7 @@ double logPriorMass (struct star *pStar, struct cluster *pCluster)
 }
 
 // Compute log prior density for cluster properties
-double logPriorClust (struct cluster *pCluster)
+double logPriorClust (Cluster *pCluster)
 {
     if (getParameter (pCluster, AGE) < ageLimit[0])
         return -HUGE_VAL;               // these are possible, we just don't have models for them YET
@@ -219,7 +219,7 @@ double scaledLogLike (int numFilts, struct star *pStar, double varScale)
 }
 
 
-double logPost1Star (struct star *pStar, struct cluster *pCluster)
+double logPost1Star (struct star *pStar, Cluster *pCluster)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;

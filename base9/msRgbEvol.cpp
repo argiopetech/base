@@ -45,7 +45,7 @@ static double (*wdPrecLogAgeFunctions[]) (double, double, double) =
 {
     &wdPrecLogAgeGir, &wdPrecLogAgeChaboyer, &wdPrecLogAgeYY, &wdPrecLogAgeDsed};
 
-double msRgbEvol (struct cluster *pCluster, double zamsMass)
+double msRgbEvol (Cluster *pCluster, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -62,7 +62,7 @@ deriveAgbTipMass() needs to be called first
 }
 
 
-void deriveAgbTipMass (struct cluster *pCluster)
+void deriveAgbTipMass (Cluster *pCluster)
 /****************************************************************************************
 last update: 20jul07
 
@@ -97,7 +97,7 @@ Array indices are defined in evolve.h
 
 
 
-double wdPrecLogAge (struct cluster *pCluster, double zamsMass)
+double wdPrecLogAge (Cluster *pCluster, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -116,7 +116,7 @@ modified for different model sets.
 }
 
 
-void loadMSRgbModels (struct cluster *pCluster, string path, int needFS)
+void loadMSRgbModels (Cluster *pCluster, string path, int needFS)
 {
     (*loadMSRgbModelFunctions[pCluster->evoModels.mainSequenceEvol]) (path, pCluster->evoModels.filterSet);
 

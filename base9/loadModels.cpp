@@ -13,7 +13,7 @@
 // Declared in parent program (mcmc, simCluster, makeCMD)
 extern int verbose;
 
-void loadModels (int needFS, struct cluster *theCluster, Settings &settings)
+void loadModels (int needFS, Cluster *theCluster, Settings &settings)
 {
     char path[100] = "models/\0";
 

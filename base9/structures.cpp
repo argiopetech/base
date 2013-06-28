@@ -6,27 +6,27 @@
 #include "evolve.hpp"
 #include "structures.hpp"
 
-static double getAge (struct cluster *pCluster);
-static double getY (struct cluster *pCluster);
-static double getFeH (struct cluster *pCluster);
-static double getMod (struct cluster *pCluster);
-static double getAbs (struct cluster *pCluster);
-static void setAge (struct cluster *pCluster, double newAge);
-static void setY (struct cluster *pCluster, double newY);
-static void setFeH (struct cluster *pCluster, double newFeH);
-static void setMod (struct cluster *pCluster, double newMod);
-static void setAbs (struct cluster *pCluster, double newAbs);
+static double getAge (Cluster *pCluster);
+static double getY (Cluster *pCluster);
+static double getFeH (Cluster *pCluster);
+static double getMod (Cluster *pCluster);
+static double getAbs (Cluster *pCluster);
+static void setAge (Cluster *pCluster, double newAge);
+static void setY (Cluster *pCluster, double newY);
+static void setFeH (Cluster *pCluster, double newFeH);
+static void setMod (Cluster *pCluster, double newMod);
+static void setAbs (Cluster *pCluster, double newAbs);
 
 
-static double (*getThisParameter[NPARAMS]) (struct cluster *) =
+static double (*getThisParameter[NPARAMS]) (Cluster *) =
 {
     &getAge, &getY, &getFeH, &getMod, &getAbs,};
 
-static void (*setThisParameter[NPARAMS]) (struct cluster *, double) =
+static void (*setThisParameter[NPARAMS]) (Cluster *, double) =
 {
     &setAge, &setY, &setFeH, &setMod, &setAbs,};
 
-void initCluster (struct cluster *pCluster)
+void initCluster (Cluster *pCluster)
 {
     int p;
 
@@ -99,7 +99,7 @@ void initStar (struct star *pStar)
     pStar->boundsFlag = 0;
 }
 
-double getMass1 (struct star *pStar, struct cluster *pCluster)
+double getMass1 (struct star *pStar, Cluster *pCluster)
 {
 
     double mass;
@@ -110,7 +110,7 @@ double getMass1 (struct star *pStar, struct cluster *pCluster)
 
 }
 
-double getMass2 (struct star *pStar, struct cluster *pCluster)
+double getMass2 (struct star *pStar, Cluster *pCluster)
 {
 
     double mass2;
@@ -120,14 +120,14 @@ double getMass2 (struct star *pStar, struct cluster *pCluster)
 
 }
 
-void setMass1 (struct star *pStar, struct cluster *pCluster, double newMass)
+void setMass1 (struct star *pStar, Cluster *pCluster, double newMass)
 {
 
     pStar->U = newMass - (pStar->beta[AGE][0] * (getParameter (pCluster, AGE) - pCluster->mean[AGE]) + pStar->beta[MOD][0] * (getParameter (pCluster, MOD) - pCluster->mean[MOD]) + pStar->beta[FEH][0] * (getParameter (pCluster, FEH) - pCluster->mean[FEH]) + pStar->beta[YYY][0] * (getParameter (pCluster, YYY) - pCluster->mean[YYY]) + pStar->betaMassRatio[0] * pow (pStar->massRatio, pStar->betaMassRatio[1]));
 
 }
 
-void setMass2 (struct star *pStar, struct cluster *pCluster, double newMass)
+void setMass2 (struct star *pStar, Cluster *pCluster, double newMass)
 {
     pStar->massRatio = newMass / getMass1 (pStar, pCluster);
 
@@ -169,7 +169,7 @@ void readStar (FILE * pFile, struct star *pStar)
 }
 
 
-void readClust (FILE * pFile, struct cluster *pCluster)
+void readClust (FILE * pFile, Cluster *pCluster)
 {
 
     int p;
@@ -182,7 +182,7 @@ void readClust (FILE * pFile, struct cluster *pCluster)
 
 
 
-void writeClust (FILE * pFile, struct cluster *pCluster)
+void writeClust (FILE * pFile, Cluster *pCluster)
 {
 
     int p;
@@ -207,12 +207,12 @@ void quickCopy (struct star *pStarFrom, struct star *pStarTo)
 
 }
 
-double getParameter (struct cluster *pCluster, int TYPE)
+double getParameter (Cluster *pCluster, int TYPE)
 {
     return getThisParameter[TYPE] (pCluster);
 }
 
-void setParameter (struct cluster *pCluster, int TYPE, double newValue)
+void setParameter (Cluster *pCluster, int TYPE, double newValue)
 {
     return setThisParameter[TYPE] (pCluster, newValue);
 }
@@ -278,7 +278,7 @@ char *getFilterName (int index)
     return filterNames[index];
 }
 
-static double getAge (struct cluster *pCluster)
+static double getAge (Cluster *pCluster)
 {
     /*
       if(getParameter(pCluster,MOD) < pCluster->betaAgeMod[0])
@@ -290,7 +290,7 @@ static double getAge (struct cluster *pCluster)
 
 }
 
-static double getY (struct cluster *pCluster)
+static double getY (Cluster *pCluster)
 {
     double Y;
 
@@ -298,17 +298,17 @@ static double getY (struct cluster *pCluster)
     return Y;
 }
 
-static double getFeH (struct cluster *pCluster)
+static double getFeH (Cluster *pCluster)
 {
     return pCluster->parameter[FEH];
 }
 
-static double getMod (struct cluster *pCluster)
+static double getMod (Cluster *pCluster)
 {
     return pCluster->parameter[MOD];
 }
 
-static double getAbs (struct cluster *pCluster)
+static double getAbs (Cluster *pCluster)
 {
     double abs;
 
@@ -316,7 +316,7 @@ static double getAbs (struct cluster *pCluster)
     return abs;
 }
 
-static void setAge (struct cluster *pCluster, double newAge)
+static void setAge (Cluster *pCluster, double newAge)
 {
     pCluster->parameter[AGE] = newAge;
 
@@ -326,22 +326,22 @@ static void setAge (struct cluster *pCluster, double newAge)
     //  pCluster->parameter[AGE] = newAge - pCluster->betaAgeMod[2]*(getParameter(pCluster,MOD)-pCluster->betaAgeMod[0]);
 }
 
-static void setY (struct cluster *pCluster, double newY)
+static void setY (Cluster *pCluster, double newY)
 {
     pCluster->parameter[YYY] = newY - pCluster->betaFY * (getParameter (pCluster, FEH) - pCluster->mean[FEH]);
 }
 
-static void setFeH (struct cluster *pCluster, double newFeH)
+static void setFeH (Cluster *pCluster, double newFeH)
 {
     pCluster->parameter[FEH] = newFeH;
 }
 
-static void setMod (struct cluster *pCluster, double newMod)
+static void setMod (Cluster *pCluster, double newMod)
 {
     pCluster->parameter[MOD] = newMod;
 }
 
-static void setAbs (struct cluster *pCluster, double newAbs)
+static void setAbs (Cluster *pCluster, double newAbs)
 {
     pCluster->parameter[ABS] = newAbs - pCluster->betamabs * (getParameter (pCluster, MOD) - pCluster->mean[MOD]) - pCluster->betaFabs * (getParameter (pCluster, FEH) - pCluster->mean[FEH]);
 }

@@ -5,7 +5,7 @@
 
 #include "structures.hpp"
 
-void evolve (struct cluster *the_cluster, std::vector<struct star> &stars, int index);
+void evolve (Cluster *the_cluster, std::vector<struct star> &stars, int index);
 void calcAbsCoeffs (int filterSet);
 
 #endif
