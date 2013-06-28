@@ -53,81 +53,81 @@ int verbose = 0, needMassNow = 0, useFilt[FILTS], numFilts = 0;
 Settings settings;
 
 /* For random number generator (mt19937ar.c) */
-unsigned long mt[NN];
-int mti = NN + 1;
+// unsigned long mt[NN];
+// int mti = NN + 1;
 
 
 
 /*
  * Initialize chain
  */
-void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
+void initChain (struct chain &mc, const struct ifmrMcmcControl &ctrl)
 {
     int p;
 
     for (p = 0; p < NPARAMS; p++)
     {
-        mc->acceptClust[p] = mc->rejectClust[p] = 0;
+        mc.acceptClust[p] = mc.rejectClust[p] = 0;
     }
 
-    mc->clust.parameter[FEH] = ctrl->priorMean[FEH];
-    mc->clust.parameter[MOD] = ctrl->priorMean[MOD];
-    mc->clust.parameter[ABS] = ctrl->priorMean[ABS];
-    mc->clust.parameter[YYY] = ctrl->priorMean[YYY];
-    mc->clust.parameter[AGE] = ctrl->initialAge;
-    mc->clust.mean[AGE] = ctrl->initialAge;
-    mc->clust.mean[YYY] = ctrl->priorMean[YYY];
-    mc->clust.mean[MOD] = ctrl->priorMean[MOD];
-    mc->clust.mean[FEH] = ctrl->priorMean[FEH];
-    mc->clust.mean[ABS] = ctrl->priorMean[ABS];
-    mc->clust.betamabs = 0.0;
-    mc->clust.betaFabs = 0.0;
+    mc.clust.parameter[FEH] = ctrl.priorMean[FEH];
+    mc.clust.parameter[MOD] = ctrl.priorMean[MOD];
+    mc.clust.parameter[ABS] = ctrl.priorMean[ABS];
+    mc.clust.parameter[YYY] = ctrl.priorMean[YYY];
+    mc.clust.parameter[AGE] = ctrl.initialAge;
+    mc.clust.mean[AGE] = ctrl.initialAge;
+    mc.clust.mean[YYY] = ctrl.priorMean[YYY];
+    mc.clust.mean[MOD] = ctrl.priorMean[MOD];
+    mc.clust.mean[FEH] = ctrl.priorMean[FEH];
+    mc.clust.mean[ABS] = ctrl.priorMean[ABS];
+    mc.clust.betamabs = 0.0;
+    mc.clust.betaFabs = 0.0;
 
     /* IFMR parameters */
-    mc->clust.parameter[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.parameter[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.parameter[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
-    mc->clust.mean[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.mean[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.mean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+    mc.clust.parameter[IFMR_SLOPE] = ctrl.priorMean[IFMR_SLOPE];
+    mc.clust.parameter[IFMR_INTERCEPT] = ctrl.priorMean[IFMR_INTERCEPT];
+    mc.clust.parameter[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
+    mc.clust.mean[IFMR_SLOPE] = ctrl.priorMean[IFMR_SLOPE];
+    mc.clust.mean[IFMR_INTERCEPT] = ctrl.priorMean[IFMR_INTERCEPT];
+    mc.clust.mean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
 
 
     int i, j;
 
-    for (j = 0; j < mc->clust.nStars; j++)
+    for (j = 0; j < mc.clust.nStars; j++)
     {
-        mc->stars[j].meanMassRatio = 0.0;
-        mc->stars[j].isFieldStar = 0;
-        mc->stars[j].clustStarProposalDens = mc->stars[j].clustStarPriorDens;   // Use prior prob of being clus star
-        mc->stars[j].UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-        mc->stars[j].massRatioStepSize = 0.001;
+        mc.stars[j].meanMassRatio = 0.0;
+        mc.stars[j].isFieldStar = 0;
+        mc.stars[j].clustStarProposalDens = mc.stars[j].clustStarPriorDens;   // Use prior prob of being clus star
+        mc.stars[j].UStepSize = 0.001; // within factor of ~2 for most main sequence stars
+        mc.stars[j].massRatioStepSize = 0.001;
 
         for (i = 0; i < NPARAMS; i++)
         {
-            mc->stars[j].beta[i][0] = 0.0;
-            mc->stars[j].beta[i][1] = 0.0;
+            mc.stars[j].beta[i][0] = 0.0;
+            mc.stars[j].beta[i][1] = 0.0;
         }
 
-        mc->stars[j].betaMassRatio[0] = 0.0;
-        mc->stars[j].betaMassRatio[1] = 0.0;
-        mc->stars[j].meanU = 0.0;
-        mc->stars[j].varU = 0.0;
+        mc.stars[j].betaMassRatio[0] = 0.0;
+        mc.stars[j].betaMassRatio[1] = 0.0;
+        mc.stars[j].meanU = 0.0;
+        mc.stars[j].varU = 0.0;
 
         for (i = 0; i < 2; i++)
-            mc->stars[j].wdType[i] = 0;
+            mc.stars[j].wdType[i] = 0;
 
         for (i = 0; i < numFilts; i++)
         {
-            mc->stars[j].photometry[i] = 0.0;
+            mc.stars[j].photometry[i] = 0.0;
         }
 
-        // find photometry for initial values of currentClust and mc->stars
-        evolve (&mc->clust, mc->stars, j);
+        // find photometry for initial values of currentClust and mc.stars
+        evolve (&mc.clust, mc.stars, j);
 
-        if (mc->stars[j].status[0] == WD)
+        if (mc.stars[j].status[0] == WD)
         {
-            mc->stars[j].UStepSize = 0.05;      // use larger initial step size for white dwarfs
-            mc->stars[j].massRatio = 0.0;
+            mc.stars[j].UStepSize = 0.05;      // use larger initial step size for white dwarfs
+            mc.stars[j].massRatio = 0.0;
         }
     }
 } /* initChain */
@@ -137,161 +137,161 @@ void initChain (struct chain *mc, const struct ifmrMcmcControl *ctrl)
 /*
  * read control parameters from input stream
  */
-void initIfmrMcmcControl (struct chain *mc, struct ifmrMcmcControl *ctrl)
+void initIfmrMcmcControl (struct chain &mc, struct ifmrMcmcControl &ctrl)
 {
 
     double priorSigma;
 
-    ctrl->verbose = 0;
-    ctrl->numFilts = 0;
+    ctrl.verbose = 0;
+    ctrl.numFilts = 0;
 
     int ii;
 
     for (ii = 0; ii < FILTS; ii++)
-        ctrl->useFilt[ii] = 0;
+        ctrl.useFilt[ii] = 0;
 
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings.seed);
 
     /* load models */
-    loadModels (0, &mc->clust, settings);
+    loadModels (0, &mc.clust, settings);
 
-    ctrl->priorMean[FEH] = settings.cluster.Fe_H;
+    ctrl.priorMean[FEH] = settings.cluster.Fe_H;
     priorSigma = settings.cluster.sigma.Fe_H;
 
     if (priorSigma < 0.0)
     {
         priorSigma = 0.0;
     }
-    ctrl->priorVar[FEH] = priorSigma * priorSigma;
+    ctrl.priorVar[FEH] = priorSigma * priorSigma;
 
-    ctrl->priorMean[MOD] = settings.cluster.distMod;
+    ctrl.priorMean[MOD] = settings.cluster.distMod;
     priorSigma = settings.cluster.sigma.distMod;
 
     if (priorSigma < 0.0)
     {
         priorSigma = 0.0;
     }
-    ctrl->priorVar[MOD] = priorSigma * priorSigma;
+    ctrl.priorVar[MOD] = priorSigma * priorSigma;
 
-    ctrl->priorMean[ABS] = settings.cluster.Av;
+    ctrl.priorMean[ABS] = settings.cluster.Av;
     priorSigma = settings.cluster.sigma.Av;
 
     if (priorSigma < 0.0)
     {
         priorSigma = 0.0;
     }
-    ctrl->priorVar[ABS] = priorSigma * priorSigma;
+    ctrl.priorVar[ABS] = priorSigma * priorSigma;
 
-    ctrl->initialAge = settings.cluster.logClusAge;
-    ctrl->priorVar[AGE] = 1.0;
+    ctrl.initialAge = settings.cluster.logClusAge;
+    ctrl.priorVar[AGE] = 1.0;
 
-    if (mc->clust.evoModels.IFMR <= 3)
+    if (mc.clust.evoModels.IFMR <= 3)
     {
-        ctrl->priorVar[IFMR_SLOPE] = 0.0;
-        ctrl->priorVar[IFMR_INTERCEPT] = 0.0;
-        ctrl->priorVar[IFMR_QUADCOEF] = 0.0;
+        ctrl.priorVar[IFMR_SLOPE] = 0.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
     }
-    else if (mc->clust.evoModels.IFMR <= 8)
+    else if (mc.clust.evoModels.IFMR <= 8)
     {
-        ctrl->priorVar[IFMR_SLOPE] = 1.0;
-        ctrl->priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl->priorVar[IFMR_QUADCOEF] = 0.0;
+        ctrl.priorVar[IFMR_SLOPE] = 1.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
     }
     else
     {
-        ctrl->priorVar[IFMR_SLOPE] = 1.0;
-        ctrl->priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl->priorVar[IFMR_QUADCOEF] = 1.0;
+        ctrl.priorVar[IFMR_SLOPE] = 1.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 1.0;
     }
 
     // copy values to global variables
-    priorVar[AGE] = ctrl->priorVar[AGE];
-    priorVar[FEH] = ctrl->priorVar[FEH];
-    priorVar[MOD] = ctrl->priorVar[MOD];
-    priorVar[ABS] = ctrl->priorVar[ABS];
-    priorVar[IFMR_SLOPE] = ctrl->priorVar[IFMR_SLOPE];
-    priorVar[IFMR_INTERCEPT] = ctrl->priorVar[IFMR_INTERCEPT];
-    priorVar[IFMR_QUADCOEF] = ctrl->priorVar[IFMR_QUADCOEF];
+    priorVar[AGE] = ctrl.priorVar[AGE];
+    priorVar[FEH] = ctrl.priorVar[FEH];
+    priorVar[MOD] = ctrl.priorVar[MOD];
+    priorVar[ABS] = ctrl.priorVar[ABS];
+    priorVar[IFMR_SLOPE] = ctrl.priorVar[IFMR_SLOPE];
+    priorVar[IFMR_INTERCEPT] = ctrl.priorVar[IFMR_INTERCEPT];
+    priorVar[IFMR_QUADCOEF] = ctrl.priorVar[IFMR_QUADCOEF];
 
-    priorMean[FEH] = ctrl->priorMean[FEH];
-    priorMean[MOD] = ctrl->priorMean[MOD];
-    priorMean[ABS] = ctrl->priorMean[ABS];
+    priorMean[FEH] = ctrl.priorMean[FEH];
+    priorMean[MOD] = ctrl.priorMean[MOD];
+    priorMean[ABS] = ctrl.priorMean[ABS];
 
     /* set starting values for IFMR parameters */
-    ctrl->priorMean[IFMR_SLOPE] = 0.08;
-    ctrl->priorMean[IFMR_INTERCEPT] = 0.65;
-    if (mc->clust.evoModels.IFMR <= 10)
-        ctrl->priorMean[IFMR_QUADCOEF] = 0.0001;
+    ctrl.priorMean[IFMR_SLOPE] = 0.08;
+    ctrl.priorMean[IFMR_INTERCEPT] = 0.65;
+    if (mc.clust.evoModels.IFMR <= 10)
+        ctrl.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
-        ctrl->priorMean[IFMR_QUADCOEF] = 0.08;
-    priorMean[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    priorMean[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    priorMean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+        ctrl.priorMean[IFMR_QUADCOEF] = 0.08;
+    priorMean[IFMR_SLOPE] = ctrl.priorMean[IFMR_SLOPE];
+    priorMean[IFMR_INTERCEPT] = ctrl.priorMean[IFMR_INTERCEPT];
+    priorMean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
 
     /* open model file, choose model set, and load models */
-    if (mc->clust.evoModels.mainSequenceEvol == CHABHELIUM)
+    if (mc.clust.evoModels.mainSequenceEvol == CHABHELIUM)
     {
-        scanf ("%lf %lf", &ctrl->priorMean[YYY], &ctrl->priorVar[YYY]);
+        scanf ("%lf %lf", &ctrl.priorMean[YYY], &ctrl.priorVar[YYY]);
 
-        if (ctrl->priorVar[YYY] < 0.0)
+        if (ctrl.priorVar[YYY] < 0.0)
         {
-            ctrl->priorVar[YYY] = 0.0;
+            ctrl.priorVar[YYY] = 0.0;
         }
     }
     else
     {
-        ctrl->priorMean[YYY] = 0.0;
-        ctrl->priorVar[YYY] = 0.0;
+        ctrl.priorMean[YYY] = 0.0;
+        ctrl.priorVar[YYY] = 0.0;
     }
-    priorVar[YYY] = ctrl->priorVar[YYY];
-    priorMean[YYY] = ctrl->priorMean[YYY];
+    priorVar[YYY] = ctrl.priorVar[YYY];
+    priorMean[YYY] = ctrl.priorMean[YYY];
 
     /* read burnIter and nIter */
-    ctrl->burnIter = settings.mpiMcmc.burnIter;
-    ctrl->nIter = settings.mpiMcmc.maxIter;
-    ctrl->thin = settings.mpiMcmc.thin;
+    ctrl.burnIter = settings.mpiMcmc.burnIter;
+    ctrl.nIter = settings.mpiMcmc.maxIter;
+    ctrl.thin = settings.mpiMcmc.thin;
 
     /* open files for reading (data) and writing */
     string filename;
 
     filename = settings.files.phot;
-    ctrl->rData.open(filename);
-    if (!ctrl->rData)
+    ctrl.rData.open(filename);
+    if (!ctrl.rData)
     {
         cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
         cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
-    ctrl->minMag = settings.cluster.minMag;
-    ctrl->maxMag = settings.cluster.maxMag;
-    ctrl->iMag = settings.cluster.index;
+    ctrl.minMag = settings.cluster.minMag;
+    ctrl.maxMag = settings.cluster.maxMag;
+    ctrl.iMag = settings.cluster.index;
 
-    if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
+    if (ctrl.iMag < 0 || ctrl.iMag > FILTS)
     {
-        cerr << "***Error: " << ctrl->iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+        cerr << "***Error: " << ctrl.iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
         cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
-    ctrl->clusterFilename = settings.files.output + ".res";
+    ctrl.clusterFilename = settings.files.output + ".res";
 
-    ctrl->iStart = 0;
+    ctrl.iStart = 0;
 
     /* Initialize filter prior mins and maxes */
     int j;
 
     for (j = 0; j < FILTS; j++)
     {
-        ctrl->filterPriorMin[j] = 1000;
-        ctrl->filterPriorMax[j] = -1000;
+        ctrl.filterPriorMin[j] = 1000;
+        ctrl.filterPriorMax[j] = -1000;
     }
 } /* initIfmrMcmcControl */
 
 
 
-void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, struct chain const mc)
+void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, struct chain const &mc)
 {
     double maxMass1 = mc.clust.M_wd_up;
     double mass1, massRatio;
@@ -321,16 +321,16 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
 
 
 
-void initStepSizes (struct cluster *clust)
+void initStepSizes (struct cluster &clust)
 {
-    clust->stepSize[AGE] = 0.005;
-    clust->stepSize[FEH] = 0.005;
-    clust->stepSize[MOD] = 0.005;
-    clust->stepSize[ABS] = 0.002;
-    clust->stepSize[YYY] = 0.002;
-    clust->stepSize[IFMR_INTERCEPT] = 0.01;
-    clust->stepSize[IFMR_SLOPE] = 0.008;
-    clust->stepSize[IFMR_QUADCOEF] = 0.008;
+    clust.stepSize[AGE] = 0.005;
+    clust.stepSize[FEH] = 0.005;
+    clust.stepSize[MOD] = 0.005;
+    clust.stepSize[ABS] = 0.002;
+    clust.stepSize[YYY] = 0.002;
+    clust.stepSize[IFMR_INTERCEPT] = 0.01;
+    clust.stepSize[IFMR_SLOPE] = 0.008;
+    clust.stepSize[IFMR_QUADCOEF] = 0.008;
 }
 
 
@@ -338,7 +338,7 @@ void initStepSizes (struct cluster *clust)
 /*
  * Read data
  */
-void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
+void readCmdData (struct chain &mc, struct ifmrMcmcControl &ctrl)
 {
     char line[300];
     double tempSigma;
@@ -346,7 +346,7 @@ void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
     char *pch, sig[] = "sig", comp[] = "   ";
 
     //Parse the header of the file to determine which filters are being used
-    ctrl->rData.getline(line, 300);     // Read in the header line
+    ctrl.rData.getline(line, 300);     // Read in the header line
 
     pch = strtok (line, " ");   // split the string on these delimiters into "tokens"
 
@@ -362,8 +362,8 @@ void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
         {                               // Otherwise check to see what this filter's name is
             if (strcmp (pch, getFilterName (filt)) == 0)
             {
-                ctrl->useFilt[filt] = 1;
-                mc->clust.evoModels.numFilts++;
+                ctrl.useFilt[filt] = 1;
+                mc.clust.evoModels.numFilts++;
                 if (aFilt < 0)
                     aFilt = filt;               // Sets this to a band we know we are using (for evolve)
                 break;
@@ -373,9 +373,9 @@ void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
 
     for (i = 0; i < FILTS; i++)
     {
-        if (ctrl->useFilt[i])
+        if (ctrl.useFilt[i])
         {
-            ctrl->numFilts++;
+            ctrl.numFilts++;
             if (aFilt < 0)
                 aFilt = i;              // Sets this to a band we know we are using (for evolve)
         }
@@ -387,66 +387,66 @@ void readCmdData (struct chain *mc, struct ifmrMcmcControl *ctrl)
     int moreStars = 1;          // true
 
     // why is this necessary???
-    mc->stars.clear();
+    mc.stars.clear();
 
     while (moreStars)
     {
-        mc->stars.emplace_back();
+        mc.stars.emplace_back();
 
-        ctrl->rData >> line;
+        ctrl.rData >> line;
 
-        if (ctrl->rData.eof())
+        if (ctrl.rData.eof())
             break;
 
-        for (i = 0; i < ctrl->numFilts; i++)
+        for (i = 0; i < ctrl.numFilts; i++)
         {
-            ctrl->rData >> mc->stars[j].obsPhot[i];
+            ctrl.rData >> mc.stars[j].obsPhot[i];
 
-            if (mc->stars[j].obsPhot[i] < ctrl->filterPriorMin[i])
+            if (mc.stars[j].obsPhot[i] < ctrl.filterPriorMin[i])
             {
-                ctrl->filterPriorMin[i] = mc->stars[j].obsPhot[i];
+                ctrl.filterPriorMin[i] = mc.stars[j].obsPhot[i];
             }
 
-            if (mc->stars[j].obsPhot[i] > ctrl->filterPriorMax[i])
+            if (mc.stars[j].obsPhot[i] > ctrl.filterPriorMax[i])
             {
-                ctrl->filterPriorMax[i] = mc->stars[j].obsPhot[i];
+                ctrl.filterPriorMax[i] = mc.stars[j].obsPhot[i];
             }
         }
 
         // copy to global variables
-        for (i = 0; i < ctrl->numFilts; i++)
+        for (i = 0; i < ctrl.numFilts; i++)
         {
-            filterPriorMin[i] = ctrl->filterPriorMin[i];
-            filterPriorMax[i] = ctrl->filterPriorMax[i];
+            filterPriorMin[i] = ctrl.filterPriorMin[i];
+            filterPriorMax[i] = ctrl.filterPriorMax[i];
         }
-        for (i = 0; i < ctrl->numFilts; i++)
+        for (i = 0; i < ctrl.numFilts; i++)
         {
-            ctrl->rData >> tempSigma;
-            mc->stars[j].variance[i] = tempSigma * fabs (tempSigma);
+            ctrl.rData >> tempSigma;
+            mc.stars[j].variance[i] = tempSigma * fabs (tempSigma);
             // The fabs() keeps the sign of the variance the same as that input by the user for sigma
             // Negative sigma (variance) is used to signal "don't count this band for this star"
         }
 
-        ctrl->rData >> mc->stars[j].U >> mc->stars[j].massRatio >> mc->stars[j].status[0] >> mc->stars[j].clustStarPriorDens >> mc->stars[j].useDuringBurnIn;
+        ctrl.rData >> mc.stars[j].U >> mc.stars[j].massRatio >> mc.stars[j].status[0] >> mc.stars[j].clustStarPriorDens >> mc.stars[j].useDuringBurnIn;
 
-        if (mc->stars[j].status[0] == 3 || (mc->stars[j].obsPhot[ctrl->iMag] >= ctrl->minMag && mc->stars[j].obsPhot[ctrl->iMag] <= ctrl->maxMag))
+        if (mc.stars[j].status[0] == 3 || (mc.stars[j].obsPhot[ctrl.iMag] >= ctrl.minMag && mc.stars[j].obsPhot[ctrl.iMag] <= ctrl.maxMag))
         {
             j++;
         }
     }
-    mc->clust.nStars = j;
+    mc.clust.nStars = j;
 
-    for (j = 0; j < mc->clust.nStars; j++)
+    for (j = 0; j < mc.clust.nStars; j++)
     {
-        mc->stars[j].massRatio = 0.0;
+        mc.stars[j].massRatio = 0.0;
     }
 
     // copy to global values
     for (i = 0; i < FILTS; i++)
     {
-        useFilt[i] = ctrl->useFilt[i];
+        useFilt[i] = ctrl.useFilt[i];
     }
-    numFilts = ctrl->numFilts;
+    numFilts = ctrl.numFilts;
 } /* readCmdData */
 
 
@@ -538,8 +538,7 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 
 int main (int argc, char *argv[])
 {
-    int i, j, p, filt, iteration,
-        accept = 0, reject = 0;
+    int accept = 0, reject = 0;
 
     double logPostCurr;
     double logPostProp;
@@ -569,28 +568,28 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    initCluster (&(mc.clust));
+    initCluster (&mc.clust);
     initCluster (&propClust);
-    initStepSizes (&mc.clust);
+    initStepSizes (mc.clust);
 
-    initIfmrMcmcControl (&mc, &ctrl);
+    initIfmrMcmcControl (mc, ctrl);
 
     mc.clust.evoModels.WDatm = BERGERON;
 
-    for (p = 0; p < NPARAMS; p++)
+    for (int p = 0; p < NPARAMS; p++)
     {
         mc.clust.priorVar[p] = ctrl.priorVar[p];
         mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
-    readCmdData (&mc, &ctrl);
+    readCmdData (mc, ctrl);
 
     obs = new struct obsStar[mc.clust.nStars]();
     starStatus = new int[mc.clust.nStars]();
 
-    for (i = 0; i < mc.clust.nStars; i++)
+    for (int i = 0; i < mc.clust.nStars; i++)
     {
-        for (filt = 0; filt < ctrl.numFilts; filt++)
+        for (int filt = 0; filt < ctrl.numFilts; filt++)
         {
             obs[i].obsPhot[filt] = mc.stars[i].obsPhot[filt];
             obs[i].variance[filt] = mc.stars[i].variance[filt];
@@ -602,9 +601,9 @@ int main (int argc, char *argv[])
     mc.clust.evoModels.numFilts = ctrl.numFilts;
     numFilts = ctrl.numFilts;
 
-    initChain (&mc, &ctrl);
+    initChain (mc, ctrl);
 
-    for (i = 0; i < mc.clust.nStars; i++)
+    for (int i = 0; i < mc.clust.nStars; i++)
     {
         mc.stars[i].isFieldStar = 0;
         mc.stars[i].boundsFlag = 0;
@@ -616,7 +615,7 @@ int main (int argc, char *argv[])
 
     if (mc.clust.nStars > 1)
     {
-        for (filt = 0; filt < ctrl.numFilts; filt++)
+        for (int filt = 0; filt < ctrl.numFilts; filt++)
         {
             logFieldStarLikelihood -= log (ctrl.filterPriorMax[filt] - ctrl.filterPriorMin[filt]);
         }
@@ -643,7 +642,7 @@ int main (int argc, char *argv[])
 
     params = new double*[NPARAMS]();
 
-    for (p = 0; p < NPARAMS; p++)
+    for (int p = 0; p < NPARAMS; p++)
     {
         params[p] = new double[nSave]();
     }
@@ -659,7 +658,7 @@ int main (int argc, char *argv[])
 
     printHeader (ctrl.burninFile, ctrl.priorVar);
 
-    for (iteration = 0; iteration < ctrl.burnIter; iteration++)
+    for (int iteration = 0; iteration < ctrl.burnIter; iteration++)
     {
         propClust = mc.clust;
 
@@ -700,7 +699,7 @@ int main (int argc, char *argv[])
             if (iteration % increment == 0)
             {
                 /* save draws */
-                for (p = 0; p < NPARAMS; p++)
+                for (int p = 0; p < NPARAMS; p++)
                 {
                     if (ctrl.priorVar[p] > EPSILON)
                     {
@@ -711,7 +710,7 @@ int main (int argc, char *argv[])
         }
 
         /* Write output */
-        for (p = 0; p < NPARAMS; p++)
+        for (int p = 0; p < NPARAMS; p++)
         {
             if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
             {
@@ -737,7 +736,7 @@ int main (int argc, char *argv[])
 
     printHeader (ctrl.resFile, ctrl.priorVar);
 
-    for (iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
+    for (int iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
     {
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
@@ -758,7 +757,7 @@ int main (int argc, char *argv[])
 
         if (iteration % ctrl.thin == 0)
         {
-            for (p = 0; p < NPARAMS; p++)
+            for (int p = 0; p < NPARAMS; p++)
             {
                 if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                 {
@@ -778,7 +777,7 @@ int main (int argc, char *argv[])
 
     freeGlobalIso (&isochrone);
 
-    for (p = 0; p < NPARAMS; p++)
+    for (int p = 0; p < NPARAMS; p++)
     {
         delete[] (params[p]);
     }
