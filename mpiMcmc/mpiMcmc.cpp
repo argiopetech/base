@@ -80,122 +80,17 @@ Settings settings;
 unsigned long mt[NN];
 int mti = NN + 1;
 
-int main (int argc, char *argv[])
+
+// Create Cholesky Decomp
+void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, double **params)
 {
-    int i, j, p, filt, iteration,
-        accept = 0, reject = 0;
-
-    double logPostCurr;
-    double logPostProp;
-
-    struct chain mc;
-    struct ifmrMcmcControl ctrl;
-    struct cluster propClust;
-
-    double fsLike;
-
-    struct obsStar *obs = 0;
-    int *starStatus = 0;
-
-    array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
-    array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
-    array<double, N_WD_MASS1> wdMass1Grid;
-
-    settings.fromCLI (argc, argv);
-    if (!settings.files.config.empty())
-    {
-        settings.fromYaml (settings.files.config);
-    }
-    else
-    {
-        settings.fromYaml ("base9.yaml");
-    }
-
-    settings.fromCLI (argc, argv);
-
-    initCluster (&(mc.clust));
-    initCluster (&propClust);
-    initStepSizes (&mc.clust);
-
-    initIfmrMcmcControl (&mc, &ctrl);
-
-    mc.clust.evoModels.WDatm = BERGERON;
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        mc.clust.priorVar[p] = ctrl.priorVar[p];
-        mc.clust.priorMean[p] = ctrl.priorMean[p];
-    }
-
-    readCmdData (&mc, &ctrl);
-
-    obs = new struct obsStar[mc.clust.nStars]();
-    starStatus = new int[mc.clust.nStars]();
-
-    for (i = 0; i < mc.clust.nStars; i++)
-    {
-        for (filt = 0; filt < ctrl.numFilts; filt++)
-        {
-            obs[i].obsPhot[filt] = mc.stars[i].obsPhot[filt];
-            obs[i].variance[filt] = mc.stars[i].variance[filt];
-        }
-        obs[i].clustStarPriorDens = mc.stars[i].clustStarPriorDens;
-        starStatus[i] = mc.stars[i].status[0];
-    }
-
-    mc.clust.evoModels.numFilts = ctrl.numFilts;
-    numFilts = ctrl.numFilts;
-
-    initChain (&mc, &ctrl);
-
-    for (i = 0; i < mc.clust.nStars; i++)
-    {
-        mc.stars[i].isFieldStar = 0;
-        mc.stars[i].boundsFlag = 0;
-    }
-
-    initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
-
-    double logFieldStarLikelihood = 0.0;
-
-    if (mc.clust.nStars > 1)
-    {
-        for (filt = 0; filt < ctrl.numFilts; filt++)
-        {
-            logFieldStarLikelihood -= log (ctrl.filterPriorMax[filt] - ctrl.filterPriorMin[filt]);
-        }
-        fsLike = exp (logFieldStarLikelihood);
-    }
-    else
-    {
-        logFieldStarLikelihood = -HUGE_VAL;
-        fsLike = 0;
-    }
-
-    initCluster (&propClust);
-
-    cout << "Bayesian analysis of stellar evolution" << endl;
-
-    /* set current log posterior to -HUGE_VAL */
-    /* will cause random starting value */
-    logPostCurr = -HUGE_VAL;
-
-    /* estimate covariance matrix for more efficient Metropolis updates */
-    int nSave = 10;             /*changed from 100 to 10 */
-    int increment = ctrl.burnIter / (2 * nSave);
-    double **params;
-
-    params = new double*[NPARAMS]();
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        params[p] = new double[nSave]();
-    }
-
     double cov;
     int nParamsUsed = 0;
 
-    for (p = 0; p < NPARAMS; p++)
+    int nSave = 10;             /*changed from 100 to 10 */
+    int increment = ctrl.burnIter / (2 * nSave);
+
+    for (int p = 0; p < NPARAMS; p++)
     {
         if (ctrl.priorVar[p] > EPSILON)
         {
@@ -203,231 +98,93 @@ int main (int argc, char *argv[])
         }
     }
 
-    // Run Burnin
-    ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
-    if (!ctrl.burninFile)
+    /* compute Cholesky decomposition of covariance matrix */
+    int h, k;
+    gsl_matrix *covMat = gsl_matrix_alloc (nParamsUsed, nParamsUsed);
+
+    h = 0;
+
+    double cholScale = 1000;    /* for numerical stability */
+
+    for (int i = 0; i < NPARAMS; i++)
     {
-        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    printHeader (ctrl.burninFile, ctrl.priorVar);
-
-    for (iteration = 0; iteration < ctrl.burnIter; iteration++)
-    {
-        propClust = mc.clust;
-
-        if (iteration < ctrl.burnIter / 2)
+        if (ctrl.priorVar[i] > EPSILON)
         {
-            propClustBigSteps (propClust, ctrl);
-        }
-        else
-        {
-            propClustIndep (propClust, ctrl);
-        }
-
-        if (ctrl.priorVar[ABS] > EPSILON)
-        {
-            propClust.parameter[ABS] = fabs (propClust.parameter[ABS]);
-        }
-        if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
-        {
-            propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
-        }
-
-        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike);
-
-        /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp))
-        {
-            mc.clust = propClust;
-            logPostCurr = logPostProp;
-            accept++;
-        }
-        else
-        {
-            reject++;
-        }
-        /* save draws to estimate covariance matrix for more efficient Metropolis */
-        if (iteration >= ctrl.burnIter / 2 && iteration < ctrl.burnIter)
-        {
-            if (iteration % increment == 0)
+            k = 0;
+            for (int j = 0; j < NPARAMS; j++)
             {
-                /* save draws */
-                for (p = 0; p < NPARAMS; p++)
+                if (ctrl.priorVar[j] > EPSILON)
                 {
-                    if (ctrl.priorVar[p] > EPSILON)
+                    cov = gsl_stats_covariance (params[i], 1, params[j], 1, nSave);
+                    gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
+
+                    if (h != k)
                     {
-                        params[p][(iteration - ctrl.burnIter / 2) / increment] = mc.clust.parameter[p];
+                        gsl_matrix_set (covMat, k, h, cov * cholScale * cholScale);
                     }
+
+                    k++;
                 }
             }
+            h++;
         }
-
-        /* Write output */
-        for (p = 0; p < NPARAMS; p++)
-        {
-            if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
-            {
-                ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
-            }
-        }
-
-        ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
     }
 
-    ctrl.burninFile.close();
-
-    // Create Cholesky Decomp
+    for (int i = 0; i < nParamsUsed; i++)
     {
-        /* compute Cholesky decomposition of covariance matrix */
-        int h, k;
-        gsl_matrix *covMat = gsl_matrix_alloc (nParamsUsed, nParamsUsed);
-
-        h = 0;
-
-        double cholScale = 1000;    /* for numerical stability */
-
-        for (i = 0; i < NPARAMS; i++)
+        for (int j = 0; j < nParamsUsed; j++)
         {
-            if (ctrl.priorVar[i] > EPSILON)
-            {
-                k = 0;
-                for (j = 0; j < NPARAMS; j++)
-                {
-                    if (ctrl.priorVar[j] > EPSILON)
-                    {
-                        cov = gsl_stats_covariance (params[i], 1, params[j], 1, nSave);
-                        gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
-
-                        if (h != k)
-                        {
-                            gsl_matrix_set (covMat, k, h, cov * cholScale * cholScale);
-                        }
-
-                        k++;
-                    }
-                }
-                h++;
-            }
+            cout << gsl_matrix_get (covMat, i, j) << " ";
         }
+        cout << endl;
+    }
 
-        for (i = 0; i < nParamsUsed; i++)
+    /* Cholesky decomposition */
+    gsl_linalg_cholesky_decomp (covMat);
+
+    /* compute proposal matrix from Cholesky factor */
+
+    /* Gelman, Roberts, Gilks scale */
+    double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
+
+    h = 0;
+    for (int i = 0; i < NPARAMS; i++)
+    {
+        if (ctrl.priorVar[i] > EPSILON)
         {
-            for (j = 0; j < nParamsUsed; j++)
+            k = 0;
+            for (int j = 0; j < NPARAMS; j++)
             {
-                cout << gsl_matrix_get (covMat, i, j) << " ";
-            }
-            cout << endl;
-        }
-
-        /* Cholesky decomposition */
-        gsl_linalg_cholesky_decomp (covMat);
-
-        /* compute proposal matrix from Cholesky factor */
-
-        /* Gelman, Roberts, Gilks scale */
-        double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
-
-        h = 0;
-        for (i = 0; i < NPARAMS; i++)
-        {
-            if (ctrl.priorVar[i] > EPSILON)
-            {
-                k = 0;
-                for (j = 0; j < NPARAMS; j++)
+                if (ctrl.priorVar[j] > EPSILON)
                 {
-                    if (ctrl.priorVar[j] > EPSILON)
+                    if (j <= i)
                     {
-                        if (j <= i)
-                        {
-                            ctrl.propMatrix[i][j] = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
-                        }
-                        else
-                        {
-                            ctrl.propMatrix[i][j] = 0.0;
-                        }
-                        k++;
+                        ctrl.propMatrix[i][j] = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
                     }
                     else
                     {
                         ctrl.propMatrix[i][j] = 0.0;
                     }
+                    k++;
                 }
-                h++;
-            }
-            else
-            {
-                for (j = 0; j < NPARAMS; j++)
+                else
                 {
                     ctrl.propMatrix[i][j] = 0.0;
                 }
             }
-        }
-    }
-
-    // Main run
-    ctrl.resFile.open(ctrl.clusterFilename);
-    if (!ctrl.resFile)
-    {
-        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    printHeader (ctrl.resFile, ctrl.priorVar);
-
-    for (iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
-    {
-        propClust = mc.clust;
-        propClustCorrelated (propClust, ctrl);
-
-        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike);
-
-        /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp))
-        {
-            mc.clust = propClust;
-            logPostCurr = logPostProp;
-            accept++;
+            h++;
         }
         else
         {
-            reject++;
-        }
-
-        if (iteration % ctrl.thin == 0)
-        {
-            for (p = 0; p < NPARAMS; p++)
+            for (int j = 0; j < NPARAMS; j++)
             {
-                if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
-                {
-                    ctrl.resFile << boost::format("%10.6f ") % mc.clust.parameter[p];
-                }
+                ctrl.propMatrix[i][j] = 0.0;
             }
-            ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
         }
     }
-
-    ctrl.resFile.close();
-    cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
-
-    /* clean up */
-    delete[] obs;
-    delete[] starStatus;
-
-    freeGlobalIso (&isochrone);
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        delete[] (params[p]);
-    }
-
-    delete[] params;
-
-    return 0;
 }
+
+
 
 double logPostStep(struct chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, struct cluster &propClust, double fsLike)
 {
@@ -994,4 +751,256 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
         wdMass1Grid[i] = mass1;
         i++;
     }
+}
+
+int main (int argc, char *argv[])
+{
+    int i, j, p, filt, iteration,
+        accept = 0, reject = 0;
+
+    double logPostCurr;
+    double logPostProp;
+
+    struct chain mc;
+    struct ifmrMcmcControl ctrl;
+    struct cluster propClust;
+
+    double fsLike;
+
+    struct obsStar *obs = 0;
+    int *starStatus = 0;
+
+    array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
+    array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
+    array<double, N_WD_MASS1> wdMass1Grid;
+
+    settings.fromCLI (argc, argv);
+    if (!settings.files.config.empty())
+    {
+        settings.fromYaml (settings.files.config);
+    }
+    else
+    {
+        settings.fromYaml ("base9.yaml");
+    }
+
+    settings.fromCLI (argc, argv);
+
+    initCluster (&(mc.clust));
+    initCluster (&propClust);
+    initStepSizes (&mc.clust);
+
+    initIfmrMcmcControl (&mc, &ctrl);
+
+    mc.clust.evoModels.WDatm = BERGERON;
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        mc.clust.priorVar[p] = ctrl.priorVar[p];
+        mc.clust.priorMean[p] = ctrl.priorMean[p];
+    }
+
+    readCmdData (&mc, &ctrl);
+
+    obs = new struct obsStar[mc.clust.nStars]();
+    starStatus = new int[mc.clust.nStars]();
+
+    for (i = 0; i < mc.clust.nStars; i++)
+    {
+        for (filt = 0; filt < ctrl.numFilts; filt++)
+        {
+            obs[i].obsPhot[filt] = mc.stars[i].obsPhot[filt];
+            obs[i].variance[filt] = mc.stars[i].variance[filt];
+        }
+        obs[i].clustStarPriorDens = mc.stars[i].clustStarPriorDens;
+        starStatus[i] = mc.stars[i].status[0];
+    }
+
+    mc.clust.evoModels.numFilts = ctrl.numFilts;
+    numFilts = ctrl.numFilts;
+
+    initChain (&mc, &ctrl);
+
+    for (i = 0; i < mc.clust.nStars; i++)
+    {
+        mc.stars[i].isFieldStar = 0;
+        mc.stars[i].boundsFlag = 0;
+    }
+
+    initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
+
+    double logFieldStarLikelihood = 0.0;
+
+    if (mc.clust.nStars > 1)
+    {
+        for (filt = 0; filt < ctrl.numFilts; filt++)
+        {
+            logFieldStarLikelihood -= log (ctrl.filterPriorMax[filt] - ctrl.filterPriorMin[filt]);
+        }
+        fsLike = exp (logFieldStarLikelihood);
+    }
+    else
+    {
+        logFieldStarLikelihood = -HUGE_VAL;
+        fsLike = 0;
+    }
+
+    initCluster (&propClust);
+
+    cout << "Bayesian analysis of stellar evolution" << endl;
+
+    /* set current log posterior to -HUGE_VAL */
+    /* will cause random starting value */
+    logPostCurr = -HUGE_VAL;
+
+    /* estimate covariance matrix for more efficient Metropolis updates */
+    int nSave = 10;             /*changed from 100 to 10 */
+    int increment = ctrl.burnIter / (2 * nSave);
+    double **params;
+
+    params = new double*[NPARAMS]();
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        params[p] = new double[nSave]();
+    }
+
+    // Run Burnin
+    ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
+    if (!ctrl.burninFile)
+    {
+        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    printHeader (ctrl.burninFile, ctrl.priorVar);
+
+    for (iteration = 0; iteration < ctrl.burnIter; iteration++)
+    {
+        propClust = mc.clust;
+
+        if (iteration < ctrl.burnIter / 2)
+        {
+            propClustBigSteps (propClust, ctrl);
+        }
+        else
+        {
+            propClustIndep (propClust, ctrl);
+        }
+
+        if (ctrl.priorVar[ABS] > EPSILON)
+        {
+            propClust.parameter[ABS] = fabs (propClust.parameter[ABS]);
+        }
+        if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
+        {
+            propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
+        }
+
+        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike);
+
+        /* accept/reject */
+        if (acceptClustMarg (logPostCurr, logPostProp))
+        {
+            mc.clust = propClust;
+            logPostCurr = logPostProp;
+            accept++;
+        }
+        else
+        {
+            reject++;
+        }
+        /* save draws to estimate covariance matrix for more efficient Metropolis */
+        if (iteration >= ctrl.burnIter / 2 && iteration < ctrl.burnIter)
+        {
+            if (iteration % increment == 0)
+            {
+                /* save draws */
+                for (p = 0; p < NPARAMS; p++)
+                {
+                    if (ctrl.priorVar[p] > EPSILON)
+                    {
+                        params[p][(iteration - ctrl.burnIter / 2) / increment] = mc.clust.parameter[p];
+                    }
+                }
+            }
+        }
+
+        /* Write output */
+        for (p = 0; p < NPARAMS; p++)
+        {
+            if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+            {
+                ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
+            }
+        }
+
+        ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
+    }
+
+    ctrl.burninFile.close();
+
+    make_cholesky_decomp(ctrl, params);
+
+    // Main run
+    ctrl.resFile.open(ctrl.clusterFilename);
+    if (!ctrl.resFile)
+    {
+        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    printHeader (ctrl.resFile, ctrl.priorVar);
+
+    for (iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
+    {
+        propClust = mc.clust;
+        propClustCorrelated (propClust, ctrl);
+
+        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike);
+
+        /* accept/reject */
+        if (acceptClustMarg (logPostCurr, logPostProp))
+        {
+            mc.clust = propClust;
+            logPostCurr = logPostProp;
+            accept++;
+        }
+        else
+        {
+            reject++;
+        }
+
+        if (iteration % ctrl.thin == 0)
+        {
+            for (p = 0; p < NPARAMS; p++)
+            {
+                if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+                {
+                    ctrl.resFile << boost::format("%10.6f ") % mc.clust.parameter[p];
+                }
+            }
+            ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
+        }
+    }
+
+    ctrl.resFile.close();
+    cout << "Acceptance ratio: " << (double) accept / (accept + reject) << endl;
+
+    /* clean up */
+    delete[] obs;
+    delete[] starStatus;
+
+    freeGlobalIso (&isochrone);
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        delete[] (params[p]);
+    }
+
+    delete[] params;
+
+    return 0;
 }
