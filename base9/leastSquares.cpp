@@ -1,5 +1,8 @@
 /*** last update:   29aug10  ***/
 
+#include <array>
+#include <vector>
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -8,6 +11,10 @@
 #include "leastSquares.hpp"
 #include "poly.hpp"
 #include "solve.hpp"
+
+#include "Matrix.hpp"
+
+using std::array;
 
 // Calculates beta using least squares fit (in order to eliminate correlation between ages and WD masses)
 double leastSquaresBeta (double *x, double *y, int l)
@@ -47,10 +54,11 @@ double brokenBeta (double *x, double *y, int l, double *d)
     //Need to write output
     int i, bin, lo, n, j;
     double lowchi, ay;
-    double chi[l], xy[l], B1[l], B2[l];
 
-    for (i = 0; i < l; i++)
-        chi[i] = xy[i] = B1[i] = B2[i] = 0.0;
+    std::vector<double> chi(l, 0.0);
+    std::vector<double> xy(l, 0.0);
+    std::vector<double> B1(l, 0.0);
+    std::vector<double> B2(l, 0.0);
 
     //Divide into 100 bins
     bin = (int) (l / 100.0);
@@ -181,7 +189,7 @@ void lsqpolyw (double *x, double *y, double *w, int l, int d, double *c)
 
     int i, j, k;
     double **N;                 //[d+1][d+1];
-    double yvector[d + 1];
+    std::vector<double> yvector(d + 1);
 
     N = new double*[d+1]();
 
@@ -203,7 +211,7 @@ void lsqpolyw (double *x, double *y, double *w, int l, int d, double *c)
             yvector[i] += w[k] * y[k] * pow (x[k], i);
     }
 
-    solve (N, yvector, d + 1);
+    solve (N, yvector.data(), d + 1);
     for (i = 0; i < d + 1; i++)
         c[i] = yvector[i];
 }
@@ -216,7 +224,7 @@ void lsqpoly (double *x, double *y, int l, int d, double *c)
 
     int i, j, k;
     double **N;
-    double yvector[d + 1];
+    std::vector<double> yvector(d + 1);
 
     N = new double*[d+1]();
 
@@ -244,7 +252,7 @@ void lsqpoly (double *x, double *y, int l, int d, double *c)
             c[i] = 0.0;
         return;
     }
-    solve (N, yvector, d + 1);
+    solve (N, yvector.data(), d + 1);
     for (i = 0; i < d + 1; i++)
         c[i] = yvector[i];
 }
@@ -258,7 +266,9 @@ double powerLaw (double *x, double *y, int l, double *c)
 
     // double lo=0.01, hi=20,tol =0.01,minchisq;
     double lo = 1, hi = 20, tol = 0.01, minchisq;       // (NS) setting the minimum power to 1
-    double p[5], a[5][2], chisq[5], xx[l];
+    array<double, 5> p, chisq;
+    Matrix<double, 5, 2> a;
+    std::vector<double> xx(l);
 
     while (hi - lo > tol)
     {
@@ -271,9 +281,9 @@ double powerLaw (double *x, double *y, int l, double *c)
             chisq[i] = a[i][0] = a[i][1] = 0.0;
             for (j = 0; j < l; j++)
                 xx[j] = pow (x[j], p[i]);
-            lsqpoly (xx, y, l, 1, a[i]);
+            lsqpoly (xx.data(), y, l, 1, a.at(i).data());
             for (j = 0; j < l; j++)
-                chisq[i] += pow (y[j] - poly (a[i], xx[j], 1), 2);
+                chisq.at(i) += pow (y[j] - poly (a.at(i).data(), xx.at(j), 1), 2);
         }
 
         // Find the value of p with the lowest chisq
