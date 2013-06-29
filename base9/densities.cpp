@@ -74,9 +74,9 @@ double logPriorMass (Star *pStar, Cluster *pCluster)
 // Compute log prior density for cluster properties
 double logPriorClust (Cluster *pCluster)
 {
-    if (getParameter (pCluster, AGE) < ageLimit[0])
+    if (pCluster->getAge() < ageLimit[0])
         return -HUGE_VAL;               // these are possible, we just don't have models for them YET
-    else if (getParameter (pCluster, AGE) > ageLimit[1])
+    else if (pCluster->getAge() > ageLimit[1])
         return -HUGE_VAL;               // appropriate for the MS/RGB models but not the WDs
     else if (pCluster->parameter[IFMR_SLOPE] < 0.0)
         return -HUGE_VAL;
@@ -110,16 +110,16 @@ double logPriorClust (Cluster *pCluster)
 
     double prior = 0.0;
 
-    if (getParameter (pCluster, ABS) < 0.0)
+    if (pCluster->getAbs() < 0.0)
         return -HUGE_VAL;
     if (pCluster->priorVar[FEH] > EPSILON)
-        prior += (-0.5) * sqr (getParameter (pCluster, FEH) - pCluster->priorMean[FEH]) / pCluster->priorVar[FEH];
+        prior += (-0.5) * sqr (pCluster->getFeH() - pCluster->priorMean[FEH]) / pCluster->priorVar[FEH];
     if (pCluster->priorVar[MOD] > EPSILON)
-        prior += (-0.5) * sqr (getParameter (pCluster, MOD) - pCluster->priorMean[MOD]) / pCluster->priorVar[MOD];
+        prior += (-0.5) * sqr (pCluster->getMod() - pCluster->priorMean[MOD]) / pCluster->priorVar[MOD];
     if (pCluster->priorVar[ABS] > EPSILON)
-        prior += (-0.5) * sqr (getParameter (pCluster, ABS) - pCluster->priorMean[ABS]) / pCluster->priorVar[ABS];
+        prior += (-0.5) * sqr (pCluster->getAbs() - pCluster->priorMean[ABS]) / pCluster->priorVar[ABS];
     if (pCluster->priorVar[YYY] > EPSILON)
-        prior += (-0.5) * sqr (getParameter (pCluster, YYY) - pCluster->priorMean[YYY]) / pCluster->priorVar[YYY];
+        prior += (-0.5) * sqr (pCluster->getY() - pCluster->priorMean[YYY]) / pCluster->priorVar[YYY];
 
     return prior;
 }

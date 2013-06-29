@@ -73,7 +73,7 @@ get the photometry of a single star. -- SD
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
-    if (fabs (isochrone.FeH - getParameter (pCluster, FEH)) > EPS || fabs (isochrone.logAge - getParameter (pCluster, AGE)) > EPS || fabs (isochrone.Y - getParameter (pCluster, YYY)) > EPS)
+    if (fabs (isochrone.FeH - pCluster->getFeH()) > EPS || fabs (isochrone.logAge - pCluster->getAge()) > EPS || fabs (isochrone.Y - pCluster->getY()) > EPS)
     {
         deriveAgbTipMass (pCluster);    // determine AGBt ZAMS mass, to find evol state
     }
@@ -85,7 +85,7 @@ get the photometry of a single star. -- SD
         return;
     }
 
-    clusterAv = getParameter (pCluster, ABS);
+    clusterAv = pCluster->getAbs();
     if (fabs (clusterAbs[0]) < EPS)
         calcAbsCoeffs (pCluster->evoModels.filterSet);
 
@@ -96,7 +96,7 @@ get the photometry of a single star. -- SD
 
         if (stars.at(j).status[0] == BD)
         {
-            getBaraffeMags (getParameter (pCluster, AGE), mass[0]);
+            getBaraffeMags (pCluster->getAge(), mass[0]);
             for (filt = 0; filt < 8; filt++)
                 if (useFilt[filt])
                     mag[2][filt] = 99.999;
@@ -185,7 +185,7 @@ get the photometry of a single star. -- SD
         {                               // can now add distance and absorption
             if (useFilt[filt])
             {
-                mag[2][filt] += getParameter (pCluster, MOD);
+                mag[2][filt] += pCluster->getMod();
                 mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;   // add A_[u-k] (standard defn of modulus already includes Av)
                 stars.at(j).photometry[i++] = mag[2][filt];
                 //i++;

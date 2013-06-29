@@ -19,8 +19,17 @@ class Cluster
     }
     ~Cluster() {;}
 
-    void readClust (FILE * pFile);
-    void writeClust (FILE * pFile);
+    double getAge();
+    double getY();
+    double getFeH();
+    double getMod();
+    double getAbs();
+
+    void setAge(double newAge);
+    void setY(double newY);
+    void setFeH(double newFeH);
+    void setMod(double newMod);
+    void setAbs(double newAbs);
 
     struct model evoModels;
 
@@ -43,4 +52,3 @@ class Cluster
 };
 
 #endif
-

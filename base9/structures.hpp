@@ -94,19 +94,14 @@ struct block
     int nIter;
 };
 
-
-// Helper functions for star and cluster structures.
-void readStar (FILE * pFile, Star *pStar);
-void writeStar (FILE * pFile, Star *pStar);
 double getMass1 (Star *pStar, Cluster *pCluster);
 double getMass2 (Star *pStar, Cluster *pCluster);
 void setMass1 (Star *pStar, Cluster *pCluster, double newMass);
-void setMass2 (Star *pStar, Cluster *pCluster, double newMass);
-void quickCopy (Star *pStarFrom, Star *pStarTo);
-double getParameter (Cluster *pCluster, int TYPE);
-void setParameter (Cluster *pCluster, int TYPE, double newValue);
+// void setMass2 (Star *pStar, Cluster *pCluster, double newMass);
+
 void setFilterNames (int filterSet);
 char *getFilterName (int index);
+
 void allocateGlobalIso (struct globalIso *newIso);
 void freeGlobalIso (struct globalIso *newIso);
 void swapGlobalEntries (struct globalIso *thisIso, int n, int useFilt[FILTS]);

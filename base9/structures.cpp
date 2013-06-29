@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -7,25 +9,7 @@
 #include "structures.hpp"
 #include "Cluster.hpp"
 
-static double getAge (Cluster *pCluster);
-static double getY (Cluster *pCluster);
-static double getFeH (Cluster *pCluster);
-static double getMod (Cluster *pCluster);
-static double getAbs (Cluster *pCluster);
-static void setAge (Cluster *pCluster, double newAge);
-static void setY (Cluster *pCluster, double newY);
-static void setFeH (Cluster *pCluster, double newFeH);
-static void setMod (Cluster *pCluster, double newMod);
-static void setAbs (Cluster *pCluster, double newAbs);
-
-
-static double (*getThisParameter[NPARAMS]) (Cluster *) =
-{
-    &getAge, &getY, &getFeH, &getMod, &getAbs,};
-
-static void (*setThisParameter[NPARAMS]) (Cluster *, double) =
-{
-    &setAge, &setY, &setFeH, &setMod, &setAbs,};
+using std::vector;
 
 void initModels (struct model *models)
 {
@@ -42,139 +26,71 @@ void initModels (struct model *models)
 
 double getMass1 (Star *pStar, Cluster *pCluster)
 {
-
     double mass;
 
-    mass = pStar->U + pStar->beta[AGE][0] * (getParameter (pCluster, AGE) - pCluster->mean[AGE]) + pStar->beta[MOD][0] * (getParameter (pCluster, MOD) - pCluster->mean[MOD]) + pStar->beta[FEH][0] * (getParameter (pCluster, FEH) - pCluster->mean[FEH]) + pStar->beta[YYY][0] * (getParameter (pCluster, YYY) - pCluster->mean[YYY]) + pStar->betaMassRatio[0] * pow (pStar->massRatio, pStar->betaMassRatio[1]);
+    mass = pStar->U + pStar->beta[AGE][0] * (pCluster->getAge() - pCluster->mean[AGE]) + pStar->beta[MOD][0] * (pCluster->getMod() - pCluster->mean[MOD]) + pStar->beta[FEH][0] * (pCluster->getFeH() - pCluster->mean[FEH]) + pStar->beta[YYY][0] * (pCluster->getY() - pCluster->mean[YYY]) + pStar->betaMassRatio[0] * pow (pStar->massRatio, pStar->betaMassRatio[1]);
 
     return mass;
-
 }
 
 double getMass2 (Star *pStar, Cluster *pCluster)
 {
-
     double mass2;
 
     mass2 = getMass1 (pStar, pCluster) * pStar->massRatio;
     return mass2;
-
 }
 
 void setMass1 (Star *pStar, Cluster *pCluster, double newMass)
 {
-
-    pStar->U = newMass - (pStar->beta[AGE][0] * (getParameter (pCluster, AGE) - pCluster->mean[AGE]) + pStar->beta[MOD][0] * (getParameter (pCluster, MOD) - pCluster->mean[MOD]) + pStar->beta[FEH][0] * (getParameter (pCluster, FEH) - pCluster->mean[FEH]) + pStar->beta[YYY][0] * (getParameter (pCluster, YYY) - pCluster->mean[YYY]) + pStar->betaMassRatio[0] * pow (pStar->massRatio, pStar->betaMassRatio[1]));
-
+    pStar->U = newMass - (pStar->beta[AGE][0] * (pCluster->getAge() - pCluster->mean[AGE]) + pStar->beta[MOD][0] * (pCluster->getMod() - pCluster->mean[MOD]) + pStar->beta[FEH][0] * (pCluster->getFeH() - pCluster->mean[FEH]) + pStar->beta[YYY][0] * (pCluster->getY() - pCluster->mean[YYY]) + pStar->betaMassRatio[0] * pow (pStar->massRatio, pStar->betaMassRatio[1]));
 }
 
 void setMass2 (Star *pStar, Cluster *pCluster, double newMass)
 {
     pStar->massRatio = newMass / getMass1 (pStar, pCluster);
-
-}
-
-
-void writeStar (FILE * pFile, Star *pStar)
-{
-
-    int p;
-
-    fprintf (pFile, "%9.6f   %7.5f    %d    %d  %6.3f %6.3f  ", pStar->U, pStar->massRatio, pStar->status[0], pStar->isFieldStar, pStar->clustStarPriorDens, pStar->clustStarProposalDens);
-    for (p = 0; p < NPARAMS; p++)
-        fprintf (pFile, "%7.3f ", pStar->beta[p][0]);
-    fprintf (pFile, " %6.3f %6.3f %6.3e %9.3e ", pStar->betaMassRatio[0], pStar->betaMassRatio[1], pStar->meanMassRatio, pStar->varMassRatio);
-    fprintf (pFile, "%9.3e %6.3f   %9.6f  %6.3e     %d", pStar->UStepSize, pStar->massRatioStepSize, pStar->meanU, pStar->varU, pStar->useDuringBurnIn);
-
-}
-
-void printStar (Star *pStar)
-{
-    //int p;
-
-    printf ("%9.6f   %7.5f    %d    %d  %6.3f %6.3f\n", pStar->U, pStar->massRatio, pStar->status[0], pStar->isFieldStar, pStar->clustStarPriorDens, pStar->clustStarProposalDens);
-    printf ("%lf %lf %lf\n", pStar->obsPhot[0], pStar->obsPhot[1], pStar->obsPhot[2]);
-    printf ("%lf %lf %lf\n", pStar->variance[0], pStar->variance[1], pStar->variance[2]);
-}
-
-void readStar (FILE * pFile, Star *pStar)
-{
-
-    int p;
-
-    fscanf (pFile, "%lf %lf %d %d %lf %lf", &(pStar->U), &(pStar->massRatio), &(pStar->status[0]), &(pStar->isFieldStar), &(pStar->clustStarPriorDens), &(pStar->clustStarProposalDens));
-    for (p = 0; p < NPARAMS; p++)
-        fscanf (pFile, "%lf ", &(pStar->beta[p][0]));
-    fscanf (pFile, " %lf %lf %lf %lf ", &(pStar->betaMassRatio[0]), &(pStar->betaMassRatio[1]), &(pStar->meanMassRatio), &(pStar->varMassRatio));
-    fscanf (pFile, "%lf %lf %lf %lf %d %*d %*d", &(pStar->UStepSize), &(pStar->massRatioStepSize), &(pStar->meanU), &(pStar->varU), &(pStar->useDuringBurnIn));
-}
-
-
-// Copies the relevant portions of pStarFrom into pStarTo
-// after a call to evolve and an accept by mcmc
-void quickCopy (Star *pStarFrom, Star *pStarTo)
-{
-
-    int i = 0;
-
-    for (i = 0; i < FILTS; i++)
-        (*pStarTo).photometry[i] = (*pStarFrom).photometry[i];
-    for (i = 0; i < 2; i++)
-        (*pStarTo).status[i] = (*pStarFrom).status[i];
-
-}
-
-double getParameter (Cluster *pCluster, int TYPE)
-{
-    return getThisParameter[TYPE] (pCluster);
-}
-
-void setParameter (Cluster *pCluster, int TYPE, double newValue)
-{
-    return setThisParameter[TYPE] (pCluster, newValue);
 }
 
 char filterNames[FILTS][10];
 
 void setFilterNames (int filterSet)
 {
-
     int f;
 
     for (f = 0; f < FILTS; f++)
         strcpy (filterNames[f], "\0");
     if (filterSet == UBVRIJHK)
     {
-        strcat (filterNames[0], "U\0");
-        strcat (filterNames[1], "B\0");
-        strcat (filterNames[2], "V\0");
-        strcat (filterNames[3], "R\0");
-        strcat (filterNames[4], "I\0");
-        strcat (filterNames[5], "J\0");
-        strcat (filterNames[6], "H\0");
-        strcat (filterNames[7], "K\0");
+        strcat (filterNames[0], "U");
+        strcat (filterNames[1], "B");
+        strcat (filterNames[2], "V");
+        strcat (filterNames[3], "R");
+        strcat (filterNames[4], "I");
+        strcat (filterNames[5], "J");
+        strcat (filterNames[6], "H");
+        strcat (filterNames[7], "K");
     }
     else if (filterSet == ACS)
     {
-        strcat (filterNames[0], "F435W\0");
-        strcat (filterNames[1], "F475W\0");
-        strcat (filterNames[2], "F550M\0");
-        strcat (filterNames[3], "F555W\0");
-        strcat (filterNames[4], "F606W\0");
-        strcat (filterNames[5], "F625W\0");
-        strcat (filterNames[6], "F775W\0");
-        strcat (filterNames[7], "F814W\0");
+        strcat (filterNames[0], "F435W");
+        strcat (filterNames[1], "F475W");
+        strcat (filterNames[2], "F550M");
+        strcat (filterNames[3], "F555W");
+        strcat (filterNames[4], "F606W");
+        strcat (filterNames[5], "F625W");
+        strcat (filterNames[6], "F775W");
+        strcat (filterNames[7], "F814W");
     }
     else if (filterSet == SDSS)
     {
-        strcat (filterNames[0], "u\0");
-        strcat (filterNames[1], "g\0");
-        strcat (filterNames[2], "r\0");
-        strcat (filterNames[3], "i\0");
-        strcat (filterNames[4], "z\0");
-        strcat (filterNames[5], "J\0");
-        strcat (filterNames[6], "H\0");
-        strcat (filterNames[7], "K\0");
+        strcat (filterNames[0], "u");
+        strcat (filterNames[1], "g");
+        strcat (filterNames[2], "r");
+        strcat (filterNames[3], "i");
+        strcat (filterNames[4], "z");
+        strcat (filterNames[5], "J");
+        strcat (filterNames[6], "H");
+        strcat (filterNames[7], "K");
     }
     else
     {
@@ -182,12 +98,12 @@ void setFilterNames (int filterSet)
         exit (1);
     }
 
-    strcat (filterNames[8], "IrB\0");
-    strcat (filterNames[9], "IrR\0");
-    strcat (filterNames[10], "SpB1\0");
-    strcat (filterNames[11], "SpB2\0");
-    strcat (filterNames[12], "SpB3\0");
-    strcat (filterNames[13], "SpB4\0");
+    strcat (filterNames[8], "IrB");
+    strcat (filterNames[9], "IrR");
+    strcat (filterNames[10], "SpB1");
+    strcat (filterNames[11], "SpB2");
+    strcat (filterNames[12], "SpB3");
+    strcat (filterNames[13], "SpB4");
 }
 
 char *getFilterName (int index)
@@ -195,78 +111,9 @@ char *getFilterName (int index)
     return filterNames[index];
 }
 
-static double getAge (Cluster *pCluster)
-{
-    /*
-      if(getParameter(pCluster,MOD) < pCluster->betaAgeMod[0])
-      return pCluster->betaAgeMod[1]*(getParameter(pCluster,MOD)-pCluster->betaAgeMod[0]) + pCluster->parameter[AGE];
-      else
-      return pCluster->betaAgeMod[2]*(getParameter(pCluster,MOD)-pCluster->betaAgeMod[0]) + pCluster->parameter[AGE];
-    */
-    return pCluster->parameter[AGE];
-
-}
-
-static double getY (Cluster *pCluster)
-{
-    double Y;
-
-    Y = pCluster->parameter[YYY] + pCluster->betaFY * (getParameter (pCluster, FEH) - pCluster->mean[FEH]);
-    return Y;
-}
-
-static double getFeH (Cluster *pCluster)
-{
-    return pCluster->parameter[FEH];
-}
-
-static double getMod (Cluster *pCluster)
-{
-    return pCluster->parameter[MOD];
-}
-
-static double getAbs (Cluster *pCluster)
-{
-    double abs;
-
-    abs = pCluster->parameter[ABS] + pCluster->betaFabs * (getParameter (pCluster, FEH) - pCluster->mean[FEH]) + pCluster->betamabs * (getParameter (pCluster, MOD) - pCluster->mean[MOD]);
-    return abs;
-}
-
-static void setAge (Cluster *pCluster, double newAge)
-{
-    pCluster->parameter[AGE] = newAge;
-
-    //if(getParameter(pCluster,MOD) < pCluster->betaAgeMod[0])
-    //  pCluster->parameter[AGE] = newAge - pCluster->betaAgeMod[1]*(getParameter(pCluster,MOD)-pCluster->betaAgeMod[0]);
-    //else
-    //  pCluster->parameter[AGE] = newAge - pCluster->betaAgeMod[2]*(getParameter(pCluster,MOD)-pCluster->betaAgeMod[0]);
-}
-
-static void setY (Cluster *pCluster, double newY)
-{
-    pCluster->parameter[YYY] = newY - pCluster->betaFY * (getParameter (pCluster, FEH) - pCluster->mean[FEH]);
-}
-
-static void setFeH (Cluster *pCluster, double newFeH)
-{
-    pCluster->parameter[FEH] = newFeH;
-}
-
-static void setMod (Cluster *pCluster, double newMod)
-{
-    pCluster->parameter[MOD] = newMod;
-}
-
-static void setAbs (Cluster *pCluster, double newAbs)
-{
-    pCluster->parameter[ABS] = newAbs - pCluster->betamabs * (getParameter (pCluster, MOD) - pCluster->mean[MOD]) - pCluster->betaFabs * (getParameter (pCluster, FEH) - pCluster->mean[FEH]);
-}
-
 //NOTE: nEntries and nFilts need to be set in the calling program before this will work properly.
 void allocateGlobalIso (struct globalIso *newIso)
 {
-
     if (newIso->nEntries == 0 || newIso->nFilts == 0)
     {
         printf ("Cannot allocate memory for global isochrone with %d entries and/or %d filts\n", newIso->nEntries, newIso->nFilts);
@@ -314,10 +161,9 @@ void freeGlobalIso (struct globalIso *newIso)
 // Swaps two mass entries in a global isochrone (n and n-1)
 void swapGlobalEntries (struct globalIso *thisIso, int n, int useFilt[FILTS])
 {
-
     int filt, tempEep;
     double tempMass;
-    double tempMag[thisIso->nFilts];
+    vector<double> tempMag(thisIso->nFilts);
 
     tempMass = thisIso->mass[n];
     tempEep = thisIso->eep[n];
@@ -336,5 +182,4 @@ void swapGlobalEntries (struct globalIso *thisIso, int n, int useFilt[FILTS])
     for (filt = 0; filt < thisIso->nFilts; filt++)
         if (useFilt[filt])
             thisIso->mag[n - 1][filt] = tempMag[filt];
-
 }

@@ -39,10 +39,10 @@ last update: 02dec07
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
     // ***FIX ME***
-    thisLogTeff = wdMassToTeffAndRadius (getParameter (pCluster, AGE), pCluster->carbonicity, thisPrecLogAge, thisWDMass, &thisWDLogRadius);
+    thisLogTeff = wdMassToTeffAndRadius (pCluster->getAge(), pCluster->carbonicity, thisPrecLogAge, thisWDMass, &thisWDLogRadius);
 
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
-    if (thisPrecLogAge >= getParameter (pCluster, AGE))
+    if (thisPrecLogAge >= pCluster->getAge())
     {                           // mcmc.c can cause this by adjusting masses and ages
         for (filt = 0; filt < FILTS; filt++)
             if (useFilt[filt])

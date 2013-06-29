@@ -44,7 +44,8 @@ double margEvolveWithBinary (Cluster *pCluster, Star *pStar)
         return -HUGE_VAL;
     }
 
-    clusterAv = getParameter (pCluster, ABS);
+    clusterAv = pCluster->getAbs();
+
     if (fabs (clusterAbs[0]) < EPS)
         calcAbsCoeffsForMarg (pCluster->evoModels.filterSet);
 
@@ -158,7 +159,7 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
     {                           // can now add distance and absorption
         if (useFilt[filt])
         {
-            mag[2][filt] += getParameter (pCluster, MOD);
+            mag[2][filt] += pCluster->getMod();
             mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;       // add A_[u-k] (standard defn of modulus already includes Av)
             pStar->photometry[i++] = mag[2][filt];
             //i++;

@@ -43,9 +43,9 @@ static double (*getMagsFunctions[]) (double) =
 
 static double (*wdPrecLogAgeFunctions[]) (double, double, double) =
 {
-    &wdPrecLogAgeGir, &wdPrecLogAgeChaboyer, &wdPrecLogAgeYY, &wdPrecLogAgeDsed};
+    &wdPrecLogAgeGir, &wdPrecLogAgeChaboyer, &wdPrecLogAgeYY, &wdPrecLogAgeDsed
+};
 
-double msRgbEvol (Cluster *pCluster, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -54,6 +54,7 @@ The former does 3-D interpolation of the Girardi isochrones.
 
 deriveAgbTipMass() needs to be called first
 ****************************************************************************************/
+double msRgbEvol (Cluster *pCluster, double zamsMass)
 {
     double massNow = 0.0;
 
@@ -62,7 +63,6 @@ deriveAgbTipMass() needs to be called first
 }
 
 
-void deriveAgbTipMass (Cluster *pCluster)
 /****************************************************************************************
 last update: 20jul07
 
@@ -72,6 +72,7 @@ Functions must return a double and have three double arguments (newFeH, newY, ne
 
 Array indices are defined in evolve.h
 ****************************************************************************************/
+void deriveAgbTipMass (Cluster *pCluster)
 {
 
     //printf("%f %f %f\n",getParameter(pCluster,FEH),getParameter(pCluster,AGE),getParameter(pCluster,YYY));
@@ -83,7 +84,7 @@ Array indices are defined in evolve.h
     return;
     }
     */
-    pCluster->AGBt_zmass = (*deriveAgbTipMassFunctions[(pCluster->evoModels).mainSequenceEvol]) (getParameter (pCluster, FEH), getParameter (pCluster, YYY), getParameter (pCluster, AGE));
+    pCluster->AGBt_zmass = (*deriveAgbTipMassFunctions[(pCluster->evoModels).mainSequenceEvol]) (pCluster->getFeH(), pCluster->getY(), pCluster->getAge());
     /*
       lastFeH = getParameter(pCluster,FEH);
       lastLogAge = getParameter(pCluster,AGE);
@@ -96,8 +97,6 @@ Array indices are defined in evolve.h
 }
 
 
-
-double wdPrecLogAge (Cluster *pCluster, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -108,10 +107,11 @@ mass and age.
 Distributed most of the code to the respective subroutines, leaving only those to be
 modified for different model sets.
 ****************************************************************************************/
+double wdPrecLogAge (Cluster *pCluster, double zamsMass)
 {
     double wdPrecLogAge = 0.0;
 
-    wdPrecLogAge = (*wdPrecLogAgeFunctions[(pCluster->evoModels).mainSequenceEvol]) (getParameter (pCluster, FEH), getParameter (pCluster, YYY), zamsMass);
+    wdPrecLogAge = (*wdPrecLogAgeFunctions[(pCluster->evoModels).mainSequenceEvol]) (pCluster->getFeH(), pCluster->getY(), zamsMass);
     return wdPrecLogAge;
 }
 
