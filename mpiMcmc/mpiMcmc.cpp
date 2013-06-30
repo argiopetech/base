@@ -55,7 +55,7 @@ Settings settings;
 /*
  * Initialize chain
  */
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl)
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels)
 {
     int p;
 
@@ -116,7 +116,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl)
         }
 
         // find photometry for initial values of currentClust and mc.stars
-        evolve (&mc.clust, mc.stars, j);
+        evolve (&mc.clust, evoModels, mc.stars, j);
 
         if (mc.stars[j].status[0] == WD)
         {
@@ -131,7 +131,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl)
 /*
  * read control parameters from input stream
  */
-void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl)
+void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels)
 {
 
     double priorSigma;
@@ -148,7 +148,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl)
     init_genrand (settings.seed);
 
     /* load models */
-    loadModels (0, &mc.clust, settings);
+    loadModels (&mc.clust, evoModels, settings);
 
     ctrl.priorMean[FEH] = settings.cluster.Fe_H;
     priorSigma = settings.cluster.sigma.Fe_H;
@@ -180,13 +180,13 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl)
     ctrl.initialAge = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
-    if (mc.clust.evoModels.IFMR <= 3)
+    if (evoModels.IFMR <= 3)
     {
         ctrl.priorVar[IFMR_SLOPE] = 0.0;
         ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
         ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
     }
-    else if (mc.clust.evoModels.IFMR <= 8)
+    else if (evoModels.IFMR <= 8)
     {
         ctrl.priorVar[IFMR_SLOPE] = 1.0;
         ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
@@ -215,7 +215,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl)
     /* set starting values for IFMR parameters */
     ctrl.priorMean[IFMR_SLOPE] = 0.08;
     ctrl.priorMean[IFMR_INTERCEPT] = 0.65;
-    if (mc.clust.evoModels.IFMR <= 10)
+    if (evoModels.IFMR <= 10)
         ctrl.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
         ctrl.priorMean[IFMR_QUADCOEF] = 0.08;
@@ -224,7 +224,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl)
     priorMean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
 
     /* open model file, choose model set, and load models */
-    if (mc.clust.evoModels.mainSequenceEvol == CHABHELIUM)
+    if (settings.mainSequence.msRgbModel == CHABHELIUM)
     {
         scanf ("%lf %lf", &ctrl.priorMean[YYY], &ctrl.priorVar[YYY]);
 
@@ -332,7 +332,7 @@ void initStepSizes (Cluster &clust)
 /*
  * Read data
  */
-void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl)
+void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels)
 {
     char line[300];
     double tempSigma;
@@ -357,7 +357,7 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl)
             if (strcmp (pch, getFilterName (filt)) == 0)
             {
                 ctrl.useFilt[filt] = 1;
-                mc.clust.evoModels.numFilts++;
+                evoModels.numFilts++;
                 if (aFilt < 0)
                     aFilt = filt;               // Sets this to a band we know we are using (for evolve)
                 break;
@@ -547,25 +547,30 @@ int main (int argc, char *argv[])
 
     Matrix<double, NPARAMS, nSave> params;
 
-    settings.fromCLI (argc, argv);
-    if (!settings.files.config.empty())
+    // Setup settings
     {
-        settings.fromYaml (settings.files.config);
-    }
-    else
-    {
-        settings.fromYaml ("base9.yaml");
+        settings.fromCLI (argc, argv);
+        if (!settings.files.config.empty())
+        {
+            settings.fromYaml (settings.files.config);
+        }
+        else
+        {
+            settings.fromYaml ("base9.yaml");
+        }
+
+        settings.fromCLI (argc, argv);
     }
 
-    settings.fromCLI (argc, argv);
+    Model evoModels = makeModel(settings);
 
     increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
     initStepSizes (mc.clust);
 
-    initIfmrMcmcControl (mc, ctrl);
+    initIfmrMcmcControl (mc, ctrl, evoModels);
 
-    mc.clust.evoModels.WDatm = BERGERON;
+    evoModels.WDatm = BERGERON;
 
     for (int p = 0; p < NPARAMS; p++)
     {
@@ -573,12 +578,12 @@ int main (int argc, char *argv[])
         mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
-    readCmdData (mc, ctrl);
+    readCmdData (mc, ctrl, evoModels);
 
-    mc.clust.evoModels.numFilts = ctrl.numFilts;
+    evoModels.numFilts = ctrl.numFilts;
     numFilts = ctrl.numFilts;
 
-    initChain (mc, ctrl);
+    initChain (mc, ctrl, evoModels);
 
     for (int i = 0; i < mc.clust.nStars; i++)
     {
@@ -643,7 +648,7 @@ int main (int argc, char *argv[])
             propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
         }
 
-        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
@@ -704,7 +709,7 @@ int main (int argc, char *argv[])
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
 
-        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))

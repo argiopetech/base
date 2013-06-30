@@ -10,6 +10,7 @@
 
 #include "densities.hpp"
 #include "marg.hpp"
+#include "Model.hpp"
 #include "mpiMcmc.hpp"
 #include "mt19937ar.hpp"
 
@@ -18,6 +19,7 @@ using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::isfinite;
 
 // Create Cholesky Decomp
 void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, nSave> &params)
@@ -123,12 +125,12 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
     }
 }
 
-double logPostStep(Chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike)
+double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike)
 {
     vector<Star> wd(N_WD_MASS1);
     double postClusterStar = 0.0;
 
-    double logPostProp = logPriorClust (&propClust);
+    double logPostProp = logPriorClust (&propClust, evoModels);
 
     if (isfinite(logPostProp))
     {
@@ -150,7 +152,7 @@ double logPostStep(Chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &p
                     wd[j].U = wdMass1Grid[j];
                     wd[j].massRatio = 0.0;
 
-                    evolve (&propClust, wd, j);
+                    evolve (&propClust, evoModels, wd, j);
 
                     if (wd[j].boundsFlag)
                     {
@@ -158,7 +160,7 @@ double logPostStep(Chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &p
                     }
                     else
                     {
-                        tmpLogPost = logPost1Star (&wd[j], &propClust);
+                        tmpLogPost = logPost1Star (&wd[j], &propClust, evoModels);
                         tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                         postClusterStar += exp (tmpLogPost);
@@ -168,7 +170,7 @@ double logPostStep(Chain &mc, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &p
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (&propClust, &mc.stars[i]);
+                postClusterStar = margEvolveWithBinary (&propClust, &mc.stars[i], evoModels);
             }
 
             postClusterStar *= mc.stars[i].clustStarPriorDens;

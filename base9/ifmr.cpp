@@ -18,33 +18,33 @@ double quadraticIFMRshift (Cluster *pCluster, double zamsMass);
 double quadraticIFMRrotate (Cluster *pCluster, double zamsMass);
 double piecewiseLinearIFMR (Cluster *pCluster, double zamsMass);
 
-double intlFinalMassReln (Cluster *pCluster, double zamsMass)
+double intlFinalMassReln (Cluster *pCluster, Model &evoModels, double zamsMass)
 {
     double wdMass = 0.0;
 
-    if (pCluster->evoModels.IFMR == WEIDEMANN)
+    if (evoModels.IFMR == WEIDEMANN)
         wdMass = weidemannIFMR (zamsMass);
-    else if (pCluster->evoModels.IFMR == WILLIAMS)
+    else if (evoModels.IFMR == WILLIAMS)
         wdMass = williamsIFMR (zamsMass);
-    else if (pCluster->evoModels.IFMR == SALARISLIN)
+    else if (evoModels.IFMR == SALARISLIN)
         wdMass = salarisLinearIFMR (zamsMass);
-    else if (pCluster->evoModels.IFMR == SALARISPW)
+    else if (evoModels.IFMR == SALARISPW)
         wdMass = salarisPiecewiseIFMR (zamsMass);
-    else if (pCluster->evoModels.IFMR == LINEAR)
+    else if (evoModels.IFMR == LINEAR)
         wdMass = linearIFMRshift (pCluster, zamsMass);
-    else if (pCluster->evoModels.IFMR == 5)
+    else if (evoModels.IFMR == 5)
         wdMass = linearIFMR0 (pCluster, zamsMass);
-    else if (pCluster->evoModels.IFMR == 6)
+    else if (evoModels.IFMR == 6)
         wdMass = linearIFMRage (pCluster, zamsMass);
-    else if (pCluster->evoModels.IFMR == 7)
+    else if (evoModels.IFMR == 7)
         wdMass = linearIFMRhighShift (pCluster, zamsMass);
-    else if (pCluster->evoModels.IFMR == 8)
+    else if (evoModels.IFMR == 8)
         wdMass = linearIFMRedit (pCluster, zamsMass);
-    else if (pCluster->evoModels.IFMR == 9)
+    else if (evoModels.IFMR == 9)
         wdMass = quadraticIFMRshift (pCluster, zamsMass);
-    else if (pCluster->evoModels.IFMR == 10)
+    else if (evoModels.IFMR == 10)
         wdMass = quadraticIFMRrotate (pCluster, zamsMass);
-    else if (pCluster->evoModels.IFMR == 11)
+    else if (evoModels.IFMR == 11)
         wdMass = piecewiseLinearIFMR (pCluster, zamsMass);
     else
         printf ("ERROR: Undefined IFMR");

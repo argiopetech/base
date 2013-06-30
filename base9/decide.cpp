@@ -15,7 +15,7 @@
 using std::vector;
 
 /*** Decides whether to accept a proposed jump between field star and cluster star models ***/
-void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile)
+void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile, Model &evoModels)
 {
     int j;
     double u, alpha, post1, post2;
@@ -26,8 +26,8 @@ void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile)
         stars2.at(j) = stars1[j];  // copy stars to new array,
         propFieldStar (&(stars2.at(j)));   // propose a new field star status,
 
-        post1 = logPost1Star (&(stars1[j]), pCluster);
-        post2 = logPost1Star (&(stars2.at(j)), pCluster);
+        post1 = logPost1Star (&(stars1[j]), pCluster, evoModels);
+        post2 = logPost1Star (&(stars2.at(j)), pCluster, evoModels);
 
         if (fabs (post2 + HUGE_VAL) < EPS)
             continue;                   // Proposed star no good.  Leave stars1 alone.
@@ -67,7 +67,7 @@ void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile)
 }
 
 /*** Decides whether to accept a proposed mass ***/
-void decideMass (Chain *mc)
+void decideMass (Chain *mc, Model &evoModels)
 {
     int j;
     double u, alpha, post1, post2;
@@ -80,7 +80,7 @@ void decideMass (Chain *mc)
         stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
-    evolve (&mc->clust, stars2, -1);    // Evolve all the (proposed) stars at once
+    evolve (&mc->clust, evoModels, stars2, -1);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // Accept or reject each star individually
@@ -88,12 +88,12 @@ void decideMass (Chain *mc)
             mc->rejectMass[j]++;        // Proposed star no good.  Leave stars1 alone.
         else
         {
-            post2 = logPost1Star (&stars2.at(j), &mc->clust);
+            post2 = logPost1Star (&stars2.at(j), &mc->clust, evoModels);
             if (fabs (post2 + HUGE_VAL) < EPS)
                 mc->rejectMass[j]++;    // Proposed star no good.  Leave stars1 alone.
             else
             {
-                post1 = logPost1Star (&mc->stars.at(j), &mc->clust);
+                post1 = logPost1Star (&mc->stars.at(j), &mc->clust, evoModels);
                 alpha = post2;
                 alpha -= post1;
 
@@ -115,7 +115,7 @@ void decideMass (Chain *mc)
 }
 
 /*** Decides whether to accept a proposed mass ratio ***/
-void decideMassRatio (Chain *mc)
+void decideMassRatio (Chain *mc, Model &evoModels)
 {
     double u, alpha, post1, post2;
     int j;
@@ -129,7 +129,7 @@ void decideMassRatio (Chain *mc)
         stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
-    evolve (&mc->clust, stars2, -1);    // Evolve all the (proposed) stars at once
+    evolve (&mc->clust, evoModels, stars2, -1);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // Accept or reject each star individually
@@ -139,12 +139,12 @@ void decideMassRatio (Chain *mc)
             mc->rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
         else
         {
-            post2 = logPost1Star (&stars2.at(j), &mc->clust);
+            post2 = logPost1Star (&stars2.at(j), &mc->clust, evoModels);
             if (fabs (post2 + HUGE_VAL) < EPS)
                 mc->rejectMassRatio[j]++;       // Proposed star no good.  Leave stars1 alone.
             else
             {
-                post1 = logPost1Star (&mc->stars.at(j), &mc->clust);
+                post1 = logPost1Star (&mc->stars.at(j), &mc->clust, evoModels);
                 alpha = post2;
                 alpha -= post1;
 
@@ -166,7 +166,7 @@ void decideMassRatio (Chain *mc)
 }
 
 // Decides whether to accept a proposed cluster property
-Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr)
+Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr, Model &evoModels)
 {
     int j;
     double u, alpha, post1 = 0.0, post2 = 0.0;
@@ -177,8 +177,8 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
     clust2 = clust1;
     propClustParam (&clust2, SAMPLE_TYPE);      // propose a new value
 
-    post1 = logPriorClust (&clust1);
-    post2 = logPriorClust (&clust2);
+    post1 = logPriorClust (&clust1, evoModels);
+    post2 = logPriorClust (&clust2, evoModels);
 
     if (fabs (post2 + HUGE_VAL) < EPS)
     {
@@ -197,7 +197,7 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
         stars2.at(j).boundsFlag = 0;
     }
 
-    evolve (&clust2, stars2, -1);
+    evolve (&clust2, evoModels, stars2, -1);
 
     for (j = 0; j < clust1.nStars; j++)
     {
@@ -209,8 +209,8 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
         if (FS_ON_STATE || stars1[j].useDuringBurnIn)
         {
 
-            post1 += logPost1Star (&(stars1[j]), &clust1);
-            post2 += logPost1Star (&(stars2.at(j)), &clust2);
+            post1 += logPost1Star (&(stars1[j]), &clust1, evoModels);
+            post2 += logPost1Star (&(stars2.at(j)), &clust2, evoModels);
 
             if (fabs (post2 + HUGE_VAL) < EPS)
             {
@@ -242,7 +242,7 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
 
 // Draw a new varScale from a scaled Inv-gamma distribution.
 // This assumes that the prior distribution for the varScale parameter is Inv-chisq(prior_df)
-void updateVarScale (Star stars[], Cluster *pCluster)
+void updateVarScale (Star stars[], Cluster *pCluster, Model &evoModels)
 {
     int nClustStars = 0, i, j;
     double scale = 0.0;
@@ -253,7 +253,7 @@ void updateVarScale (Star stars[], Cluster *pCluster)
         if (!stars[i].isFieldStar)
         {
             nClustStars++;
-            for (j = 0; j < pCluster->evoModels.numFilts; j++)
+            for (j = 0; j < evoModels.numFilts; j++)
             {
                 if (stars[i].variance[j] > 0)
                     scale += 0.5 * ((stars[i].photometry[j] - stars[i].obsPhot[j]) * (stars[i].photometry[j] - stars[i].obsPhot[j]) / stars[i].variance[j]);
@@ -261,7 +261,7 @@ void updateVarScale (Star stars[], Cluster *pCluster)
         }
     }
     scale += 0.5;
-    double g = gamdev ((pCluster->evoModels.numFilts * nClustStars + prior_df) / 2.0);
+    double g = gamdev ((evoModels.numFilts * nClustStars + prior_df) / 2.0);
 
     pCluster->varScale = scale / g;
 }

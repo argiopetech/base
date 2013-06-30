@@ -56,6 +56,8 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
+    Model evoModels = makeModel(settings);
+
     ////////////////////////////////////////////
     /////// Open files to read and write ///////
     ////////////////////////////////////////////
@@ -99,8 +101,8 @@ int main (int argc, char *argv[])
         fscanf (rDataPtr, "%d ", &useFilt[filt]);
         if (useFilt[filt])
         {
-            theCluster.evoModels.numFilts++;
-            //printf("** %d **\n",theCluster.evoModels.numFilts);
+            evoModels.numFilts++;
+            //printf("** %d **\n",evoModels.numFilts);
             aFilt = filt;               // Sets this to a band we know we are using (for evolve)
         }
     }
@@ -118,7 +120,7 @@ int main (int argc, char *argv[])
         verbose = 1;            /* give standard feedback if incorrectly specified */
 
 
-    loadModels (0, &theCluster, settings);      /* read in stellar evol & WD models */
+    loadModels (&theCluster, evoModels, settings);      /* read in stellar evol & WD models */
 
 
     /* read cluster parameters */
@@ -130,7 +132,7 @@ int main (int argc, char *argv[])
 
     theCluster.parameter[ABS] = settings.cluster.Av;
 
-    if (theCluster.evoModels.mainSequenceEvol == CHABHELIUM)
+    if (settings.mainSequence.msRgbModel == CHABHELIUM)
     {
         theCluster.parameter[YYY] = settings.cluster.Y;
     }
@@ -147,7 +149,7 @@ int main (int argc, char *argv[])
     stars.at(0).U = 1.0;
     stars.at(0).massRatio = 0.0;
 
-    evolve (&theCluster, stars, -1);
+    evolve (&theCluster, evoModels, stars, -1);
 
     int nWD = 10000;
 
@@ -169,7 +171,7 @@ int main (int argc, char *argv[])
         }
         stars.at(j).massRatio = 0.0;
     }
-    evolve (&theCluster, stars, -1);
+    evolve (&theCluster, evoModels, stars, -1);
 
 
     fprintf (wDebugPtr, " mass stage1");
@@ -188,7 +190,7 @@ int main (int argc, char *argv[])
             {
                 // if(prevV > stars.at(j).photometry[0]){
                 fprintf (wDebugPtr, "%lf %6d ", stars.at(j).U, stars.at(j).status[0]);
-                for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
+                for (filt = 0; filt < evoModels.numFilts; filt++)
                     fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                 fprintf (wDebugPtr, "\n");
 //           prevV = stars.at(j).photometry[0];
@@ -201,7 +203,7 @@ int main (int argc, char *argv[])
             else
             {
                 fprintf (wDebugPtr, "%5.2f %3d ", stars.at(j).U, stars.at(j).status[0]);
-                for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
+                for (filt = 0; filt < evoModels.numFilts; filt++)
                     fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                 fprintf (wDebugPtr, "\n");
             }

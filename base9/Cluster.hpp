@@ -5,6 +5,7 @@
 
 #include "constants.hpp"
 #include "Model.hpp"
+#include "MsRgbModel.hpp"
 
 class Cluster
 {
@@ -14,8 +15,6 @@ class Cluster
         stepSize.fill(0.0);
         mean.fill(0.0);
         parameter.fill(0.0);
-
-        initModels (&evoModels);
     }
     ~Cluster() {;}
 
@@ -30,8 +29,6 @@ class Cluster
     void setFeH(double newFeH);
     void setMod(double newMod);
     void setAbs(double newAbs);
-
-    struct model evoModels;
 
     std::array<double, 3> betaAgeMod;
     std::array<double, NPARAMS> parameter;

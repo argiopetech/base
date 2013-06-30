@@ -1,6 +1,8 @@
 #ifndef WDEVOL_H
 #define WDEVOL_H
 
-double wdEvol (Cluster *pCluster, Star *pStar, int cmpnt);
+#include "Model.hpp"
+
+double wdEvol (Cluster *pCluster, Model &, Star *pStar, int cmpnt);
 
 #endif

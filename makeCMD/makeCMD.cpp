@@ -10,6 +10,7 @@
 #include "structures.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
+#include "ifmr.hpp"
 
 using std::vector;
 
@@ -30,9 +31,6 @@ int aFilt = 0;
 int verbose, needMassNow = 1, useFilt[FILTS];   //, numFilts;
 
 void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
-
-// double intlFinalMassReln(double zamsMass, int IFMR);
-double intlFinalMassReln (Cluster *pCluster, double zamsMass);
 
 int main (int argc, char *argv[])
 {
@@ -73,6 +71,8 @@ int main (int argc, char *argv[])
     }
 
     settings.fromCLI (argc, argv);
+
+    Model evoModels = makeModel(settings);
 
     ////////////////////////////////////////////
     /////// Open files to read and write ///////
@@ -175,8 +175,7 @@ int main (int argc, char *argv[])
         fscanf (rDataPtr, "%d ", &useFilt[filt]);
         if (useFilt[filt])
         {
-            theCluster.evoModels.numFilts++;
-            //printf("** %d **\n",theCluster.evoModels.numFilts);
+            evoModels.numFilts++;
             aFilt = filt;               // Sets this to a band we know we are using (for evolve)
         }
     }
@@ -188,18 +187,13 @@ int main (int argc, char *argv[])
     ///////// and load models /////////
     ///////////////////////////////////
 
-    /* printf("\n Enter M_wd_up : "); */
-    /* scanf("%lf", &theCluster.M_wd_up); */
-
-    /* printf("\n Run in verbose mode (0=no, 1=yes, 2=YES) ?"); */
-    /* scanf("%d",&verbose); */
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
     verbose = settings.verbose;
 
     if (verbose < 0 || verbose > 2)
         verbose = 1;            // give standard feedback if incorrectly specified
 
-    loadModels (0, &theCluster, settings);      // read in stellar evol & WD models
+    loadModels (&theCluster, evoModels, settings);      // read in stellar evol & WD models
 
 
     //////////////////////////////
@@ -289,9 +283,9 @@ int main (int argc, char *argv[])
             do
             {
                 fscanf (rDataPtr, "%s ", starName[j]);
-                for (p = 0; p < theCluster.evoModels.numFilts; p++)
+                for (p = 0; p < evoModels.numFilts; p++)
                     fscanf (rDataPtr, "%lf ", &(stars.at(j).obsPhot[p]));
-                for (p = 0; p < theCluster.evoModels.numFilts; p++)
+                for (p = 0; p < evoModels.numFilts; p++)
                     fscanf (rDataPtr, "%*f ");
                 fscanf (rDataPtr, "%*f %*f %d ", &stars.at(j).status[0]);
                 fgets (line, 240, rDataPtr);
@@ -359,12 +353,12 @@ int main (int argc, char *argv[])
                 }
             }
         }
-        evolve (&theCluster, stars, -1);
+        evolve (&theCluster, evoModels, stars, -1);
         for (j = 0; j < theCluster.nStars; j++)
         {
             if (cm[j])
             {                           // if it is a cluster star
-                for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
+                for (filt = 0; filt < evoModels.numFilts; filt++)
                 {
                     sumPhot[j][filt] += stars.at(j).photometry[filt];
                     sumSquaresPhot[j][filt] += stars.at(j).photometry[filt] * stars.at(j).photometry[filt];
@@ -410,7 +404,7 @@ int main (int argc, char *argv[])
                     // fprintf(wCmdPtr,"%10.5f  %9.3e  ", intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR),
                     //         intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR) -
                     //         intlFinalMassReln(meanMass[m][j] - sigma, theCluster.evoModels.IFMR));
-                    fprintf (wCmdPtr, "%10.5f  %9.3e  ", intlFinalMassReln (&theCluster, meanMass[m][j]), intlFinalMassReln (&theCluster, meanMass[m][j]) - intlFinalMassReln (&theCluster, meanMass[m][j] - sigma));
+                    fprintf (wCmdPtr, "%10.5f  %9.3e  ", intlFinalMassReln (&theCluster, evoModels, meanMass[m][j]), intlFinalMassReln (&theCluster, evoModels, meanMass[m][j]) - intlFinalMassReln (&theCluster, evoModels, meanMass[m][j] - sigma));
                 else
                     fprintf (wCmdPtr, "%10.5f  %9.3e  ", 0.0, 0.0);
             }
@@ -421,7 +415,7 @@ int main (int argc, char *argv[])
             if (m == 1)
             {
                 //printf("*** %d ***\n",theCluster.evoModels.numFilts);
-                for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
+                for (filt = 0; filt < evoModels.numFilts; filt++)
                 {
                     if (N > 1.0)
                     {
@@ -459,7 +453,7 @@ int main (int argc, char *argv[])
         stars.at(j).massRatio = 0.0;
     }
 
-    evolve (&theCluster, stars, -1);
+    evolve (&theCluster, evoModels, stars, -1);
 
     fprintf (wDebugPtr, " mass stage1");
     for (filt = 0; filt < FILTS; filt++)
@@ -478,7 +472,7 @@ int main (int argc, char *argv[])
                 if (prevV > stars.at(j).photometry[0])
                 {
                     fprintf (wDebugPtr, "%5.2f %6d ", stars.at(j).U, stars.at(j).status[0]);
-                    for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
+                    for (filt = 0; filt < evoModels.numFilts; filt++)
                         fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                     fprintf (wDebugPtr, "\n");
                     prevV = stars.at(j).photometry[0];
@@ -492,7 +486,7 @@ int main (int argc, char *argv[])
             else
             {
                 fprintf (wDebugPtr, "%5.2f %3d ", stars.at(j).U, stars.at(j).status[0]);
-                for (filt = 0; filt < theCluster.evoModels.numFilts; filt++)
+                for (filt = 0; filt < evoModels.numFilts; filt++)
                     fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                 fprintf (wDebugPtr, "\n");
             }

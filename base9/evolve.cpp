@@ -7,6 +7,7 @@
 #include "evolve.hpp"
 #include "msRgbEvol.hpp"
 #include "gBaraffeMag.hpp"
+#include "wdEvol.hpp"
 
 using std::vector;
 
@@ -21,10 +22,9 @@ struct globalIso isochrone;
 
 static double clusterAbs[FILTS] = { 0 };
 
-double wdEvol (Cluster *pCluster, Star *pStar, int cmpnt);
 void calcAbsCoeffs (int filterSet);
 
-void evolve (Cluster *pCluster, vector<Star> &stars, int index)
+void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index)
 /**************************************************************************************
 last update: 25Aug10
 
@@ -75,7 +75,7 @@ get the photometry of a single star. -- SD
     //were last time through
     if (fabs (isochrone.FeH - pCluster->getFeH()) > EPS || fabs (isochrone.logAge - pCluster->getAge()) > EPS || fabs (isochrone.Y - pCluster->getY()) > EPS)
     {
-        deriveAgbTipMass (pCluster);    // determine AGBt ZAMS mass, to find evol state
+        pCluster->AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(pCluster->getFeH(), pCluster->getY(), pCluster->getAge());    // determine AGBt ZAMS mass, to find evol state
     }
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
@@ -87,7 +87,7 @@ get the photometry of a single star. -- SD
 
     clusterAv = pCluster->getAbs();
     if (fabs (clusterAbs[0]) < EPS)
-        calcAbsCoeffs (pCluster->evoModels.filterSet);
+        calcAbsCoeffs (evoModels.filterSet);
 
     for (j = index; j < index + numStars; j++)
     {
@@ -129,7 +129,7 @@ get the photometry of a single star. -- SD
                 }
                 else if (mass[cmpnt] <= pCluster->AGBt_zmass)
                 {                       // for main seq or giant star
-                    stars.at(j).massNow[cmpnt] = msRgbEvol (pCluster, mass[cmpnt]);
+                    stars.at(j).massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol (mass[cmpnt]);
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = globalMags[filt];
@@ -137,7 +137,7 @@ get the photometry of a single star. -- SD
                 }
                 else if (mass[cmpnt] <= pCluster->M_wd_up)
                 {                       // for white dwarf
-                    ltau[cmpnt] = wdEvol (pCluster, &(stars.at(j)), cmpnt);
+                    ltau[cmpnt] = wdEvol (pCluster, evoModels, &(stars.at(j)), cmpnt);
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = globalMags[filt];

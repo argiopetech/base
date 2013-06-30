@@ -6,22 +6,15 @@
 #include "gBergMag.hpp"
 #include "wdCooling.hpp"
 #include "structures.hpp"
+#include "Model.hpp"
+#include "ifmr.hpp"
 
 const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
 
-double wdPrecLogAge (Cluster *pCluster, double zamsMass);
-
-// double intlFinalMassReln(double zamsMass, int IFMR);
-double intlFinalMassReln (Cluster *pCluster, double zamsMass);
-
-double wdEvol (Cluster *pCluster, Star *pStar, int cmpnt)
-/****************************************************************************************
-last update: 02dec07
-
-****************************************************************************************/
+double wdEvol (Cluster *pCluster, Model &evoModels, Star *pStar, int cmpnt)
 {
 
     int filt;
@@ -33,12 +26,11 @@ last update: 02dec07
     else
         mass = getMass2 (pStar, pCluster);
 
-    thisPrecLogAge = wdPrecLogAge (pCluster, mass);
-    // thisWDMass       = intlFinalMassReln(mass, pCluster->evoModels.IFMR);
-    thisWDMass = intlFinalMassReln (pCluster, mass);
+    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster->getFeH(), pCluster->getY(), mass);
+
+    thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    // ***FIX ME***
     thisLogTeff = wdMassToTeffAndRadius (pCluster->getAge(), pCluster->carbonicity, thisPrecLogAge, thisWDMass, &thisWDLogRadius);
 
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
@@ -55,9 +47,9 @@ last update: 02dec07
         bergeronTeffToMags (thisLogTeff, thisWDLogG, (*pStar).wdType[cmpnt]);
     }
 
-    (*pStar).massNow[cmpnt] = thisWDMass;
-    (*pStar).wdLogTeff[cmpnt] = thisLogTeff;
-    (*pStar).status[cmpnt] = WD;
+    pStar->massNow[cmpnt] = thisWDMass;
+    pStar->wdLogTeff[cmpnt] = thisLogTeff;
+    pStar->status[cmpnt] = WD;
 
     return thisPrecLogAge;
 

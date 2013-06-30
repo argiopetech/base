@@ -9,6 +9,6 @@
 #include "gBaraffeMag.hpp"
 #include "Settings.hpp"
 
-void loadModels (int needFS, Cluster *theCluster, Settings &);
+void loadModels (Cluster *theCluster, Model &, Settings &);
 
 #endif

@@ -54,10 +54,18 @@ struct yyIsochrone
     double AgbTurnoffMass;
 };
 
-void loadYale (std::string path, int filterSet);
-double deriveYYAgbTip (double newFeH, double newY, double newLogAge);
-double wdPrecLogAgeYY (double thisFeH, double thisY, double zamsMass);
-double getYaleMags (double zamsMass);
+class YaleMsModel : public MsRgbModel
+{
+  public:
+    YaleMsModel() {;}
+    virtual ~YaleMsModel() {;}
 
+    virtual double deriveAgbTipMass(double, double, double);
+    virtual double msRgbEvol(double);
+    virtual double wdPrecLogAge(double, double, double);
+    virtual void loadModel(std::string, int);
+
+  private:
+};
 
 #endif

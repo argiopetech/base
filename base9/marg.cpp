@@ -6,6 +6,8 @@
 #include "msRgbEvol.hpp"
 #include "gBaraffeMag.hpp"
 #include "densities.hpp"
+#include "Model.hpp"
+#include "wdEvol.hpp"
 
 const int MAX_ENTRIES = 370;
 
@@ -19,23 +21,22 @@ extern double ageLimit[2];
 extern struct globalIso isochrone;
 static double clusterAbs[FILTS] = { 0 };
 
-double wdEvol (Cluster *pCluster, Star *pStar, int cmpnt);
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, Star *pStar);
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, Star *pStar, Model&);
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster *pCluster, Star *pStar);
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, Star *pStar);
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, Star *pStar, Model&);
 
 void calcAbsCoeffsForMarg (int filterSet);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate
    the integral */
-double margEvolveWithBinary (Cluster *pCluster, Star *pStar)
+double margEvolveWithBinary (Cluster *pCluster, Star *pStar, Model &evoModels)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
     double post = 0.0;
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
-    deriveAgbTipMass (pCluster);        // determine AGBt ZAMS mass, to find evol state
+    pCluster->AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(pCluster->getFeH(), pCluster->getY(), pCluster->getAge());        // determine AGBt ZAMS mass, to find evol state
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster->AGBt_zmass < EPS)
@@ -47,7 +48,7 @@ double margEvolveWithBinary (Cluster *pCluster, Star *pStar)
     clusterAv = pCluster->getAbs();
 
     if (fabs (clusterAbs[0]) < EPS)
-        calcAbsCoeffsForMarg (pCluster->evoModels.filterSet);
+        calcAbsCoeffsForMarg (evoModels.filterSet);
 
     int m;
     double dMass;
@@ -70,7 +71,7 @@ double margEvolveWithBinary (Cluster *pCluster, Star *pStar)
                 dMass = dIsoMass / isoIncrem;
                 mass[0] = isochrone.mass[m] + k * dMass;
 
-                calcPost (&post, dMass, mag, clusterAv, &flux, mass, pCluster, pStar);
+                calcPost (&post, dMass, mag, clusterAv, &flux, mass, pCluster, pStar, evoModels);
             }
         }
     }
@@ -84,7 +85,7 @@ double margEvolveWithBinary (Cluster *pCluster, Star *pStar)
     }
 }
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, Star *pStar)
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, Star *pStar, Model &evoModels)
 {
     int filt;
 
@@ -98,7 +99,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, S
     }
     else if (mass[cmpnt] <= pCluster->AGBt_zmass)
     {                           // for main seq or giant star
-        pStar->massNow[cmpnt] = msRgbEvol (pCluster, mass[cmpnt]);
+        pStar->massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol(mass[cmpnt]);
         for (filt = 0; filt < FILTS; filt++)
             if (useFilt[filt])
                 mag[cmpnt][filt] = globalMags[filt];
@@ -106,7 +107,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, S
     }
     else if (mass[cmpnt] <= pCluster->M_wd_up)
     {                           // for white dwarf
-        ltau[cmpnt] = wdEvol (pCluster, pStar, cmpnt);
+        ltau[cmpnt] = wdEvol (pCluster, evoModels, pStar, cmpnt);
         for (filt = 0; filt < FILTS; filt++)
             if (useFilt[filt])
                 mag[cmpnt][filt] = globalMags[filt];
@@ -168,13 +169,13 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
 }
 
 
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, Star *pStar)
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, Star *pStar, Model &evoModels)
 {
     setMass1 (pStar, pCluster, mass[0]);
 
     int cmpnt = 0, filt;
 
-    setMags (mag, cmpnt, mass, pCluster, pStar);
+    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels);
 
     double tmpLogPost, tmpPost;
 
@@ -187,10 +188,10 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
     pStar->massNow[cmpnt] = 0.0;
     ltau[cmpnt] = 0.0;          // may not be a WD, so no precursor age,
     pStar->wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-    setMags (mag, cmpnt, mass, pCluster, pStar);
+    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels);
 
     deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar);
-    tmpLogPost = logPost1Star (pStar, pCluster);
+    tmpLogPost = logPost1Star (pStar, pCluster, evoModels);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass[0] / mass[0]);    /* dMassRatio */
     tmpPost = exp (tmpLogPost);
@@ -258,11 +259,11 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
             pStar->massNow[cmpnt] = 0.0;
             ltau[cmpnt] = 0.0;  // may not be a WD, so no precursor age,
             pStar->wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-            setMags (mag, cmpnt, mass, pCluster, pStar);
+            setMags (mag, cmpnt, mass, pCluster, pStar, evoModels);
 
             deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar);
             /* now have magnitudes, want posterior probability */
-            tmpLogPost = logPost1Star (pStar, pCluster);
+            tmpLogPost = logPost1Star (pStar, pCluster, evoModels);
             tmpLogPost += log (dMass);
             tmpLogPost += log ((isochrone.mass[i + 1] - isochrone.mass[i]) / mass[0]);
             tmpPost = exp (tmpLogPost);

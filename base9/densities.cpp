@@ -72,7 +72,7 @@ double logPriorMass (Star *pStar, Cluster *pCluster)
 }
 
 // Compute log prior density for cluster properties
-double logPriorClust (Cluster *pCluster)
+double logPriorClust (Cluster *pCluster, Model &evoModels)
 {
     if (pCluster->getAge() < ageLimit[0])
         return -HUGE_VAL;               // these are possible, we just don't have models for them YET
@@ -80,14 +80,14 @@ double logPriorClust (Cluster *pCluster)
         return -HUGE_VAL;               // appropriate for the MS/RGB models but not the WDs
     else if (pCluster->parameter[IFMR_SLOPE] < 0.0)
         return -HUGE_VAL;
-    if (pCluster->evoModels.IFMR == 11)
+    if (evoModels.IFMR == 11)
     {
         if (pCluster->parameter[IFMR_QUADCOEF] < 0.0)
             return -HUGE_VAL;
     }
 
     // enforce monotonicity in IFMR
-    if (pCluster->evoModels.IFMR == 10)
+    if (evoModels.IFMR == 10)
     {
         double massLower = 0.15;
         double massUpper = pCluster->M_wd_up;
@@ -219,7 +219,7 @@ double scaledLogLike (int numFilts, Star *pStar, double varScale)
 }
 
 
-double logPost1Star (Star *pStar, Cluster *pCluster)
+double logPost1Star (Star *pStar, Cluster *pCluster, Model &evoModels)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;
@@ -229,7 +229,7 @@ double logPost1Star (Star *pStar, Cluster *pCluster)
     if (fabs (logPrior + HUGE_VAL) < EPSILON)
         return (logPrior);
 
-    likelihood = scaledLogLike (pCluster->evoModels.numFilts, pStar, pCluster->varScale);
+    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster->varScale);
 
     if (fabs (likelihood + HUGE_VAL) < EPSILON)
         return (likelihood);

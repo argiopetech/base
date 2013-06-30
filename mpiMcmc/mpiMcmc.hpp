@@ -28,6 +28,7 @@ struct ifmrMcmcControl
     std::ofstream resFile;
     std::ofstream burninFile;
     std::string clusterFilename;
+
     int fsSamplingOn;
     int sampleVarScale;
     int nIter;                  // number of post burn-in iterations

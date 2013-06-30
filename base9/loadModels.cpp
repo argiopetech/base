@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -10,58 +12,53 @@
 #include "wdCooling.hpp"
 #include "gBaraffeMag.hpp"
 
+using std::cerr;
+using std::endl;
+
 // Declared in parent program (mcmc, simCluster, makeCMD)
 extern int verbose;
 
-void loadModels (int needFS, Cluster *theCluster, Settings &settings)
+void loadModels (Cluster *theCluster, Model &evoModels, Settings &settings)
 {
     char path[100] = "models/\0";
 
-    theCluster->evoModels.mainSequenceEvol = settings.mainSequence.msRgbModel;
+    evoModels.filterSet = settings.mainSequence.filterSet;
 
-    if (theCluster->evoModels.mainSequenceEvol < 0 || theCluster->evoModels.mainSequenceEvol > 3)
+    if (evoModels.filterSet < 0 || evoModels.filterSet > 2)
     {
-        printf ("***Error: No models found for main sequence evolution model %d.***\n", theCluster->evoModels.mainSequenceEvol);
+        printf ("***Error: No models found for filter set %d.***\n", evoModels.filterSet);
         printf ("[Exiting...]\n");
         exit (1);
     }
 
-    theCluster->evoModels.filterSet = settings.mainSequence.filterSet;
+    setFilterNames (evoModels.filterSet);
 
-    if (theCluster->evoModels.filterSet < 0 || theCluster->evoModels.filterSet > 2)
+    evoModels.IFMR = settings.whiteDwarf.ifmr;
+
+    evoModels.WDcooling = settings.whiteDwarf.wdModel;
+
+    if (evoModels.WDcooling < 0 || evoModels.WDcooling > 3)
     {
-        printf ("***Error: No models found for filter set %d.***\n", theCluster->evoModels.filterSet);
-        printf ("[Exiting...]\n");
-        exit (1);
-    }
-
-    setFilterNames (theCluster->evoModels.filterSet);
-
-    theCluster->evoModels.IFMR = settings.whiteDwarf.ifmr;
-
-    theCluster->evoModels.WDcooling = settings.whiteDwarf.wdModel;
-
-    if (theCluster->evoModels.WDcooling < 0 || theCluster->evoModels.WDcooling > 3)
-    {
-        printf ("***Error: No models found for white dwarf filter set %d.***\n", theCluster->evoModels.WDcooling);
+        printf ("***Error: No models found for white dwarf filter set %d.***\n", evoModels.WDcooling);
         printf ("[Exiting...]\n");
         exit (1);
     }
 
     theCluster->carbonicity = settings.whiteDwarf.carbonicity;
 
-    theCluster->evoModels.brownDwarfEvol = settings.brownDwarf.bdModel;
+    evoModels.brownDwarfEvol = settings.brownDwarf.bdModel;
 
-    if (theCluster->evoModels.brownDwarfEvol == BARAFFE)
+    if (evoModels.brownDwarfEvol == BARAFFE)
         loadBaraffe (path);
 
-    theCluster->evoModels.WDatm = BERGERON;
+    evoModels.WDatm = BERGERON;
 
     printf ("\nReading models...\n");
 
-    loadMSRgbModels (theCluster, path, needFS);
-    loadWDCool (path, theCluster->evoModels.WDcooling);
-    loadBergeron (path, theCluster->evoModels.filterSet);
+    evoModels.mainSequenceEvol->loadModel(path, settings.mainSequence.filterSet);
+
+    loadWDCool (path, evoModels.WDcooling);
+    loadBergeron (path, evoModels.filterSet);
 
     printf ("Models read.\n");
 

@@ -8,7 +8,7 @@
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "binSearch.hpp"
-#include "gYaleMag.hpp"
+#include "YaleMsModel.hpp"
 #include "binSearch.hpp"
 
 using std::string;
@@ -43,7 +43,7 @@ static double feh2z (double FeH);
 static void intpolZ (int iZ, int iAge, double newZ);
 static void intpolAge (int iAge, double newAge);
 
-void loadYale (string path, int filterSet)
+void YaleMsModel::loadModel (string path, int filterSet)
 {
     FILE *pYY;
     int z, a, n, p;
@@ -237,7 +237,7 @@ void loadYale (string path, int filterSet)
 // Currently ignores newY
 **********************************************************************************/
 
-double deriveYYAgbTip (double newFeH, double newY, double newLogAge)
+double YaleMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogAge)
 {
 
     double newAge = pow (10, newLogAge) / 1e9;
@@ -571,7 +571,7 @@ static double feh2z (double FeH)
     return Z;
 }
 
-double getYaleMags (double zamsMass)
+double YaleMsModel::msRgbEvol (double zamsMass)
 {
 
 /**************************************************************
@@ -597,7 +597,7 @@ double getYaleMags (double zamsMass)
 }
 
 
-double wdPrecLogAgeYY (double thisFeH, double thisY, double zamsMass)
+double YaleMsModel::wdPrecLogAge (double thisFeH, double thisY, double zamsMass)
 /*************************************************************************************
 last update: 12nov07
 

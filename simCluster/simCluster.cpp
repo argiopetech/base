@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 
 #include <cstdio>
 #include <cmath>
@@ -9,13 +10,14 @@
 
 #include "mt19937ar.hpp"
 #include "evolve.hpp"
+#include "gennorm.hpp"
 #include "structures.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
 
 using std::vector;
-
-double gen_norm (double mean, double std_dev);
+using std::cerr;
+using std::endl;
 
 // Used by other methods in simCluster
 static int nMSRG = 0, nWD = 0, nNSBH = 0;       //, nDa=0, nDb=0;
@@ -59,6 +61,8 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
+    Model evoModels = makeModel(settings);
+
     for (filt = 0; filt < 8; filt++)
         useFilt[filt] = 1;              // calculate all of U-K
     for (filt = 8; filt < FILTS; filt++)
@@ -85,11 +89,14 @@ int main (int argc, char *argv[])
     if (verbose < 0 || verbose > 2)
         verbose = 1;            // give standard feedback if incorrectly specified
 
-    loadModels (nFieldStars, &theCluster, settings);
+    // !!! FIX ME !!!
+    cerr << "This is broken. If we need field stars and are using the YALE models, we also have to load the DSED models.";
+//    loadModels (nFieldStars, &theCluster, evoModels, settings);
+    loadModels (&theCluster, evoModels, settings);
 
-    if (theCluster.evoModels.mainSequenceEvol == YALE)
+    if (settings.mainSequence.msRgbModel == YALE)
         minMass = 0.4;
-    if (theCluster.evoModels.mainSequenceEvol == DSED)
+    if (settings.mainSequence.msRgbModel == DSED)
         minMass = 0.25;
 
     strcpy (w_file, settings.files.output.c_str());
@@ -137,7 +144,7 @@ int main (int argc, char *argv[])
         massTotal += theStar.U;
         theStar.massRatio = 0.0;
 
-        evolve (&theCluster, stars, 0);      // given inputs, derive mags for first component
+        evolve (&theCluster, evoModels, stars, 0);      // given inputs, derive mags for first component
 
         fprintf (w_ptr, "%4d %7.3f ", i + 1, getMass1 (&theStar, &theCluster)); // output primary star data
         for (filt = 0; filt < FILTS; filt++)
@@ -167,7 +174,7 @@ int main (int argc, char *argv[])
         else
             theStar.U = 0.0;
 
-        evolve (&theCluster, stars, 0);      // Evolve secondary star by itself
+        evolve (&theCluster, evoModels, stars, 0);      // Evolve secondary star by itself
 
         fprintf (w_ptr, "%7.3f ", getMass1 (&theStar, &theCluster));    // output secondary star data
         for (filt = 0; filt < FILTS; filt++)
@@ -180,7 +187,7 @@ int main (int argc, char *argv[])
         theStar.massRatio = theStar.U / tempU;
         theStar.U = tempU;
 
-        evolve (&theCluster, stars, 0);      // Find the photometry for the whole system
+        evolve (&theCluster, evoModels, stars, 0);      // Find the photometry for the whole system
         for (cmpnt = 0; cmpnt < 2; cmpnt++)
             updateCount (&theStar, cmpnt);
 
@@ -211,7 +218,7 @@ int main (int argc, char *argv[])
         theStar.massRatio = 0.0;
         theStar.status[0] = BD;
 
-        evolve (&theCluster, stars, 0);      // given inputs, derive mags for first component
+        evolve (&theCluster, evoModels, stars, 0);      // given inputs, derive mags for first component
 
         fprintf (w_ptr, "%4d %7.4f ", i + 10001, getMass1 (&theStar, &theCluster));     // output primary star data
         for (filt = 0; filt < FILTS; filt++)
@@ -257,10 +264,17 @@ int main (int argc, char *argv[])
 
     theCluster.nStars = nFieldStars;
     tempMod = theCluster.parameter[MOD];
-    if (theCluster.evoModels.mainSequenceEvol == YALE)
-        theCluster.evoModels.mainSequenceEvol = DSED;
 
-    if (theCluster.evoModels.mainSequenceEvol == DSED)
+    {
+        // !!! FIX ME !!!
+        cerr << "Field stars are broken..." << endl;
+        exit(1);
+
+        if (settings.mainSequence.msRgbModel == YALE)
+            ; //            evoModels.mainSequenceEvol = DSED;
+    }
+
+    if ((settings.mainSequence.msRgbModel == DSED) || (settings.mainSequence.msRgbModel == YALE))
     {
         minFeH = -2.5;
         maxFeH = 0.56;
@@ -294,7 +308,7 @@ int main (int argc, char *argv[])
             // there are more stars behind than in front
             theCluster.parameter[MOD] = tempMod - 12.0 + log10 (pow (10, (pow (pow (26.0, 3.0) * genrand_res53 (), 1.0 / 3.0))));
 
-            evolve (&theCluster, stars, 0);
+            evolve (&theCluster, evoModels, stars, 0);
 
         } while (theStar.photometry[2] < minV || theStar.photometry[2] > maxV || theStar.photometry[1] - theStar.photometry[2] < -0.5 || theStar.photometry[1] - theStar.photometry[2] > 1.7);
 

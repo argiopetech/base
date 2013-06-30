@@ -1,1 +1,3 @@
-double margEvolveWithBinary (Cluster *pCluster, Star *pStar);
+#include "Model.hpp"
+
+double margEvolveWithBinary (Cluster *pCluster, Star *pStar, Model&);

@@ -11,18 +11,6 @@
 
 using std::vector;
 
-void initModels (struct model *models)
-{
-    models->evoModel = 0;
-    models->brownDwarfEvol = 0;
-    models->mainSequenceEvol = 0;
-    models->IFMR = 0;
-    models->WDcooling = 0;
-    models->WDatm = 0;
-    models->filterSet = 0;
-    models->numFilts = 0;
-};
-
 
 double getMass1 (Star *pStar, Cluster *pCluster)
 {
