@@ -24,10 +24,7 @@ const int SDSS       = 2;
 
 // Define model sets
 //Main sequence evolution
-const int GIR        = 0;
-const int CHABHELIUM = 1;
-const int YALE       = 2;
-const int DSED       = 3;
+enum class MsModel {GIRARDI, CHABHELIUM, YALE, DSED};
 
 //IFMR
 const int WEIDEMANN  = 0;

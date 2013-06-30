@@ -25,7 +25,7 @@ endif()
 include_directories( ${MPI_CXX_INCLUDE_PATH} )
 
 
-set(CMAKE_CXX_FLAGS                "-frtti -march=native -fstrict-aliasing -std=c++11 -Wall -pedantic ${MPI_CXX_COMPILE_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS                "-march=native -fstrict-aliasing -std=c++11 -Wall -pedantic ${MPI_CXX_COMPILE_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG" CACHE STRING "" FORCE)

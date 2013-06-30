@@ -177,7 +177,7 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     /* open model file, choose model set, and load models */
 
-    if (s.mainSequence.msRgbModel == CHABHELIUM)
+    if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
         scanf ("%lf %lf", &ctrl->priorMean[YYY], &ctrl->priorVar[YYY]);
 

@@ -8,7 +8,7 @@
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "binSearch.hpp"
-#include "gGirMag.hpp"
+#include "GirardiMsModel.hpp"
 
 using std::string;
 
@@ -27,7 +27,7 @@ static char tempFile[100];
 static void getFileName (string path, int z, int filterSet);
 
 
-void loadGirardi (string path, int filterSet)
+void GirardiMsModel::loadModel (string path, int filterSet)
 {
 
     /****************************************************************************
@@ -171,7 +171,7 @@ static void getFileName (string path, int z, int filterSet)
 }
 
 
-double deriveGirAgbTip (double newFeH, double newY, double newAge)
+double GirardiMsModel::deriveAgbTipMass (double newFeH, double newY, double newAge)
 /****************************************************************************************
 last update: 12nov07
 
@@ -239,7 +239,7 @@ cluster age, interpolating in isochrones as necessary.
 }
 
 
-double getGirardiMags (double zamsMass)
+double GirardiMsModel::msRgbEvol (double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -303,7 +303,7 @@ Uses static variables iAge and iFeH.
 }
 
 // Helper function for getGirardiMags
-double interpInMass (int whichAgeIndex, double zamsMass, int whichFeHIndex, double *ageMag)
+double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whichFeHIndex, double *ageMag)
 {
 
     int filt, lo, mid, hi, i;
@@ -385,10 +385,7 @@ double interpInMass (int whichAgeIndex, double zamsMass, int whichFeHIndex, doub
 }
 
 
-
-int reverseBinarySearch (double *searchArray, int size, double searchItem);
-
-double wdPrecLogAgeGir (double thisFeH, double thisY, double zamsMass)
+double GirardiMsModel::wdPrecLogAge (double thisFeH, double thisY, double zamsMass)
 /*************************************************************************************
 last update: 12nov07
 

@@ -132,7 +132,7 @@ int main (int argc, char *argv[])
 
     theCluster.parameter[ABS] = settings.cluster.Av;
 
-    if (settings.mainSequence.msRgbModel == CHABHELIUM)
+    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
         theCluster.parameter[YYY] = settings.cluster.Y;
     }

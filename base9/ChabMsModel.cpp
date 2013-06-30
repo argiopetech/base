@@ -6,7 +6,7 @@
 #include <cstring>
 
 #include "evolve.hpp"
-#include "gChabMag.hpp"
+#include "ChabMsModel.hpp"
 #include "binSearch.hpp"
 #include "linInterp.hpp"
 
@@ -48,7 +48,7 @@ static void initIso (struct cIsochrone *iso);
 static void getFileName (string path, int z, int y);
 static char tempFile[100];
 
-void loadChaboyer (string path, int filterSet)
+void ChabMsModel::loadModel (string path, int filterSet)
 {
 
     // ************************************************************************************
@@ -168,7 +168,7 @@ static void getFileName (string path, int z, int y)
 
 // Interpolates between isochrones for two ages using linear interpolation
 // Must run loadChaboyer() first for this to work.
-double deriveChabAgbTip (double newFeH, double newY, double newLogAge)
+double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogAge)
 {
 
     int iAge = -1, iY = -1, iFeH = -1, newimax = 500, newimin = 0, ioff[2][2][2], neweep;
@@ -319,7 +319,7 @@ double deriveChabAgbTip (double newFeH, double newY, double newLogAge)
 // Must run loadChaboyer() and deriveChabAgbTip()
 // to load and interpolate an isochrone before this subroutine will work
 // Stores output values in globalMags[]
-double getChaboyerMags (double zamsMass)
+double ChabMsModel::msRgbEvol (double zamsMass)
 {
 
     int m, filt;
@@ -339,7 +339,7 @@ double getChaboyerMags (double zamsMass)
     return zamsMass;
 }
 
-double wdPrecLogAgeChaboyer (double FeH, double thisY, double zamsMass)
+double ChabMsModel::wdPrecLogAge (double FeH, double thisY, double zamsMass)
 {
 
     return 0.0;
@@ -368,24 +368,6 @@ static void initIso (struct cIsochrone *newIso)
     }
 }
 
-/*
-  static void outputIso(struct cIsochrone *iso, FILE *wPtr){
-
-  int m,filt;
-  fprintf(wPtr,"%f %f %f %f %d\n",(*iso).age,(*iso).FeH,(*iso).Y,(*iso).AGBt,(*iso).numEeps);
-  for(m=0;m<(*iso).numEeps;m++){
-  fprintf(wPtr,"%d %f ",(*iso).eeps[m],(*iso).mass[m]);
-  for(filt=0;filt<N_CHAB_FILTS;filt++) if(useFilt[filt]) fprintf(wPtr,"%f ",(*iso).mag[m][filt]);
-  fprintf(wPtr,"\n");
-  }
-  fflush(wPtr);
-  }
-*/
-
-// a and b are 1-d arrays with two elements
-// a contains the two bounding values to be interpolated
-// x is the value to be interpolated at
-// b returns the coefficients
 static void calcCoeff (double a[], double b[], double x)
 {
     b[0] = (a[1] - x) / (a[1] - a[0]);

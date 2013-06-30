@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 
+#include "constants.hpp"
 #include "yaml-cpp/yaml.h"
 
 class Settings
@@ -18,7 +19,7 @@ class Settings
     struct MainSequenceSettings
     {
         int filterSet;
-        int msRgbModel;
+        MsModel msRgbModel;
     };
 
     struct WhiteDwarfSettings

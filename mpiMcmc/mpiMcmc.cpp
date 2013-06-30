@@ -224,7 +224,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoMod
     priorMean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
 
     /* open model file, choose model set, and load models */
-    if (settings.mainSequence.msRgbModel == CHABHELIUM)
+    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
         scanf ("%lf %lf", &ctrl.priorMean[YYY], &ctrl.priorVar[YYY]);
 

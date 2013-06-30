@@ -52,7 +52,7 @@ void Settings::fromYaml (const string yamlFile)
     Node scatterConfNode = getNode (configNode, "scatterCluster");
 
     mainSequence.filterSet = getOrDie<int>(mainSequenceNode, "filterSet");
-    mainSequence.msRgbModel = getOrDie<int>(mainSequenceNode, "msRgbModel");
+    mainSequence.msRgbModel = static_cast<MsModel>(getOrDie<int>(mainSequenceNode, "msRgbModel"));
 
     whiteDwarf.ifmr = getOrDie<int>(whiteDwarfNode, "ifmr");
     whiteDwarf.wdModel = getOrDie<int>(whiteDwarfNode, "wdModel");
@@ -191,7 +191,9 @@ void Settings::fromCLI (int argc, char **argv)
                 break;
 
             case 0xFE:
-                istringstream (string (optarg)) >> mainSequence.msRgbModel;
+                int i;
+                istringstream (string (optarg)) >> i;
+                mainSequence.msRgbModel = static_cast<MsModel>(i);
                 break;
 
             case 0xFD:

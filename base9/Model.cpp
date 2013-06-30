@@ -16,18 +16,20 @@ Model makeModel(Settings &s)
     // !!! FIX ME !!!
     switch (s.mainSequence.msRgbModel) //    evoModels.mainSequenceEvol = settings.mainSequence.msRgbModel;
     {
-        // case GIR:
-        //      break;
-        // case CHABHELIUM:
-        //      break;
-        case YALE:
+        case MsModel::GIRARDI:
+            msModel = shared_ptr<GirardiMsModel>(new GirardiMsModel);
+            break;
+        case MsModel::CHABHELIUM:
+            msModel = shared_ptr<ChabMsModel>(new ChabMsModel);
+            break;
+        case MsModel::YALE:
             msModel = shared_ptr<YaleMsModel>(new YaleMsModel);
             break;
-        case DSED:
+        case MsModel::DSED:
             msModel = shared_ptr<DsedMsModel>(new DsedMsModel);
             break;
         default:
-            cerr << "***Error: No models found for main sequence evolution model " << s.mainSequence.msRgbModel << ".***" << endl;
+            cerr << "***Error: No models found for main sequence evolution model " << static_cast<int>(s.mainSequence.msRgbModel) << ".***" << endl;
             cerr << "[Exiting...]\n" << endl;
             exit(1);
     }

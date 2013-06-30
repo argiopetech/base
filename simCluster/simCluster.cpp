@@ -94,9 +94,9 @@ int main (int argc, char *argv[])
 //    loadModels (nFieldStars, &theCluster, evoModels, settings);
     loadModels (&theCluster, evoModels, settings);
 
-    if (settings.mainSequence.msRgbModel == YALE)
+    if (settings.mainSequence.msRgbModel == MsModel::YALE)
         minMass = 0.4;
-    if (settings.mainSequence.msRgbModel == DSED)
+    if (settings.mainSequence.msRgbModel == MsModel::DSED)
         minMass = 0.25;
 
     strcpy (w_file, settings.files.output.c_str());
@@ -270,11 +270,11 @@ int main (int argc, char *argv[])
         cerr << "Field stars are broken..." << endl;
         exit(1);
 
-        if (settings.mainSequence.msRgbModel == YALE)
+        if (settings.mainSequence.msRgbModel == MsModel::YALE)
             ; //            evoModels.mainSequenceEvol = DSED;
     }
 
-    if ((settings.mainSequence.msRgbModel == DSED) || (settings.mainSequence.msRgbModel == YALE))
+    if ((settings.mainSequence.msRgbModel == MsModel::DSED) || (settings.mainSequence.msRgbModel == MsModel::YALE))
     {
         minFeH = -2.5;
         maxFeH = 0.56;

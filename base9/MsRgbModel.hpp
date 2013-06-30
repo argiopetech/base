@@ -9,11 +9,11 @@ class MsRgbModel
     virtual ~MsRgbModel() {;}
 
 /****************************************************************************************
-Derive AGBt mass (actually the ZAMS mass for the appropriate AGBt star) for a given
-metallicity, age, and helium abundance (if necessary).  Uses an array of pointers to functions.
-Functions must return a double and have three double arguments (newFeH, newY, newLogAge)
+ * Derive AGBt mass (actually the ZAMS mass for the appropriate AGBt star) for a given
+ * metallicity, age, and helium abundance (if necessary).  Uses an array of pointers to functions.
+ * Functions must return a double and have three double arguments (newFeH, newY, newLogAge)
 
-Array indices are defined in evolve.h
+ * Array indices are defined in evolve.h
 ****************************************************************************************/
     virtual double deriveAgbTipMass(double, double, double) = 0;
 
