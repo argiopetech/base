@@ -39,66 +39,6 @@ void setMass2 (Star *pStar, Cluster *pCluster, double newMass)
     pStar->massRatio = newMass / getMass1 (pStar, pCluster);
 }
 
-char filterNames[FILTS][10];
-
-void setFilterNames (int filterSet)
-{
-    int f;
-
-    for (f = 0; f < FILTS; f++)
-        strcpy (filterNames[f], "\0");
-    if (filterSet == UBVRIJHK)
-    {
-        strcat (filterNames[0], "U");
-        strcat (filterNames[1], "B");
-        strcat (filterNames[2], "V");
-        strcat (filterNames[3], "R");
-        strcat (filterNames[4], "I");
-        strcat (filterNames[5], "J");
-        strcat (filterNames[6], "H");
-        strcat (filterNames[7], "K");
-    }
-    else if (filterSet == ACS)
-    {
-        strcat (filterNames[0], "F435W");
-        strcat (filterNames[1], "F475W");
-        strcat (filterNames[2], "F550M");
-        strcat (filterNames[3], "F555W");
-        strcat (filterNames[4], "F606W");
-        strcat (filterNames[5], "F625W");
-        strcat (filterNames[6], "F775W");
-        strcat (filterNames[7], "F814W");
-    }
-    else if (filterSet == SDSS)
-    {
-        strcat (filterNames[0], "u");
-        strcat (filterNames[1], "g");
-        strcat (filterNames[2], "r");
-        strcat (filterNames[3], "i");
-        strcat (filterNames[4], "z");
-        strcat (filterNames[5], "J");
-        strcat (filterNames[6], "H");
-        strcat (filterNames[7], "K");
-    }
-    else
-    {
-        printf ("\nfilterSet %d not available.  Exiting.\n", filterSet);
-        exit (1);
-    }
-
-    strcat (filterNames[8], "IrB");
-    strcat (filterNames[9], "IrR");
-    strcat (filterNames[10], "SpB1");
-    strcat (filterNames[11], "SpB2");
-    strcat (filterNames[12], "SpB3");
-    strcat (filterNames[13], "SpB4");
-}
-
-char *getFilterName (int index)
-{
-    return filterNames[index];
-}
-
 //NOTE: nEntries and nFilts need to be set in the calling program before this will work properly.
 void allocateGlobalIso (struct globalIso *newIso)
 {

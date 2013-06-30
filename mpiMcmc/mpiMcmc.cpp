@@ -26,6 +26,7 @@
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
 #include "Settings.hpp"
+#include "FilterSet.hpp"
 
 using std::array;
 using std::string;

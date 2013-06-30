@@ -12,6 +12,7 @@ using std::shared_ptr;
 Model makeModel(Settings &s)
 {
     shared_ptr<MsRgbModel> msModel;
+    MsFilterSet filterSet;
 
     // !!! FIX ME !!!
     switch (s.mainSequence.msRgbModel) //    evoModels.mainSequenceEvol = settings.mainSequence.msRgbModel;
@@ -34,7 +35,20 @@ Model makeModel(Settings &s)
             exit(1);
     }
 
-    Model model(msModel);
+    switch (s.mainSequence.filterSet)
+    {
+        case MsFilterSet::UBVRIJHK:
+        case MsFilterSet::ACS:
+        case MsFilterSet::SDSS:
+            filterSet = s.mainSequence.filterSet;
+            break;
+        default:
+            cerr << "***Error: No models found for filter set " << static_cast<int>(s.mainSequence.filterSet) << ".***" << endl;
+            cerr << "[Exiting...]" << endl;
+            exit (1);
+    }
+
+    Model model(msModel, filterSet);
 
     return model;
 }

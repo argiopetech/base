@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "constants.hpp"
+
 class MsRgbModel
 {
   public:
@@ -35,6 +37,6 @@ modified for different model sets.
 ****************************************************************************************/
     virtual double wdPrecLogAge(double, double, double) = 0;
 
-    virtual void loadModel(std::string, int) = 0;
+    virtual void loadModel(std::string, MsFilterSet) = 0;
 };
 #endif

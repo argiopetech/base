@@ -14,6 +14,7 @@
 #include "structures.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
+#include "FilterSet.hpp"
 
 using std::vector;
 using std::cerr;

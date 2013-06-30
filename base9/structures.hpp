@@ -99,9 +99,6 @@ double getMass2 (Star *pStar, Cluster *pCluster);
 void setMass1 (Star *pStar, Cluster *pCluster, double newMass);
 // void setMass2 (Star *pStar, Cluster *pCluster, double newMass);
 
-void setFilterNames (int filterSet);
-char *getFilterName (int index);
-
 void allocateGlobalIso (struct globalIso *newIso);
 void freeGlobalIso (struct globalIso *newIso);
 void swapGlobalEntries (struct globalIso *thisIso, int n, int useFilt[FILTS]);

@@ -19,10 +19,10 @@ class DsedMsModel : public MsRgbModel
     virtual double deriveAgbTipMass(double, double, double);
     virtual double msRgbEvol(double);
     virtual double wdPrecLogAge(double, double, double);
-    virtual void loadModel(std::string, int);
+    virtual void loadModel(std::string, MsFilterSet);
 
   private:
-    std::string getFileName (std::string, int, int, int);
+    std::string getFileName (std::string, int, int, MsFilterSet);
 };
 
 #endif

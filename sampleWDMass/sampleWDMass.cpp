@@ -16,6 +16,7 @@
 #include "samplers.hpp"
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
+#include "FilterSet.hpp"
 
 const int N_AGE = 30;
 const int N_FEH = 1;
@@ -581,7 +582,7 @@ int main (int argc, char *argv[])
         if (evoModels.brownDwarfEvol == BARAFFE)
             loadBaraffe (settings.files.models);
 
-        evoModels.mainSequenceEvol->loadModel(settings.files.models, 0);
+        evoModels.mainSequenceEvol->loadModel(settings.files.models, MsFilterSet::UBVRIJHK);
         loadWDCool (settings.files.models, evoModels.WDcooling);
         loadBergeron (settings.files.models, evoModels.filterSet);
     }

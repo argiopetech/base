@@ -48,9 +48,8 @@ static void initIso (struct cIsochrone *iso);
 static void getFileName (string path, int z, int y);
 static char tempFile[100];
 
-void ChabMsModel::loadModel (string path, int filterSet)
+void ChabMsModel::loadModel (string path, MsFilterSet filterSet)
 {
-
     // ************************************************************************************
     // **********************    Chaboyer models   ****************************************
     // * BBN, dY/dZ=1.6 and Y_init=0.286, 0.306 consistent with initial solar composition *
@@ -62,7 +61,7 @@ void ChabMsModel::loadModel (string path, int filterSet)
     char line[240];             //,tempFile[100];
     FILE *pChaboyer;
 
-    if (filterSet != UBVRIJHK)
+    if (filterSet != MsFilterSet::UBVRIJHK)
     {
         printf ("\nFilter set %d not available on Chaboyer helium models.  Exiting...\n", filterSet);
         exit (1);

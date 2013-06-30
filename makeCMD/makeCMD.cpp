@@ -11,6 +11,7 @@
 #include "loadModels.hpp"
 #include "Settings.hpp"
 #include "ifmr.hpp"
+#include "FilterSet.hpp"
 
 using std::vector;
 

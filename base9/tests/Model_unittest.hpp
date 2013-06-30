@@ -11,6 +11,7 @@ double *ltau, *aFilt;
 TEST(Model, makeModel)
 {
     Settings s;
+    s.mainSequence.filterSet = MsFilterSet::ACS;
 
     s.mainSequence.msRgbModel = MsModel::GIRARDI;
     EXPECT_EQ(typeid(*(new GirardiMsModel)), typeid(*makeModel(s).mainSequenceEvol));    

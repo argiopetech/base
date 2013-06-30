@@ -16,17 +16,17 @@ using std::shared_ptr;
 class Model
 {
   public:
-    Model(shared_ptr<MsRgbModel> msRgbModel)
-        : mainSequenceEvol(msRgbModel)
+    Model(shared_ptr<MsRgbModel> msRgbModel, MsFilterSet filterSet)
+        : mainSequenceEvol(msRgbModel), filterSet(filterSet)
     {;}
 
     int evoModel = 0;
     int brownDwarfEvol = 0;
     shared_ptr<MsRgbModel> mainSequenceEvol;
+    MsFilterSet filterSet;
     int IFMR = 0;
     int WDcooling = 0;
     int WDatm = 0;
-    int filterSet = 0;
     int numFilts = 0;
 };
 

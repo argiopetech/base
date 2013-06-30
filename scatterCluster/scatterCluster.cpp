@@ -8,6 +8,7 @@
 #include "evolve.hpp"
 #include "structures.hpp"
 #include "Settings.hpp"
+#include "FilterSet.hpp"
 
 unsigned long seed = 0;
 
@@ -27,7 +28,7 @@ int outputScatter (FILE * w_ptr, int isFS, double clusterMemberPrior);
 int main (int argc, char *argv[])
 {
 
-    int count, nr, nStars, wdCount, i, filt, filterSet, firstFilt, nFieldStars, isFS, isBD;
+    int count, nr, nStars, filterSet, wdCount, i, filt, firstFilt, nFieldStars, isFS, isBD;
     double limitSigToNoise, brightLimit, faintLimit, clusterMemberPrior;
     char filename[100], line[1000], aFilterName[10];
     FILE *r_ptr, *w_ptr;
@@ -71,7 +72,7 @@ int main (int argc, char *argv[])
 
     for (filterSet = 0; filterSet < 3; filterSet++)
     {
-        setFilterNames (filterSet);
+        setFilterNames (static_cast<MsFilterSet>(filterSet));
         printf ("%d %s %s\n", filterSet, aFilterName, getFilterName (0));
         if (strcmp (aFilterName, getFilterName (0)) == 0)
             break;

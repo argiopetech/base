@@ -51,7 +51,7 @@ void Settings::fromYaml (const string yamlFile)
     Node isoConfNode = getNode (configNode, "makeIsochrone");
     Node scatterConfNode = getNode (configNode, "scatterCluster");
 
-    mainSequence.filterSet = getOrDie<int>(mainSequenceNode, "filterSet");
+    mainSequence.filterSet = static_cast<MsFilterSet>(getOrDie<int>(mainSequenceNode, "filterSet"));
     mainSequence.msRgbModel = static_cast<MsModel>(getOrDie<int>(mainSequenceNode, "msRgbModel"));
 
     whiteDwarf.ifmr = getOrDie<int>(whiteDwarfNode, "ifmr");
@@ -174,6 +174,8 @@ void Settings::fromCLI (int argc, char **argv)
 
     while ((c = getopt_long (argc, t_argv, "", long_options, &option_index)) != (-1))
     {
+        int i;
+
         switch (c)
         {
             case 0:
@@ -187,11 +189,11 @@ void Settings::fromCLI (int argc, char **argv)
                 break;
 
             case 0xFF:
-                istringstream (string (optarg)) >> mainSequence.filterSet;
+                istringstream (string (optarg)) >> i;
+                mainSequence.filterSet = static_cast<MsFilterSet>(i);
                 break;
 
             case 0xFE:
-                int i;
                 istringstream (string (optarg)) >> i;
                 mainSequence.msRgbModel = static_cast<MsModel>(i);
                 break;

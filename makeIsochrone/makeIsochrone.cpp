@@ -9,6 +9,7 @@
 #include "evolve.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
+#include "FilterSet.hpp"
 
 using std::vector;
 

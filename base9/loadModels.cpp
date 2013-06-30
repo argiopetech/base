@@ -11,6 +11,7 @@
 #include "gBergMag.hpp"
 #include "wdCooling.hpp"
 #include "gBaraffeMag.hpp"
+#include "FilterSet.hpp"
 
 using std::cerr;
 using std::endl;
@@ -21,15 +22,6 @@ extern int verbose;
 void loadModels (Cluster *theCluster, Model &evoModels, Settings &settings)
 {
     char path[100] = "models/\0";
-
-    evoModels.filterSet = settings.mainSequence.filterSet;
-
-    if (evoModels.filterSet < 0 || evoModels.filterSet > 2)
-    {
-        printf ("***Error: No models found for filter set %d.***\n", evoModels.filterSet);
-        printf ("[Exiting...]\n");
-        exit (1);
-    }
 
     setFilterNames (evoModels.filterSet);
 
