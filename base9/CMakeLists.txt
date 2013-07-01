@@ -12,7 +12,7 @@ add_executable(base9_tests
     tests/base9_unittest.cpp
 )
  
-target_link_libraries(base9_tests gtest gtest_main base9 ${MPI_LIBRARIES})
+target_link_libraries(base9_tests gtest gtest_main base9 ${MPI_LIBRARIES} pthread)
 
 add_test(
     NAME base9_tests

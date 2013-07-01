@@ -9,10 +9,8 @@ using std::array;
 using std::cerr;
 using std::endl;
 
-array<double, 8> calcAbsCoeffs (MsFilterSet filterSet)
+void calcAbsCoeffs (MsFilterSet filterSet, array<double, FILTS> &clusterAbs)
 {
-    array<double, 8> clusterAbs;
-
     if (filterSet == MsFilterSet::UBVRIJHK)
     {
         clusterAbs[0] = 1.569;  // Cardelli, Clayton, Mathis 1989, table 3
@@ -51,8 +49,6 @@ array<double, 8> calcAbsCoeffs (MsFilterSet filterSet)
         cerr << "filterSet " << static_cast<int>(filterSet) << "not found.  Exiting." << endl;
         exit (1);
     }
-
-    return clusterAbs;
 }
 
 

@@ -1,3 +1,5 @@
+#include <array>
+
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
@@ -10,6 +12,8 @@
 #include "wdEvol.hpp"
 #include "FilterSet.hpp"
 
+using std::array;
+
 const int MAX_ENTRIES = 370;
 
 extern int verbose, useFilt[FILTS], aFilt, needMassNow;
@@ -20,13 +24,11 @@ extern double globalMags[FILTS];
 extern double ageLimit[2];
 
 extern struct globalIso isochrone;
-static double clusterAbs[FILTS] = { 0 };
+static array<double, FILTS> clusterAbs;
 
 void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, Star *pStar, Model&);
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster *pCluster, Star *pStar);
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster *pCluster, Star *pStar, Model&);
-
-void calcAbsCoeffsForMarg (int filterSet);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate
    the integral */
@@ -49,7 +51,9 @@ double margEvolveWithBinary (Cluster *pCluster, Star *pStar, Model &evoModels)
     clusterAv = pCluster->getAbs();
 
     if (fabs (clusterAbs[0]) < EPS)
-        calcAbsCoeffs (evoModels.filterSet);
+    {
+        calcAbsCoeffs (evoModels.filterSet, clusterAbs);
+    }
 
     int m;
     double dMass;

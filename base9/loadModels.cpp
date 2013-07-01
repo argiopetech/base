@@ -13,6 +13,7 @@
 #include "gBaraffeMag.hpp"
 #include "FilterSet.hpp"
 
+using std::cout;
 using std::cerr;
 using std::endl;
 
@@ -21,8 +22,6 @@ extern int verbose;
 
 void loadModels (Cluster *theCluster, Model &evoModels, Settings &settings)
 {
-    char path[100] = "models/\0";
-
     setFilterNames (evoModels.filterSet);
 
     evoModels.IFMR = settings.whiteDwarf.ifmr;
@@ -31,8 +30,8 @@ void loadModels (Cluster *theCluster, Model &evoModels, Settings &settings)
 
     if (evoModels.WDcooling < 0 || evoModels.WDcooling > 3)
     {
-        printf ("***Error: No models found for white dwarf filter set %d.***\n", evoModels.WDcooling);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: No models found for white dwarf filter set " << evoModels.WDcooling << ".***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
@@ -41,16 +40,16 @@ void loadModels (Cluster *theCluster, Model &evoModels, Settings &settings)
     evoModels.brownDwarfEvol = settings.brownDwarf.bdModel;
 
     if (evoModels.brownDwarfEvol == BARAFFE)
-        loadBaraffe (path);
+        loadBaraffe (settings.files.models);
 
     evoModels.WDatm = BERGERON;
 
-    printf ("\nReading models...\n");
+    cout << "\nReading models..." << endl;
 
-    evoModels.mainSequenceEvol->loadModel(path, settings.mainSequence.filterSet);
+    evoModels.mainSequenceEvol->loadModel(settings.files.models, settings.mainSequence.filterSet);
 
-    loadWDCool (path, evoModels.WDcooling);
-    loadBergeron (path, evoModels.filterSet);
+    loadWDCool (settings.files.models, evoModels.WDcooling);
+    loadBergeron (settings.files.models, evoModels.filterSet);
 
     printf ("Models read.\n");
 

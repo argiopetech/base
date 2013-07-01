@@ -1,3 +1,4 @@
+#include <array>
 #include <vector>
 
 #include <cstdio>
@@ -10,6 +11,7 @@
 #include "wdEvol.hpp"
 #include "FilterSet.hpp"
 
+using std::array;
 using std::vector;
 
 extern int verbose, useFilt[FILTS], aFilt, needMassNow;
@@ -21,7 +23,7 @@ double ageLimit[2];
 
 struct globalIso isochrone;
 
-static double clusterAbs[FILTS] = { 0 };
+static array<double, FILTS> clusterAbs;
 
 void calcAbsCoeffs (int filterSet);
 
@@ -88,7 +90,7 @@ void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index
 
     clusterAv = pCluster->getAbs();
     if (fabs (clusterAbs[0]) < EPS)
-        calcAbsCoeffs (evoModels.filterSet);
+        calcAbsCoeffs (evoModels.filterSet, clusterAbs);
 
     for (j = index; j < index + numStars; j++)
     {
