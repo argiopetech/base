@@ -782,9 +782,9 @@ int main (int argc, char *argv[])
         double wdPostSum, maxWDLogPost, mass1;
         double postClusterStar;
 
-        for (j = 0; j < mc.clust.nStars; j++)
+        for (auto star : mc.stars)
         {
-            if (mc.stars.at(j).status[0] == WD)
+            if (star.status[0] == WD)
             {
 
                 postClusterStar = 0.0;
@@ -793,13 +793,13 @@ int main (int argc, char *argv[])
                 for (mass1 = 0.15; mass1 < mc.clust.M_wd_up; mass1 += dMass1)
                 {
                     /* condition on WD being cluster star */
-                    mc.stars.at(j).U = mass1;
-                    mc.stars.at(j).massRatio = 0.0;
-                    evolve (&mc.clust, evoModels, mc.stars, j);
+                    star.U = mass1;
+                    star.massRatio = 0.0;
+                    evolve (&mc.clust, evoModels, star);
 
-                    if (!mc.stars.at(j).boundsFlag)
+                    if (!star.boundsFlag)
                     {
-                        wdLogPost[im] = logPost1Star (&mc.stars.at(j), &mc.clust, evoModels);
+                        wdLogPost[im] = logPost1Star (&star, &mc.clust, evoModels);
                         postClusterStar += exp (wdLogPost[im]);
                     }
                     else
@@ -846,7 +846,7 @@ int main (int argc, char *argv[])
 
                 postClusterStar *= (mc.clust.M_wd_up - 0.15);
 
-                clusMemPost[m * nWDs + iWD] = mc.stars.at(j).clustStarPriorDens * postClusterStar / (mc.stars.at(j).clustStarPriorDens * postClusterStar + (1.0 - mc.stars.at(j).clustStarPriorDens) * fsLike);
+                clusMemPost[m * nWDs + iWD] = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
             }
         }
     }

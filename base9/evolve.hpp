@@ -6,7 +6,7 @@
 #include "Model.hpp"
 #include "structures.hpp"
 
-void evolve (Cluster *the_cluster, Model &, std::vector<Star> &stars, int index);
+void evolve (Cluster *the_cluster, Model &, Star &star);
 void calcAbsCoeffs (int filterSet);
 
 #endif

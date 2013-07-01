@@ -355,7 +355,10 @@ int main (int argc, char *argv[])
                 }
             }
         }
-        evolve (&theCluster, evoModels, stars, -1);
+
+        for (auto s : stars)
+            evolve (&theCluster, evoModels, s);
+
         for (j = 0; j < theCluster.nStars; j++)
         {
             if (cm[j])
@@ -454,7 +457,8 @@ int main (int argc, char *argv[])
         stars.at(j).massRatio = 0.0;
     }
 
-    evolve (&theCluster, evoModels, stars, -1);
+    for (auto s : stars)
+        evolve (&theCluster, evoModels, s);
 
     fprintf (wDebugPtr, " mass stage1");
     for (filt = 0; filt < FILTS; filt++)

@@ -87,42 +87,42 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels)
     mc.clust.mean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
 
 
-    int i, j;
+    int i;
 
-    for (j = 0; j < mc.clust.nStars; j++)
+    for (auto star : mc.stars)
     {
-        mc.stars[j].meanMassRatio = 0.0;
-        mc.stars[j].isFieldStar = 0;
-        mc.stars[j].clustStarProposalDens = mc.stars[j].clustStarPriorDens;   // Use prior prob of being clus star
-        mc.stars[j].UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-        mc.stars[j].massRatioStepSize = 0.001;
+        star.meanMassRatio = 0.0;
+        star.isFieldStar = 0;
+        star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
+        star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
+        star.massRatioStepSize = 0.001;
 
         for (i = 0; i < NPARAMS; i++)
         {
-            mc.stars[j].beta[i][0] = 0.0;
-            mc.stars[j].beta[i][1] = 0.0;
+            star.beta[i][0] = 0.0;
+            star.beta[i][1] = 0.0;
         }
 
-        mc.stars[j].betaMassRatio[0] = 0.0;
-        mc.stars[j].betaMassRatio[1] = 0.0;
-        mc.stars[j].meanU = 0.0;
-        mc.stars[j].varU = 0.0;
+        star.betaMassRatio[0] = 0.0;
+        star.betaMassRatio[1] = 0.0;
+        star.meanU = 0.0;
+        star.varU = 0.0;
 
         for (i = 0; i < 2; i++)
-            mc.stars[j].wdType[i] = 0;
+            star.wdType[i] = 0;
 
         for (i = 0; i < numFilts; i++)
         {
-            mc.stars[j].photometry[i] = 0.0;
+            star.photometry[i] = 0.0;
         }
 
         // find photometry for initial values of currentClust and mc.stars
-        evolve (&mc.clust, evoModels, mc.stars, j);
+        evolve (&mc.clust, evoModels, star);
 
-        if (mc.stars[j].status[0] == WD)
+        if (star.status[0] == WD)
         {
-            mc.stars[j].UStepSize = 0.05;      // use larger initial step size for white dwarfs
-            mc.stars[j].massRatio = 0.0;
+            star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
+            star.massRatio = 0.0;
         }
     }
 } /* initChain */

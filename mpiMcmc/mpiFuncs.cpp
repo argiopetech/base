@@ -166,21 +166,21 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
                 for (int j = 0; j < N_WD_MASS1; j++)
                 {
                     double tmpLogPost;
-                    vector<Star> wd(1, star);
-                    wd.front().boundsFlag = 0;
-                    wd.front().isFieldStar = 0;
-                    wd.front().U = wdMass1Grid[j];
-                    wd.front().massRatio = 0.0;
+                    Star wd(star);
+                    wd.boundsFlag = 0;
+                    wd.isFieldStar = 0;
+                    wd.U = wdMass1Grid[j];
+                    wd.massRatio = 0.0;
                            
-                    evolve (&propClust, evoModels, wd, 0);
+                    evolve (&propClust, evoModels, wd);
 
-                    if (wd.front().boundsFlag)
+                    if (wd.boundsFlag)
                     {
                         cerr <<"**wd[" << j << "].boundsFlag" << endl;
                     }
                     else
                     {
-                        tmpLogPost = logPost1Star (&wd.front(), &propClust, evoModels);
+                        tmpLogPost = logPost1Star (&wd, &propClust, evoModels);
                         tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                         postClusterStar = postClusterStar +  exp (tmpLogPost);

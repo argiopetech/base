@@ -41,8 +41,7 @@ int main (int argc, char *argv[])
     char w_file[100];
     FILE *w_ptr;
     Cluster theCluster;
-    vector <Star> stars(1);
-    Star theStar = stars.front();
+    Star theStar;
 
     double drawFromIMF (void);
     double genrand_res53 (void);
@@ -145,7 +144,7 @@ int main (int argc, char *argv[])
         massTotal += theStar.U;
         theStar.massRatio = 0.0;
 
-        evolve (&theCluster, evoModels, stars, 0);      // given inputs, derive mags for first component
+        evolve (&theCluster, evoModels, theStar);      // given inputs, derive mags for first component
 
         fprintf (w_ptr, "%4d %7.3f ", i + 1, getMass1 (&theStar, &theCluster)); // output primary star data
         for (filt = 0; filt < FILTS; filt++)
@@ -175,7 +174,7 @@ int main (int argc, char *argv[])
         else
             theStar.U = 0.0;
 
-        evolve (&theCluster, evoModels, stars, 0);      // Evolve secondary star by itself
+        evolve (&theCluster, evoModels, theStar);      // Evolve secondary star by itself
 
         fprintf (w_ptr, "%7.3f ", getMass1 (&theStar, &theCluster));    // output secondary star data
         for (filt = 0; filt < FILTS; filt++)
@@ -188,7 +187,7 @@ int main (int argc, char *argv[])
         theStar.massRatio = theStar.U / tempU;
         theStar.U = tempU;
 
-        evolve (&theCluster, evoModels, stars, 0);      // Find the photometry for the whole system
+        evolve (&theCluster, evoModels, theStar);      // Find the photometry for the whole system
         for (cmpnt = 0; cmpnt < 2; cmpnt++)
             updateCount (&theStar, cmpnt);
 
@@ -219,7 +218,7 @@ int main (int argc, char *argv[])
         theStar.massRatio = 0.0;
         theStar.status[0] = BD;
 
-        evolve (&theCluster, evoModels, stars, 0);      // given inputs, derive mags for first component
+        evolve (&theCluster, evoModels, theStar);      // given inputs, derive mags for first component
 
         fprintf (w_ptr, "%4d %7.4f ", i + 10001, getMass1 (&theStar, &theCluster));     // output primary star data
         for (filt = 0; filt < FILTS; filt++)
@@ -322,7 +321,7 @@ int main (int argc, char *argv[])
             // there are more stars behind than in front
             theCluster.parameter[MOD] = tempMod - 12.0 + log10 (pow (10, (pow (pow (26.0, 3.0) * genrand_res53 (), 1.0 / 3.0))));
 
-            evolve (&theCluster, evoModels, stars, 0);
+            evolve (&theCluster, evoModels, theStar);
 
         } while (theStar.photometry[2] < minV || theStar.photometry[2] > maxV || theStar.photometry[1] - theStar.photometry[2] < -0.5 || theStar.photometry[1] - theStar.photometry[2] > 1.7);
 

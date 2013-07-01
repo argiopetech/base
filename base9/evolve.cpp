@@ -51,9 +51,9 @@ NUMSTARS NEEDS TO BE INPUT CORRECTLY.  If the index is positive, it will use tha
 of the stars array.  You can also feed it a pointer to a single star and an index of 0 to
 get the photometry of a single star. -- SD
 ***************************************************************************************/
-void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index)
+void evolve (Cluster *pCluster, Model &evoModels, Star &star)
 {
-    int filt, i, cmpnt, j, numStars = 1;
+    int filt, i, cmpnt;
     double mag[3][FILTS], mass[2], flux, clusterAv;
 
     //Allocate memory to global isochrone(if it hasn't been allocated already)
@@ -63,16 +63,6 @@ void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index
         isochrone.nFilts = FILTS;
         allocateGlobalIso (&isochrone);
     }
-
-    // A negative value for index means evolve all the stars in the *stars array,
-    // a positive value means evolve that star only
-    if (index < 0)
-    {
-        index = 0;
-        numStars = pCluster->nStars;
-    }
-    else
-        numStars = 1;
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
@@ -84,7 +74,7 @@ void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster->AGBt_zmass < EPS)
     {
-        stars.at(0).boundsFlag = 1;
+        star.boundsFlag = 1;
         return;
     }
 
@@ -92,106 +82,105 @@ void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index
     if (fabs (clusterAbs[0]) < EPS)
         calcAbsCoeffs (evoModels.filterSet, clusterAbs);
 
-    for (j = index; j < index + numStars; j++)
+    mass[0] = getMass1 (&star, pCluster);
+    mass[1] = getMass2 (&star, pCluster);
+
+    if (star.status[0] == BD)
     {
-        mass[0] = getMass1 (&stars.at(j), pCluster);
-        mass[1] = getMass2 (&stars.at(j), pCluster);
+        getBaraffeMags (pCluster->getAge(), mass[0]);
 
-        if (stars.at(j).status[0] == BD)
+        for (filt = 0; filt < 8; filt++)
+            if (useFilt[filt])
+                mag[2][filt] = 99.999;
+
+        for (filt = 8; filt < FILTS; filt++)
         {
-            getBaraffeMags (pCluster->getAge(), mass[0]);
-            for (filt = 0; filt < 8; filt++)
-                if (useFilt[filt])
-                    mag[2][filt] = 99.999;
-            for (filt = 8; filt < FILTS; filt++)
-            {
-                if (useFilt[filt])
-                {
-                    mag[2][filt] = globalMags[filt];
-                }
-            }
-        }
-        else
-        {
-            for (cmpnt = 0; cmpnt < 2; cmpnt++)
-            {
-                for (filt = 0; filt < FILTS; filt++)
-                    if (useFilt[filt])
-                        globalMags[filt] = 99.999;
-                stars.at(j).massNow[cmpnt] = 0.0;
-                ltau[cmpnt] = 0.0;      // may not be a WD, so no precursor age,
-                stars.at(j).wdLogTeff[cmpnt] = 0.0;        // no WD Teff,
-
-                if (mass[cmpnt] <= 0.0001)
-                {                       // for non-existent secondary stars
-                    for (filt = 0; filt < FILTS; filt++)
-                        if (useFilt[filt])
-                            mag[cmpnt][filt] = 99.999;
-                    stars.at(j).status[cmpnt] = DNE;
-                    stars.at(j).massNow[cmpnt] = 0.0;
-                }
-                else if (mass[cmpnt] <= pCluster->AGBt_zmass)
-                {                       // for main seq or giant star
-                    stars.at(j).massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol (mass[cmpnt]);
-                    for (filt = 0; filt < FILTS; filt++)
-                        if (useFilt[filt])
-                            mag[cmpnt][filt] = globalMags[filt];
-                    stars.at(j).status[cmpnt] = MSRG;      // keep track of evolutionary state
-                }
-                else if (mass[cmpnt] <= pCluster->M_wd_up)
-                {                       // for white dwarf
-                    ltau[cmpnt] = wdEvol (pCluster, evoModels, &(stars.at(j)), cmpnt);
-                    for (filt = 0; filt < FILTS; filt++)
-                        if (useFilt[filt])
-                            mag[cmpnt][filt] = globalMags[filt];
-                }
-                else if (mass[cmpnt] <= 100.)
-                {                       // for neutron star or black hole remnant
-                    for (filt = 0; filt < FILTS; filt++)
-                        if (useFilt[filt])
-                            mag[cmpnt][filt] = 99.999;
-                    stars.at(j).status[cmpnt] = NSBH;
-                }
-                else
-                {
-                    //     log << (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
-                    for (filt = 0; filt < FILTS; filt++)
-                        if (useFilt[filt])
-                            mag[cmpnt][filt] = 99.999;
-                    stars.at(j).status[cmpnt] = DNE;
-                }
-            }
-
-            // can now derive combined mags
-            if (mag[1][aFilt] < 99.)
-            {                           // if there is a secondary star (aFilt set in parent program)
-                for (filt = 0; filt < FILTS; filt++)
-                {                       // (NOTE: useFilt shortcut may help once doing binaries)
-                    if (useFilt[filt])
-                    {
-                        flux = pow (10.0, (mag[0][filt] / -2.5));       // add up the fluxes of the primary
-                        flux += pow (10.0, (mag[1][filt] / -2.5));      // and the secondary
-                        mag[2][filt] = -2.5 * log10 (flux);     // (these 3 lines take 5% of run time for N large)
-                    }                   // if primary mag = 99.999, then this works
-                }
-            }                           // to make the combined mag = secondary mag
-            else
-            {
-                for (filt = 0; filt < FILTS; filt++)
-                    if (useFilt[filt])
-                        mag[2][filt] = mag[0][filt];
-            }
-        }
-        i = 0;
-        for (filt = 0; filt < FILTS; filt++)
-        {                               // can now add distance and absorption
             if (useFilt[filt])
             {
-                mag[2][filt] += pCluster->getMod();
-                mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;   // add A_[u-k] (standard defn of modulus already includes Av)
-                stars.at(j).photometry[i++] = mag[2][filt];
-                //i++;
+                mag[2][filt] = globalMags[filt];
             }
+        }
+    }
+    else
+    {
+        for (cmpnt = 0; cmpnt < 2; cmpnt++)
+        {
+            for (filt = 0; filt < FILTS; filt++)
+                if (useFilt[filt])
+                    globalMags[filt] = 99.999;
+
+            star.massNow[cmpnt] = 0.0;
+            ltau[cmpnt] = 0.0;      // may not be a WD, so no precursor age,
+            star.wdLogTeff[cmpnt] = 0.0;        // no WD Teff,
+
+            if (mass[cmpnt] <= 0.0001)
+            {                       // for non-existent secondary stars
+                for (filt = 0; filt < FILTS; filt++)
+                    if (useFilt[filt])
+                        mag[cmpnt][filt] = 99.999;
+                star.status[cmpnt] = DNE;
+                star.massNow[cmpnt] = 0.0;
+            }
+            else if (mass[cmpnt] <= pCluster->AGBt_zmass)
+            {                       // for main seq or giant star
+                star.massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol (mass[cmpnt]);
+                for (filt = 0; filt < FILTS; filt++)
+                    if (useFilt[filt])
+                        mag[cmpnt][filt] = globalMags[filt];
+                star.status[cmpnt] = MSRG;      // keep track of evolutionary state
+            }
+            else if (mass[cmpnt] <= pCluster->M_wd_up)
+            {                       // for white dwarf
+                ltau[cmpnt] = wdEvol (pCluster, evoModels, &star, cmpnt);
+                for (filt = 0; filt < FILTS; filt++)
+                    if (useFilt[filt])
+                        mag[cmpnt][filt] = globalMags[filt];
+            }
+            else if (mass[cmpnt] <= 100.)
+            {                       // for neutron star or black hole remnant
+                for (filt = 0; filt < FILTS; filt++)
+                    if (useFilt[filt])
+                        mag[cmpnt][filt] = 99.999;
+                star.status[cmpnt] = NSBH;
+            }
+            else
+            {
+                //     log << (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
+                for (filt = 0; filt < FILTS; filt++)
+                    if (useFilt[filt])
+                        mag[cmpnt][filt] = 99.999;
+                star.status[cmpnt] = DNE;
+            }
+        }
+
+        // can now derive combined mags
+        if (mag[1][aFilt] < 99.)
+        {                           // if there is a secondary star (aFilt set in parent program)
+            for (filt = 0; filt < FILTS; filt++)
+            {                       // (NOTE: useFilt shortcut may help once doing binaries)
+                if (useFilt[filt])
+                {
+                    flux = pow (10.0, (mag[0][filt] / -2.5));       // add up the fluxes of the primary
+                    flux += pow (10.0, (mag[1][filt] / -2.5));      // and the secondary
+                    mag[2][filt] = -2.5 * log10 (flux);     // (these 3 lines take 5% of run time for N large)
+                }                   // if primary mag = 99.999, then this works
+            }
+        }                           // to make the combined mag = secondary mag
+        else
+        {
+            for (filt = 0; filt < FILTS; filt++)
+                if (useFilt[filt])
+                    mag[2][filt] = mag[0][filt];
+        }
+    }
+    i = 0;
+    for (filt = 0; filt < FILTS; filt++)
+    {                               // can now add distance and absorption
+        if (useFilt[filt])
+        {
+            mag[2][filt] += pCluster->getMod();
+            mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;   // add A_[u-k] (standard defn of modulus already includes Av)
+            star.photometry[i++] = mag[2][filt];
         }
     }
 }

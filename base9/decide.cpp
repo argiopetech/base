@@ -80,7 +80,8 @@ void decideMass (Chain *mc, Model &evoModels)
         stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
-    evolve (&mc->clust, evoModels, stars2, -1);    // Evolve all the (proposed) stars at once
+    for (auto s : stars2)
+        evolve (&mc->clust, evoModels, s);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // Accept or reject each star individually
@@ -129,7 +130,8 @@ void decideMassRatio (Chain *mc, Model &evoModels)
         stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
-    evolve (&mc->clust, evoModels, stars2, -1);    // Evolve all the (proposed) stars at once
+    for (auto s : stars2)
+        evolve (&mc->clust, evoModels, s);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc->clust.nStars; j++)
     {                           // Accept or reject each star individually
@@ -197,7 +199,8 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
         stars2.at(j).boundsFlag = 0;
     }
 
-    evolve (&clust2, evoModels, stars2, -1);
+    for( auto s : stars2)
+        evolve (&clust2, evoModels, s);
 
     for (j = 0; j < clust1.nStars; j++)
     {
