@@ -1,5 +1,7 @@
 #include <array>
+#include <atomic>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 #include <boost/format.hpp>
@@ -16,6 +18,7 @@
 #include "mt19937ar.hpp"
 
 using std::array;
+using std::atomic;
 using std::vector;
 using std::cout;
 using std::cerr;
@@ -126,10 +129,27 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
     }
 }
 
+void parallelFor(const unsigned int size, std::function<void(const unsigned int)> func)
+{
+    const unsigned int nbThreads = std::thread::hardware_concurrency();
+
+    std::vector < std::thread > threads;
+
+    for (unsigned int idThread = 0; idThread < nbThreads; idThread++) {
+        auto threadFunc = [=, &threads]() {
+            for (unsigned int i=idThread; i<size; i+=nbThreads) {
+                func(i);
+            }
+        };
+
+        threads.push_back(std::thread(threadFunc));
+    }
+    for (auto & t : threads) t.join();
+}
+
 double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike)
 {
-    vector<Star> wd(N_WD_MASS1);
-    double postClusterStar = 0.0;
+    atomic<double> postClusterStar(0.0);
 
     double logPostProp = logPriorClust (&propClust, evoModels);
 
@@ -142,28 +162,28 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
             if (star.status[0] == WD)
             {
                 postClusterStar = 0.0;
-                double tmpLogPost;
 
                 for (int j = 0; j < N_WD_MASS1; j++)
                 {
-                    wd[j] = star;
-                    wd[j].boundsFlag = 0;
-                    wd[j].isFieldStar = 0;
-                    wd[j].U = wdMass1Grid[j];
-                    wd[j].massRatio = 0.0;
+                    double tmpLogPost;
+                    vector<Star> wd(1, star);
+                    wd.front().boundsFlag = 0;
+                    wd.front().isFieldStar = 0;
+                    wd.front().U = wdMass1Grid[j];
+                    wd.front().massRatio = 0.0;
+                           
+                    evolve (&propClust, evoModels, wd, 0);
 
-                    evolve (&propClust, evoModels, wd, j);
-
-                    if (wd[j].boundsFlag)
+                    if (wd.front().boundsFlag)
                     {
                         cerr <<"**wd[" << j << "].boundsFlag" << endl;
                     }
                     else
                     {
-                        tmpLogPost = logPost1Star (&wd[j], &propClust, evoModels);
+                        tmpLogPost = logPost1Star (&wd.front(), &propClust, evoModels);
                         tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
-                        postClusterStar += exp (tmpLogPost);
+                        postClusterStar = postClusterStar +  exp (tmpLogPost);
                     }
                 }
             }
@@ -173,7 +193,7 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
                 postClusterStar = margEvolveWithBinary (&propClust, &star, evoModels);
             }
 
-            postClusterStar *= star.clustStarPriorDens;
+            postClusterStar = postClusterStar * star.clustStarPriorDens;
 
 
             /* marginalize over field star status */
