@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 #include <cstdio>
 #include <cstdlib>
@@ -13,6 +14,8 @@
 #include "binSearch.hpp"
 
 using std::string;
+using std::cerr;
+using std::endl;
 
 static int nIso;
 static double *wdMasses;
@@ -103,7 +106,7 @@ void loadWDCool (string path, int modelSet)
     }
     else if ((modelSet != ALTHAUS) && (modelSet != RENEDO))
     {
-        printf ("\nCooling models do not exist.  Exiting...\n");
+        cerr << "\nCooling models do not exist.  Exiting..." << endl;
         exit (1);
     }
 
@@ -112,7 +115,7 @@ void loadWDCool (string path, int modelSet)
 
         if ((pCoolingModels = fopen (tempFile, "r")) == NULL)
         {
-            printf ("\n\n file %s was not found - exiting\n", tempFile);
+            cerr << "\n file " << tempFile << " was not found - exiting" << endl;
             exit (1);
         }
 
@@ -208,7 +211,7 @@ void loadWDCool (string path, int modelSet)
 
             if ((pCoolingModels = fopen (tempFile, "r")) == NULL)
             {
-                printf ("\n\n file %s was not found - exiting\n", tempFile);
+                cerr << "\n file " << tempFile << " was not found - exiting" << endl;
                 exit (1);
             }
 
@@ -275,7 +278,7 @@ void loadWDCool (string path, int modelSet)
 
             if ((pCoolingModels = fopen (tempFile, "r")) == NULL)
             {
-                printf ("\n\n file %s was not found - exiting\n", tempFile);
+                cerr << "\n file " << tempFile << " was not found - exiting" << endl;
                 exit (1);
             }
 
@@ -330,20 +333,6 @@ void loadWDCool (string path, int modelSet)
     wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
 
     nIso = massCurves + 1;
-
-//    fclose(pCoolingModels);
-
-    /* int i, j; */
-    /* for (i = 0; i < nIso; i++) */
-    /* { */
-    /*     printf("%d\n", wdCurves[i].length); */
-    /*     for (j = 0; j < wdCurves[i].length; j++) */
-    /*     { */
-    /*         printf("%g -- %g, %d\n", wdCurves[i].mass, wdCurves[i].carbonCurve[j].x_carbon, wdCurves[i].carbonCurve[j].length); */
-    /*     } */
-    /* } */
-
-    /* exit(0); */
 }
 
 
@@ -385,7 +374,7 @@ double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double 
 
     if (massIndex < 0)
     {
-        printf ("Error in binary search on mass (wdCooling.c)\n");
+        cerr << "Error in binary search on mass (wdCooling.c)" << endl;
         exit (1);
     }
 
@@ -398,7 +387,7 @@ double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double 
 
             if (ageIndex < 0)
             {
-                printf ("Error in binary search on age (wdCooling.c)\n");
+                cerr << "Error in binary search on age (wdCooling.c)" << endl;
                 exit (1);
             }
 
@@ -440,7 +429,7 @@ double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wd
 
     if (massIndex < 0)
     {
-        printf ("Error in binary search on mass (wdCooling.c)\n");
+        cerr << "Error in binary search on mass (wdCooling.c)" << endl;
         exit (1);
     }
 
@@ -451,7 +440,7 @@ double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wd
 
         if (ageIndex < 0)
         {
-            printf ("Error in binary search on age (wdCooling.c)\n");
+            cerr << "Error in binary search on age (wdCooling.c)" << endl;
             exit (1);
         }
 

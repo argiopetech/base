@@ -50,6 +50,6 @@ void loadModels (Cluster *theCluster, Model &evoModels, Settings &settings)
     loadWDCool (settings.files.models, evoModels.WDcooling);
     loadBergeron (settings.files.models, evoModels.filterSet);
 
-    printf ("Models read.\n");
+    cout << "Models read." << endl;
 
 }

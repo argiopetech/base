@@ -154,8 +154,7 @@ void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index
                 }
                 else
                 {
-                    // if (verbose)
-                    //     printf (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
+                    //     log << (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = 99.999;

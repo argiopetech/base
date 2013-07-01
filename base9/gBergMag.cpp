@@ -23,6 +23,8 @@ The appropriate magnitudes are put in globalMags[][].
 #include "gBergMag.hpp"
 
 using std::string;
+using std::cerr;
+using std::endl;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
 extern int useFilt[FILTS];
@@ -47,7 +49,7 @@ void loadBergeron (string path, MsFilterSet filterSet)
 
     if (filterSet != MsFilterSet::SDSS && filterSet != MsFilterSet::UBVRIJHK)
     {
-        printf ("\nFilter set %d not available on Bergeron models.  Exiting...\n", filterSet);
+        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Bergeron models.  Exiting..." << endl;
         exit (1);
     }
 
@@ -58,7 +60,7 @@ void loadBergeron (string path, MsFilterSet filterSet)
 
     if ((pBergeron = fopen (tempFile, "r")) == NULL)
     {
-        printf ("\n\n file %s was not found - exiting\n", tempFile);
+        cerr << "\nFile " << tempFile << " was not found - exiting" << endl;
         exit (1);
     }
 
@@ -90,7 +92,7 @@ void loadBergeron (string path, MsFilterSet filterSet)
 
     if ((pBergeron = fopen (tempFile, "r")) == NULL)
     {
-        printf ("\n\n file %s was not found - exiting\n", tempFile);
+        cerr << "\n file " << tempFile << " was not found - exiting" << endl;
         exit (1);
     }
 
@@ -191,7 +193,7 @@ void bergeronTeffToMags (double wdLogTeff, double wdLogG, int wdType)
     else
     {
         // NS EDIT: it's not very nice to exit...
-        printf ("\nInvalid WD type.  Must be 0 (DA) or 1 (DB). Exiting...\n");
+        cerr << "\nInvalid WD type.  Must be 0 (DA) or 1 (DB). Exiting..." << endl;
         // exit(1);
         for (filt = 0; filt < BERG_NFILTS; filt++)
         {

@@ -1,5 +1,6 @@
 #include <array>
 #include <string>
+#include <iostream>
 #include <vector>
 
 #include <cstdio>
@@ -11,6 +12,7 @@
 #include "yaml-cpp/yaml.h"
 #include "Settings.hpp"
 
+using std::cout;
 using std::cerr;
 using std::endl;
 using std::istringstream;
@@ -182,10 +184,13 @@ void Settings::fromCLI (int argc, char **argv)
                 /* If this option set a flag, do nothing else now. */
                 if (long_options[option_index].flag != 0)
                     break;
-                printf ("option %s", long_options[option_index].name);
+
+                cout << "option " << long_options[option_index].name;
+
                 if (optarg)
-                    printf (" with arg %s", optarg);
-                printf ("\n");
+                    cout << " with arg " << optarg;
+
+                cout << endl;
                 break;
 
             case 0xFF:

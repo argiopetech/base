@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 #include <cstdio>
 #include <cmath>
@@ -12,6 +13,8 @@
 #include "binSearch.hpp"
 
 using std::string;
+using std::cerr;
+using std::endl;
 
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
@@ -54,7 +57,7 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
 
     if (filterSet != MsFilterSet::UBVRIJHK)
     {
-        printf ("\nFilter set %d not available on YY models.  Exiting...\n", filterSet);
+        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on YY models.  Exiting...";
         exit (1);
     }
 
@@ -70,9 +73,9 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
         }
 
         getFileName (path, z);  // work on one Dsed model at a time
-        if ((pYY = fopen (tempFile, "r")) == NULL)
-        {                               // open file
-            printf ("\n\n file %s was not found - exiting\n", tempFile);
+        if ((pYY = fopen (tempFile, "r")) == NULL) // open file
+        {
+            cerr << "\n file " << tempFile << " was not found - exiting" << endl;
             exit (1);
         }
 
@@ -91,8 +94,8 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
         }
 
         a = -1;
-        while (fgets (line, 500, pYY) != NULL)
-        {                               // YY model for all ages
+        while (fgets (line, 500, pYY) != NULL) // YY model for all ages
+        {
             if (line[0] == 'a')
             {
                 a++;
@@ -196,7 +199,7 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
     //fscanf(pModelList,"%s",tempFile);
     if ((pYY = fopen (tempFile, "r")) == NULL)
     {
-        printf ("\n\n file %s was not found - exiting\n", tempFile);
+        cerr << "\n file " << tempFile << " was not found - exiting" << endl;
         exit (1);
     }
 
@@ -247,26 +250,22 @@ double YaleMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 
     if (newAge < yyAge[0][0])
     {
-        // if (verbose)
-        //     printf ("\n Requested age (%.3f) too young. (gYaleMag.c)", newLogAge);
+        //     log << ("\n Requested age (%.3f) too young. (gYaleMag.c)", newLogAge);
         return 0.0;
     }
     if (newAge > yyAge[N_YY_Z - 1][N_YY_AGES - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested age (%.3f) too old. (gYaleMag.c)", newLogAge);
+        //     log << ("\n Requested age (%.3f) too old. (gYaleMag.c)", newLogAge);
         return 0.0;
     }
     if (newZ < yyZ[0])
     {
-        // if (verbose)
-        //     printf ("\n Requested Z (%.3f, FeH = %.3f) too low. (gYaleMag.c)", newZ, newFeH);
+        //     log << ("\n Requested Z (%.3f, FeH = %.3f) too low. (gYaleMag.c)", newZ, newFeH);
         return 0.0;
     }
     if (newZ > yyZ[N_YY_Z - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
+        //     log << ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
         return 0.0;
     }
 
@@ -402,7 +401,7 @@ static void eepset (double x[], double y[], int nstep, int igrd, double *slope)
         else
         {
             if (xp < x[ikip] && xp > x[ikip + 1])
-                printf ("possibly incorrect\n");
+                cerr << "possibly incorrect" << endl;
         }
     }
 
@@ -470,18 +469,20 @@ static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorde
             return 1;
         else
         {
-            printf ("Failed to find the turnoff mass (xp=%f, xm=%f).  Exiting.\n", (*xp), xm);
+            cerr << "Failed to find the turnoff mass (xp=" << *xp << ", xm=" << xm << ").  Exiting." << endl;
             exit (1);
         }
     }
-    //    (*xp)=(-2.0d0*c) /(b+s)
-    //  xm=(-2.0d0*c) /(b-s)
+
     (*ybar) = y[0];
+
     for (m = 1; m < n; m++)
     {
         (*ybar) = (*ybar) * (xbar - x[m]) + y[m];
     }
+
     (*xp) = xbar;
+
     return 0;
 }
 
@@ -490,15 +491,10 @@ static void initIso (struct yyIsochrone *newIso)
 
     int i, j;
 
-    //newIso->nEntries = MAX_YY_ENTRIES;
-    //newIso->nFilts   = N_YY_FILTS;
-    //allocateGlobalIso(newIso);
-
     newIso->FeH = 0.0;
     newIso->age = 0.0;
     newIso->logAge = 0.0;
     newIso->z = 0.0;
-    //newIso->y=0.0;
     newIso->nEntries = 0;
     for (i = 0; i < MAX_YY_ENTRIES; i++)
     {
@@ -508,29 +504,6 @@ static void initIso (struct yyIsochrone *newIso)
     }
 }
 
-/*
-  void outputYYIso(struct yyIsochrone *iso, FILE *ptr, int byMag){
-
-  int m, filt;
-
-  fprintf(ptr,"FeH = %f, z = %f, logAge = %f, age = %f, AgbTurnoffMass = %f, nEntries = %d\n",
-  iso->FeH,iso->z,iso->logAge,iso->age,iso->AgbTurnoffMass,iso->nEntries);
-  fprintf(ptr,"mass U B V R I J H K\n");
-  for(m=0;m<iso->nEntries;m++){
-  if(byMag){
-  fprintf(ptr,"%6.3f ",iso->mass[m]);
-  for(filt=0;filt<N_YY_FILTS;filt++)
-  fprintf(ptr,"%6.3f ",iso->mag[m][filt]);
-  }
-  else{
-  for(filt=0;filt<N_YY_PARAMS;filt++)
-  fprintf(ptr,"%6.3f ",iso->param[m][filt]);
-  }
-  fprintf(ptr,"\n");
-  }
-  }
-
-*/
 static void getFileName (string path, int z)
 {
 

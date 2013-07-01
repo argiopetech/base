@@ -1,5 +1,10 @@
+#include <iostream>
+
 #include <cstdio>
 #include <cstdlib>
+
+using std::cerr;
+using std::endl;
 
 /*
 // performs a binary search for interpolation
@@ -36,7 +41,7 @@ int binarySearch (double *searchArray, int size, double searchItem)
         // not found, but should never reach here
         if (lo >= hi)
         {
-            printf ("ERROR: BINARY SEARCH FAILURE \n");
+            cerr << "ERROR: BINARY SEARCH FAILURE" << endl;
             return -1;
         }
 
@@ -46,7 +51,7 @@ int binarySearch (double *searchArray, int size, double searchItem)
             hi = mid - 1;
     }
 
-    printf ("ERROR: BINARY SEARCH FAILURE \n");
+    cerr << "ERROR: BINARY SEARCH FAILURE" << endl;
     return -1;
 }
 
@@ -79,7 +84,7 @@ int reverseBinarySearch (double *searchArray, int size, double searchItem)
         // not found, but should never reach here
         if (lo >= hi)
         {
-            printf ("ERROR: BINARY SEARCH FAILURE \n");
+            cerr << "ERROR: BINARY SEARCH FAILURE" << endl;
             return -1;
         }
 
@@ -89,6 +94,7 @@ int reverseBinarySearch (double *searchArray, int size, double searchItem)
             hi = mid - 1;
     }
 
-    printf ("ERROR: BINARY SEARCH FAILURE \n");
+    cerr << "ERROR: BINARY SEARCH FAILURE" << endl;
+
     return -1;
 }

@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 #include <cstdio>
 #include <cmath>
@@ -11,6 +12,8 @@
 #include "GirardiMsModel.hpp"
 
 using std::string;
+using std::cerr;
+using std::endl;
 
 extern int useFilt[FILTS], needMassNow;
 extern double globalMags[FILTS];
@@ -67,7 +70,7 @@ void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
 
     if (filterSet != MsFilterSet::UBVRIJHK && filterSet != MsFilterSet::SDSS && filterSet != MsFilterSet::ACS)
     {
-        printf ("\nFilter set %d not available on Girardi models.  Exiting...\n", filterSet);
+        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Girardi models.  Exiting..." << endl;
         exit (1);
     }
 
@@ -93,7 +96,7 @@ void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
         //fscanf(pModelList,"%s",tempFile);                                 // work on one Girardi model at a time
         if ((pGirardi = fopen (tempFile, "r")) == NULL)
         {                               // open file
-            printf ("\n\n file %s was not found - exiting\n", tempFile);
+            cerr << "\nFile " << tempFile << " was not found - exiting" << endl;
             exit (1);
         }
 
@@ -187,26 +190,22 @@ cluster age, interpolating in isochrones as necessary.
 
     if (newAge < 7.80)
     {
-        // if (verbose)
-        //     printf ("\n Requested age too young. (drv_g_AGB_m.c)");
+        //     log << ("\n Requested age too young. (drv_g_AGB_m.c)");
         return 0.0;
     }
     if (newAge > 10.25)
     {
-        // if (verbose)
-        //     printf ("\n Requested age too old. (drv_g_AGB_m.c)");
+        //     log << ("\n Requested age too old. (drv_g_AGB_m.c)");
         return 0.0;
     }
     if (newFeH < gFeH[0])
     {
-        // if (verbose)
-        //     printf ("\n Requested FeH too low. (drv_g_AGB_m.c)");
+        //     log << ("\n Requested FeH too low. (drv_g_AGB_m.c)");
         return 0.0;
     }
     if (newFeH > gFeH[N_GIR_Z - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested FeH too high. (drv_g_AGB_m.c)");
+        //     log << ("\n Requested FeH too high. (drv_g_AGB_m.c)");
         return 0.0;
     }
 
@@ -215,10 +214,7 @@ cluster age, interpolating in isochrones as necessary.
 
     iAge = (int) (rint ((interpAge[LOW] - 7.8) * 20));
 
-    // if (verbose == 2)
-    // {
-    //     printf ("\n For AGBt: Using log(age)=%.2f bounded by interpAge[HIGH] = %.3f interpAge[LOW] = %.3f\n", newAge, interpAge[HIGH], interpAge[LOW]);
-    // }
+    //     log << setLevel(2) << ("\n For AGBt: Using log(age)=%.2f bounded by interpAge[HIGH] = %.3f interpAge[LOW] = %.3f\n", newAge, interpAge[HIGH], interpAge[LOW]);
 
     //Find metallicity boundaries
     iFeH = binarySearch (gFeH, N_GIR_Z, newFeH);        // function returns lower bound
@@ -346,7 +342,7 @@ double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whi
 
             if (lo >= hi)
             {
-                printf ("ERROR: BINARY SEARCH FAILURE gGirmag\n");
+                cerr << "ERROR: BINARY SEARCH FAILURE gGirmag" << endl;
                 break;
             }
 
@@ -412,14 +408,13 @@ higher mass and younger AGBt star that was the WD precursor.
         if (zamsMass < gAGBt[iFeH + f][N_GIR_AGES - 1])
         {                               // possible if cluster older than logAge=9.0
             wdPrecLogAge[f] = gLogAge[iFeH + f][N_GIR_AGES - 1];        // FOR NOW just use logAge = 9.0
-            // if (verbose)
-            //     printf (" %.3f Mo < smallest AGBt (%.2f) model mass.  Setting precursor log age to %.3f.\n", zamsMass, gAGBt[iFeH + f][N_GIR_AGES - 1], wdPrecLogAge[f]);
+            //     log << (" %.3f Mo < smallest AGBt (%.2f) model mass.  Setting precursor log age to %.3f.\n", zamsMass, gAGBt[iFeH + f][N_GIR_AGES - 1], wdPrecLogAge[f]);
         }
         else if (zamsMass > gAGBt[iFeH + f][0])
         {
             wdPrecLogAge[f] = -2.7 * log10 (zamsMass / gAGBt[iFeH + f][0]) + gLogAge[iFeH + f][0];
-            // if (verbose)
-            //     printf (" %.3f Mo > largest AGBt (%.2f) model mass.  Extrapolating precursor log age.\n", zamsMass, gAGBt[iFeH + f][0]);
+
+            //     log << (" %.3f Mo > largest AGBt (%.2f) model mass.  Extrapolating precursor log age.\n", zamsMass, gAGBt[iFeH + f][0]);
         }
 
         else

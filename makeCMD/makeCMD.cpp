@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include <vector>
 
 #include <cmath>
@@ -14,6 +15,9 @@
 #include "FilterSet.hpp"
 
 using std::vector;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 const double  FS_NUM       = 0.0;    // mcmc outputs negative mass for field star
 const int  COL_MAX         = 1000;    // max number of cluster stars
@@ -82,25 +86,22 @@ int main (int argc, char *argv[])
     strcpy (filename, settings.files.scatter.c_str());
     if ((rDataPtr = fopen (filename, "r")) == NULL)
     {
-        printf ("***Error: file %s was not found.***\n", filename);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: file " << filename << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
-    /* printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> "); */
     minMag = settings.cluster.minMag;
     maxMag = settings.cluster.maxMag;
     iMag = settings.cluster.index;
 
     if (iMag < 0 || iMag > 2)
     {
-        printf ("***Error: %d not a valid magnitude index.  Choose 0,1,or 2.***\n", iMag);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: " << iMag << " not a valid magnitude index.  Choose 0,1,or 2.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
-    /* printf("\n Enter mcmc file name : "); */
-    /* scanf("%s",filename); */
     // This is a leftover from Base8 and may not work with the current cluster files
     strcpy (filename, settings.files.output.c_str());
     openOutputFiles (&rClusterPtr, filename, CLUS_READ);
@@ -122,18 +123,18 @@ int main (int argc, char *argv[])
 
     if (theCluster.nStars < 1)
     {
-        printf ("\n need at least a one column file - exiting.\n");
+        cerr << "\nNeed at least a one column file - exiting." << endl;
         exit (1);
     }
     if (theCluster.nStars > COL_MAX)
     {
-        printf ("\n Exceeded the limit of the number of cluster stars in a file - exiting.\n");
+        cerr << "\nExceeded the limit of the number of cluster stars in a file - exiting." << endl;
         exit (1);
     }
 
     if (theCluster.nStars != tempCols)
     {
-        printf ("\n Different numbers of stars in .mass1 and .mass2 files");
+        cerr << "\nDifferent numbers of stars in .mass1 and .mass2 files" << endl;
         exit (1);
     }
 
@@ -415,7 +416,6 @@ int main (int argc, char *argv[])
             // Calculate photometry stats
             if (m == 1)
             {
-                //printf("*** %d ***\n",theCluster.evoModels.numFilts);
                 for (filt = 0; filt < evoModels.numFilts; filt++)
                 {
                     if (N > 1.0)
@@ -428,7 +428,7 @@ int main (int argc, char *argv[])
                     }
                     else
                         mean = 99.999;
-                    //printf("***%10f %10.4e***",mean, variance);
+
                     fprintf (wCmdPtr, "%10f %10.4e ", mean < 99 ? mean : 99.999, mean < 99 ? variance : 0.0);
                 }
                 fprintf (wCmdPtr, "\n");
@@ -535,17 +535,17 @@ void openOutputFiles (FILE ** filePtr, char *filename, int fileType)
             mode = "w";
             break;
         default:
-            printf ("***Error: Bad file choice in openOutputFiles().***\n");
-            printf ("[Exiting...]\n");
+            cerr << "***Error: Bad file choice in openOutputFiles().***" << endl;
+            cerr << "[Exiting...]" << endl;
             exit (0);
 
     }
 
-    printf ("Reading file  : %s (%s)\n", tmpfile, mode);
+    cout << "Reading file  : " << tmpfile << " (" << mode << ")" << endl;
     if ((*filePtr = fopen (tmpfile, mode)) == NULL)
     {
-        printf ("***Error: File %s was not available. %s ***\n", tmpfile, mode);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: File " << tmpfile << " was not available. " << mode << " ***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 }

@@ -27,8 +27,7 @@ double drawFromIMF ()
 
     zamsMass = pow (10.0, logMass);     /* costs about 17% of run time */
 
-    // if (verbose == 2)
-    //     printf (" drawFromIMF: zamsMass = %.3f\n", zamsMass);
+    //     log << (" drawFromIMF: zamsMass = %.3f\n", zamsMass);
 
     return zamsMass;
 

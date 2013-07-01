@@ -1,4 +1,6 @@
 /*** Last update: 19jun06 ***/
+#include <iostream>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -17,6 +19,10 @@
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
 #include "FilterSet.hpp"
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 const int N_AGE = 30;
 const int N_FEH = 1;
@@ -201,8 +207,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     if ((ctrl->rData = fopen (filename, "r")) == NULL)
     {
-        printf ("***Error: file %s was not found.***\n", filename);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: file " << filename << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
@@ -210,8 +216,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     strcat (filename, ".res");
     if ((ctrl->rSampledParamFile = fopen (filename, "r")) == NULL)
     {
-        printf ("***Error: file %s was not found.***\n", filename);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: file " << filename << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
@@ -220,8 +226,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     ctrl->iMag = settings.cluster.index;
     if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
     {
-        printf ("***Error: %d not a valid magnitude index.  Choose 0, 1,or 2.***\n", ctrl->iMag);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: " << ctrl->iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
@@ -229,15 +235,15 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     strcat (filename, ".massSamples");
     if ((ctrl->wMassSampleFile = fopen (filename, "w")) == NULL)
     {
-        printf ("***Error: File %s was not available for writing.***\n", filename);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
     strcat (filename, ".membership");
     if ((ctrl->wMembershipFile = fopen (filename, "w")) == NULL)
     {
-        printf ("***Error: File %s was not available for writing.***\n", filename);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
@@ -572,8 +578,6 @@ int main (int argc, char *argv[])
 
     evoModels.WDatm = BERGERON;
 
-    printf ("carbonicity: %lf\n", mc.clust.carbonicity);
-
     if (taskid != MASTER) /* already loaded in the MASTER task */
     {
         if (evoModels.brownDwarfEvol == BARAFFE)
@@ -683,7 +687,7 @@ int main (int argc, char *argv[])
     if (taskid == MASTER)
     {
         readSampledParams (&mc, &ctrl, &sampledPars, evoModels);
-        printf ("sampledPars[0].age = %lf\n", sampledPars[0].age);
+        cout << "sampledPars[0].age = " << sampledPars[0].age << endl;
         fflush (stdout);
 
         if ((unifs = (double *) calloc (ctrl.nSamples * nWDs, sizeof (double))) == NULL)
@@ -891,7 +895,7 @@ int main (int argc, char *argv[])
         fclose (ctrl.wMassSampleFile);
         fclose (ctrl.wMembershipFile);
 
-        printf ("Part 2 completed successfully\n");
+        cout << "Part 2 completed successfully" << endl;
     }
     else
     {

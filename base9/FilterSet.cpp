@@ -95,7 +95,7 @@ void setFilterNames (MsFilterSet filterSet)
     }
     else
     {
-        printf ("\nfilterSet %d not available.  Exiting.\n", filterSet);
+        cerr << "\nFilterSet " << static_cast<int>(filterSet) << " not available.  Exiting." << endl;
         exit (1);
     }
 

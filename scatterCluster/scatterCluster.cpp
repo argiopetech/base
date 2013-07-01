@@ -1,14 +1,20 @@
+#include <iostream>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <cstring>
-#include <unistd.h>
+#include <boost/format.hpp>
 
 #include "mt19937ar.hpp"
 #include "evolve.hpp"
 #include "structures.hpp"
 #include "Settings.hpp"
 #include "FilterSet.hpp"
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 unsigned long seed = 0;
 
@@ -47,13 +53,11 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    /* printf("\n Enter simulated cluster file name : "); */
-    /* scanf("%s",filename); */
     strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".sim.out");
     if ((r_ptr = fopen (filename, "r")) == NULL)
     {
-        printf ("\n\n file %s was not found - exiting ", filename);
+        cerr << "\nFile " << filename << " was not found - exiting" << endl;
         exit (1);
     }
 
@@ -73,50 +77,36 @@ int main (int argc, char *argv[])
     for (filterSet = 0; filterSet < 3; filterSet++)
     {
         setFilterNames (static_cast<MsFilterSet>(filterSet));
-        printf ("%d %s %s\n", filterSet, aFilterName, getFilterName (0));
+        cout << filterSet << ' ' << aFilterName << ' ' << getFilterName (0) << endl;
         if (strcmp (aFilterName, getFilterName (0)) == 0)
             break;
     }
-    printf ("filterSet = %d\n", filterSet);
+    cout << "filterSet = " << filterSet << endl;
 
     fgets (line, 1000, r_ptr);  // remove rest of header line
 
     std::copy(settings.scatterCluster.exposures.begin(), settings.scatterCluster.exposures.end(), exptime);
-
-    /* printf("\n Enter number of stars to keep, bright and faint and cut-off mags, and their filter: "); */
-    /* scanf("%d %lf %lf %d",&nStars,&brightLimit, &faintLimit, &firstFilt);            // brightLimit primarily used to cut off RGB */
 
     nStars = settings.simCluster.nStars;
     brightLimit = settings.scatterCluster.brightLimit;
     faintLimit = settings.scatterCluster.faintLimit;
     firstFilt = settings.scatterCluster.relevantFilt;
 
-    /* printf("\n Enter limiting signal-to-noise (e.g. 15) : "); */
-    /* scanf("%lf",&limitSigToNoise); */
     limitSigToNoise = settings.scatterCluster.limitS2N;
 
-    /* printf("\n Enter number of field stars to include (e.g. 0): "); */
-    /* scanf("%d",&nFieldStars); */
     nFieldStars = settings.simCluster.nFieldStars;
     if (nFieldStars < 0)
         nFieldStars = 0;
 
-    /* printf("\n Enter an integer seed: "); */
-    /* scanf("%ld",&seed); */
     seed = settings.seed;
 
-    /* printf("\n Enter output file name : "); */
-    /* scanf("%s",filename); */
     strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".sim.scatter");
     if ((w_ptr = fopen (filename, "w")) == NULL)
     {
-        printf ("\n\n file %s not available for writing - exiting ", filename);
+        cerr << "\nFile " << filename << " not available for writing - exiting" << endl;
         exit (1);
     }
-    /* printf("\n"); */
-
-
 
     // clusterMemberPrior = (double) nStars / (nStars + nFieldStars);
     // if(clusterMemberPrior > 0.99) clusterMemberPrior = 0.99;
@@ -127,16 +117,13 @@ int main (int argc, char *argv[])
     //Output headers
     for (filt = 0; filt < FILTS; filt++)
         fprintf (w_ptr, "%s ", getFilterName (filt));
-/*    fprintf(w_ptr,"\n");
-      for(filt=0;filt<FILTS;filt++){
-      if(exptime[filt] > EPS) fprintf(w_ptr,"1 ");
-      else                    fprintf(w_ptr,"0 ");
-      }
-*/
+
     fprintf (w_ptr, "id ");
+
     for (filt = 0; filt < FILTS; filt++)
         if (exptime[filt] > EPS)
             fprintf (w_ptr, "%6s ", getFilterName (filt));
+
     for (filt = 0; filt < FILTS; filt++)
         if (exptime[filt] > EPS)
             fprintf (w_ptr, "sig%-5s ", getFilterName (filt));
@@ -157,7 +144,7 @@ int main (int argc, char *argv[])
         {
             if (count < nStars)
             {
-                printf (" Warning - not enough (%d) non-RGB stars in input file to keep desired number (%d) of stars.\n", count, nStars);
+                cerr << " Warning - not enough (" << count << ") non-RGB stars in input file to keep desired number (" << nStars << ") of stars." << endl;
             }
             count = 0;
             nStars = 100000;
@@ -231,10 +218,10 @@ int main (int argc, char *argv[])
     }
     if (count < nFieldStars)
     {
-        printf (" Warning - not enough (%d) field stars in input file to keep desired number (%d) of stars.\n", count, nFieldStars);
+        cerr << " Warning - not enough (" << count << ") field stars in input file to keep desired number (" << nFieldStars << ") of stars." << endl;
     }
 
-    printf (" There %s %d WD%s in this scatter file, %s\n", wdCount == 1 ? "is" : "are", wdCount, wdCount == 1 ? "" : "s", filename);
+    cerr << " There " << (wdCount == 1 ? "is " : "are " )<< wdCount << " WD%s in this scatter file, " << filename << endl;
 
     fclose (r_ptr);
     fclose (w_ptr);
@@ -273,7 +260,7 @@ double signalToNoise (double mag, double exptime, int filter)
 
     if (filter >= FILTS || filter < 0)
     {
-        printf ("filter (%d) out of range - exiting\n", filter);
+        cerr << "Filter (" << filter << ") out of range - exiting" << endl;
         exit (1);
     }
 
@@ -306,7 +293,7 @@ int readLine (FILE * filePtr)
 
     if (starID == EOF)
     {
-        printf ("\nFatal error in readLine.  Exiting.\n");
+        cerr << "\nFatal error in readLine.  Exiting." << endl;
         exit (1);
     }
 
@@ -350,7 +337,7 @@ int scatterPhot (double limitSigToNoise)
         sigToNoise = signalToNoise (phot[filt], exptime[filt], filt);
         if (sigToNoise < limitSigToNoise)
         {                               // large photometric errors can lock mcmc during burnin
-            printf ("Warning: star %4d, mass1=%.3f, stage1=%d, filter=%d, S/N = %.3f < %.1f (user limit) - skipping.\n", starID, mass1, stage1, filt, sigToNoise, limitSigToNoise);
+            cerr << boost::format("Warning: star %4d, mass1=%.3f, stage1=%d, filter=%d, S/N = %.3f < %.1f (user limit) - skipping.") % starID % mass1 % stage1 % filt % sigToNoise % limitSigToNoise << endl;
             return 0;
         }
 

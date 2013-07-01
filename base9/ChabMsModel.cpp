@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 #include <cstdio>
 #include <cstdlib>
@@ -11,6 +12,8 @@
 #include "linInterp.hpp"
 
 using std::string;
+using std::cerr;
+using std::endl;
 
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
@@ -62,7 +65,7 @@ void ChabMsModel::loadModel (string path, MsFilterSet filterSet)
 
     if (filterSet != MsFilterSet::UBVRIJHK)
     {
-        printf ("\nFilter set %d not available on Chaboyer helium models.  Exiting...\n", filterSet);
+        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Chaboyer helium models.  Exiting..." << endl;
         exit (1);
     }
 
@@ -91,7 +94,7 @@ void ChabMsModel::loadModel (string path, MsFilterSet filterSet)
             //fscanf(pModelList,"%s",tempFile);                                 // work on one Chaboyer model at a time
             if ((pChaboyer = fopen (tempFile, "r")) == NULL)
             {                           // open file
-                printf ("\n\n file %s was not found - exiting\n", tempFile);
+                cerr << "\nFile " << tempFile << " was not found - exiting" << endl;
                 exit (1);
             }
 
@@ -176,38 +179,32 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 
     if (newLogAge < cLogAge[0][0][0])
     {
-        // if (verbose)
-        //     printf ("\n Requested age (%.3f) too young. (gChabMag.c)", cLogAge[0][0][0]);       //newLogAge);
+        //     log << ("\n Requested age (%.3f) too young. (gChabMag.c)", cLogAge[0][0][0]);       //newLogAge);
         return 0.0;
     }
     if (newLogAge > cLogAge[N_CHAB_Z - 1][N_CHAB_Y - 1][N_CHAB_AGES - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested age (%.3f) too old. (gChabMag.c)", newLogAge);
+        //     log << ("\n Requested age (%.3f) too old. (gChabMag.c)", newLogAge);
         return 0.0;
     }
     if (newFeH < cFeH[0])
     {
-        // if (verbose)
-        //     printf ("\n Requested FeH (%.3f) too low. (gChabMag.c)", newFeH);
+        //     log << ("\n Requested FeH (%.3f) too low. (gChabMag.c)", newFeH);
         return 0.0;
     }
     if (newFeH > cFeH[N_CHAB_Z - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested FeH (%.3f) too high. (gChabMag.c)", newFeH);
+        //     log << ("\n Requested FeH (%.3f) too high. (gChabMag.c)", newFeH);
         return 0.0;
     }
     if (newY < cY[0][0])
     {
-        // if (verbose)
-        //     printf ("\n Requested Y (%.3f) too low. (gChabMag.c)", newY);
+        //     log << ("\n Requested Y (%.3f) too low. (gChabMag.c)", newY);
         return 0.0;
     }
     if (newY > cY[N_CHAB_Z - 1][N_CHAB_Y - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested Y (%.3f) too high. (gChabMag.c)", newY);
+        //     log << ("\n Requested Y (%.3f) too high. (gChabMag.c)", newY);
         return 0.0;
     }
 
@@ -220,8 +217,6 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
     calcCoeff (&cFeH[iFeH], d, newFeH);
     calcCoeff (&cY[z][iY], c, newY);
     calcCoeff (&cAge[z][y][iAge], b, newAge);
-
-    // if(o) fprintf(wPtr,"%f %f %f %f %f %f\n",b[0],b[1],c[0],c[1],d[0],d[1]);
 
     // Find the minimum and maximum eep values and set a global
     // min and max that is the union of the min and max for each isochrone
@@ -336,11 +331,7 @@ double ChabMsModel::msRgbEvol (double zamsMass)
 
 double ChabMsModel::wdPrecLogAge (double FeH, double thisY, double zamsMass)
 {
-
     return 0.0;
-
-    //printf("Chaboyer models unavaible at this time.  Have a nice day!\n (drv_c_AGB_m)");
-    exit (1);
 }
 
 static void initIso (struct cIsochrone *newIso)

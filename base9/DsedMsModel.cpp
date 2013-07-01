@@ -253,29 +253,25 @@ double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 
     if (newLogAge < dLogAge[0][0])
     {
-        // if (verbose)
-        //     printf ("\n Requested age (%.3f) too young. (gDsedMag.c)", newLogAge);
+        //     log << ("\n Requested age (%.3f) too young. (gDsedMag.c)", newLogAge);
         return 0.0;
     }
 
     if (newLogAge > dLogAge[N_DSED_Z - 1][N_DSED_AGES - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested age (%.3f) too old. (gDsedMag.c)", newLogAge);
+        //     log << ("\n Requested age (%.3f) too old. (gDsedMag.c)", newLogAge);
         return 0.0;
     }
 
     if (newFeH < dFeH[0])
     {
-        // if (verbose)
-        //     printf ("\n Requested FeH (%.3f) too low. (gDsedMag.c)", newFeH);
+        //     log << ("\n Requested FeH (%.3f) too low. (gDsedMag.c)", newFeH);
         return 0.0;
     }
 
     if (newFeH > dFeH[N_DSED_Z - 1])
     {
-        // if (verbose)
-        //     printf ("\n Requested FeH (%.3f) too high. (gDsedMag.c)", newFeH);
+        //     log << ("\n Requested FeH (%.3f) too high. (gDsedMag.c)", newFeH);
         return 0.0;
     }
 
@@ -409,16 +405,13 @@ double DsedMsModel::wdPrecLogAge (double thisFeH, double thisY, double zamsMass)
         if (zamsMass < dAGBt[iFeH + f][N_DSED_AGES - 1]) // possible if cluster older than logAge=9.0
         {
             wdPrecLogAge[f] = dLogAge[iFeH + f][N_DSED_AGES - 1];       // FOR NOW just use logAge = 9.0
-
-            // if (verbose)
-            //     printf (" %.3f Mo < smallest AGBt (%.2f) model mass.  Setting precursor log age to %.3f.\n", zamsMass, dAGBt[iFeH + f][N_DSED_AGES - 1], wdPrecLogAge[f]);
+            //     log << (" %.3f Mo < smallest AGBt (%.2f) model mass.  Setting precursor log age to %.3f.\n", zamsMass, dAGBt[iFeH + f][N_DSED_AGES - 1], wdPrecLogAge[f]);
         }
         else if (zamsMass > dAGBt[iFeH + f][0])
         {
             wdPrecLogAge[f] = dAgbCoeff[iFeH + f][1] * (pow (log10 (zamsMass), 2) - pow (log10 (dAGBt[iFeH + f][0]), 2)) + dAgbCoeff[iFeH + f][0] * (log10 (zamsMass / dAGBt[iFeH + f][0])) + dLogAge[iFeH + f][0];
 
-            // if (verbose)
-            //     printf (" %.3f Mo > largest AGBt (%.2f) model mass.  Extrapolating precursor log age.\n", zamsMass, dAGBt[iFeH + f][0]);
+            //     log << (" %.3f Mo > largest AGBt (%.2f) model mass.  Extrapolating precursor log age.\n", zamsMass, dAGBt[iFeH + f][0]);
         }
         else
         {

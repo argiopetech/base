@@ -67,7 +67,6 @@ void propClustParam (Cluster *clust, int TYPE)
     else if (TYPE == AGE)
     {
         (*clust).parameter[AGE] = (*clust).parameter[AGE] + (*clust).stepSize[AGE] * (genrand_res53 () - 0.5);
-        //printf("%f\n",(*clust).parameter[AGE]);
         return;
     }
     else

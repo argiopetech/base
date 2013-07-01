@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 
 #include <cstdio>
@@ -12,6 +13,9 @@
 #include "FilterSet.hpp"
 
 using std::vector;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 const int CLUS_READ       =  9;
 const int CLUS_STAT_WRITE = 10;
@@ -63,31 +67,24 @@ int main (int argc, char *argv[])
     /////// Open files to read and write ///////
     ////////////////////////////////////////////
 
-    /* printf("Enter file name containing color/magnitude data:\n> "); */
-    /* scanf("%s",filename); */
     strcpy (filename, settings.files.phot.c_str());
     if ((rDataPtr = fopen (filename, "r")) == NULL)
     {
-        printf ("***Error: file %s was not found.***\n", filename);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: file " << filename << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
-    /* printf("Enter minimum and maximum magnitude of MS to use and band (0,1, or 2):\n> "); */
-    /* scanf("%lf %lf %d", &minMag, &maxMag,&iMag); */
     minMag = settings.cluster.minMag;
     maxMag = settings.cluster.maxMag;
     iMag = settings.cluster.index;
     if (iMag < 0 || iMag > 2)
     {
-        printf ("***Error: %d not a valid magnitude index.  Choose 0,1,or 2.***\n", iMag);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: " << iMag << " not a valid magnitude index.  Choose 0,1,or 2.***" << endl;
+    cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
-    // char outfilename[100];
-    /* printf("\n Enter isochrone file name : "); */
-    /* scanf("%s",filename); */
     strcpy (filename, settings.files.output.c_str());  // File ending gets added in openOutputFiles
     openOutputFiles (&wDebugPtr, filename, DEBUG_FILE);
 
@@ -103,7 +100,6 @@ int main (int argc, char *argv[])
         if (useFilt[filt])
         {
             evoModels.numFilts++;
-            //printf("** %d **\n",evoModels.numFilts);
             aFilt = filt;               // Sets this to a band we know we are using (for evolve)
         }
     }
@@ -115,11 +111,6 @@ int main (int argc, char *argv[])
     ///////// and load models /////////
     ///////////////////////////////////
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
-
-    // verbose = settings.verbose;
-    // if (verbose < 0 || verbose > 2)
-    //     verbose = 1;            /* give standard feedback if incorrectly specified */
-
 
     loadModels (&theCluster, evoModels, settings);      /* read in stellar evol & WD models */
 
@@ -248,17 +239,17 @@ static void openOutputFiles (FILE ** filePtr, char *filename, int fileType)
             mode = "w";
             break;
         default:
-            printf ("***Error: Bad file choice in openOutputFiles().***\n");
-            printf ("[Exiting...]\n");
+            cerr << "***Error: Bad file choice in openOutputFiles().***" << endl;
+            cerr << "[Exiting...]" << endl;
             exit (0);
 
     }
 
-    printf ("Reading file  : %s (%s)\n", tmpfile, mode);
+    cout << "Reading file  : " << tmpfile << " (" << mode << ")" << endl;
     if ((*filePtr = fopen (tmpfile, mode)) == NULL)
     {
-        printf ("***Error: File %s was not available. %s ***\n", tmpfile, mode);
-        printf ("[Exiting...]\n");
+        cerr << "***Error: File " << tmpfile << " was not available. " << mode << "***" << endl;
+        cerr << "[Exiting...]" << endl;
         exit (1);
     }
 }

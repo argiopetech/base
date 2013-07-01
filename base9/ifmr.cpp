@@ -1,9 +1,14 @@
+#include <iostream>
+
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
 
 #include "evolve.hpp"
 #include "linInterp.hpp"
+
+using std::cerr;
+using std::endl;
 
 double weidemannIFMR (double zamsMass);
 double williamsIFMR (double zamsMass);
@@ -47,7 +52,7 @@ double intlFinalMassReln (Cluster *pCluster, Model &evoModels, double zamsMass)
     else if (evoModels.IFMR == 11)
         wdMass = piecewiseLinearIFMR (pCluster, zamsMass);
     else
-        printf ("ERROR: Undefined IFMR");
+        cerr << "ERROR: Undefined IFMR" << endl;
     return wdMass;
 }
 
@@ -236,7 +241,7 @@ large as 9.0.
 
             if (lo >= hi)
             {
-                printf ("ERROR: BINARY SEARCH FAILURE \n");
+                cerr << "ERROR: BINARY SEARCH FAILURE" << endl;
                 break;
             }
 

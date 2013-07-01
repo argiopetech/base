@@ -102,8 +102,6 @@ double brokenBeta (double *x, double *y, int l, double *d)
             chi[i] += (xy[n] - y[n]) * (xy[n] - y[n]);
         }
 
-        //printf("%d %f %f %f %f %f %f\n",i,x[i],y[i],B1[i],B2[i],ay,chi[i]);
-
         if (chi[i] < lowchi)
         {
             lowchi = chi[i];
@@ -118,16 +116,6 @@ double brokenBeta (double *x, double *y, int l, double *d)
     return 0.0;
 }
 
-/*
-  double findChiSq(double *x, double *y, int l,double a){
-
-  int i;
-
-  i = binarySearch(x,l,a);
-
-
-  }
-*/
 
 void swap (double *p1, double *p2)
 {

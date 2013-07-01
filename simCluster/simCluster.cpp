@@ -5,8 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <sys/types.h>
-#include <unistd.h>
+#include <boost/format.hpp>
 
 #include "mt19937ar.hpp"
 #include "evolve.hpp"
@@ -17,6 +16,7 @@
 #include "FilterSet.hpp"
 
 using std::vector;
+using std::cout;
 using std::cerr;
 using std::endl;
 
@@ -104,7 +104,7 @@ int main (int argc, char *argv[])
     strcat (w_file, ".sim.out");
     if ((w_ptr = fopen (w_file, "w")) == NULL)
     {
-        printf ("\n\n file %s was not available for writing - exiting ", w_file);
+        cerr << "\nFile " << w_file << " was not available for writing - exiting" << endl;
         exit (1);
     }
 
@@ -246,15 +246,28 @@ int main (int argc, char *argv[])
         fprintf (w_ptr, "\n");
     }
 
-    printf ("\n Properties for cluster:");
-    printf ("\n logClusAge     = %6.3f\n [Fe/H]         = %5.2f\n Y              = %5.2f", theCluster.parameter[AGE], theCluster.parameter[FEH], theCluster.parameter[YYY]);
-    printf ("\n modulus        = %5.2f\n Av             = %5.2f\n WDMassUp       = %4.1f", theCluster.parameter[MOD], theCluster.parameter[ABS], theCluster.M_wd_up);
-    printf ("\n fractionBinary = %5.2f\n", fractionBinary);
-
-    printf ("\n Totals:");
-    printf ("\n nSystems       = %d\n nStars         = %d\n nMSRG          = %d\n nWD            = %d", theCluster.nStars, nStars, nMSRG, nWD);
-    printf ("\n nNSBH          = %d\n massTotal      = %.2f\n MSRGMassTotal  = %.2f\n wdMassTotal    = %.2f\n", nNSBH, massTotal, MSRGMassTotal, wdMassTotal);
-    printf ("\n nFieldStars    = %d\n", nFieldStars * 2);
+    cout << "\n Properties for cluster:" << endl;
+    cout << boost::format(" logClusAge     = %6.3f") % theCluster.parameter[AGE] << endl;
+    cout << boost::format(" [Fe/H]         = %5.2f") % theCluster.parameter[FEH] << endl;
+    cout << boost::format(" Y              = %5.2f") % theCluster.parameter[YYY] << endl;
+    cout << boost::format(" modulus        = %5.2f") % theCluster.parameter[MOD] << endl;
+    cout << boost::format(" Av             = %5.2f") % theCluster.parameter[ABS] << endl;
+    cout << boost::format(" WDMassUp       = %4.1f") % theCluster.M_wd_up << endl;
+    cout << boost::format(" fractionBinary = %5.2f") % fractionBinary << endl;
+    
+    cout << "Totals:" << endl;
+    cout << " nSystems       = " << theCluster.nStars << endl;
+    cout << " nStars         = " << nStars << endl;
+    cout << " nMSRG          = " << nMSRG << endl;
+    cout << " nWD            = " << nWD << endl;
+    cout << " nNSBH          = " << nNSBH << endl;
+    cout.precision(2);
+    cout << " massTotal      = " << massTotal << endl;
+    cout.precision(2);
+    cout << " MSRGMassTotal  = " << MSRGMassTotal << endl;
+    cout.precision(2);
+    cout << " wdMassTotal    = " << wdMassTotal << endl;
+    cout << " nFieldStars    = " << nFieldStars * 2 << endl;;
 
 
     //////////////////////////////

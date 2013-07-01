@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 
 #include <cmath>
@@ -10,6 +11,8 @@
 #include "Cluster.hpp"
 
 using std::vector;
+using std::cerr;
+using std::endl;
 
 
 double getMass1 (Star *pStar, Cluster *pCluster)
@@ -44,13 +47,13 @@ void allocateGlobalIso (struct globalIso *newIso)
 {
     if (newIso->nEntries == 0 || newIso->nFilts == 0)
     {
-        printf ("Cannot allocate memory for global isochrone with %d entries and/or %d filts\n", newIso->nEntries, newIso->nFilts);
+        cerr << "Cannot allocate memory for global isochrone with " << newIso->nEntries << " entries and/or " << newIso->nFilts << " filts" << endl;
         exit (1);
     }
 
     if (newIso->mass != NULL)
     {
-        printf ("globalIso memory already allocated\n");
+        cerr << "globalIso memory already allocated" << endl;
         return;
     }
 
