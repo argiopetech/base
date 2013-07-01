@@ -44,7 +44,6 @@ struct ifmrMcmcControl
     int iStart;
     double filterPriorMin[FILTS];
     double filterPriorMax[FILTS];
-    int verbose;
     int useFilt[FILTS];
     int numFilts;
     double propMatrix[NPARAMS][NPARAMS];

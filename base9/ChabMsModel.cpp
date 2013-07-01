@@ -12,7 +12,6 @@
 
 using std::string;
 
-extern int verbose;
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
 extern struct globalIso isochrone;
@@ -175,43 +174,40 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
     double newAge = pow (10, newLogAge) / 1e9;
     double b[2], c[2], d[2];
 
-    //verbose = 1;
-    //printf("******** Here  %f %f %f **********\n", newFeH, newY, newLogAge);
-
     if (newLogAge < cLogAge[0][0][0])
     {
-        if (verbose)
-            printf ("\n Requested age (%.3f) too young. (gChabMag.c)", cLogAge[0][0][0]);       //newLogAge);
+        // if (verbose)
+        //     printf ("\n Requested age (%.3f) too young. (gChabMag.c)", cLogAge[0][0][0]);       //newLogAge);
         return 0.0;
     }
     if (newLogAge > cLogAge[N_CHAB_Z - 1][N_CHAB_Y - 1][N_CHAB_AGES - 1])
     {
-        if (verbose)
-            printf ("\n Requested age (%.3f) too old. (gChabMag.c)", newLogAge);
+        // if (verbose)
+        //     printf ("\n Requested age (%.3f) too old. (gChabMag.c)", newLogAge);
         return 0.0;
     }
     if (newFeH < cFeH[0])
     {
-        if (verbose)
-            printf ("\n Requested FeH (%.3f) too low. (gChabMag.c)", newFeH);
+        // if (verbose)
+        //     printf ("\n Requested FeH (%.3f) too low. (gChabMag.c)", newFeH);
         return 0.0;
     }
     if (newFeH > cFeH[N_CHAB_Z - 1])
     {
-        if (verbose)
-            printf ("\n Requested FeH (%.3f) too high. (gChabMag.c)", newFeH);
+        // if (verbose)
+        //     printf ("\n Requested FeH (%.3f) too high. (gChabMag.c)", newFeH);
         return 0.0;
     }
     if (newY < cY[0][0])
     {
-        if (verbose)
-            printf ("\n Requested Y (%.3f) too low. (gChabMag.c)", newY);
+        // if (verbose)
+        //     printf ("\n Requested Y (%.3f) too low. (gChabMag.c)", newY);
         return 0.0;
     }
     if (newY > cY[N_CHAB_Z - 1][N_CHAB_Y - 1])
     {
-        if (verbose)
-            printf ("\n Requested Y (%.3f) too high. (gChabMag.c)", newY);
+        // if (verbose)
+        //     printf ("\n Requested Y (%.3f) too high. (gChabMag.c)", newY);
         return 0.0;
     }
 

@@ -16,7 +16,7 @@ using std::array;
 
 const int MAX_ENTRIES = 370;
 
-extern int verbose, useFilt[FILTS], aFilt, needMassNow;
+extern int useFilt[FILTS], aFilt, needMassNow;
 extern double ltau[2];
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
@@ -126,8 +126,8 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster *pCluster, S
     }
     else
     {
-        if (verbose)
-            printf (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
+        // if (verbose)
+        //     printf (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
         for (filt = 0; filt < FILTS; filt++)
             if (useFilt[filt])
                 mag[cmpnt][filt] = 99.999;

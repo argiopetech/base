@@ -14,7 +14,7 @@
 using std::array;
 using std::vector;
 
-extern int verbose, useFilt[FILTS], aFilt, needMassNow;
+extern int useFilt[FILTS], aFilt, needMassNow;
 extern double ltau[2];
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
@@ -154,8 +154,8 @@ void evolve (Cluster *pCluster, Model &evoModels, vector<Star> &stars, int index
                 }
                 else
                 {
-                    if (verbose)
-                        printf (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
+                    // if (verbose)
+                    //     printf (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
                     for (filt = 0; filt < FILTS; filt++)
                         if (useFilt[filt])
                             mag[cmpnt][filt] = 99.999;

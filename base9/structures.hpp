@@ -8,20 +8,6 @@
 #include "Star.hpp"
 #include "Chain.hpp"
 
-//Be careful adding new sample types.  Their order is important.
-//There are a few places in the code that test for SAMPLE_TYPE > or <.
-const int MASS              = -2;
-const int AGE_DURING_WANDER = -1;  // age sampling during AGE_WANDER (defined in samplers.h)
-
-const int AGE               =  0;  // age sampling
-const int YYY               =  1;  // helium sampling
-const int FEH               =  2;  // metallicity sampling
-const int MOD               =  3;  // modulus sampling
-const int ABS               =  4;  // absorption sampling;
-const int IFMR_INTERCEPT    =  5;
-const int IFMR_SLOPE        =  6;
-const int IFMR_QUADCOEF     =  7;
-
 struct globalIso
 {
     double FeH;
@@ -82,7 +68,6 @@ struct mcmcControl
     int iStart;
     double filterPriorMin[FILTS];
     double filterPriorMax[FILTS];
-    int verbose;
     int useFilt[FILTS];
     enum blockType currentBlock;
 };

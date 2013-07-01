@@ -18,7 +18,6 @@ using std::cerr;
 using std::endl;
 
 // Declared in parent program (mcmc, simCluster, makeCMD)
-extern int verbose;
 
 void loadModels (Cluster *theCluster, Model &evoModels, Settings &settings)
 {

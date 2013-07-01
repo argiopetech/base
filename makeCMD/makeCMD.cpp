@@ -29,7 +29,7 @@ double ltau[2], wdLogTeff[2];
 int aFilt = 0;
 
 // Used by a bunch of different functions.
-int verbose, needMassNow = 1, useFilt[FILTS];   //, numFilts;
+int needMassNow = 1, useFilt[FILTS];   //, numFilts;
 
 void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 
@@ -189,10 +189,10 @@ int main (int argc, char *argv[])
     ///////////////////////////////////
 
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
-    verbose = settings.verbose;
+    // verbose = settings.verbose;
 
-    if (verbose < 0 || verbose > 2)
-        verbose = 1;            // give standard feedback if incorrectly specified
+    // if (verbose < 0 || verbose > 2)
+    //     verbose = 1;            // give standard feedback if incorrectly specified
 
     loadModels (&theCluster, evoModels, settings);      // read in stellar evol & WD models
 

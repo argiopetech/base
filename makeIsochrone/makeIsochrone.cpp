@@ -27,7 +27,7 @@ int aFilt = 0;
 extern struct globalIso isochrone;
 
 // Used by a bunch of different functions.
-int verbose, needMassNow = 1, useFilt[FILTS], numFilts;
+int needMassNow = 1, useFilt[FILTS], numFilts;
 
 static void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 
@@ -116,9 +116,9 @@ int main (int argc, char *argv[])
     ///////////////////////////////////
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
 
-    verbose = settings.verbose;
-    if (verbose < 0 || verbose > 2)
-        verbose = 1;            /* give standard feedback if incorrectly specified */
+    // verbose = settings.verbose;
+    // if (verbose < 0 || verbose > 2)
+    //     verbose = 1;            /* give standard feedback if incorrectly specified */
 
 
     loadModels (&theCluster, evoModels, settings);      /* read in stellar evol & WD models */

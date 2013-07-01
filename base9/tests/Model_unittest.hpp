@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-int verbose, needMassNow;
+int needMassNow;
 int *useFilt;
 double *ltau, *aFilt;
 

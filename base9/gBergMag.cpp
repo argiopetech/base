@@ -25,7 +25,7 @@ The appropriate magnitudes are put in globalMags[][].
 using std::string;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
-extern int verbose, useFilt[FILTS];
+extern int useFilt[FILTS];
 extern double globalMags[FILTS];
 
 // Arrays to hold the models

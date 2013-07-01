@@ -29,7 +29,7 @@ double ltau[2];
 int aFilt = 0;
 
 // Used by a bunch of different functions.
-int verbose, needMassNow = 1, useFilt[FILTS];
+int needMassNow = 1, useFilt[FILTS];
 
 // For random # generator (mt19937ar.c)
 unsigned long seed = 0;
@@ -86,9 +86,9 @@ int main (int argc, char *argv[])
 
     seed = settings.seed;
 
-    verbose = settings.verbose;
-    if (verbose < 0 || verbose > 2)
-        verbose = 1;            // give standard feedback if incorrectly specified
+    // verbose = settings.verbose;
+    // if (verbose < 0 || verbose > 2)
+    //     verbose = 1;            // give standard feedback if incorrectly specified
 
     // !!! FIX ME !!!
     cerr << "This is broken. If we need field stars and are using the YALE models, we also have to load the DSED models.";

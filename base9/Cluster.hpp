@@ -12,9 +12,17 @@ class Cluster
   public:
     Cluster()
     {
-        stepSize.fill(0.0);
         mean.fill(0.0);
         parameter.fill(0.0);
+
+        stepSize[AGE] = 0.005;
+        stepSize[FEH] = 0.005;
+        stepSize[MOD] = 0.005;
+        stepSize[ABS] = 0.002;
+        stepSize[YYY] = 0.002;
+        stepSize[IFMR_INTERCEPT] = 0.01;
+        stepSize[IFMR_SLOPE] = 0.008;
+        stepSize[IFMR_QUADCOEF] = 0.008;
     }
     ~Cluster() {;}
 

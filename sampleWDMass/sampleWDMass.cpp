@@ -46,7 +46,6 @@ struct ifmrGridControl
     int modelSet;
     double filterPriorMin[FILTS];
     double filterPriorMax[FILTS];
-    int verbose;
     int useFilt[FILTS];
     int numFilts;
     int nSamples;
@@ -93,7 +92,7 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 extern double ageLimit[2];      /* Defined in evolve.c, set in the appropriate model during loadModels. */
 
 /* Used by a bunch of different functions. */
-int verbose = 0, needMassNow = 0, useFilt[FILTS], numFilts = 0;
+int needMassNow = 0, useFilt[FILTS], numFilts = 0;
 
 /* For random number generator (mt19937ar.c) */
 unsigned long seed;
@@ -109,7 +108,6 @@ Settings settings;
  */
 static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridControl *ctrl, Settings &s)
 {
-    ctrl->verbose = 0;
     ctrl->numFilts = 0;
 
     int ii;
@@ -558,7 +556,6 @@ int main (int argc, char *argv[])
     }
     else
     {
-        ctrl.verbose = 0;
         ctrl.iStart = 0;
     }
 

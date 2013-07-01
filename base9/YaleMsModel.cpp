@@ -16,9 +16,6 @@ using std::string;
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
 
-// Defined in parent program (mcmc, simCluster,makeCMD)
-extern int verbose;
-
 // Defined in evolve.c
 extern double ageLimit[2];
 extern struct globalIso isochrone;
@@ -250,26 +247,26 @@ double YaleMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 
     if (newAge < yyAge[0][0])
     {
-        if (verbose)
-            printf ("\n Requested age (%.3f) too young. (gYaleMag.c)", newLogAge);
+        // if (verbose)
+        //     printf ("\n Requested age (%.3f) too young. (gYaleMag.c)", newLogAge);
         return 0.0;
     }
     if (newAge > yyAge[N_YY_Z - 1][N_YY_AGES - 1])
     {
-        if (verbose)
-            printf ("\n Requested age (%.3f) too old. (gYaleMag.c)", newLogAge);
+        // if (verbose)
+        //     printf ("\n Requested age (%.3f) too old. (gYaleMag.c)", newLogAge);
         return 0.0;
     }
     if (newZ < yyZ[0])
     {
-        if (verbose)
-            printf ("\n Requested Z (%.3f, FeH = %.3f) too low. (gYaleMag.c)", newZ, newFeH);
+        // if (verbose)
+        //     printf ("\n Requested Z (%.3f, FeH = %.3f) too low. (gYaleMag.c)", newZ, newFeH);
         return 0.0;
     }
     if (newZ > yyZ[N_YY_Z - 1])
     {
-        if (verbose)
-            printf ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
+        // if (verbose)
+        //     printf ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
         return 0.0;
     }
 
