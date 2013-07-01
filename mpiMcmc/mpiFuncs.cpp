@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 
+#include <boost/format.hpp>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
@@ -75,7 +76,7 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
     {
         for (int j = 0; j < nParamsUsed; j++)
         {
-            cout << gsl_matrix_get (covMat, i, j) << " ";
+            cout << boost::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
         }
         cout << endl;
     }
@@ -135,18 +136,17 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
     if (isfinite(logPostProp))
     {
         /* loop over assigned stars */
-        for (int i = 0; i < mc.clust.nStars; i++)
+        for (auto star : mc.stars)
         {
             /* loop over all (mass1, mass ratio) pairs */
-            if (mc.stars[i].status[0] == WD)
+            if (star.status[0] == WD)
             {
-
                 postClusterStar = 0.0;
                 double tmpLogPost;
 
                 for (int j = 0; j < N_WD_MASS1; j++)
                 {
-                    wd[j] = mc.stars[i];
+                    wd[j] = star;
                     wd[j].boundsFlag = 0;
                     wd[j].isFieldStar = 0;
                     wd[j].U = wdMass1Grid[j];
@@ -170,14 +170,14 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (&propClust, &mc.stars[i], evoModels);
+                postClusterStar = margEvolveWithBinary (&propClust, &star, evoModels);
             }
 
-            postClusterStar *= mc.stars[i].clustStarPriorDens;
+            postClusterStar *= star.clustStarPriorDens;
 
 
             /* marginalize over field star status */
-            logPostProp += log ((1.0 - mc.stars[i].clustStarPriorDens) * fsLike + postClusterStar);
+            logPostProp += log ((1.0 - star.clustStarPriorDens) * fsLike + postClusterStar);
         }
     }
 

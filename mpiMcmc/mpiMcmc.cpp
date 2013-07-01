@@ -370,12 +370,12 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels)
 
     while (moreStars)
     {
-        mc.stars.emplace_back();
-
         ctrl.rData >> line;
 
         if (ctrl.rData.eof())
             break;
+
+        mc.stars.emplace_back();
 
         for (i = 0; i < ctrl.numFilts; i++)
         {
@@ -426,6 +426,8 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels)
         useFilt[i] = ctrl.useFilt[i];
     }
     numFilts = ctrl.numFilts;
+
+    assert (mc.stars.size() == mc.clust.nStars);
 } /* readCmdData */
 
 

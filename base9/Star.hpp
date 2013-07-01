@@ -25,7 +25,6 @@ class Star
         for (auto &a : beta)
             a.fill(0.0);
     }
-
     ~Star() {;}
 
     Matrix<double, NPARAMS, 2> beta;
