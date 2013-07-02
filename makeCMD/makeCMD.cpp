@@ -36,7 +36,7 @@ double wdLogTeff[2];
 int aFilt = 0;
 
 // Used by a bunch of different functions.
-int needMassNow = 1, useFilt[FILTS];   //, numFilts;
+int useFilt[FILTS];   //, numFilts;
 
 void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 

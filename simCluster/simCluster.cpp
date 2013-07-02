@@ -30,7 +30,7 @@ static double wdMassTotal = 0.0, MSRGMassTotal = 0.0;
 int aFilt = 0;
 
 // Used by a bunch of different functions.
-int needMassNow = 1, useFilt[FILTS];
+int useFilt[FILTS];
 
 // For random # generator (mt19937ar.c)
 unsigned long seed = 0;

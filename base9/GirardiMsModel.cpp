@@ -15,7 +15,7 @@ using std::string;
 using std::cerr;
 using std::endl;
 
-extern int useFilt[FILTS], needMassNow;
+extern int useFilt[FILTS];
 extern double globalMags[FILTS];
 extern double ageLimit[2];
 
@@ -274,12 +274,8 @@ Uses static variables iAge and iFeH.
                 continue;               // for speed, don't bother with this calculation
             fehMag[f][filt] = linInterp (modelAge[LOW], modelAge[HIGH], ageMag[f][LOW][filt], ageMag[f][HIGH][filt], currentAge);
         }
-        if (needMassNow)
-        {                               // simCluster.c needs the resulting number
-            fehMassNow[f] = linInterp (modelAge[LOW], modelAge[HIGH], ageMassNow[f][LOW], ageMassNow[f][HIGH], currentAge);
-        }
-        else
-            fehMassNow[f] = 0.0;        // for speed, mcmc doesn't care about this value
+
+        fehMassNow[f] = linInterp (modelAge[LOW], modelAge[HIGH], ageMassNow[f][LOW], ageMassNow[f][HIGH], currentAge);
     }
 
     // Interpolate in FeH
@@ -289,10 +285,8 @@ Uses static variables iAge and iFeH.
             continue;                   // for speed, don't bother with this calculation
         globalMags[filt] = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMag[LOW][filt], fehMag[HIGH][filt], currentFeH);
     }
-    if (needMassNow)
-    {                           // simCluster.c needs the resulting number
-        massNow = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMassNow[LOW], fehMassNow[HIGH], currentFeH);
-    }
+
+    massNow = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMassNow[LOW], fehMassNow[HIGH], currentFeH);
 
     return massNow;
 
@@ -318,8 +312,9 @@ double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whi
             if (useFilt[filt])
                 ageMag[filt] = gIsoMag[whichFeHIndex][filt][hi];        //   for this particular age)and FeH)
         }
-        if (needMassNow)
-            tempMass = gIsoMass[ZAMS][whichFeHIndex][hi];
+
+        tempMass = gIsoMass[ZAMS][whichFeHIndex][hi];
+
         return tempMass;
     }
 
@@ -371,10 +366,9 @@ double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whi
             continue;                   // for speed, don't bother with this calculation
         ageMag[filt] = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMag[LOW][filt], modelMag[HIGH][filt], zamsMass);
     }
-    if (needMassNow)
-    {
-        tempMass = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMass[LOW][NOW], modelMass[HIGH][NOW], zamsMass);
-    }
+
+
+    tempMass = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMass[LOW][NOW], modelMass[HIGH][NOW], zamsMass);
 
     return tempMass;
 

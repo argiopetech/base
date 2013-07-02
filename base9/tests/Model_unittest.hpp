@@ -4,7 +4,6 @@
 
 #include <iostream>
 
-int needMassNow;
 int *useFilt;
 double *ltau, *aFilt;
 

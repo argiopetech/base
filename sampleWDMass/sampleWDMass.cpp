@@ -99,7 +99,7 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 extern double ageLimit[2];      /* Defined in evolve.c, set in the appropriate model during loadModels. */
 
 /* Used by a bunch of different functions. */
-int needMassNow = 0, useFilt[FILTS], numFilts = 0;
+int useFilt[FILTS], numFilts = 0;
 
 /* For random number generator (mt19937ar.c) */
 unsigned long seed;

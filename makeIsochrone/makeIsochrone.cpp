@@ -33,7 +33,7 @@ int aFilt = 0;
 extern struct globalIso isochrone;
 
 // Used by a bunch of different functions.
-int needMassNow = 1, useFilt[FILTS], numFilts;
+int useFilt[FILTS], numFilts;
 
 static void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 

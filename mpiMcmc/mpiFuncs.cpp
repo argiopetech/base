@@ -38,7 +38,6 @@ int aFilt;
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
 int useFilt[FILTS];
-int needMassNow = 0;
 
 /*
  * Read data
@@ -91,7 +90,6 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModel
     int j = 0;
     int moreStars = 1;          // true
 
-    // why is this necessary???
     mc.stars.clear();
 
     while (moreStars)
@@ -435,7 +433,6 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoM
     mc.clust.mean[IFMR_SLOPE] = ctrl.priorMean[IFMR_SLOPE];
     mc.clust.mean[IFMR_INTERCEPT] = ctrl.priorMean[IFMR_INTERCEPT];
     mc.clust.mean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
-
 
     int i;
 
