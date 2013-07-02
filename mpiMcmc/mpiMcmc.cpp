@@ -5,15 +5,9 @@
 #include "Settings.hpp"
 
 using std::array;
-using std::string;
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::vector;
-using std::ofstream;
-using std::isfinite;
-
-extern double ageLimit[2];      /* Defined in evolve.c, set in loadModels. */
 
 int main (int argc, char *argv[])
 {
