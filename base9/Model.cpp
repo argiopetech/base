@@ -9,7 +9,7 @@ using std::cerr;
 using std::endl;
 using std::shared_ptr;
 
-Model makeModel(Settings &s)
+const Model makeModel(Settings &s)
 {
     shared_ptr<MsRgbModel> msModel;
     MsFilterSet filterSet;
@@ -49,6 +49,25 @@ Model makeModel(Settings &s)
     }
 
     Model model(msModel, filterSet);
+
+// !!! FIX ME !!!
+
+    model.IFMR = s.whiteDwarf.ifmr;
+
+    model.WDcooling = s.whiteDwarf.wdModel;
+
+    if (model.WDcooling < 0 || model.WDcooling > 3)
+    {
+        cerr << "***Error: No model found for white dwarf filter set " << model.WDcooling << ".***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    model.brownDwarfEvol = s.brownDwarf.bdModel;
+
+    model.WDatm = BERGERON;
+
+// END FIX ME
 
     return model;
 }

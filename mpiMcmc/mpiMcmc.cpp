@@ -56,7 +56,7 @@ Settings settings;
 /*
  * Initialize chain
  */
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels)
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels)
 {
     int p;
 
@@ -132,7 +132,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels)
 /*
  * read control parameters from input stream
  */
-void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels)
+void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels)
 {
 
     double priorSigma;
@@ -317,7 +317,7 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
 /*
  * Read data
  */
-void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels)
+void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels)
 {
     char line[300];
     double tempSigma;
@@ -342,7 +342,7 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels)
             if (strcmp (pch, getFilterName (filt)) == 0)
             {
                 ctrl.useFilt[filt] = 1;
-                evoModels.numFilts++;
+                const_cast<Model&>(evoModels).numFilts++;
                 if (aFilt < 0)
                     aFilt = filt;               // Sets this to a band we know we are using (for evolve)
                 break;
@@ -549,13 +549,11 @@ int main (int argc, char *argv[])
         settings.fromCLI (argc, argv);
     }
 
-    Model evoModels = makeModel(settings);
+    const Model evoModels = makeModel(settings);
 
     increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
     initIfmrMcmcControl (mc, ctrl, evoModels);
-
-    evoModels.WDatm = BERGERON;
 
     for (int p = 0; p < NPARAMS; p++)
     {
@@ -564,9 +562,6 @@ int main (int argc, char *argv[])
     }
 
     readCmdData (mc, ctrl, evoModels);
-
-    evoModels.numFilts = ctrl.numFilts;
-    numFilts = ctrl.numFilts;
 
     initChain (mc, ctrl, evoModels);
 

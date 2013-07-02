@@ -26,13 +26,13 @@ extern double ageLimit[2];
 extern struct globalIso isochrone;
 static array<double, FILTS> clusterAbs;
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, Model&);
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model&);
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar);
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, Model&);
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate
    the integral */
-double margEvolveWithBinary (Cluster &pCluster, Star &pStar, Model &evoModels)
+double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoModels)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
     double post = 0.0;
@@ -90,7 +90,7 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, Model &evoModels)
     }
 }
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, Model &evoModels)
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels)
 {
     int filt;
 
@@ -173,7 +173,7 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
 }
 
 
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, Model &evoModels)
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels)
 {
     setMass1 (pStar, pCluster, mass[0]);
 

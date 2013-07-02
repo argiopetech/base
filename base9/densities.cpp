@@ -72,7 +72,7 @@ double logPriorMass (Star &pStar, Cluster &pCluster)
 }
 
 // Compute log prior density for cluster properties
-double logPriorClust (Cluster &pCluster, Model &evoModels)
+double logPriorClust (Cluster &pCluster, const Model &evoModels)
 {
     if (pCluster.getAge() < ageLimit[0])
         return -HUGE_VAL;               // these are possible, we just don't have models for them YET
@@ -219,7 +219,7 @@ double scaledLogLike (int numFilts, Star &pStar, double varScale)
 }
 
 
-double logPost1Star (Star &pStar, Cluster &pCluster, Model &evoModels)
+double logPost1Star (Star &pStar, Cluster &pCluster, const Model &evoModels)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;

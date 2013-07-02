@@ -144,10 +144,11 @@ void parallelFor(const unsigned int size, std::function<void(const unsigned int)
 
         threads.push_back(std::thread(threadFunc));
     }
-    for (auto & t : threads) t.join();
+    for (auto &t : threads)
+        t.join();
 }
 
-double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike)
+double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike)
 {
     atomic<double> postClusterStar(0.0);
 
