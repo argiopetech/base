@@ -61,7 +61,7 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    Model evoModels = makeModel(settings);
+    const Model evoModels = makeModel(settings);
 
     for (filt = 0; filt < 8; filt++)
         useFilt[filt] = 1;              // calculate all of U-K

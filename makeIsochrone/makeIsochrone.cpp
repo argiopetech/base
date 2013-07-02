@@ -61,7 +61,7 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    Model evoModels = makeModel(settings);
+    const Model evoModels = makeModel(settings);
 
     ////////////////////////////////////////////
     /////// Open files to read and write ///////
@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
         fscanf (rDataPtr, "%d ", &useFilt[filt]);
         if (useFilt[filt])
         {
-            evoModels.numFilts++;
+            const_cast<Model&>(evoModels).numFilts++;
             aFilt = filt;               // Sets this to a band we know we are using (for evolve)
         }
     }
