@@ -117,7 +117,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels)
         }
 
         // find photometry for initial values of currentClust and mc.stars
-        evolve (&mc.clust, evoModels, star);
+        evolve (mc.clust, evoModels, star);
 
         if (star.status[0] == WD)
         {

@@ -151,7 +151,7 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
 {
     atomic<double> postClusterStar(0.0);
 
-    double logPostProp = logPriorClust (&propClust, evoModels);
+    double logPostProp = logPriorClust (propClust, evoModels);
 
     if (isfinite(logPostProp))
     {
@@ -172,7 +172,7 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
                     wd.U = wdMass1Grid[j];
                     wd.massRatio = 0.0;
                            
-                    evolve (&propClust, evoModels, wd);
+                    evolve (propClust, evoModels, wd);
 
                     if (wd.boundsFlag)
                     {
@@ -180,7 +180,7 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
                     }
                     else
                     {
-                        tmpLogPost = logPost1Star (&wd, &propClust, evoModels);
+                        tmpLogPost = logPost1Star (wd, propClust, evoModels);
                         tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                         postClusterStar = postClusterStar +  exp (tmpLogPost);
@@ -190,7 +190,7 @@ double logPostStep(Chain &mc, Model &evoModels, array<double, N_WD_MASS1> &wdMas
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (&propClust, &star, evoModels);
+                postClusterStar = margEvolveWithBinary (propClust, star, evoModels);
             }
 
             postClusterStar = postClusterStar * star.clustStarPriorDens;

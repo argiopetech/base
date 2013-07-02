@@ -357,7 +357,7 @@ int main (int argc, char *argv[])
         }
 
         for (auto s : stars)
-            evolve (&theCluster, evoModels, s);
+            evolve (theCluster, evoModels, s);
 
         for (j = 0; j < theCluster.nStars; j++)
         {
@@ -409,7 +409,7 @@ int main (int argc, char *argv[])
                     // fprintf(wCmdPtr,"%10.5f  %9.3e  ", intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR),
                     //         intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR) -
                     //         intlFinalMassReln(meanMass[m][j] - sigma, theCluster.evoModels.IFMR));
-                    fprintf (wCmdPtr, "%10.5f  %9.3e  ", intlFinalMassReln (&theCluster, evoModels, meanMass[m][j]), intlFinalMassReln (&theCluster, evoModels, meanMass[m][j]) - intlFinalMassReln (&theCluster, evoModels, meanMass[m][j] - sigma));
+                    fprintf (wCmdPtr, "%10.5f  %9.3e  ", intlFinalMassReln (theCluster, evoModels, meanMass[m][j]), intlFinalMassReln (theCluster, evoModels, meanMass[m][j]) - intlFinalMassReln (theCluster, evoModels, meanMass[m][j] - sigma));
                 else
                     fprintf (wCmdPtr, "%10.5f  %9.3e  ", 0.0, 0.0);
             }
@@ -458,7 +458,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (&theCluster, evoModels, s);
+        evolve (theCluster, evoModels, s);
 
     fprintf (wDebugPtr, " mass stage1");
     for (filt = 0; filt < FILTS; filt++)

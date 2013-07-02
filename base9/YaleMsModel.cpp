@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cmath>
@@ -15,6 +16,7 @@
 using std::string;
 using std::cerr;
 using std::endl;
+using std::vector;
 
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
@@ -222,7 +224,7 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
     {
         tempIso[i].nEntries = MAX_YY_ENTRIES;
         tempIso[i].nFilts = N_YY_FILTS;
-        allocateGlobalIso (&tempIso[i]);
+        allocateGlobalIso (tempIso[i]);
     }
 
     fclose (pYY);
@@ -438,22 +440,24 @@ static void eepset (double x[], double y[], int nstep, int igrd, double *slope)
 static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorder)
 {
     int n = 4, k, l, m;
-    double y[n], a, b, c, s, xm, xbar;
+    double a, b, c, s, xm, xbar;
+
+    vector<double> y(n);
 
     for (k = 0; k < n; k++)
-        y[k] = yy[k];
+        y.at(k) = yy[k];
 
     for (k = 0; k < n - 1; k++)
     {
         for (l = 0; l < n - k - 1; l++)
         {
-            y[l] = (y[l + 1] - y[l]) / (x[l + k + 1] - x[l]);
+            y.at(l) = (y.at(l + 1) - y.at(l)) / (x[l + k + 1] - x[l]);
         }
     }
 
-    a = 3.0 * y[0];
-    b = -2.0 * y[0] * (x[3] + x[2] + x[1]) + 2.0 * y[1];
-    c = y[0] * (x[2] * x[3] + x[1] * x[3] + x[1] * x[2]) - y[1] * (x[3] + x[2]) + y[2];
+    a = 3.0 * y.at(0);
+    b = -2.0 * y.at(0) * (x[3] + x[2] + x[1]) + 2.0 * y.at(1);
+    c = y.at(0) * (x[2] * x[3] + x[1] * x[3] + x[1] * x[2]) - y.at(1) * (x[3] + x[2]) + y.at(2);
     s = sqrt (b * b - 4.0 * a * c);
 
     (*xp) = (-b + s) / (2.0 * a);
@@ -474,11 +478,11 @@ static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorde
         }
     }
 
-    (*ybar) = y[0];
+    (*ybar) = y.at(0);
 
     for (m = 1; m < n; m++)
     {
-        (*ybar) = (*ybar) * (xbar - x[m]) + y[m];
+        (*ybar) = (*ybar) * (xbar - x[m]) + y.at(m);
     }
 
     (*xp) = xbar;

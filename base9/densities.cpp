@@ -21,7 +21,7 @@ static int calcMassNorm = 0;
 extern double filterPriorMin[FILTS], filterPriorMax[FILTS];
 extern double ageLimit[2];
 
-double logPriorMass (Star *pStar, Cluster *pCluster)
+double logPriorMass (Star &pStar, Cluster &pCluster)
 // Compute log prior density
 {
     const double mf_sigma = 0.67729, mf_mu = -1.02;
@@ -29,7 +29,7 @@ double logPriorMass (Star *pStar, Cluster *pCluster)
 
     double mass1, log_m1, logPrior = 0.0;
 
-    if (pStar->status[0] == BD)
+    if (pStar.status[0] == BD)
         return 0.0;
 
     // Calculate the mass normalization factor once so that we don't have to
@@ -40,7 +40,7 @@ double logPriorMass (Star *pStar, Cluster *pCluster)
         double tup, tlow;
 
         p = mf_mu + mf_sigma * mf_sigma * log (10);
-        tup = (log10 (pCluster->M_wd_up) - p) / (mf_sigma);
+        tup = (log10 (pCluster.M_wd_up) - p) / (mf_sigma);
         tlow = (-1 - p) / mf_sigma;
         q = exp (-(mf_mu * mf_mu - p * p) / (2 * mf_sigma * mf_sigma));
         c = 1 / (q * mf_sigma * sqrt (2 * M_PI) * (Phi (tup) - Phi (tlow)));
@@ -51,13 +51,13 @@ double logPriorMass (Star *pStar, Cluster *pCluster)
 
     mass1 = getMass1 (pStar, pCluster);
 
-    if (mass1 > 0.1 && mass1 <= pCluster->M_wd_up)
+    if (mass1 > 0.1 && mass1 <= pCluster.M_wd_up)
     {
-        if ((*pStar).isFieldStar)
+        if (pStar.isFieldStar)
         {
-            logPrior = logTDens ((*pStar).U, (*pStar).meanU, (*pStar).varU, DOF);
-            if ((*pStar).status[0] != WD)
-                logPrior += logTDens ((*pStar).massRatio, (*pStar).meanMassRatio, (*pStar).varMassRatio, DOF);
+            logPrior = logTDens (pStar.U, pStar.meanU, pStar.varU, DOF);
+            if (pStar.status[0] != WD)
+                logPrior += logTDens (pStar.massRatio, pStar.meanMassRatio, pStar.varMassRatio, DOF);
             return logPrior;
         }
         else
@@ -72,17 +72,17 @@ double logPriorMass (Star *pStar, Cluster *pCluster)
 }
 
 // Compute log prior density for cluster properties
-double logPriorClust (Cluster *pCluster, Model &evoModels)
+double logPriorClust (Cluster &pCluster, Model &evoModels)
 {
-    if (pCluster->getAge() < ageLimit[0])
+    if (pCluster.getAge() < ageLimit[0])
         return -HUGE_VAL;               // these are possible, we just don't have models for them YET
-    else if (pCluster->getAge() > ageLimit[1])
+    else if (pCluster.getAge() > ageLimit[1])
         return -HUGE_VAL;               // appropriate for the MS/RGB models but not the WDs
-    else if (pCluster->parameter[IFMR_SLOPE] < 0.0)
+    else if (pCluster.parameter[IFMR_SLOPE] < 0.0)
         return -HUGE_VAL;
     if (evoModels.IFMR == 11)
     {
-        if (pCluster->parameter[IFMR_QUADCOEF] < 0.0)
+        if (pCluster.parameter[IFMR_QUADCOEF] < 0.0)
             return -HUGE_VAL;
     }
 
@@ -90,14 +90,14 @@ double logPriorClust (Cluster *pCluster, Model &evoModels)
     if (evoModels.IFMR == 10)
     {
         double massLower = 0.15;
-        double massUpper = pCluster->M_wd_up;
+        double massUpper = pCluster.M_wd_up;
         double massShift = 3.0;
-        double angle = atan (pCluster->parameter[IFMR_SLOPE]);
-        double aa = cos (angle) * (1 + pCluster->parameter[IFMR_SLOPE] * pCluster->parameter[IFMR_SLOPE]);
+        double angle = atan (pCluster.parameter[IFMR_SLOPE]);
+        double aa = cos (angle) * (1 + pCluster.parameter[IFMR_SLOPE] * pCluster.parameter[IFMR_SLOPE]);
         double xLower = aa * (massLower - massShift);
         double xUpper = aa * (massUpper - massShift);
 
-        double dydx_xLower = pCluster->parameter[IFMR_QUADCOEF] * (xLower - xUpper);
+        double dydx_xLower = pCluster.parameter[IFMR_QUADCOEF] * (xLower - xUpper);
         double dydx_xUpper = -dydx_xLower;
 
         double slopeLower = tan (angle + atan (dydx_xLower));
@@ -110,21 +110,21 @@ double logPriorClust (Cluster *pCluster, Model &evoModels)
 
     double prior = 0.0;
 
-    if (pCluster->getAbs() < 0.0)
+    if (pCluster.getAbs() < 0.0)
         return -HUGE_VAL;
-    if (pCluster->priorVar[FEH] > EPSILON)
-        prior += (-0.5) * sqr (pCluster->getFeH() - pCluster->priorMean[FEH]) / pCluster->priorVar[FEH];
-    if (pCluster->priorVar[MOD] > EPSILON)
-        prior += (-0.5) * sqr (pCluster->getMod() - pCluster->priorMean[MOD]) / pCluster->priorVar[MOD];
-    if (pCluster->priorVar[ABS] > EPSILON)
-        prior += (-0.5) * sqr (pCluster->getAbs() - pCluster->priorMean[ABS]) / pCluster->priorVar[ABS];
-    if (pCluster->priorVar[YYY] > EPSILON)
-        prior += (-0.5) * sqr (pCluster->getY() - pCluster->priorMean[YYY]) / pCluster->priorVar[YYY];
+    if (pCluster.priorVar[FEH] > EPSILON)
+        prior += (-0.5) * sqr (pCluster.getFeH() - pCluster.priorMean[FEH]) / pCluster.priorVar[FEH];
+    if (pCluster.priorVar[MOD] > EPSILON)
+        prior += (-0.5) * sqr (pCluster.getMod() - pCluster.priorMean[MOD]) / pCluster.priorVar[MOD];
+    if (pCluster.priorVar[ABS] > EPSILON)
+        prior += (-0.5) * sqr (pCluster.getAbs() - pCluster.priorMean[ABS]) / pCluster.priorVar[ABS];
+    if (pCluster.priorVar[YYY] > EPSILON)
+        prior += (-0.5) * sqr (pCluster.getY() - pCluster.priorMean[YYY]) / pCluster.priorVar[YYY];
 
     return prior;
 }
 
-double logLikelihood (int numFilts, Star *pStar)
+double logLikelihood (int numFilts, Star &pStar)
 // Computes log likelihood
 {
     int i;
@@ -132,9 +132,9 @@ double logLikelihood (int numFilts, Star *pStar)
 
     for (i = 0; i < numFilts; i++)
     {
-        if ((*pStar).isFieldStar)
+        if (pStar.isFieldStar)
         {
-            if (filterPriorMin[i] <= pStar->obsPhot[i] && pStar->obsPhot[i] <= filterPriorMax[i])
+            if (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i])
                 likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
             else
             {
@@ -144,14 +144,14 @@ double logLikelihood (int numFilts, Star *pStar)
         }
         else
         {
-            if (pStar->variance[i] > 1e-9)
-                likelihood -= 0.5 * (log (2 * M_PI * pStar->variance[i]) + (sqr (pStar->photometry[i] - pStar->obsPhot[i]) / pStar->variance[i]));
+            if (pStar.variance[i] > 1e-9)
+                likelihood -= 0.5 * (log (2 * M_PI * pStar.variance[i]) + (sqr (pStar.photometry[i] - pStar.obsPhot[i]) / pStar.variance[i]));
         }
     }
     return likelihood;
 }
 
-double tLogLikelihood (int numFilts, Star *pStar)
+double tLogLikelihood (int numFilts, Star &pStar)
 // Computes log likelihood
 {
     int i;
@@ -159,11 +159,11 @@ double tLogLikelihood (int numFilts, Star *pStar)
     double dof = 3.0;
     double quadratic_sum = 0.0;
 
-    if ((*pStar).isFieldStar)
+    if (pStar.isFieldStar)
     {
         for (i = 0; i < numFilts; i++)
         {
-            if (filterPriorMin[i] <= pStar->obsPhot[i] && pStar->obsPhot[i] <= filterPriorMax[i])
+            if (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i])
                 likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
             else
             {
@@ -176,10 +176,10 @@ double tLogLikelihood (int numFilts, Star *pStar)
     {
         for (i = 0; i < numFilts; i++)
         {
-            if (pStar->variance[i] > 1e-9)
+            if (pStar.variance[i] > 1e-9)
             {
-                quadratic_sum += sqr (pStar->photometry[i] - pStar->obsPhot[i]) / pStar->variance[i];
-                likelihood -= 0.5 * (log (M_PI * pStar->variance[i]));
+                quadratic_sum += sqr (pStar.photometry[i] - pStar.obsPhot[i]) / pStar.variance[i];
+                likelihood -= 0.5 * (log (M_PI * pStar.variance[i]));
             }
         }
         likelihood += lgamma (0.5 * (dof + (double) numFilts)) - lgamma (0.5 * dof);
@@ -188,7 +188,7 @@ double tLogLikelihood (int numFilts, Star *pStar)
     return likelihood;
 }
 
-double scaledLogLike (int numFilts, Star *pStar, double varScale)
+double scaledLogLike (int numFilts, Star &pStar, double varScale)
 // Computes log likelihood
 {
     int i;
@@ -196,9 +196,9 @@ double scaledLogLike (int numFilts, Star *pStar, double varScale)
 
     for (i = 0; i < numFilts; i++)
     {
-        if ((*pStar).isFieldStar)
+        if (pStar.isFieldStar)
         {
-            if (filterPriorMin[i] <= pStar->obsPhot[i] && pStar->obsPhot[i] <= filterPriorMax[i])
+            if (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i])
                 likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
             else
             {
@@ -208,9 +208,9 @@ double scaledLogLike (int numFilts, Star *pStar, double varScale)
         }
         else
         {
-            if (pStar->variance[i] > 1e-9)
+            if (pStar.variance[i] > 1e-9)
             {
-                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar->variance[i]) + (sqr (pStar->photometry[i] - pStar->obsPhot[i]) / (varScale * pStar->variance[i])));
+                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance[i]) + (sqr (pStar.photometry[i] - pStar.obsPhot[i]) / (varScale * pStar.variance[i])));
             }
 
         }
@@ -219,7 +219,7 @@ double scaledLogLike (int numFilts, Star *pStar, double varScale)
 }
 
 
-double logPost1Star (Star *pStar, Cluster *pCluster, Model &evoModels)
+double logPost1Star (Star &pStar, Cluster &pCluster, Model &evoModels)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;
@@ -229,7 +229,7 @@ double logPost1Star (Star *pStar, Cluster *pCluster, Model &evoModels)
     if (fabs (logPrior + HUGE_VAL) < EPSILON)
         return (logPrior);
 
-    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster->varScale);
+    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale);
 
     if (fabs (likelihood + HUGE_VAL) < EPSILON)
         return (likelihood);

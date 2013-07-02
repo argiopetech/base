@@ -795,11 +795,11 @@ int main (int argc, char *argv[])
                     /* condition on WD being cluster star */
                     star.U = mass1;
                     star.massRatio = 0.0;
-                    evolve (&mc.clust, evoModels, star);
+                    evolve (mc.clust, evoModels, star);
 
                     if (!star.boundsFlag)
                     {
-                        wdLogPost[im] = logPost1Star (&star, &mc.clust, evoModels);
+                        wdLogPost[im] = logPost1Star (star, mc.clust, evoModels);
                         postClusterStar += exp (wdLogPost[im]);
                     }
                     else

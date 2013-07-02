@@ -287,7 +287,7 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
             n = m;
             while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
             {
-                swapGlobalEntries (&isochrone, n, useFilt);
+                swapGlobalEntries (isochrone, n, useFilt);
                 n--;
             }
         }

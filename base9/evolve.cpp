@@ -51,7 +51,7 @@ NUMSTARS NEEDS TO BE INPUT CORRECTLY.  If the index is positive, it will use tha
 of the stars array.  You can also feed it a pointer to a single star and an index of 0 to
 get the photometry of a single star. -- SD
 ***************************************************************************************/
-void evolve (Cluster *pCluster, Model &evoModels, Star &star)
+void evolve (Cluster &pCluster, Model const &evoModels, Star &star)
 {
     int filt, i, cmpnt;
     double mag[3][FILTS], mass[2], flux, clusterAv;
@@ -61,33 +61,33 @@ void evolve (Cluster *pCluster, Model &evoModels, Star &star)
     {
         isochrone.nEntries = 370;
         isochrone.nFilts = FILTS;
-        allocateGlobalIso (&isochrone);
+        allocateGlobalIso (isochrone);
     }
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
-    if (fabs (isochrone.FeH - pCluster->getFeH()) > EPS || fabs (isochrone.logAge - pCluster->getAge()) > EPS || fabs (isochrone.Y - pCluster->getY()) > EPS)
+    if (fabs (isochrone.FeH - pCluster.getFeH()) > EPS || fabs (isochrone.logAge - pCluster.getAge()) > EPS || fabs (isochrone.Y - pCluster.getY()) > EPS)
     {
-        pCluster->AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(pCluster->getFeH(), pCluster->getY(), pCluster->getAge());    // determine AGBt ZAMS mass, to find evol state
+        pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(pCluster.getFeH(), pCluster.getY(), pCluster.getAge());    // determine AGBt ZAMS mass, to find evol state
     }
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
-    if (pCluster->AGBt_zmass < EPS)
+    if (pCluster.AGBt_zmass < EPS)
     {
         star.boundsFlag = 1;
         return;
     }
 
-    clusterAv = pCluster->getAbs();
+    clusterAv = pCluster.getAbs();
     if (fabs (clusterAbs[0]) < EPS)
         calcAbsCoeffs (evoModels.filterSet, clusterAbs);
 
-    mass[0] = getMass1 (&star, pCluster);
-    mass[1] = getMass2 (&star, pCluster);
+    mass[0] = getMass1 (star, pCluster);
+    mass[1] = getMass2 (star, pCluster);
 
     if (star.status[0] == BD)
     {
-        getBaraffeMags (pCluster->getAge(), mass[0]);
+        getBaraffeMags (pCluster.getAge(), mass[0]);
 
         for (filt = 0; filt < 8; filt++)
             if (useFilt[filt])
@@ -121,7 +121,7 @@ void evolve (Cluster *pCluster, Model &evoModels, Star &star)
                 star.status[cmpnt] = DNE;
                 star.massNow[cmpnt] = 0.0;
             }
-            else if (mass[cmpnt] <= pCluster->AGBt_zmass)
+            else if (mass[cmpnt] <= pCluster.AGBt_zmass)
             {                       // for main seq or giant star
                 star.massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol (mass[cmpnt]);
                 for (filt = 0; filt < FILTS; filt++)
@@ -129,9 +129,9 @@ void evolve (Cluster *pCluster, Model &evoModels, Star &star)
                         mag[cmpnt][filt] = globalMags[filt];
                 star.status[cmpnt] = MSRG;      // keep track of evolutionary state
             }
-            else if (mass[cmpnt] <= pCluster->M_wd_up)
+            else if (mass[cmpnt] <= pCluster.M_wd_up)
             {                       // for white dwarf
-                ltau[cmpnt] = wdEvol (pCluster, evoModels, &star, cmpnt);
+                ltau[cmpnt] = wdEvol (pCluster, evoModels, star, cmpnt);
                 for (filt = 0; filt < FILTS; filt++)
                     if (useFilt[filt])
                         mag[cmpnt][filt] = globalMags[filt];
@@ -178,7 +178,7 @@ void evolve (Cluster *pCluster, Model &evoModels, Star &star)
     {                               // can now add distance and absorption
         if (useFilt[filt])
         {
-            mag[2][filt] += pCluster->getMod();
+            mag[2][filt] += pCluster.getMod();
             mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;   // add A_[u-k] (standard defn of modulus already includes Av)
             star.photometry[i++] = mag[2][filt];
         }

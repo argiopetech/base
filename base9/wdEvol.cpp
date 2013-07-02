@@ -14,7 +14,7 @@ const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 extern int useFilt[FILTS];
 extern double globalMags[FILTS];
 
-double wdEvol (Cluster *pCluster, Model &evoModels, Star *pStar, int cmpnt)
+double wdEvol (Cluster &pCluster, const Model &evoModels, Star &pStar, int cmpnt)
 {
 
     int filt;
@@ -26,15 +26,15 @@ double wdEvol (Cluster *pCluster, Model &evoModels, Star *pStar, int cmpnt)
     else
         mass = getMass2 (pStar, pCluster);
 
-    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster->getFeH(), pCluster->getY(), mass);
+    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.getFeH(), pCluster.getY(), mass);
 
     thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    thisLogTeff = wdMassToTeffAndRadius (pCluster->getAge(), pCluster->carbonicity, thisPrecLogAge, thisWDMass, &thisWDLogRadius);
+    thisLogTeff = wdMassToTeffAndRadius (pCluster.getAge(), pCluster.carbonicity, thisPrecLogAge, thisWDMass, &thisWDLogRadius);
 
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
-    if (thisPrecLogAge >= pCluster->getAge())
+    if (thisPrecLogAge >= pCluster.getAge())
     {                           // mcmc.c can cause this by adjusting masses and ages
         for (filt = 0; filt < FILTS; filt++)
             if (useFilt[filt])
@@ -44,12 +44,12 @@ double wdEvol (Cluster *pCluster, Model &evoModels, Star *pStar, int cmpnt)
     {
         //Calculate logg
         thisWDLogG = LOG_G_PLUS_LOG_M_SUN + log (thisWDMass) - 2 * thisWDLogRadius;
-        bergeronTeffToMags (thisLogTeff, thisWDLogG, (*pStar).wdType[cmpnt]);
+        bergeronTeffToMags (thisLogTeff, thisWDLogG, pStar.wdType[cmpnt]);
     }
 
-    pStar->massNow[cmpnt] = thisWDMass;
-    pStar->wdLogTeff[cmpnt] = thisLogTeff;
-    pStar->status[cmpnt] = WD;
+    pStar.massNow[cmpnt] = thisWDMass;
+    pStar.wdLogTeff[cmpnt] = thisLogTeff;
+    pStar.status[cmpnt] = WD;
 
     return thisPrecLogAge;
 

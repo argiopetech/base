@@ -142,7 +142,7 @@ int main (int argc, char *argv[])
     stars.at(0).massRatio = 0.0;
 
     for (auto s : stars)
-        evolve (&theCluster, evoModels, s);
+        evolve (theCluster, evoModels, s);
 
     int nWD = 10000;
 
@@ -166,7 +166,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (&theCluster, evoModels, s);
+        evolve (theCluster, evoModels, s);
 
 
     fprintf (wDebugPtr, " mass stage1");

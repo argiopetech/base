@@ -15,19 +15,19 @@
 using std::vector;
 
 /*** Decides whether to accept a proposed jump between field star and cluster star models ***/
-void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile, Model &evoModels)
+void decideFieldStar (Star stars1[], Cluster &pCluster, FILE * wFile, Model &evoModels)
 {
     int j;
     double u, alpha, post1, post2;
-    vector<Star> stars2(pCluster->nStars);
+    vector<Star> stars2(pCluster.nStars);
 
-    for (j = 0; j < pCluster->nStars; j++)
+    for (j = 0; j < pCluster.nStars; j++)
     {                           // For each star,
         stars2.at(j) = stars1[j];  // copy stars to new array,
         propFieldStar (&(stars2.at(j)));   // propose a new field star status,
 
-        post1 = logPost1Star (&(stars1[j]), pCluster, evoModels);
-        post2 = logPost1Star (&(stars2.at(j)), pCluster, evoModels);
+        post1 = logPost1Star (stars1[j], pCluster, evoModels);
+        post2 = logPost1Star (stars2.at(j), pCluster, evoModels);
 
         if (fabs (post2 + HUGE_VAL) < EPS)
             continue;                   // Proposed star no good.  Leave stars1 alone.
@@ -67,34 +67,34 @@ void decideFieldStar (Star stars1[], Cluster *pCluster, FILE * wFile, Model &evo
 }
 
 /*** Decides whether to accept a proposed mass ***/
-void decideMass (Chain *mc, Model &evoModels)
+void decideMass (Chain &mc, Model &evoModels)
 {
     int j;
     double u, alpha, post1, post2;
-    vector<Star> stars2(mc->clust.nStars);
+    vector<Star> stars2(mc.clust.nStars);
 
-    for (j = 0; j < mc->clust.nStars; j++)
+    for (j = 0; j < mc.clust.nStars; j++)
     {                           // For each star,
-        stars2.at(j) = mc->stars.at(j);       // copy stars to new array,
+        stars2.at(j) = mc.stars.at(j);       // copy stars to new array,
         propMass (&stars2.at(j));  // propose a new mass,
         stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
     for (auto s : stars2)
-        evolve (&mc->clust, evoModels, s);    // Evolve all the (proposed) stars at once
+        evolve (mc.clust, evoModels, s);    // Evolve all the (proposed) stars at once
 
-    for (j = 0; j < mc->clust.nStars; j++)
+    for (j = 0; j < mc.clust.nStars; j++)
     {                           // Accept or reject each star individually
-        if (stars2.at(j).boundsFlag || getMass1 (&stars2.at(j), &mc->clust) < EPS)
-            mc->rejectMass[j]++;        // Proposed star no good.  Leave stars1 alone.
+        if (stars2.at(j).boundsFlag || getMass1 (stars2.at(j), mc.clust) < EPS)
+            mc.rejectMass[j]++;        // Proposed star no good.  Leave stars1 alone.
         else
         {
-            post2 = logPost1Star (&stars2.at(j), &mc->clust, evoModels);
+            post2 = logPost1Star (stars2.at(j), mc.clust, evoModels);
             if (fabs (post2 + HUGE_VAL) < EPS)
-                mc->rejectMass[j]++;    // Proposed star no good.  Leave stars1 alone.
+                mc.rejectMass[j]++;    // Proposed star no good.  Leave stars1 alone.
             else
             {
-                post1 = logPost1Star (&mc->stars.at(j), &mc->clust, evoModels);
+                post1 = logPost1Star (mc.stars.at(j), mc.clust, evoModels);
                 alpha = post2;
                 alpha -= post1;
 
@@ -105,48 +105,48 @@ void decideMass (Chain *mc, Model &evoModels)
 
                 if (u < alpha)
                 {
-                    mc->acceptMass[j]++;        // Accept proposed star
-                    mc->stars.at(j) = stars2.at(j);   // And copy back to the stars1 array
+                    mc.acceptMass[j]++;        // Accept proposed star
+                    mc.stars.at(j) = stars2.at(j);   // And copy back to the stars1 array
                 }
                 else
-                    mc->rejectMass[j]++;        // Proposed star no good.  Leave stars1 alone.
+                    mc.rejectMass[j]++;        // Proposed star no good.  Leave stars1 alone.
             }
         }
     }
 }
 
 /*** Decides whether to accept a proposed mass ratio ***/
-void decideMassRatio (Chain *mc, Model &evoModels)
+void decideMassRatio (Chain &mc, Model &evoModels)
 {
     double u, alpha, post1, post2;
     int j;
 
-    vector<Star> stars2(mc->clust.nStars);
+    vector<Star> stars2(mc.clust.nStars);
 
-    for (j = 0; j < mc->clust.nStars; j++)
+    for (j = 0; j < mc.clust.nStars; j++)
     {                           // For each star,
-        stars2.at(j) = mc->stars.at(j);       // copy stars to new array,
+        stars2.at(j) = mc.stars.at(j);       // copy stars to new array,
         propMassRatio (&stars2.at(j));     // propose a new mass ratio,
         stars2.at(j).boundsFlag = 0;       // and set the boundsFlag to zero
     }
 
     for (auto s : stars2)
-        evolve (&mc->clust, evoModels, s);    // Evolve all the (proposed) stars at once
+        evolve (mc.clust, evoModels, s);    // Evolve all the (proposed) stars at once
 
-    for (j = 0; j < mc->clust.nStars; j++)
+    for (j = 0; j < mc.clust.nStars; j++)
     {                           // Accept or reject each star individually
-        if (stars2.at(j).boundsFlag || getMass1 (&stars2.at(j), &mc->clust) < EPS)
-            mc->rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
+        if (stars2.at(j).boundsFlag || getMass1 (stars2.at(j), mc.clust) < EPS)
+            mc.rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
         else if (stars2.at(j).massRatio > 1.0 || stars2.at(j).massRatio < 0.0)
-            mc->rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
+            mc.rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
         else
         {
-            post2 = logPost1Star (&stars2.at(j), &mc->clust, evoModels);
+            post2 = logPost1Star (stars2.at(j), mc.clust, evoModels);
             if (fabs (post2 + HUGE_VAL) < EPS)
-                mc->rejectMassRatio[j]++;       // Proposed star no good.  Leave stars1 alone.
+                mc.rejectMassRatio[j]++;       // Proposed star no good.  Leave stars1 alone.
             else
             {
-                post1 = logPost1Star (&mc->stars.at(j), &mc->clust, evoModels);
+                post1 = logPost1Star (mc.stars.at(j), mc.clust, evoModels);
                 alpha = post2;
                 alpha -= post1;
 
@@ -157,11 +157,11 @@ void decideMassRatio (Chain *mc, Model &evoModels)
 
                 if (u < alpha)
                 {
-                    mc->acceptMassRatio[j]++;   // Accept proposed star
-                    mc->stars.at(j) = stars2.at(j);   // And copy back to the stars1 array
+                    mc.acceptMassRatio[j]++;   // Accept proposed star
+                    mc.stars.at(j) = stars2.at(j);   // And copy back to the stars1 array
                 }
                 else
-                    mc->rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
+                    mc.rejectMassRatio[j]++;   // Proposed star no good.  Leave stars1 alone.
             }
         }
     }
@@ -179,8 +179,8 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
     clust2 = clust1;
     propClustParam (&clust2, SAMPLE_TYPE);      // propose a new value
 
-    post1 = logPriorClust (&clust1, evoModels);
-    post2 = logPriorClust (&clust2, evoModels);
+    post1 = logPriorClust (clust1, evoModels);
+    post2 = logPriorClust (clust2, evoModels);
 
     if (fabs (post2 + HUGE_VAL) < EPS)
     {
@@ -190,7 +190,7 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
 
     for (j = 0; j < clust1.nStars; j++)
     {
-        if (getMass1 (&stars1[j], &clust2) < EPS)
+        if (getMass1 (stars1[j], clust2) < EPS)
         {
             (*reject)++;
             return clust1;
@@ -200,7 +200,7 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
     }
 
     for( auto s : stars2)
-        evolve (&clust2, evoModels, s);
+        evolve (clust2, evoModels, s);
 
     for (j = 0; j < clust1.nStars; j++)
     {
@@ -212,8 +212,8 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
         if (FS_ON_STATE || stars1[j].useDuringBurnIn)
         {
 
-            post1 += logPost1Star (&(stars1[j]), &clust1, evoModels);
-            post2 += logPost1Star (&(stars2.at(j)), &clust2, evoModels);
+            post1 += logPost1Star (stars1[j], clust1, evoModels);
+            post2 += logPost1Star (stars2.at(j), clust2, evoModels);
 
             if (fabs (post2 + HUGE_VAL) < EPS)
             {
@@ -245,13 +245,13 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
 
 // Draw a new varScale from a scaled Inv-gamma distribution.
 // This assumes that the prior distribution for the varScale parameter is Inv-chisq(prior_df)
-void updateVarScale (Star stars[], Cluster *pCluster, Model &evoModels)
+void updateVarScale (Star stars[], Cluster &pCluster, Model &evoModels)
 {
     int nClustStars = 0, i, j;
     double scale = 0.0;
     double prior_df = 3.0;
 
-    for (i = 0; i < pCluster->nStars; i++)
+    for (i = 0; i < pCluster.nStars; i++)
     {
         if (!stars[i].isFieldStar)
         {
@@ -266,5 +266,5 @@ void updateVarScale (Star stars[], Cluster *pCluster, Model &evoModels)
     scale += 0.5;
     double g = gamdev ((evoModels.numFilts * nClustStars + prior_df) / 2.0);
 
-    pCluster->varScale = scale / g;
+    pCluster.varScale = scale / g;
 }

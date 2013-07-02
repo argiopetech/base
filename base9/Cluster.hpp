@@ -26,17 +26,17 @@ class Cluster
     }
     ~Cluster() {;}
 
-    double getAge();
-    double getY();
-    double getFeH();
-    double getMod();
-    double getAbs();
+    double getAge() const;
+    double getY() const;
+    double getFeH() const;
+    double getMod() const;
+    double getAbs() const;
 
-    void setAge(double newAge);
-    void setY(double newY);
-    void setFeH(double newFeH);
-    void setMod(double newMod);
-    void setAbs(double newAbs);
+    void setAge(const double newAge);
+    void setY(const double newY);
+    void setFeH(const double newFeH);
+    void setMod(const double newMod);
+    void setAbs(const double newAbs);
 
     std::array<double, 3> betaAgeMod;
     std::array<double, NPARAMS> parameter;
