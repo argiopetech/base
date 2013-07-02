@@ -11,7 +11,6 @@
 #include "Settings.hpp"
 #include "loadModels.hpp"
 #include "FilterSet.hpp"
-#include "mpi_things.hpp"
 
 #include "../mpiFuncs.hpp"
 
@@ -32,18 +31,19 @@ TEST(mpiMcmc, oneStep)
     EXPECT_NEAR(-448.007816, run1step(), 0.0001);
 }
 
-void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
-
 Model yamlChunk()
 {
+    Settings settings;
+
     settings.fromYaml ("/home/elliot/Projects/stellar_evolution/test/hyades2/base9.yaml");
 
     return makeModel(settings);
 }
 
-
 double run1step()
 {
+    Settings settings;
+
     double logPostProp;
     double fsLike;
 
@@ -75,7 +75,6 @@ double run1step()
     readCmdData (mc, ctrl, evoModels);
 
     evoModels.numFilts = ctrl.numFilts;
-    numFilts = ctrl.numFilts;
 
     initChain (mc, ctrl, evoModels, ltau);
 

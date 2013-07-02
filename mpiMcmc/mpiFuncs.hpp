@@ -17,5 +17,6 @@ void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl);
 void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl);
 void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl);
 void printHeader (std::ofstream &file, std::array<double, NPARAMS> const &priors);
+void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels);
 
 #endif
