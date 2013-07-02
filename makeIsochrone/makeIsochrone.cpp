@@ -1,3 +1,4 @@
+#include <array>
 #include <iostream>
 #include <vector>
 
@@ -12,6 +13,7 @@
 #include "Settings.hpp"
 #include "FilterSet.hpp"
 
+using std::array;
 using std::vector;
 using std::cout;
 using std::cerr;
@@ -25,7 +27,7 @@ const int CMD_FILE        = 13;
 const int DEBUG_FILE      = 16;
 
 // Used by evolve.c
-double ltau[2], wdLogTeff[2];
+double wdLogTeff[2];
 int aFilt = 0;
 
 extern struct globalIso isochrone;
@@ -43,6 +45,8 @@ int main (int argc, char *argv[])
 
     FILE *rDataPtr;
     FILE *wDebugPtr;
+
+    array<double, 2> ltau;
 
     Cluster theCluster;
     vector<Star> stars;
@@ -142,7 +146,7 @@ int main (int argc, char *argv[])
     stars.at(0).massRatio = 0.0;
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, s);
+        evolve (theCluster, evoModels, s, ltau);
 
     int nWD = 10000;
 
@@ -166,7 +170,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, s);
+        evolve (theCluster, evoModels, s, ltau);
 
 
     fprintf (wDebugPtr, " mass stage1");

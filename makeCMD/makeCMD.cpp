@@ -1,3 +1,5 @@
+#include <array>
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -14,6 +16,7 @@
 #include "ifmr.hpp"
 #include "FilterSet.hpp"
 
+using std::array;
 using std::vector;
 using std::cout;
 using std::cerr;
@@ -29,7 +32,7 @@ const int  CMD_FILE        = 13;
 const int  DEBUG_FILE      = 16;
 
 // Used by evolve.c
-double ltau[2], wdLogTeff[2];
+double wdLogTeff[2];
 int aFilt = 0;
 
 // Used by a bunch of different functions.
@@ -59,6 +62,8 @@ int main (int argc, char *argv[])
 
     FILE *rMassPtr[2], *rClusterPtr, *rDataPtr;
     FILE *wClusterStatPtr, *wCmdPtr, *wDebugPtr;
+
+    array<double, 2> ltau;
 
     Cluster theCluster;
     vector<Star> stars;
@@ -357,7 +362,7 @@ int main (int argc, char *argv[])
         }
 
         for (auto s : stars)
-            evolve (theCluster, evoModels, s);
+            evolve (theCluster, evoModels, s, ltau);
 
         for (j = 0; j < theCluster.nStars; j++)
         {
@@ -458,7 +463,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, s);
+        evolve (theCluster, evoModels, s, ltau);
 
     fprintf (wDebugPtr, " mass stage1");
     for (filt = 0; filt < FILTS; filt++)

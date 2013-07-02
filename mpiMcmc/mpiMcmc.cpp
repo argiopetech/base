@@ -39,7 +39,7 @@ using std::isfinite;
 
 /*** global variables ***/
 /* Used by evolve.c */
-double ltau[2];
+//double ltau[2];
 int aFilt = -1;
 
 /* Used in densities.c. */
@@ -56,7 +56,7 @@ Settings settings;
 /*
  * Initialize chain
  */
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels)
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, array<double, 2> &ltau)
 {
     int p;
 
@@ -117,7 +117,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoM
         }
 
         // find photometry for initial values of currentClust and mc.stars
-        evolve (mc.clust, evoModels, star);
+        evolve (mc.clust, evoModels, star, ltau);
 
         if (star.status[0] == WD)
         {
@@ -528,6 +528,7 @@ int main (int argc, char *argv[])
     struct ifmrMcmcControl ctrl;
     Cluster propClust;
 
+    array<double, 2> ltau;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
     array<double, N_WD_MASS1> wdMass1Grid;
@@ -563,7 +564,7 @@ int main (int argc, char *argv[])
 
     readCmdData (mc, ctrl, evoModels);
 
-    initChain (mc, ctrl, evoModels);
+    initChain (mc, ctrl, evoModels, ltau);
 
     for (int i = 0; i < mc.clust.nStars; i++)
     {
@@ -628,10 +629,10 @@ int main (int argc, char *argv[])
             propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
         }
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau);
 
         /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp))
+        if (acceptClustMarg (logPostCurr, logPostProp, ltau))
         {
             mc.clust = propClust;
             logPostCurr = logPostProp;
@@ -689,10 +690,10 @@ int main (int argc, char *argv[])
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau);
 
         /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp))
+        if (acceptClustMarg (logPostCurr, logPostProp, ltau))
         {
             mc.clust = propClust;
             logPostCurr = logPostProp;

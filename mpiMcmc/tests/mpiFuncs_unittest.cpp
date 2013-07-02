@@ -33,7 +33,7 @@ TEST(mpiMcmc, oneStep)
 }
 
 void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc);
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels);
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels, array<double, 2>&);
 void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
 void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
 void initStepSizes (Cluster &clust);
@@ -59,6 +59,7 @@ double run1step()
     struct ifmrMcmcControl ctrl;
     Cluster propClust;
 
+    array<double, 2> ltau;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
     array<double, N_WD_MASS1> wdMass1Grid;
@@ -86,7 +87,7 @@ double run1step()
     evoModels.numFilts = ctrl.numFilts;
     numFilts = ctrl.numFilts;
 
-    initChain (mc, ctrl, evoModels);
+    initChain (mc, ctrl, evoModels, ltau);
 
     for (int i = 0; i < mc.clust.nStars; i++)
     {
@@ -119,7 +120,7 @@ double run1step()
         propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
     }
 
-    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike);
+    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau);
 
     return logPostProp;
 }

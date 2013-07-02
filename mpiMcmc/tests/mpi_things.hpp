@@ -39,7 +39,6 @@ using std::isfinite;
 
 /*** global variables ***/
 /* Used by evolve.c */
-double ltau[2];
 int aFilt = -1;
 
 /* Used in densities.c. */
@@ -56,7 +55,7 @@ Settings settings;
 /*
  * Initialize chain
  */
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels)
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels, array<double, 2> &ltau)
 {
     int p;
 
@@ -117,7 +116,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels)
         }
 
         // find photometry for initial values of currentClust and mc.stars
-        evolve (mc.clust, evoModels, star);
+        evolve (mc.clust, evoModels, star, ltau);
 
         if (star.status[0] == WD)
         {

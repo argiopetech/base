@@ -1,5 +1,6 @@
 /*** Decides whether to accept proposed Metropolis-Hastings steps ***/
 
+#include <array>
 #include <vector>
 
 #include <cmath>
@@ -12,6 +13,7 @@
 #include "evolve.hpp"
 #include "structures.hpp"
 
+using std::array;
 using std::vector;
 
 /*** Decides whether to accept a proposed jump between field star and cluster star models ***/
@@ -67,7 +69,7 @@ void decideFieldStar (Star stars1[], Cluster &pCluster, FILE * wFile, Model &evo
 }
 
 /*** Decides whether to accept a proposed mass ***/
-void decideMass (Chain &mc, Model &evoModels)
+void decideMass (Chain &mc, const Model &evoModels, array<double, 2> &ltau)
 {
     int j;
     double u, alpha, post1, post2;
@@ -81,7 +83,7 @@ void decideMass (Chain &mc, Model &evoModels)
     }
 
     for (auto s : stars2)
-        evolve (mc.clust, evoModels, s);    // Evolve all the (proposed) stars at once
+        evolve (mc.clust, evoModels, s, ltau);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc.clust.nStars; j++)
     {                           // Accept or reject each star individually
@@ -116,7 +118,7 @@ void decideMass (Chain &mc, Model &evoModels)
 }
 
 /*** Decides whether to accept a proposed mass ratio ***/
-void decideMassRatio (Chain &mc, Model &evoModels)
+void decideMassRatio (Chain &mc, const Model &evoModels, array<double, 2> &ltau)
 {
     double u, alpha, post1, post2;
     int j;
@@ -131,7 +133,7 @@ void decideMassRatio (Chain &mc, Model &evoModels)
     }
 
     for (auto s : stars2)
-        evolve (mc.clust, evoModels, s);    // Evolve all the (proposed) stars at once
+        evolve (mc.clust, evoModels, s, ltau);    // Evolve all the (proposed) stars at once
 
     for (j = 0; j < mc.clust.nStars; j++)
     {                           // Accept or reject each star individually
@@ -168,7 +170,7 @@ void decideMassRatio (Chain &mc, Model &evoModels)
 }
 
 // Decides whether to accept a proposed cluster property
-Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr, Model &evoModels)
+Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *accept, int *reject, const int SAMPLE_TYPE, FILE * w_ptr, Model &evoModels, array<double, 2> ltau)
 {
     int j;
     double u, alpha, post1 = 0.0, post2 = 0.0;
@@ -200,7 +202,7 @@ Cluster decideClust (Cluster clust1, Star stars1[], const int FS_ON_STATE, int *
     }
 
     for( auto s : stars2)
-        evolve (clust2, evoModels, s);
+        evolve (clust2, evoModels, s, ltau);
 
     for (j = 0; j < clust1.nStars; j++)
     {

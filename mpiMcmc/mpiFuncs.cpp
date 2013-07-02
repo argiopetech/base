@@ -148,7 +148,7 @@ void parallelFor(const unsigned int size, std::function<void(const unsigned int)
         t.join();
 }
 
-double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike)
+double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau)
 {
     atomic<double> postClusterStar(0.0);
 
@@ -173,7 +173,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
                     wd.U = wdMass1Grid[j];
                     wd.massRatio = 0.0;
                            
-                    evolve (propClust, evoModels, wd);
+                    evolve (propClust, evoModels, wd, ltau);
 
                     if (wd.boundsFlag)
                     {
@@ -191,7 +191,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, star, evoModels);
+                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, ltau);
             }
 
             postClusterStar = postClusterStar * star.clustStarPriorDens;
@@ -206,7 +206,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
 }
 
 /* Decides whether to accept a proposed cluster property */
-int acceptClustMarg (double logPostCurr, double logPostProp)
+int acceptClustMarg (double logPostCurr, double logPostProp, array<double, 2> &ltau)
 {
     if (isinf (logPostProp))
     {

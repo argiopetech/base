@@ -17,7 +17,6 @@ using std::array;
 const int MAX_ENTRIES = 370;
 
 extern int useFilt[FILTS], aFilt, needMassNow;
-extern double ltau[2];
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
 extern double globalMags[FILTS];
@@ -26,13 +25,13 @@ extern double ageLimit[2];
 extern struct globalIso isochrone;
 static array<double, FILTS> clusterAbs;
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model&);
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model&, array<double, 2>&);
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar);
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&);
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&, array<double, 2> &ltau);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate
    the integral */
-double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoModels)
+double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoModels, array<double, 2> &ltau)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
     double post = 0.0;
@@ -76,7 +75,7 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
                 dMass = dIsoMass / isoIncrem;
                 mass[0] = isochrone.mass[m] + k * dMass;
 
-                calcPost (&post, dMass, mag, clusterAv, &flux, mass, pCluster, pStar, evoModels);
+                calcPost (&post, dMass, mag, clusterAv, &flux, mass, pCluster, pStar, evoModels, ltau);
             }
         }
     }
@@ -90,7 +89,7 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
     }
 }
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels)
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels, array<double, 2> &ltau)
 {
     int filt;
 
@@ -173,13 +172,13 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
 }
 
 
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels)
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels, array<double, 2> &ltau)
 {
     setMass1 (pStar, pCluster, mass[0]);
 
     int cmpnt = 0, filt;
 
-    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels);
+    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, ltau);
 
     double tmpLogPost, tmpPost;
 
@@ -192,7 +191,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
     pStar.massNow[cmpnt] = 0.0;
     ltau[cmpnt] = 0.0;          // may not be a WD, so no precursor age,
     pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels);
+    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, ltau);
 
     deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels);
@@ -263,7 +262,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
             pStar.massNow[cmpnt] = 0.0;
             ltau[cmpnt] = 0.0;  // may not be a WD, so no precursor age,
             pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-            setMags (mag, cmpnt, mass, pCluster, pStar, evoModels);
+            setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, ltau);
 
             deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar);
             /* now have magnitudes, want posterior probability */

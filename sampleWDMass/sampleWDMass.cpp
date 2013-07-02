@@ -1,4 +1,5 @@
 /*** Last update: 19jun06 ***/
+#include <array>
 #include <iostream>
 
 #include <cstdio>
@@ -20,6 +21,7 @@
 #include "mt19937ar.hpp"
 #include "FilterSet.hpp"
 
+using std::array;
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -90,7 +92,6 @@ double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
 
 /* Used by evolve.c */
-double ltau[2];
 int aFilt = -1;
 
 /* Used in densities.c. */
@@ -528,6 +529,8 @@ int main (int argc, char *argv[])
     clustPar *sampledPars;
     double *unifs;              /* draw uniform random numbers ahead of time */
 
+    array<double, 2> ltau;
+
     MPI_Datatype clustParType;
     MPI_Datatype obsStarType;
     MPI_Status status;
@@ -795,7 +798,7 @@ int main (int argc, char *argv[])
                     /* condition on WD being cluster star */
                     star.U = mass1;
                     star.massRatio = 0.0;
-                    evolve (mc.clust, evoModels, star);
+                    evolve (mc.clust, evoModels, star, ltau);
 
                     if (!star.boundsFlag)
                     {
