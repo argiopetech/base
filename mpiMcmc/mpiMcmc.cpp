@@ -45,169 +45,10 @@ int aFilt = -1;
 /* Used in densities.c. */
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
-double priorMean[NPARAMS], priorVar[NPARAMS];
 extern double ageLimit[2];      /* Defined in evolve.c, set in loadModels. */
 extern struct globalIso isochrone;
 
 int needMassNow = 0, useFilt[FILTS];
-
-Settings settings;
-
-/*
- * read control parameters from input stream
- */
-void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels)
-{
-
-    double priorSigma;
-
-    ctrl.numFilts = 0;
-
-    int ii;
-
-    for (ii = 0; ii < FILTS; ii++)
-        ctrl.useFilt[ii] = 0;
-
-    /* Read number of steps, burn-in details, random seed */
-    init_genrand (settings.seed);
-
-    /* load models */
-    loadModels (&mc.clust, evoModels, settings);
-
-    ctrl.priorMean[FEH] = settings.cluster.Fe_H;
-    priorSigma = settings.cluster.sigma.Fe_H;
-
-    if (priorSigma < 0.0)
-    {
-        priorSigma = 0.0;
-    }
-    ctrl.priorVar[FEH] = priorSigma * priorSigma;
-
-    ctrl.priorMean[MOD] = settings.cluster.distMod;
-    priorSigma = settings.cluster.sigma.distMod;
-
-    if (priorSigma < 0.0)
-    {
-        priorSigma = 0.0;
-    }
-    ctrl.priorVar[MOD] = priorSigma * priorSigma;
-
-    ctrl.priorMean[ABS] = settings.cluster.Av;
-    priorSigma = settings.cluster.sigma.Av;
-
-    if (priorSigma < 0.0)
-    {
-        priorSigma = 0.0;
-    }
-    ctrl.priorVar[ABS] = priorSigma * priorSigma;
-
-    ctrl.initialAge = settings.cluster.logClusAge;
-    ctrl.priorVar[AGE] = 1.0;
-
-    if (evoModels.IFMR <= 3)
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 0.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
-    }
-    else if (evoModels.IFMR <= 8)
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 1.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
-    }
-    else
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 1.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 1.0;
-    }
-
-    // copy values to global variables
-    priorVar[AGE] = ctrl.priorVar[AGE];
-    priorVar[FEH] = ctrl.priorVar[FEH];
-    priorVar[MOD] = ctrl.priorVar[MOD];
-    priorVar[ABS] = ctrl.priorVar[ABS];
-    priorVar[IFMR_SLOPE] = ctrl.priorVar[IFMR_SLOPE];
-    priorVar[IFMR_INTERCEPT] = ctrl.priorVar[IFMR_INTERCEPT];
-    priorVar[IFMR_QUADCOEF] = ctrl.priorVar[IFMR_QUADCOEF];
-
-    priorMean[FEH] = ctrl.priorMean[FEH];
-    priorMean[MOD] = ctrl.priorMean[MOD];
-    priorMean[ABS] = ctrl.priorMean[ABS];
-
-    /* set starting values for IFMR parameters */
-    ctrl.priorMean[IFMR_SLOPE] = 0.08;
-    ctrl.priorMean[IFMR_INTERCEPT] = 0.65;
-    if (evoModels.IFMR <= 10)
-        ctrl.priorMean[IFMR_QUADCOEF] = 0.0001;
-    else
-        ctrl.priorMean[IFMR_QUADCOEF] = 0.08;
-    priorMean[IFMR_SLOPE] = ctrl.priorMean[IFMR_SLOPE];
-    priorMean[IFMR_INTERCEPT] = ctrl.priorMean[IFMR_INTERCEPT];
-    priorMean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
-
-    /* open model file, choose model set, and load models */
-    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
-    {
-        scanf ("%lf %lf", &ctrl.priorMean[YYY], &ctrl.priorVar[YYY]);
-
-        if (ctrl.priorVar[YYY] < 0.0)
-        {
-            ctrl.priorVar[YYY] = 0.0;
-        }
-    }
-    else
-    {
-        ctrl.priorMean[YYY] = 0.0;
-        ctrl.priorVar[YYY] = 0.0;
-    }
-    priorVar[YYY] = ctrl.priorVar[YYY];
-    priorMean[YYY] = ctrl.priorMean[YYY];
-
-    /* read burnIter and nIter */
-    ctrl.burnIter = settings.mpiMcmc.burnIter;
-    ctrl.nIter = settings.mpiMcmc.maxIter;
-    ctrl.thin = settings.mpiMcmc.thin;
-
-    /* open files for reading (data) and writing */
-    string filename;
-
-    filename = settings.files.phot;
-    ctrl.rData.open(filename);
-    if (!ctrl.rData)
-    {
-        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    ctrl.minMag = settings.cluster.minMag;
-    ctrl.maxMag = settings.cluster.maxMag;
-    ctrl.iMag = settings.cluster.index;
-
-    if (ctrl.iMag < 0 || ctrl.iMag > FILTS)
-    {
-        cerr << "***Error: " << ctrl.iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    ctrl.clusterFilename = settings.files.output + ".res";
-
-    ctrl.iStart = 0;
-
-    /* Initialize filter prior mins and maxes */
-    int j;
-
-    for (j = 0; j < FILTS; j++)
-    {
-        ctrl.filterPriorMin[j] = 1000;
-        ctrl.filterPriorMax[j] = -1000;
-    }
-} /* initIfmrMcmcControl */
-
-
 
 void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc)
 {
@@ -458,6 +299,8 @@ int main (int argc, char *argv[])
 
     Matrix<double, NPARAMS, nSave> params;
 
+    Settings settings;
+
     // Setup settings
     {
         settings.fromCLI (argc, argv);
@@ -477,7 +320,7 @@ int main (int argc, char *argv[])
 
     increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
-    initIfmrMcmcControl (mc, ctrl, evoModels);
+    initIfmrMcmcControl (mc, ctrl, evoModels, settings);
 
     for (int p = 0; p < NPARAMS; p++)
     {

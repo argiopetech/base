@@ -34,7 +34,6 @@ TEST(mpiMcmc, oneStep)
 
 void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc);
 void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
-void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
 void initStepSizes (Cluster &clust);
 void printHeader (ofstream &file, array<double, NPARAMS> const &priors);
 void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl);
@@ -73,7 +72,7 @@ double run1step()
 
     initStepSizes (mc.clust);
 
-    initIfmrMcmcControl (mc, ctrl, evoModels);
+    initIfmrMcmcControl (mc, ctrl, evoModels, settings);
 
     for (int p = 0; p < NPARAMS; p++)
     {

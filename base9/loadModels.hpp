@@ -1,6 +1,4 @@
-#if defined( LOAD_MODELS_H )
-/* the file has been included already */
-#else
+#ifndef LOAD_MODELS_H
 #define LOAD_MODELS_H
 
 #include "msRgbEvol.hpp"

@@ -1,6 +1,7 @@
 #include <array>
 #include <atomic>
 #include <iostream>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -12,6 +13,7 @@
 #include <gsl/gsl_linalg.h>
 
 #include "densities.hpp"
+#include "loadModels.hpp"
 #include "marg.hpp"
 #include "Model.hpp"
 #include "mpiMcmc.hpp"
@@ -19,11 +21,150 @@
 
 using std::array;
 using std::atomic;
+using std::string;
 using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::isfinite;
+
+
+/*
+ * read control parameters from input stream
+ */
+void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings)
+{
+
+    double priorSigma;
+
+    ctrl.numFilts = 0;
+
+    int ii;
+
+    for (ii = 0; ii < FILTS; ii++)
+        ctrl.useFilt[ii] = 0;
+
+    /* Read number of steps, burn-in details, random seed */
+    init_genrand (settings.seed);
+
+    /* load models */
+    loadModels (&mc.clust, evoModels, settings);
+
+    ctrl.priorMean[FEH] = settings.cluster.Fe_H;
+    priorSigma = settings.cluster.sigma.Fe_H;
+
+    if (priorSigma < 0.0)
+    {
+        priorSigma = 0.0;
+    }
+    ctrl.priorVar[FEH] = priorSigma * priorSigma;
+
+    ctrl.priorMean[MOD] = settings.cluster.distMod;
+    priorSigma = settings.cluster.sigma.distMod;
+
+    if (priorSigma < 0.0)
+    {
+        priorSigma = 0.0;
+    }
+    ctrl.priorVar[MOD] = priorSigma * priorSigma;
+
+    ctrl.priorMean[ABS] = settings.cluster.Av;
+    priorSigma = settings.cluster.sigma.Av;
+
+    if (priorSigma < 0.0)
+    {
+        priorSigma = 0.0;
+    }
+    ctrl.priorVar[ABS] = priorSigma * priorSigma;
+
+    ctrl.initialAge = settings.cluster.logClusAge;
+    ctrl.priorVar[AGE] = 1.0;
+
+    if (evoModels.IFMR <= 3)
+    {
+        ctrl.priorVar[IFMR_SLOPE] = 0.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
+    }
+    else if (evoModels.IFMR <= 8)
+    {
+        ctrl.priorVar[IFMR_SLOPE] = 1.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
+    }
+    else
+    {
+        ctrl.priorVar[IFMR_SLOPE] = 1.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 1.0;
+    }
+
+    /* set starting values for IFMR parameters */
+    ctrl.priorMean[IFMR_SLOPE] = 0.08;
+    ctrl.priorMean[IFMR_INTERCEPT] = 0.65;
+    if (evoModels.IFMR <= 10)
+        ctrl.priorMean[IFMR_QUADCOEF] = 0.0001;
+    else
+        ctrl.priorMean[IFMR_QUADCOEF] = 0.08;
+
+    /* open model file, choose model set, and load models */
+    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
+    {
+        scanf ("%lf %lf", &ctrl.priorMean[YYY], &ctrl.priorVar[YYY]);
+
+        if (ctrl.priorVar[YYY] < 0.0)
+        {
+            ctrl.priorVar[YYY] = 0.0;
+        }
+    }
+    else
+    {
+        ctrl.priorMean[YYY] = 0.0;
+        ctrl.priorVar[YYY] = 0.0;
+    }
+
+    /* read burnIter and nIter */
+    ctrl.burnIter = settings.mpiMcmc.burnIter;
+    ctrl.nIter = settings.mpiMcmc.maxIter;
+    ctrl.thin = settings.mpiMcmc.thin;
+
+    /* open files for reading (data) and writing */
+    string filename;
+
+    filename = settings.files.phot;
+    ctrl.rData.open(filename);
+    if (!ctrl.rData)
+    {
+        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    ctrl.minMag = settings.cluster.minMag;
+    ctrl.maxMag = settings.cluster.maxMag;
+    ctrl.iMag = settings.cluster.index;
+
+    if (ctrl.iMag < 0 || ctrl.iMag > FILTS)
+    {
+        cerr << "***Error: " << ctrl.iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    ctrl.clusterFilename = settings.files.output + ".res";
+
+    ctrl.iStart = 0;
+
+    /* Initialize filter prior mins and maxes */
+    int j;
+
+    for (j = 0; j < FILTS; j++)
+    {
+        ctrl.filterPriorMin[j] = 1000;
+        ctrl.filterPriorMax[j] = -1000;
+    }
+} /* initIfmrMcmcControl */
+
 
 /*
  * Initialize chain
