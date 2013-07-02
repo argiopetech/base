@@ -33,7 +33,6 @@ TEST(mpiMcmc, oneStep)
 }
 
 void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc);
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, Model &evoModels, array<double, 2>&);
 void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
 void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
 void initStepSizes (Cluster &clust);
