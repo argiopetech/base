@@ -1,6 +1,7 @@
 #include <array>
 #include <atomic>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -18,6 +19,7 @@
 #include "Model.hpp"
 #include "mpiMcmc.hpp"
 #include "mt19937ar.hpp"
+#include "samplers.hpp"
 
 using std::array;
 using std::atomic;
@@ -27,6 +29,90 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::isfinite;
+using std::ofstream;
+
+void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
+{
+    /* DOF defined in densities.h */
+    double scale = 5.0;
+    int p;
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar[p] > EPSILON)
+        {
+            clust.parameter[p] += sampleT (scale * scale * clust.stepSize[p] * clust.stepSize[p], DOF);
+        }
+    }
+}
+
+void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
+{
+    /* DOF defined in densities.h */
+    int p;
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar[p] > EPSILON)
+        {
+            clust.parameter[p] += sampleT (clust.stepSize[p] * clust.stepSize[p], DOF);
+        }
+    }
+}
+
+void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
+{
+    /* DOF defined in densities.h */
+    double indepProps[NPARAMS] = { 0.0 };
+    double corrProps[NPARAMS] = { 0.0 };
+
+    int p, k;
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar[p] > EPSILON)
+        {
+            indepProps[p] = sampleT (1.0, DOF);
+        }
+    }
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar[p] > EPSILON)
+        {
+            for (k = 0; k <= p; k++)
+            {                           /* propMatrix is lower diagonal */
+                if (ctrl.priorVar[k] > EPSILON)
+                {
+                    corrProps[p] += ctrl.propMatrix[p][k] * indepProps[k];
+                }
+            }
+            clust.parameter[p] += corrProps[p];
+        }
+    }
+}
+
+
+void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
+{
+    const char *paramNames[] = { "    logAge",
+                                 "         Y",
+                                 "       FeH",
+                                 "   modulus",
+                                 "absorption",
+                                 " IFMRconst",
+                                 "   IFMRlin",
+                                 "  IFMRquad"
+    };
+
+    for (int p = 0; p < NPARAMS; p++)
+    {
+        if (priors.at(p) > EPSILON || p == MOD || p == FEH || p == ABS)
+        {
+            file << paramNames[p] << ' ';
+        }
+    }
+    file << "logPost" << endl;
+}
 
 void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc)
 {

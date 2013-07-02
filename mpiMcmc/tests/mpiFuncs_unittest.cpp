@@ -33,11 +33,6 @@ TEST(mpiMcmc, oneStep)
 }
 
 void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
-void initStepSizes (Cluster &clust);
-void printHeader (ofstream &file, array<double, NPARAMS> const &priors);
-void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl);
-void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl);
-void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl);
 
 Model yamlChunk()
 {
@@ -68,8 +63,6 @@ double run1step()
     settings.files.output = "/home/elliot/Projects/stellar_evolution/test/hyades2/hyades/Mcmc";
     settings.files.phot   = "/home/elliot/Projects/stellar_evolution/test/hyades2/hyades/Hyades.UBV.phot";
     settings.files.models = "/home/elliot/Projects/stellar_evolution/test/hyades2/models/";
-
-    initStepSizes (mc.clust);
 
     initIfmrMcmcControl (mc, ctrl, evoModels, settings);
 
