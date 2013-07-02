@@ -32,7 +32,6 @@ TEST(mpiMcmc, oneStep)
     EXPECT_NEAR(-448.007816, run1step(), 0.0001);
 }
 
-void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc);
 void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, Model &evoModels);
 void initStepSizes (Cluster &clust);
 void printHeader (ofstream &file, array<double, NPARAMS> const &priors);

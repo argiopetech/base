@@ -28,6 +28,33 @@ using std::cerr;
 using std::endl;
 using std::isfinite;
 
+void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc)
+{
+    double maxMass1 = mc.clust.M_wd_up;
+    double mass1, massRatio;
+    double dMsMass1 = (maxMass1 - MIN_MASS1) / (double) N_MS_MASS1;
+    double dMsMassRatio = 1.0 / (double) N_MS_MASS_RATIO;
+    double dWdMass1 = (maxMass1 - MIN_MASS1) / (double) N_WD_MASS1;
+
+    int i = 0;
+
+    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dMsMass1)
+    {
+        for (massRatio = 0.0; massRatio < 1.0; massRatio += dMsMassRatio)
+        {
+            msMass1Grid[i] = mass1;
+            msMassRatioGrid[i] = massRatio;
+            i++;
+        }
+    }
+
+    i = 0;
+    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dWdMass1)
+    {
+        wdMass1Grid[i] = mass1;
+        i++;
+    }
+}
 
 /*
  * read control parameters from input stream

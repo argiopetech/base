@@ -11,5 +11,6 @@ double logPostStep(Chain &mc, const Model &evoModel, std::array<double, N_WD_MAS
 int acceptClustMarg (double logPostCurr, double logPostProp, std::array<double, 2> &ltau);
 void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, std::array<double, 2> &ltau);
 void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings);
+void initMassGrids (std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, std::array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc);
 
 #endif
