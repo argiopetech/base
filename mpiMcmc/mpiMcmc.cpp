@@ -14,7 +14,6 @@ using std::ofstream;
 using std::isfinite;
 
 extern double ageLimit[2];      /* Defined in evolve.c, set in loadModels. */
-extern struct globalIso isochrone;
 
 int main (int argc, char *argv[])
 {
@@ -223,9 +222,6 @@ int main (int argc, char *argv[])
     ctrl.resFile.close();
 
     cout << "\nAcceptance ratio: " << (double) accept / (accept + reject) << endl;
-
-    /* clean up */
-    freeGlobalIso (isochrone);
 
     return 0;
 }
