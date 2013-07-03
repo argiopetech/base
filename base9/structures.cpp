@@ -15,7 +15,7 @@ using std::cerr;
 using std::endl;
 
 
-double getMass1 (Star &pStar, Cluster &pCluster)
+double getMass1 (Star &pStar, const Cluster &pCluster)
 {
     return pStar.U + pStar.beta[AGE][0] * (pCluster.getAge() - pCluster.mean[AGE])
                    + pStar.beta[MOD][0] * (pCluster.getMod() - pCluster.mean[MOD])
@@ -25,12 +25,12 @@ double getMass1 (Star &pStar, Cluster &pCluster)
                    );
 }
 
-double getMass2 (Star &pStar, Cluster &pCluster)
+double getMass2 (Star &pStar, const Cluster &pCluster)
 {
     return getMass1 (pStar, pCluster) * pStar.massRatio;
 }
 
-void setMass1 (Star &pStar, Cluster &pCluster, double newMass)
+void setMass1 (Star &pStar, const Cluster &pCluster, double newMass)
 {
     pStar.U = newMass - ( pStar.beta[AGE][0] * (pCluster.getAge() - pCluster.mean[AGE]) 
                         + pStar.beta[MOD][0] * (pCluster.getMod() - pCluster.mean[MOD]) 
@@ -40,7 +40,7 @@ void setMass1 (Star &pStar, Cluster &pCluster, double newMass)
                         );
 }
 
-void setMass2 (Star &pStar, Cluster &pCluster, double newMass)
+void setMass2 (Star &pStar, const Cluster &pCluster, double newMass)
 {
     pStar.massRatio = newMass / getMass1 (pStar, pCluster);
 }

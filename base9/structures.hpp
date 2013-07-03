@@ -101,9 +101,9 @@ struct block
     int nIter;
 };
 
-double getMass1 (Star &pStar, Cluster &pCluster);
-double getMass2 (Star &pStar, Cluster &pCluster);
-void setMass1 (Star &pStar, Cluster &pCluster, double newMass);
+double getMass1 (Star &pStar, const Cluster &pCluster);
+double getMass2 (Star &pStar, const Cluster &pCluster);
+void setMass1 (Star &pStar, const Cluster &pCluster, double newMass);
 // void setMass2 (Star *pStar, Cluster *pCluster, double newMass);
 
 void allocateGlobalIso (struct globalIso &newIso);

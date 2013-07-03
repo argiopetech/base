@@ -3,6 +3,6 @@
 
 #include "Model.hpp"
 
-double wdEvol (Cluster &pCluster, const Model &, Star &pStar, int cmpnt);
+double wdEvol (const Cluster &pCluster, const Model &, Star &pStar, int cmpnt);
 
 #endif
