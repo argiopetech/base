@@ -15,11 +15,11 @@
 #include "gBergMag.hpp"
 #include "wdCooling.hpp"
 #include "densities.hpp"
-#include "decide.hpp"
 #include "samplers.hpp"
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
 #include "FilterSet.hpp"
+#include "WhiteDwarf.hpp"
 
 using std::array;
 using std::cerr;
@@ -673,7 +673,6 @@ int main (int argc, char *argv[])
     for (i = 0; i < mc.clust.nStars; i++)
     {
         mc.stars.at(i).isFieldStar = 0;
-        mc.stars.at(i).boundsFlag = 0;
     }
 
     double logFieldStarLikelihood = 0.0;
@@ -798,17 +797,21 @@ int main (int argc, char *argv[])
                     /* condition on WD being cluster star */
                     star.U = mass1;
                     star.massRatio = 0.0;
-                    evolve (mc.clust, evoModels, star, ltau);
 
-                    if (!star.boundsFlag)
+                    try
                     {
+                        evolve (mc.clust, evoModels, star, ltau);
+
                         wdLogPost[im] = logPost1Star (star, mc.clust, evoModels);
                         postClusterStar += exp (wdLogPost[im]);
                     }
-                    else
+                    catch ( WDBoundsError &e )
                     {
+                        cerr << e.what() << endl;
+
                         wdLogPost[im] = -HUGE_VAL;
                     }
+
                     im++;
                 }
                 im = 0;

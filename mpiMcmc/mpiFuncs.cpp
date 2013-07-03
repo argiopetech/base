@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <stdexcept>
 
 #include <cstring>
 
@@ -23,6 +24,7 @@
 #include "mpiMcmc.hpp"
 #include "mt19937ar.hpp"
 #include "samplers.hpp"
+#include "WhiteDwarf.hpp"
 
 using std::array;
 using std::atomic;
@@ -269,7 +271,6 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
  */
 void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings)
 {
-
     double priorSigma;
 
     ctrl.numFilts = 0;
@@ -618,23 +619,22 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
                 {
                     double tmpLogPost;
                     Star wd(star);
-                    wd.boundsFlag = 0;
                     wd.isFieldStar = 0;
                     wd.U = wdMass1Grid[j];
                     wd.massRatio = 0.0;
                            
                     evolve (propClust, evoModels, wd, ltau);
 
-                    if (wd.boundsFlag)
-                    {
-                        cerr <<"**wd[" << j << "].boundsFlag" << endl;
-                    }
-                    else
+                    try
                     {
                         tmpLogPost = logPost1Star (wd, propClust, evoModels);
                         tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                         postClusterStar = postClusterStar +  exp (tmpLogPost);
+                    }
+                    catch ( WDBoundsError &e )
+                    {
+                        cerr << e.what() << endl;
                     }
                 }
             }

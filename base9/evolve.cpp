@@ -10,6 +10,7 @@
 #include "gBaraffeMag.hpp"
 #include "wdEvol.hpp"
 #include "FilterSet.hpp"
+#include "WhiteDwarf.hpp"
 
 using std::array;
 using std::vector;
@@ -25,7 +26,6 @@ struct globalIso isochrone;
 static array<double, FILTS> clusterAbs;
 
 void calcAbsCoeffs (int filterSet);
-
 
 /**************************************************************************************
 last update: 25Aug10
@@ -55,14 +55,6 @@ void evolve (Cluster &pCluster, Model const &evoModels, Star &star, array<double
     int filt, i, cmpnt;
     double mag[3][FILTS], mass[2], flux, clusterAv;
 
-    //Allocate memory to global isochrone(if it hasn't been allocated already)
-    if (isochrone.mass == NULL)
-    {
-        isochrone.nEntries = 370;
-        isochrone.nFilts = FILTS;
-        allocateGlobalIso (isochrone);
-    }
-
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
     if (fabs (isochrone.FeH - pCluster.getFeH()) > EPS || fabs (isochrone.logAge - pCluster.getAge()) > EPS || fabs (isochrone.Y - pCluster.getY()) > EPS)
@@ -73,11 +65,11 @@ void evolve (Cluster &pCluster, Model const &evoModels, Star &star, array<double
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster.AGBt_zmass < EPS)
     {
-        star.boundsFlag = 1;
-        return;
+        throw WDBoundsError("Bounds error in evolve.cpp");
     }
 
     clusterAv = pCluster.getAbs();
+
     if (fabs (clusterAbs[0]) < EPS)
         calcAbsCoeffs (evoModels.filterSet, clusterAbs);
 

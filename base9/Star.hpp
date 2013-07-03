@@ -43,7 +43,6 @@ class Star
 
     bool isFieldStar = false;
     bool useDuringBurnIn = false;       // switch whether to use star to burn in cluster parameters
-    bool boundsFlag = false;
 
     double clustStarPriorDens = 0.0;    // prior probability that the star is a cluster star
     double clustStarProposalDens = 0.0; // proposal density for steps to the cluster star model

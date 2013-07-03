@@ -65,7 +65,6 @@ int main (int argc, char *argv[])
     for (int i = 0; i < mc.clust.nStars; i++)
     {
         mc.stars[i].isFieldStar = 0;
-        mc.stars[i].boundsFlag = 0;
     }
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);

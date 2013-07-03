@@ -8,8 +8,51 @@
 #include "Star.hpp"
 #include "Chain.hpp"
 
+#include <iostream>
+
 struct globalIso
 {
+    globalIso()
+        : globalIso(370, FILTS)
+    {;}
+
+    globalIso(int nEntries, int nFilts)
+        : nEntries(nEntries),nFilts(nFilts)
+    {
+        std::cout << "Constructing globalIso with nEntries: " << nEntries << " and nFilts: " << nFilts << std::endl;
+
+        assert(mass == NULL);
+        assert(nEntries != 0 && nFilts != 0);
+
+        mass = new double[nEntries]();
+        massNow = new double[nEntries]();
+        eep = new int[nEntries]();
+
+        int j = 0;
+
+        mag = new double*[nEntries]();
+
+        for (j = 0; j < nEntries; j++)
+        {
+            mag[j] = new double[nFilts]();
+        }
+    }
+
+    ~globalIso()
+    {
+        delete[] (mass);
+        delete[] (massNow);
+        delete[] (eep);
+
+        int j = 0;
+
+        for (j = 0; j < nEntries; j++)
+        {
+            delete[] (mag[j]);
+        }
+        delete[] (mag);
+    }
+
     double FeH;
     double logAge;
     double age;

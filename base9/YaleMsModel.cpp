@@ -32,7 +32,7 @@ static double yyLogAge[N_YY_Z][N_YY_AGES], yyAge[N_YY_Z][N_YY_AGES];
 static struct yyIsochrone yyIso[N_YY_Z][N_YY_AGES];
 static double yyAGBt[N_YY_Z][N_YY_AGES];
 static char tempFile[100];
-static struct globalIso tempIso[2];
+static struct globalIso tempIso[2] {globalIso(MAX_YY_ENTRIES, N_YY_FILTS), globalIso(MAX_YY_ENTRIES, N_YY_FILTS)};
 static double coeff[6][8];
 
 //Static funtions
@@ -219,13 +219,6 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
     //Set the min and max age in this model set (for use in densities.c)
     ageLimit[0] = yyLogAge[0][0];
     ageLimit[1] = yyLogAge[0][N_YY_AGES - 1];
-
-    for (i = 0; i < 2; i++)
-    {
-        tempIso[i].nEntries = MAX_YY_ENTRIES;
-        tempIso[i].nFilts = N_YY_FILTS;
-        allocateGlobalIso (tempIso[i]);
-    }
 
     fclose (pYY);
     return;

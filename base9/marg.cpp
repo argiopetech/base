@@ -11,6 +11,7 @@
 #include "Model.hpp"
 #include "wdEvol.hpp"
 #include "FilterSet.hpp"
+#include "WhiteDwarf.hpp"
 
 using std::array;
 
@@ -43,8 +44,8 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster.AGBt_zmass < EPS)
     {
-        pStar.boundsFlag = 1;
-        return -HUGE_VAL;
+        throw WDBoundsError("Bounds error in marg.cpp");
+//        return -HUGE_VAL;
     }
 
     clusterAv = pCluster.getAbs();
