@@ -30,8 +30,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, S
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar);
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&, array<double, 2> &ltau);
 
-/* evaluate on a grid of primary mass and mass ratio to approximate
-   the integral */
+/* evaluate on a grid of primary mass and mass ratio to approximate the integral */
 double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoModels, array<double, 2> &ltau)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
@@ -45,7 +44,6 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
     if (pCluster.AGBt_zmass < EPS)
     {
         throw WDBoundsError("Bounds error in marg.cpp");
-//        return -HUGE_VAL;
     }
 
     clusterAv = pCluster.getAbs();

@@ -12,6 +12,7 @@ The appropriate magnitudes are put in globalMags[][].
 ********************************************************************************/
 
 #include <string>
+#include <iostream>
 
 #include <cstdio>
 #include <cmath>
