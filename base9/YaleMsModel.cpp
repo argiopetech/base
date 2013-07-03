@@ -551,7 +551,7 @@ double YaleMsModel::msRgbEvol (double zamsMass)
 
     int filt, m = 0;
 
-    m = binarySearch (isochrone.mass, isochrone.nEntries, zamsMass);
+    m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
 
     for (filt = 0; filt < N_YY_FILTS; filt++)
     {

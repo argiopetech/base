@@ -8,8 +8,6 @@
 #include "Star.hpp"
 #include "Chain.hpp"
 
-#include <iostream>
-
 struct globalIso
 {
     globalIso()
@@ -19,52 +17,33 @@ struct globalIso
     globalIso(int nEntries, int nFilts)
         : nEntries(nEntries),nFilts(nFilts)
     {
-        std::cout << "Constructing globalIso with nEntries: " << nEntries << " and nFilts: " << nFilts << std::endl;
-
-        assert(mass == NULL);
         assert(nEntries != 0 && nFilts != 0);
 
-        mass = new double[nEntries]();
-        massNow = new double[nEntries]();
-        eep = new int[nEntries]();
+        mass.resize(nEntries);
+        massNow.resize(nEntries);
+        eep.resize(nEntries);
 
-        int j = 0;
-
-        mag = new double*[nEntries]();
-
-        for (j = 0; j < nEntries; j++)
-        {
-            mag[j] = new double[nFilts]();
-        }
+        mag.assign(nEntries, std::vector<double>(nFilts));
     }
 
     ~globalIso()
-    {
-        delete[] (mass);
-        delete[] (massNow);
-        delete[] (eep);
+    {;}
 
-        int j = 0;
+    std::vector< std::vector<double> > mag;
 
-        for (j = 0; j < nEntries; j++)
-        {
-            delete[] (mag[j]);
-        }
-        delete[] (mag);
-    }
+    std::vector<int> eep;
+    std::vector<double> mass;
+    std::vector<double> massNow;
 
+    int nEntries;
+    int nFilts;
+
+    double AgbTurnoffMass;
     double FeH;
     double logAge;
     double age;
     double Y;
     double z;
-    double *mass;
-    double *massNow;
-    double **mag;                       //Dimensions are [NMASSES][NFILTS];
-    double AgbTurnoffMass;
-    int nEntries;
-    int nFilts;
-    int *eep;
 };
 
 enum class blockType

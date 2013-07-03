@@ -314,7 +314,7 @@ double ChabMsModel::msRgbEvol (double zamsMass)
 
     int m, filt;
 
-    m = binarySearch (isochrone.mass, isochrone.nEntries, zamsMass);
+    m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
 
     for (filt = 0; filt < N_CHAB_FILTS; filt++)
     {
