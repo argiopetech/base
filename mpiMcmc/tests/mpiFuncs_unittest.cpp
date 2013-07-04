@@ -78,11 +78,6 @@ double run1step()
 
     initChain (mc, ctrl, evoModels, ltau);
 
-    for (int i = 0; i < mc.clust.nStars; i++)
-    {
-        mc.stars[i].isFieldStar = 0;
-    }
-
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
     double logFieldStarLikelihood = 0.0;

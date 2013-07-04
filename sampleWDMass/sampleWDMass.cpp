@@ -1,11 +1,13 @@
 /*** Last update: 19jun06 ***/
 #include <array>
+#include <fstream>
+#include <string>
+#include <sstream>
 #include <iostream>
 
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
-#include <cstring>
 #include <mpi.h>
 #include <unistd.h>
 
@@ -22,6 +24,8 @@
 #include "WhiteDwarf.hpp"
 
 using std::array;
+using std::string;
+using std::istringstream;
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -40,7 +44,7 @@ const int ALLOC_CHUNK = 1;
 
 struct ifmrGridControl
 {
-    FILE *rData;
+    std::ifstream rData;
     FILE *rSampledParamFile;
     FILE *wMassSampleFile;
     FILE *wMembershipFile;
@@ -99,7 +103,7 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 extern double ageLimit[2];      /* Defined in evolve.c, set in the appropriate model during loadModels. */
 
 /* Used by a bunch of different functions. */
-int useFilt[FILTS], numFilts = 0;
+int useFilt[FILTS];
 
 /* For random number generator (mt19937ar.c) */
 unsigned long seed;
@@ -206,9 +210,10 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     strcpy (filename, settings.files.phot.c_str());
 
-    if ((ctrl->rData = fopen (filename, "r")) == NULL)
+    ctrl->rData.open(filename);
+    if (!ctrl->rData)
     {
-        cerr << "***Error: file " << filename << " was not found.***" << endl;
+        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
         cerr << "[Exiting...]" << endl;
         exit (1);
     }
@@ -260,127 +265,88 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     }
 } // initIfmrGridControl
 
-
-/*
- * Read CMD data
- */
-static void readCmdData (Chain *mc, struct ifmrGridControl *ctrl, Model &evoModels)
+void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModels)
 {
-    char line[300];
-    double tempSigma;
-    int filt, i;
-    char *pch, sig[] = "sig\0", comp[] = "   \0";
+    string line, pch;
 
     //Parse the header of the file to determine which filters are being used
-    fgets (line, 300, ctrl->rData);     // Read in the header line
+    getline(ctrl.rData, line);  // Read in the header line
 
-    pch = strtok (line, " ");   // split the string on these delimiters into "tokens"
+    istringstream header(line); // Ignore the first token (which is "id")
 
-    while (pch != NULL)
+    header >> pch;
+
+    while (!header.eof())
     {
-        pch = strtok (NULL, " ");       // Ignore the first token (which is "id") and move
-        // to the next (which should be the first filter name)
+        header >> pch;
 
-        strncpy (comp, pch, 3); // copy the first three letters into the dummy string 'comp'
-        if (strcmp (comp, sig) == 0)
-        {
+        if (pch == "sig")
             break;                      // and check to see if they are 'sig'.  If they are, there are no more filters
-        }
 
-        for (filt = 0; filt < FILTS; filt++)    // Otherwise check to see what this filter's name is
-        {
-            if (strcmp (pch, getFilterName (filt)) == 0)
+        for (int filt = 0; filt < FILTS; filt++)
+        {                               // Otherwise check to see what this filter's name is
+            if (pch == getFilterName (filt))
             {
-                ctrl->useFilt[filt] = 1;
-                evoModels.numFilts++;
-
+                ctrl.useFilt[filt] = 1;
+                const_cast<Model&>(evoModels).numFilts++;
                 if (aFilt < 0)
-                {
                     aFilt = filt;               // Sets this to a band we know we are using (for evolve)
-                }
-
                 break;
             }
         }
     }
 
-    for (i = 0; i < FILTS; i++)
+    for (int i = 0; i < FILTS; i++)
     {
-        if (ctrl->useFilt[i])
+        if (ctrl.useFilt[i])
         {
-            ctrl->numFilts++;
+            ctrl.numFilts++;
             if (aFilt < 0)
-            {
                 aFilt = i;              // Sets this to a band we know we are using (for evolve)
-            }
         }
     }
 
     // This loop reads in photometry data
     // It also reads a best guess for the mass
-    int nr, j = 0;
-    int moreStars = 1;          // true
+    mc.stars.clear();
 
-    while (moreStars)
+    while (!ctrl.rData.eof())
     {
-        mc->stars.emplace_back();
+        getline(ctrl.rData, line);
 
-        nr = fscanf (ctrl->rData, "%*s");
-
-        if (nr == EOF)
+        if (ctrl.rData.eof())
             break;
 
-        for (i = 0; i < ctrl->numFilts; i++)
+        mc.stars.push_back(Star(line, ctrl.numFilts));
+
+        for (int i = 0; i < ctrl.numFilts; i++)
         {
-            fscanf (ctrl->rData, "%lf", &(mc->stars.at(j).obsPhot[i]));
+            if (mc.stars.back().obsPhot[i] < ctrl.filterPriorMin[i])
+            {
+                ctrl.filterPriorMin[i] = mc.stars.back().obsPhot[i];
+            }
 
-            if (mc->stars.at(j).obsPhot[i] < ctrl->filterPriorMin[i])
-                ctrl->filterPriorMin[i] = mc->stars.at(j).obsPhot[i];
+            if (mc.stars.back().obsPhot[i] > ctrl.filterPriorMax[i])
+            {
+                ctrl.filterPriorMax[i] = mc.stars.back().obsPhot[i];
+            }
 
-            if (mc->stars.at(j).obsPhot[i] > ctrl->filterPriorMax[i])
-                ctrl->filterPriorMax[i] = mc->stars.at(j).obsPhot[i];
+            filterPriorMin[i] = ctrl.filterPriorMin[i];
+            filterPriorMax[i] = ctrl.filterPriorMax[i];
         }
 
-        // copy to global variables
-        for (i = 0; i < ctrl->numFilts; i++)
+        if (!(mc.stars.back().status[0] == 3 || (mc.stars.back().obsPhot[ctrl.iMag] >= ctrl.minMag && mc.stars.back().obsPhot[ctrl.iMag] <= ctrl.maxMag)))
         {
-            filterPriorMin[i] = ctrl->filterPriorMin[i];
-            filterPriorMax[i] = ctrl->filterPriorMax[i];
+            mc.stars.pop_back();
         }
-
-        for (i = 0; i < ctrl->numFilts; i++)
-        {
-            fscanf (ctrl->rData, "%lf", &tempSigma);
-            mc->stars.at(j).variance[i] = tempSigma * fabs (tempSigma);
-            // The fabs() keeps the sign of the variance the same as that input by the user for sigma
-            // Negative sigma (variance) is used to signal "don't count this band for this star"
-        }
-
-        fscanf (ctrl->rData, "%lf %lf %d %lf %d", &(mc->stars.at(j).U), &(mc->stars.at(j).massRatio), &(mc->stars.at(j).status[0]), &(mc->stars.at(j).clustStarPriorDens), &(mc->stars.at(j).useDuringBurnIn));
-
-        if (mc->stars.at(j).status[0] == 3 || (mc->stars.at(j).obsPhot[ctrl->iMag] >= ctrl->minMag && mc->stars.at(j).obsPhot[ctrl->iMag] <= ctrl->maxMag))
-        {
-            j++;
-        }
-    }
-    mc->clust.nStars = j;
-
-    for (j = 0; j < mc->clust.nStars; j++)
-    {
-        mc->stars.at(j).massRatio = 0.0;
     }
 
     // copy to global values
-    for (i = 0; i < FILTS; i++)
+    for (int i = 0; i < FILTS; i++)
     {
-        useFilt[i] = ctrl->useFilt[i];
+        useFilt[i] = ctrl.useFilt[i];
     }
-
-    numFilts = ctrl->numFilts;
-
-    fclose (ctrl->rData);
-} // readCmdData
-
+} /* readCmdData */
 
 /*
  * Read sampled params
@@ -469,42 +435,41 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     mc->clust.betamabs = 0.0;
     mc->clust.betaFabs = 0.0;
 
-    int i, j;
+    int i;
 
-    for (j = 0; j < mc->clust.nStars; j++)
+    for (auto star : mc->stars)
     {
-        mc->stars.at(j).meanMassRatio = 0.0;
-        mc->stars.at(j).isFieldStar = 0;
-        mc->stars.at(j).clustStarProposalDens = mc->stars.at(j).clustStarPriorDens;   // Use prior prob of being clus star
-        mc->stars.at(j).UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-        mc->stars.at(j).massRatioStepSize = 0.001;
+        star.meanMassRatio = 0.0;
+        star.isFieldStar = 0;
+        star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
+        star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
+        star.massRatioStepSize = 0.001;
 
         for (i = 0; i < NPARAMS; i++)
         {
-            mc->stars.at(j).beta[i][0] = 0.0;
-            mc->stars.at(j).beta[i][1] = 0.0;
+            star.beta[i][0] = 0.0;
+            star.beta[i][1] = 0.0;
         }
-        mc->stars.at(j).betaMassRatio[0] = 0.0;
-        mc->stars.at(j).betaMassRatio[1] = 0.0;
-        mc->stars.at(j).meanU = 0.0;
-        mc->stars.at(j).varU = 0.0;
+        star.betaMassRatio[0] = 0.0;
+        star.betaMassRatio[1] = 0.0;
+        star.meanU = 0.0;
+        star.varU = 0.0;
 
         for (i = 0; i < 2; i++)
-            mc->stars.at(j).wdType[i] = DA;
+            star.wdType[i] = DA;
 
-        for (i = 0; i < numFilts; i++)
+        for (i = 0; i < ctrl->numFilts; i++)
         {
-            mc->stars.at(j).photometry[i] = 0.0;
+            star.photometry[i] = 0.0;
         }
 
         // find photometry for initial values of currentClust and mc->stars
-        if (mc->stars.at(j).status[0] == WD)
+        if (star.status[0] == WD)
         {
-            mc->stars.at(j).UStepSize = 0.05;      // use larger initial step size for white dwarfs
-            mc->stars.at(j).massRatio = 0.0;
+            star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
+            star.massRatio = 0.0;
         }
     }
-
 } // initChain
 
 int main (int argc, char *argv[])
@@ -603,12 +568,12 @@ int main (int argc, char *argv[])
 
     if (taskid == MASTER)
     {
-        readCmdData (&mc, &ctrl, evoModels);
+        readCmdData (mc, ctrl, evoModels);
 
-        obs = new obsStar[mc.clust.nStars]();
-        starStatus = new int[mc.clust.nStars]();
+        obs = new obsStar[mc.stars.size()]();
+        starStatus = new int[mc.stars.size()]();
 
-        for (i = 0; i < mc.clust.nStars; i++)
+        for (i = 0; i < mc.stars.size(); i++)
         {
             for (filt = 0; filt < ctrl.numFilts; filt++)
             {
@@ -630,29 +595,28 @@ int main (int argc, char *argv[])
     MPI_Bcast (useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
 
     evoModels.numFilts = ctrl.numFilts;
-    numFilts = ctrl.numFilts;
 
     MPI_Bcast (ctrl.filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
     MPI_Bcast (ctrl.filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
     MPI_Bcast (filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
     MPI_Bcast (filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.nStars, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+//    MPI_Bcast (&mc.clust.nStars, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
 
     MPI_Barrier (MPI_COMM_WORLD);
     if (taskid != MASTER)
     {
-        obs = new obsStar[mc.clust.nStars]();
-        starStatus = new int[mc.clust.nStars]();
+        obs = new obsStar[mc.stars.size()]();
+        starStatus = new int[mc.stars.size()]();
     }
 
-    MPI_Bcast (starStatus, mc.clust.nStars, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (obs, mc.clust.nStars, obsStarType, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast (starStatus, mc.stars.size(), MPI_INT, MASTER, MPI_COMM_WORLD);
+    MPI_Bcast (obs, mc.stars.size(), obsStarType, MASTER, MPI_COMM_WORLD);
     if (taskid != MASTER)
     {
         /* initialize the stars array */
-        mc.stars.resize(mc.clust.nStars);
+        mc.stars.resize(mc.stars.size());
 
-        for (i = 0; i < mc.clust.nStars; i++)
+        for (i = 0; i < mc.stars.size(); i++)
         {
             for (filt = 0; filt < ctrl.numFilts; filt++)
             {
@@ -670,7 +634,7 @@ int main (int argc, char *argv[])
 
     initChain (&mc, &ctrl);
 
-    for (i = 0; i < mc.clust.nStars; i++)
+    for (i = 0; i < mc.stars.size(); i++)
     {
         mc.stars.at(i).isFieldStar = 0;
     }

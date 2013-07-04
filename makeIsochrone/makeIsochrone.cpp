@@ -137,26 +137,21 @@ int main (int argc, char *argv[])
         theCluster.parameter[YYY] = 0.0;
     }
 
-    // Create a simulated cluster based on the cluster stats and output for comparison
-    theCluster.nStars = 1;
+    stars.resize(1);
 
-    stars.resize(theCluster.nStars);
-
-    stars.at(0).U = 1.0;
-    stars.at(0).massRatio = 0.0;
+    stars.front().U = 1.0;
+    stars.front().massRatio = 0.0;
 
     for (auto s : stars)
         evolve (theCluster, evoModels, s, ltau);
 
     int nWD = 10000;
 
-    theCluster.nStars = isochrone.nEntries + nWD;
-
-    stars.resize(theCluster.nStars);
+    stars.resize(isochrone.nEntries + nWD);
 
     double dMass = (theCluster.M_wd_up - isochrone.mass[isochrone.nEntries]) / (double) nWD;
 
-    for (j = 0; j < theCluster.nStars; j++)
+    for (j = 0; j < stars.size(); j++)
     {
         if (j < isochrone.nEntries)
         {
@@ -179,25 +174,17 @@ int main (int argc, char *argv[])
             fprintf (wDebugPtr, "          %s", getFilterName (filt));
     fprintf (wDebugPtr, "\n");
 
-//   double prevV=100;
-    for (j = 0; j < theCluster.nStars; j++)
+    for (j = 0; j < stars.size(); j++)
     {
 
         if (stars.at(j).photometry[0] < 90)
         {
             if (stars.at(j).status[0] == MSRG)
             {
-                // if(prevV > stars.at(j).photometry[0]){
                 fprintf (wDebugPtr, "%lf %6d ", stars.at(j).U, stars.at(j).status[0]);
                 for (filt = 0; filt < evoModels.numFilts; filt++)
                     fprintf (wDebugPtr, "%10f ", stars.at(j).photometry[filt]);
                 fprintf (wDebugPtr, "\n");
-//           prevV = stars.at(j).photometry[0];
-                // }
-                // else{
-                //   prevV = 0.0;
-                //   continue;
-                // }
             }
             else
             {

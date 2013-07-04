@@ -64,16 +64,11 @@ int main (int argc, char *argv[])
 
     initChain (mc, ctrl, evoModels, ltau);
 
-    for (int i = 0; i < mc.clust.nStars; i++)
-    {
-        mc.stars[i].isFieldStar = 0;
-    }
-
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
     double logFieldStarLikelihood = 0.0;
 
-    if (mc.clust.nStars > 1)
+    if (mc.stars.size() > 1)
     {
         for (int filt = 0; filt < ctrl.numFilts; filt++)
         {

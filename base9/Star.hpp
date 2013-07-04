@@ -1,4 +1,8 @@
+#ifndef STAR_HPP
+#define STAR_HPP
+
 #include <array>
+#include <string>
 
 #include "constants.hpp"
 #include "Cluster.hpp"
@@ -11,7 +15,7 @@ class Star
     Star()
     {
         // NPARAMS-element arrays
-        useFilt.fill(false);
+//        useFilt.fill(false);
         obsPhot.fill(0.0);
         photometry.fill(0.0);
         variance.fill(0.0);
@@ -26,16 +30,26 @@ class Star
         for (auto &a : beta)
             a.fill(0.0);
     }
+
+    Star(const std::string &s, int filters)
+        : Star()
+    {
+        readCMD(s, filters);
+    }
+
     ~Star() {;}
+
+    void readCMD(const std::string&, int);
+
+    double getMass1 (const Cluster &) const;
+    double getMass2 (const Cluster &) const;
+    void setMass1 (const Cluster &, double);
+    // void setMass2 (const Cluster &, double);
+
 
     Matrix<double, NPARAMS, 2> beta;
 
-    double getMass1 (const Cluster &pCluster) const;
-    double getMass2 (const Cluster &pCluster) const;
-    void setMass1 (const Cluster &pCluster, double newMass);
-    // void setMass2 (const Cluster &pCluster, double newMass);
-
-    std::array<bool, FILTS> useFilt;
+//    std::array<bool, FILTS> useFilt;
 
     std::array<int, 2> status;
     std::array<int, 2> wdType;
@@ -61,3 +75,5 @@ class Star
     double UStepSize = 0.0;
     double massRatioStepSize = 0.0;
 };
+
+#endif

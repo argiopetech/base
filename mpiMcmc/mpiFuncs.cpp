@@ -3,11 +3,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <thread>
 #include <vector>
 #include <stdexcept>
-
-#include <cstring>
 
 #include <boost/format.hpp>
 #include <gsl/gsl_blas.h>
@@ -35,6 +34,7 @@ using std::cerr;
 using std::endl;
 using std::isfinite;
 using std::ofstream;
+using std::istringstream;
 
 int aFilt;
 double filterPriorMin[FILTS];
@@ -46,27 +46,25 @@ int useFilt[FILTS];
  */
 void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels)
 {
-    char line[300];
-    double tempSigma;
-    int filt, i;
-    char *pch, sig[] = "sig", comp[] = "   ";
+    string line, pch;
 
     //Parse the header of the file to determine which filters are being used
-    ctrl.rData.getline(line, 300);     // Read in the header line
+    getline(ctrl.rData, line);  // Read in the header line
 
-    pch = strtok (line, " ");   // split the string on these delimiters into "tokens"
+    istringstream header(line); // Ignore the first token (which is "id")
 
-    while (pch != NULL)
+    header >> pch;
+
+    while (!header.eof())
     {
-        pch = strtok (NULL, " ");       // Ignore the first token (which is "id") and move
-        // to the next (which should be the first filter name)
-        strncpy (comp, pch, 3); // copy the first three letters into the dummy string 'comp'
-        if (strcmp (comp, sig) == 0)
+        header >> pch;
+
+        if (pch == "sig")
             break;                      // and check to see if they are 'sig'.  If they are, there are no more filters
 
-        for (filt = 0; filt < FILTS; filt++)
+        for (int filt = 0; filt < FILTS; filt++)
         {                               // Otherwise check to see what this filter's name is
-            if (strcmp (pch, getFilterName (filt)) == 0)
+            if (pch == getFilterName (filt))
             {
                 ctrl.useFilt[filt] = 1;
                 const_cast<Model&>(evoModels).numFilts++;
@@ -77,7 +75,7 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModel
         }
     }
 
-    for (i = 0; i < FILTS; i++)
+    for (int i = 0; i < FILTS; i++)
     {
         if (ctrl.useFilt[i])
         {
@@ -89,70 +87,44 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModel
 
     // This loop reads in photometry data
     // It also reads a best guess for the mass
-    int j = 0;
-    int moreStars = 1;          // true
-
     mc.stars.clear();
 
-    while (moreStars)
+    while (!ctrl.rData.eof())
     {
-        ctrl.rData >> line;
+        getline(ctrl.rData, line);
 
         if (ctrl.rData.eof())
             break;
 
-        mc.stars.emplace_back();
+        mc.stars.push_back(Star(line, ctrl.numFilts));
 
-        for (i = 0; i < ctrl.numFilts; i++)
+        for (int i = 0; i < ctrl.numFilts; i++)
         {
-            ctrl.rData >> mc.stars[j].obsPhot[i];
-
-            if (mc.stars[j].obsPhot[i] < ctrl.filterPriorMin[i])
+            if (mc.stars.back().obsPhot[i] < ctrl.filterPriorMin[i])
             {
-                ctrl.filterPriorMin[i] = mc.stars[j].obsPhot[i];
+                ctrl.filterPriorMin[i] = mc.stars.back().obsPhot[i];
             }
 
-            if (mc.stars[j].obsPhot[i] > ctrl.filterPriorMax[i])
+            if (mc.stars.back().obsPhot[i] > ctrl.filterPriorMax[i])
             {
-                ctrl.filterPriorMax[i] = mc.stars[j].obsPhot[i];
+                ctrl.filterPriorMax[i] = mc.stars.back().obsPhot[i];
             }
-        }
 
-        // copy to global variables
-        for (i = 0; i < ctrl.numFilts; i++)
-        {
             filterPriorMin[i] = ctrl.filterPriorMin[i];
             filterPriorMax[i] = ctrl.filterPriorMax[i];
         }
-        for (i = 0; i < ctrl.numFilts; i++)
+
+        if (!(mc.stars.back().status[0] == 3 || (mc.stars.back().obsPhot[ctrl.iMag] >= ctrl.minMag && mc.stars.back().obsPhot[ctrl.iMag] <= ctrl.maxMag)))
         {
-            ctrl.rData >> tempSigma;
-            mc.stars[j].variance[i] = tempSigma * fabs (tempSigma);
-            // The fabs() keeps the sign of the variance the same as that input by the user for sigma
-            // Negative sigma (variance) is used to signal "don't count this band for this star"
+            mc.stars.pop_back();
         }
-
-        ctrl.rData >> mc.stars[j].U >> mc.stars[j].massRatio >> mc.stars[j].status[0] >> mc.stars[j].clustStarPriorDens >> mc.stars[j].useDuringBurnIn;
-
-        if (mc.stars[j].status[0] == 3 || (mc.stars[j].obsPhot[ctrl.iMag] >= ctrl.minMag && mc.stars[j].obsPhot[ctrl.iMag] <= ctrl.maxMag))
-        {
-            j++;
-        }
-    }
-    mc.clust.nStars = j;
-
-    for (j = 0; j < mc.clust.nStars; j++)
-    {
-        mc.stars[j].massRatio = 0.0;
     }
 
     // copy to global values
-    for (i = 0; i < FILTS; i++)
+    for (int i = 0; i < FILTS; i++)
     {
         useFilt[i] = ctrl.useFilt[i];
     }
-
-    assert (mc.stars.size() == mc.clust.nStars);
 } /* readCmdData */
 
 void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)

@@ -37,7 +37,7 @@ unsigned long seed = 0;
 
 int main (int argc, char *argv[])
 {
-    int i, filt, nStars, cmpnt, nFieldStars, nBrownDwarfs;
+    int i, filt, nStars, cmpnt, nBrownDwarfs;
     double fractionBinary, tempU, massTotal, fractionDB, tempMod, minV, maxV, minMass = 0.15;
     char w_file[100];
     FILE *w_ptr;
@@ -71,7 +71,7 @@ int main (int argc, char *argv[])
     for (filt = 8; filt < FILTS; filt++)
         useFilt[filt] = 1;              // but not the other crap
 
-    theCluster.nStars = settings.simCluster.nStars;
+//    theCluster.nStars = settings.simCluster.nStars;
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
     fractionBinary = settings.simCluster.percentBinary;
     fractionDB = settings.simCluster.percentDB;
@@ -80,7 +80,7 @@ int main (int argc, char *argv[])
     theCluster.parameter[AGE] = settings.cluster.logClusAge;
     theCluster.parameter[FEH] = settings.cluster.Fe_H;
     theCluster.parameter[YYY] = settings.cluster.Y;
-    nFieldStars = settings.simCluster.nFieldStars;
+//    nFieldStars = settings.simCluster.nFieldStars;
     nBrownDwarfs = settings.simCluster.nBrownDwarfs;
 
     fractionBinary /= 100.;     // input as percentages, use as fractions
@@ -137,7 +137,7 @@ int main (int argc, char *argv[])
     ///// Create cluster stars /////
     ////////////////////////////////
     // derive masses, mags, and summary stats
-    for (i = 0; i < theCluster.nStars; i++)
+    for (i = 0; i < settings.simCluster.nStars; i++)
     {                           // for all systems in the cluster
         do
         {
@@ -258,7 +258,7 @@ int main (int argc, char *argv[])
     cout << boost::format(" fractionBinary = %5.2f") % fractionBinary << endl;
     
     cout << "Totals:" << endl;
-    cout << " nSystems       = " << theCluster.nStars << endl;
+    cout << " nSystems       = " << settings.simCluster.nStars << endl;
     cout << " nStars         = " << nStars << endl;
     cout << " nMSRG          = " << nMSRG << endl;
     cout << " nWD            = " << nWD << endl;
@@ -269,7 +269,7 @@ int main (int argc, char *argv[])
     cout << " MSRGMassTotal  = " << MSRGMassTotal << endl;
     cout.precision(2);
     cout << " wdMassTotal    = " << wdMassTotal << endl;
-    cout << " nFieldStars    = " << nFieldStars * 2 << endl;;
+    cout << " nFieldStars    = " << settings.simCluster.nFieldStars * 2 << endl;;
 
 
     //////////////////////////////
@@ -278,7 +278,7 @@ int main (int argc, char *argv[])
 
     double minFeH, maxFeH, minAge, maxAge;
 
-    theCluster.nStars = nFieldStars;
+//    theCluster.nStars = nFieldStars;
     tempMod = theCluster.parameter[MOD];
 
     {
@@ -306,7 +306,7 @@ int main (int argc, char *argv[])
     }
 
     i = 0;
-    while (i < theCluster.nStars)
+    while (i < settings.simCluster.nFieldStars)
     {
         do
         {

@@ -45,7 +45,6 @@ class Cluster
     std::array<double, NPARAMS> priorVar;
     std::array<double, NPARAMS> priorMean;
 
-    int nStars = 0;
     int photometrySet;
     double M_wd_up = 8.0;
     double betamabs = 0.0;
