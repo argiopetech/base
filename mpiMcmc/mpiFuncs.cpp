@@ -243,13 +243,9 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
  */
 void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings)
 {
-    double priorSigma;
-
     ctrl.numFilts = 0;
 
-    int ii;
-
-    for (ii = 0; ii < FILTS; ii++)
+    for (int ii = 0; ii < FILTS; ii++)
         ctrl.useFilt[ii] = 0;
 
     /* Read number of steps, burn-in details, random seed */
@@ -259,35 +255,28 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     loadModels (&clust, evoModels, settings);
 
     clust.parameter[FEH] = settings.cluster.Fe_H;
-
-    priorSigma = settings.cluster.sigma.Fe_H;
-
-    if (priorSigma < 0.0)
-    {
-        priorSigma = 0.0;
-    }
-    ctrl.priorVar[FEH] = priorSigma * priorSigma;
+    ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
     clust.parameter[MOD] = settings.cluster.distMod;
-    priorSigma = settings.cluster.sigma.distMod;
-
-    if (priorSigma < 0.0)
-    {
-        priorSigma = 0.0;
-    }
-    ctrl.priorVar[MOD] = priorSigma * priorSigma;
+    ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
     clust.parameter[ABS] = settings.cluster.Av;
-    priorSigma = settings.cluster.sigma.Av;
-
-    if (priorSigma < 0.0)
-    {
-        priorSigma = 0.0;
-    }
-    ctrl.priorVar[ABS] = priorSigma * priorSigma;
+    ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
     clust.parameter[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
+
+    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
+    {
+        clust.parameter[YYY] = settings.cluster.Y;
+        ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
+    }
+    else
+    {
+        clust.parameter[YYY] = 0.0;
+        ctrl.priorVar[YYY] = 0.0;
+    }
+
 
     if (evoModels.IFMR <= 3)
     {
@@ -311,25 +300,22 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     /* set starting values for IFMR parameters */
     clust.parameter[IFMR_SLOPE] = 0.08;
     clust.parameter[IFMR_INTERCEPT] = 0.65;
+
     if (evoModels.IFMR <= 10)
         clust.parameter[IFMR_QUADCOEF] = 0.0001;
     else
         clust.parameter[IFMR_QUADCOEF] = 0.08;
 
-    /* open model file, choose model set, and load models */
-    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
+    for (auto &var : ctrl.priorVar)
     {
-        scanf ("%lf %lf", &clust.parameter[YYY], &ctrl.priorVar[YYY]);
-
-        if (ctrl.priorVar[YYY] < 0.0)
+        if (var < 0.0)
         {
-            ctrl.priorVar[YYY] = 0.0;
+            var = 0.0;
         }
-    }
-    else
-    {
-        clust.parameter[YYY] = 0.0;
-        ctrl.priorVar[YYY] = 0.0;
+        else
+        {
+            var = var * var;
+        }
     }
 
     /* read burnIter and nIter */
@@ -375,7 +361,7 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.mean.begin());
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.priorMean.begin());
-
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
 } /* initIfmrMcmcControl */
 
 
@@ -384,44 +370,16 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
  */
 void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, array<double, 2> &ltau)
 {
-    int p;
-
-    for (p = 0; p < NPARAMS; p++)
+    for (int p = 0; p < NPARAMS; p++)
     {
         mc.acceptClust[p] = mc.rejectClust[p] = 0;
     }
 
-    mc.clust.betamabs = 0.0;
-    mc.clust.betaFabs = 0.0;
-
-    int i;
-
     for (auto star : mc.stars)
     {
-        star.meanMassRatio = 0.0;
-        star.isFieldStar = 0;
         star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
         star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
         star.massRatioStepSize = 0.001;
-
-        for (i = 0; i < NPARAMS; i++)
-        {
-            star.beta[i][0] = 0.0;
-            star.beta[i][1] = 0.0;
-        }
-
-        star.betaMassRatio[0] = 0.0;
-        star.betaMassRatio[1] = 0.0;
-        star.meanU = 0.0;
-        star.varU = 0.0;
-
-        for (i = 0; i < 2; i++)
-            star.wdType[i] = 0;
-
-        for (i = 0; i < ctrl.numFilts; i++)
-        {
-            star.photometry[i] = 0.0;
-        }
 
         // find photometry for initial values of currentClust and mc.stars
         evolve (mc.clust, evoModels, star, ltau);

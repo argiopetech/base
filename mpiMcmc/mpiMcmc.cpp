@@ -54,12 +54,6 @@ int main (int argc, char *argv[])
 
     initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
 
-    for (int p = 0; p < NPARAMS; p++)
-    {
-        mc.clust.priorVar[p] = ctrl.priorVar[p];
-//        mc.clust.priorMean[p] = ctrl.priorMean[p];
-    }
-
     readCmdData (mc.stars, ctrl, evoModels);
 
     initChain (mc, ctrl, evoModels, ltau);

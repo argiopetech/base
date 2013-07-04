@@ -15,7 +15,6 @@ class Star
     Star()
     {
         // NPARAMS-element arrays
-//        useFilt.fill(false);
         obsPhot.fill(0.0);
         photometry.fill(0.0);
         variance.fill(0.0);
@@ -48,8 +47,6 @@ class Star
 
 
     Matrix<double, NPARAMS, 2> beta;
-
-//    std::array<bool, FILTS> useFilt;
 
     std::array<int, 2> status;
     std::array<int, 2> wdType;
