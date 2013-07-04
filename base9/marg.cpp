@@ -173,7 +173,7 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
 
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels, array<double, 2> &ltau)
 {
-    setMass1 (pStar, pCluster, mass[0]);
+    pStar.setMass1 (pCluster, mass[0]);
 
     int cmpnt = 0, filt;
 

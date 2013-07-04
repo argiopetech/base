@@ -12,8 +12,8 @@ constexpr double sqr(double a)
     return a * a;
 }
 
-static_assert(M_PI >= 3.14, "M_PI is defined and and at least 3.14");
-static_assert(M_PI <  4.00, "M_PI is defined and less than 4.0");
+static_assert(M_PI > 3.141592, "M_PI is defined and and at least 3.141592");
+static_assert(M_PI < 3.15, "M_PI is defined and less than 3.15");
 
 static double logMassNorm = 0.0;
 static int calcMassNorm = 0;
@@ -49,7 +49,7 @@ double logPriorMass (Star &pStar, Cluster &pCluster)
         calcMassNorm = 1;
     }
 
-    mass1 = getMass1 (pStar, pCluster);
+    mass1 = pStar.getMass1(pCluster);
 
     if (mass1 > 0.1 && mass1 <= pCluster.M_wd_up)
     {

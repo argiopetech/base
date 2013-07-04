@@ -1,6 +1,7 @@
 #include <array>
 
 #include "constants.hpp"
+#include "Cluster.hpp"
 #include "Matrix.hpp"
 
 // Define a structure star that houses all star properties
@@ -28,6 +29,11 @@ class Star
     ~Star() {;}
 
     Matrix<double, NPARAMS, 2> beta;
+
+    double getMass1 (const Cluster &pCluster) const;
+    double getMass2 (const Cluster &pCluster) const;
+    void setMass1 (const Cluster &pCluster, double newMass);
+    // void setMass2 (const Cluster &pCluster, double newMass);
 
     std::array<bool, FILTS> useFilt;
 

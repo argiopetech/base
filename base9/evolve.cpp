@@ -73,8 +73,8 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     if (fabs (clusterAbs[0]) < EPS)
         calcAbsCoeffs (evoModels.filterSet, clusterAbs);
 
-    mass[0] = getMass1 (star, pCluster);
-    mass[1] = getMass2 (star, pCluster);
+    mass[0] = star.getMass1(pCluster);
+    mass[1] = star.getMass2(pCluster);
 
     if (star.status[0] == BD)
     {
