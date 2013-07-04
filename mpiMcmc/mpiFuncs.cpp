@@ -44,7 +44,7 @@ int useFilt[FILTS];
 /*
  * Read data
  */
-void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels)
+void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels)
 {
     string line, pch;
 
@@ -87,7 +87,7 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModel
 
     // This loop reads in photometry data
     // It also reads a best guess for the mass
-    mc.stars.clear();
+    stars.clear();
 
     while (!ctrl.rData.eof())
     {
@@ -96,27 +96,27 @@ void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModel
         if (ctrl.rData.eof())
             break;
 
-        mc.stars.push_back(Star(line, ctrl.numFilts));
+        stars.push_back(Star(line, ctrl.numFilts));
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
-            if (mc.stars.back().obsPhot[i] < ctrl.filterPriorMin[i])
+            if (stars.back().obsPhot[i] < ctrl.filterPriorMin[i])
             {
-                ctrl.filterPriorMin[i] = mc.stars.back().obsPhot[i];
+                ctrl.filterPriorMin[i] = stars.back().obsPhot[i];
             }
 
-            if (mc.stars.back().obsPhot[i] > ctrl.filterPriorMax[i])
+            if (stars.back().obsPhot[i] > ctrl.filterPriorMax[i])
             {
-                ctrl.filterPriorMax[i] = mc.stars.back().obsPhot[i];
+                ctrl.filterPriorMax[i] = stars.back().obsPhot[i];
             }
 
             filterPriorMin[i] = ctrl.filterPriorMin[i];
             filterPriorMax[i] = ctrl.filterPriorMax[i];
         }
 
-        if (!(mc.stars.back().status[0] == 3 || (mc.stars.back().obsPhot[ctrl.iMag] >= ctrl.minMag && mc.stars.back().obsPhot[ctrl.iMag] <= ctrl.maxMag)))
+        if (!(stars.back().status[0] == 3 || (stars.back().obsPhot[ctrl.iMag] >= ctrl.minMag && stars.back().obsPhot[ctrl.iMag] <= ctrl.maxMag)))
         {
-            mc.stars.pop_back();
+            stars.pop_back();
         }
     }
 
@@ -241,7 +241,7 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
 /*
  * read control parameters from input stream
  */
-void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings)
+void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings)
 {
     double priorSigma;
 
@@ -256,9 +256,10 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &
     init_genrand (settings.seed);
 
     /* load models */
-    loadModels (&mc.clust, evoModels, settings);
+    loadModels (&clust, evoModels, settings);
 
-    ctrl.priorMean[FEH] = settings.cluster.Fe_H;
+    clust.parameter[FEH] = settings.cluster.Fe_H;
+
     priorSigma = settings.cluster.sigma.Fe_H;
 
     if (priorSigma < 0.0)
@@ -267,7 +268,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &
     }
     ctrl.priorVar[FEH] = priorSigma * priorSigma;
 
-    ctrl.priorMean[MOD] = settings.cluster.distMod;
+    clust.parameter[MOD] = settings.cluster.distMod;
     priorSigma = settings.cluster.sigma.distMod;
 
     if (priorSigma < 0.0)
@@ -276,7 +277,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &
     }
     ctrl.priorVar[MOD] = priorSigma * priorSigma;
 
-    ctrl.priorMean[ABS] = settings.cluster.Av;
+    clust.parameter[ABS] = settings.cluster.Av;
     priorSigma = settings.cluster.sigma.Av;
 
     if (priorSigma < 0.0)
@@ -285,7 +286,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &
     }
     ctrl.priorVar[ABS] = priorSigma * priorSigma;
 
-    ctrl.initialAge = settings.cluster.logClusAge;
+    clust.parameter[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
     if (evoModels.IFMR <= 3)
@@ -308,17 +309,17 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &
     }
 
     /* set starting values for IFMR parameters */
-    ctrl.priorMean[IFMR_SLOPE] = 0.08;
-    ctrl.priorMean[IFMR_INTERCEPT] = 0.65;
+    clust.parameter[IFMR_SLOPE] = 0.08;
+    clust.parameter[IFMR_INTERCEPT] = 0.65;
     if (evoModels.IFMR <= 10)
-        ctrl.priorMean[IFMR_QUADCOEF] = 0.0001;
+        clust.parameter[IFMR_QUADCOEF] = 0.0001;
     else
-        ctrl.priorMean[IFMR_QUADCOEF] = 0.08;
+        clust.parameter[IFMR_QUADCOEF] = 0.08;
 
     /* open model file, choose model set, and load models */
     if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
-        scanf ("%lf %lf", &ctrl.priorMean[YYY], &ctrl.priorVar[YYY]);
+        scanf ("%lf %lf", &clust.parameter[YYY], &ctrl.priorVar[YYY]);
 
         if (ctrl.priorVar[YYY] < 0.0)
         {
@@ -327,7 +328,7 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &
     }
     else
     {
-        ctrl.priorMean[YYY] = 0.0;
+        clust.parameter[YYY] = 0.0;
         ctrl.priorVar[YYY] = 0.0;
     }
 
@@ -371,6 +372,10 @@ void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &
         ctrl.filterPriorMin[j] = 1000;
         ctrl.filterPriorMax[j] = -1000;
     }
+
+    std::copy(clust.parameter.begin(), clust.parameter.end(), clust.mean.begin());
+    std::copy(clust.parameter.begin(), clust.parameter.end(), clust.priorMean.begin());
+
 } /* initIfmrMcmcControl */
 
 
@@ -386,26 +391,8 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoM
         mc.acceptClust[p] = mc.rejectClust[p] = 0;
     }
 
-    mc.clust.parameter[FEH] = ctrl.priorMean[FEH];
-    mc.clust.parameter[MOD] = ctrl.priorMean[MOD];
-    mc.clust.parameter[ABS] = ctrl.priorMean[ABS];
-    mc.clust.parameter[YYY] = ctrl.priorMean[YYY];
-    mc.clust.parameter[AGE] = ctrl.initialAge;
-    mc.clust.mean[AGE] = ctrl.initialAge;
-    mc.clust.mean[YYY] = ctrl.priorMean[YYY];
-    mc.clust.mean[MOD] = ctrl.priorMean[MOD];
-    mc.clust.mean[FEH] = ctrl.priorMean[FEH];
-    mc.clust.mean[ABS] = ctrl.priorMean[ABS];
     mc.clust.betamabs = 0.0;
     mc.clust.betaFabs = 0.0;
-
-    /* IFMR parameters */
-    mc.clust.parameter[IFMR_SLOPE] = ctrl.priorMean[IFMR_SLOPE];
-    mc.clust.parameter[IFMR_INTERCEPT] = ctrl.priorMean[IFMR_INTERCEPT];
-    mc.clust.parameter[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
-    mc.clust.mean[IFMR_SLOPE] = ctrl.priorMean[IFMR_SLOPE];
-    mc.clust.mean[IFMR_INTERCEPT] = ctrl.priorMean[IFMR_INTERCEPT];
-    mc.clust.mean[IFMR_QUADCOEF] = ctrl.priorMean[IFMR_QUADCOEF];
 
     int i;
 

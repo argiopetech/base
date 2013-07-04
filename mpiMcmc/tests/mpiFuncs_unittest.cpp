@@ -64,15 +64,15 @@ double run1step()
     settings.files.phot   = "/home/elliot/Projects/stellar_evolution/test/hyades2/hyades/Hyades.UBV.phot";
     settings.files.models = "/home/elliot/Projects/stellar_evolution/test/hyades2/models/";
 
-    initIfmrMcmcControl (mc, ctrl, evoModels, settings);
+    initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
 
     for (int p = 0; p < NPARAMS; p++)
     {
         mc.clust.priorVar[p] = ctrl.priorVar[p];
-        mc.clust.priorMean[p] = ctrl.priorMean[p];
+        // mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
-    readCmdData (mc, ctrl, evoModels);
+    readCmdData (mc.stars, ctrl, evoModels);
 
     evoModels.numFilts = ctrl.numFilts;
 

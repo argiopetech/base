@@ -7,16 +7,19 @@
 #include "Model.hpp"
 #include "mpiMcmc.hpp"
 
-void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, nSave> &params);
-double logPostStep(Chain &mc, const Model &evoModel, std::array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, std::array<double, 2> &ltau);
-int acceptClustMarg (double logPostCurr, double logPostProp, std::array<double, 2> &ltau);
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, std::array<double, 2> &ltau);
-void initIfmrMcmcControl (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings);
-void initMassGrids (std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, std::array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc);
-void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl);
-void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl);
-void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl);
-void printHeader (std::ofstream &file, std::array<double, NPARAMS> const &priors);
-void readCmdData (Chain &mc, struct ifmrMcmcControl &ctrl, const Model &evoModels);
+void make_cholesky_decomp(struct ifmrMcmcControl &, Matrix<double, NPARAMS, nSave> &);
+double logPostStep(Chain &, const Model &, std::array<double, N_WD_MASS1> &, Cluster &, double, std::array<double, 2> &);
+int acceptClustMarg (double, double, std::array<double, 2> &);
+
+void initChain (Chain &, const struct ifmrMcmcControl &, const Model &, std::array<double, 2> &);
+void initIfmrMcmcControl (Cluster &, struct ifmrMcmcControl &, const Model &, Settings &);
+void initMassGrids (std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &, std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &, std::array<double, N_WD_MASS1> &, const Chain &);
+
+void propClustBigSteps (Cluster &, const struct ifmrMcmcControl &);
+void propClustIndep (Cluster &, const struct ifmrMcmcControl &);
+void propClustCorrelated (Cluster &, const struct ifmrMcmcControl &);
+
+void printHeader (std::ofstream &, const std::array<double, NPARAMS> &);
+void readCmdData (std::vector<Star> &, struct ifmrMcmcControl &ctrl, const Model &);
 
 #endif

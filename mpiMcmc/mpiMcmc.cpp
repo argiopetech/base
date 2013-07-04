@@ -52,15 +52,15 @@ int main (int argc, char *argv[])
 
     increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
-    initIfmrMcmcControl (mc, ctrl, evoModels, settings);
+    initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
 
     for (int p = 0; p < NPARAMS; p++)
     {
         mc.clust.priorVar[p] = ctrl.priorVar[p];
-        mc.clust.priorMean[p] = ctrl.priorMean[p];
+//        mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
-    readCmdData (mc, ctrl, evoModels);
+    readCmdData (mc.stars, ctrl, evoModels);
 
     initChain (mc, ctrl, evoModels, ltau);
 

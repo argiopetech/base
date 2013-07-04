@@ -35,7 +35,6 @@ struct ifmrMcmcControl
     int burnIter;               // total number of burn-in iterations
     int thin;
     int modelSet;
-    double priorMean[NPARAMS];
     std::array<double, NPARAMS> priorVar;
     double initialAge;
     double minMag;
