@@ -6,7 +6,6 @@
 #include <cstdlib>
 
 #include "evolve.hpp"
-#include "msRgbEvol.hpp"
 #include "gBaraffeMag.hpp"
 #include "wdEvol.hpp"
 #include "FilterSet.hpp"

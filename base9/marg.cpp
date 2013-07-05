@@ -5,7 +5,6 @@
 #include <cstdlib>
 
 #include "evolve.hpp"
-#include "msRgbEvol.hpp"
 #include "gBaraffeMag.hpp"
 #include "densities.hpp"
 #include "Model.hpp"

@@ -1,7 +1,6 @@
 #ifndef LOAD_MODELS_H
 #define LOAD_MODELS_H
 
-#include "msRgbEvol.hpp"
 #include "gBergMag.hpp"
 #include "wdCooling.hpp"
 #include "gBaraffeMag.hpp"

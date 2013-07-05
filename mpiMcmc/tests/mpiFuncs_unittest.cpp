@@ -105,5 +105,10 @@ double run1step()
 
     logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau);
 
+    cout << boost::format("%10.6f") % propClust.parameter[AGE] << ' '
+         << boost::format("%10.6f") % propClust.parameter[FEH] << ' '
+         << boost::format("%10.6f") % propClust.parameter[MOD] << ' '
+         << boost::format("%10.6f") % propClust.parameter[ABS] << endl;
+
     return logPostProp;
 }

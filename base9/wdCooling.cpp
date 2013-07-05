@@ -1,38 +1,40 @@
+#include <algorithm>
 #include <string>
+#include <fstream>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <cstring>
 #include <cassert>
-#include <mpi.h>
 
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "wdCooling.hpp"
-#include "binSearch.hpp"
 
+using std::lower_bound;
 using std::string;
+using std::ifstream;
+using std::vector;
 using std::cerr;
 using std::endl;
 
-static int nIso;
-static double *wdMasses;
-static struct wdCoolingCurve *wdCurves;
+static vector<struct wdCoolingCurve> wdCurves;
 static int coolingModel;
 
 struct althausModel
 {
-    const char *filename;
-    int hasHLum;
-    double mass;
+    const string filename;
+    const bool hasHLum;
+    const double mass;
 };
 
 struct renedoModel
 {
-    const char *filename;
-    double mass;
+    const string filename;
+    const double mass;
 };
 
 void loadWDCool (string path, int modelSet)
@@ -61,7 +63,6 @@ void loadWDCool (string path, int modelSet)
         {"T09_1E4.Z0", true, 0.90},
         {"T10_1E4.Z0", true, 1.00},
         {"T11_1E4.Z0", true, 1.10},
-        {0, 0, 0}
     };
 
     static struct renedoModel renedo[] = {
@@ -76,33 +77,24 @@ void loadWDCool (string path, int modelSet)
         {"wd0837_z001.trk", 0.837},
         {"wd0877_z001.trk", 0.877},
         {"wd0934_z001.trk", 0.934},
-        {0, 0}
     };
 
-    int massCurves = 0, carbonCurves = 0, entries = 0;
-    FILE *pCoolingModels;
-    char tempFile[100] = "\0", line[240];
-    double tempAge, tempTeff, tempMass, tempRadius, lastMass = 0.0, tempCarbon, lastCarbon = 0.0;
-    void *tempAlloc;            // temporary for allocation
+    string tempFile, line;
+    double newAge, newTeff, newMass, newRadius;
+    double newCarbon = 0.6 ;// 0.38; // Good default value, per Mike Montgomery
+    double ignore;
 
     coolingModel = modelSet;
 
-    // Allocate memory for the cooling curves dynamically so that
-    // any number of curves can be read in (up to limits of memory)
-    wdCurves = new struct wdCoolingCurve[1]();
-    wdCurves[0].wdCarbons = new double[1]();
-    wdCurves[0].carbonCurve = new struct wdCarbonCurve[1]();
-    wdMasses = new double[1]();
-
-    strcat (tempFile, path.c_str());
+    tempFile = path;
 
     if (modelSet == WOOD)
     {
-        strcat (tempFile, "xb.comb");
+        tempFile += "xb.comb";
     }
     else if (modelSet == MONTGOMERY)
     {
-        strcat (tempFile, "wdtables");
+        tempFile += "wdtables";
     }
     else if ((modelSet != ALTHAUS) && (modelSet != RENEDO))
     {
@@ -112,231 +104,289 @@ void loadWDCool (string path, int modelSet)
 
     if ((modelSet == MONTGOMERY) || (modelSet == WOOD))
     {
+        ifstream pCoolingModels;
+        pCoolingModels.open(tempFile);
 
-        if ((pCoolingModels = fopen (tempFile, "r")) == NULL)
+        if (!pCoolingModels.is_open())
         {
             cerr << "\n file " << tempFile << " was not found - exiting" << endl;
             exit (1);
-        }
+        }        
 
-        fgets (line, 240, pCoolingModels);      /* after header line, read in Wood model file */
+        getline(pCoolingModels, line); // get header line
 
-        while (fgets (line, 240, pCoolingModels) != NULL)
+        while (!pCoolingModels.eof())
         {
             if (modelSet == WOOD)
             {
-                sscanf (line, "%*d %lf %*f %*f %*f %lf %lf %*f %*f %*f %lf", &tempAge, &tempRadius, &tempTeff, &tempMass);
-                tempCarbon = 0.6;       // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
+                pCoolingModels >> ignore
+                               >> newAge
+                               >> ignore >> ignore >> ignore
+                               >> newRadius
+                               >> newTeff
+                               >> ignore >> ignore >> ignore
+                               >> newMass;
             }
             else
             {
-                sscanf (line, "%*d %lf %*f %*f %*f %lf %lf %*f %*f %*f %lf %lf", &tempAge, &tempRadius, &tempTeff, &tempMass, &tempCarbon);
+                pCoolingModels >> ignore
+                               >> newAge
+                               >> ignore >> ignore >> ignore
+                               >> newRadius
+                               >> newTeff
+                               >> ignore >> ignore >> ignore
+                               >> newMass
+                               >> newCarbon;
             }
 
-            if ((massCurves == 0) && (carbonCurves == 0) && (entries == 0))
+            if (!pCoolingModels.eof())
             {
-                lastMass = tempMass;
-                lastCarbon = tempCarbon;
+                if (wdCurves.empty() || newMass != wdCurves.back().mass)
+                {
+                    wdCurves.emplace_back(newMass);
+       
+                    if (wdCurves.back().carbonCurves.empty() || newCarbon != wdCurves.back().carbonCurves.back().carbon)
+                    {
+                        wdCurves.back().carbonCurves.emplace_back(newCarbon);
+                    }
+
+                    wdCurves.back().carbonCurves.back().records.emplace_back(newRadius, log10(newAge), newTeff);
+                }
             }
-
-            // If the mass for this entry isn't the same as the mass of
-            // the last entry, it's a new cooling curve.  Re-allocate
-            // memory for the wdCurves array and start storing in the next
-            // entry. Additionally, make a new cooling curve every time
-            // there is a new carbon. In theory it will already do this
-            // due to going from max to min mass, but I check anyway.
-
-            if ((tempMass != lastMass))
-            {
-                wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
-                wdCurves[massCurves].length = carbonCurves + 1;
-
-                massCurves += 1;
-                carbonCurves = 0;
-                entries = 0;
-
-                if ((tempAlloc = (void *) realloc (wdCurves, (massCurves + 1) * sizeof (struct wdCoolingCurve))) == NULL)
-                    perror ("wdCurves memory allocation error \n");
-                else
-                    wdCurves = (struct wdCoolingCurve *) tempAlloc;
-
-                wdCurves[massCurves].wdCarbons = new double[1]();
-                wdCurves[massCurves].carbonCurve = new struct wdCarbonCurve[1]();
-
-                if ((tempAlloc = (void *) realloc (wdMasses, (massCurves + 1) * sizeof (double))) == NULL)
-                    perror ("wdMasses memory allocation error \n");
-                else
-                    wdMasses = (double *) tempAlloc;
-
-            }
-            else if (tempCarbon != lastCarbon)
-            {
-                wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
-                carbonCurves += 1;
-                entries = 0;
-
-                if ((tempAlloc = (void *) realloc (wdCurves[massCurves].carbonCurve, (carbonCurves + 1) * sizeof (struct wdCarbonCurve))) == NULL)
-                    perror ("wdMasses memory allocation error \n");
-                else
-                    wdCurves[massCurves].carbonCurve = (struct wdCarbonCurve *) tempAlloc;
-
-                if ((tempAlloc = (void *) realloc (wdCurves[massCurves].wdCarbons, (carbonCurves + 1) * sizeof (double))) == NULL)
-                    perror ("wdMasses memory allocation error \n");
-                else
-                    wdCurves[massCurves].wdCarbons = (double *) tempAlloc;
-            }
-
-            wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
-            wdCurves[massCurves].mass = wdMasses[massCurves] = tempMass;
-            wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
-            wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
-            wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10 (tempAge);
-            lastMass = tempMass;
-            lastCarbon = tempCarbon;
-            entries++;
         }
     }
     else if (modelSet == ALTHAUS)
     {
-        int i = 0;
-
-        tempCarbon = 0.6;               // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
-        massCurves = -1;
-
-        while (althaus[i].filename != 0)        // Keep going till we hit the last record
+        for (auto massModel : althaus)
         {
-            strcpy (tempFile, path.c_str());
-            strcat (tempFile, "althaus/");
-            strcat (tempFile, althaus[i].filename);
+            tempFile = path;
+            tempFile += "althaus/";
+            tempFile += massModel.filename;
 
-            if ((pCoolingModels = fopen (tempFile, "r")) == NULL)
+            ifstream pCoolingModels;
+            pCoolingModels.open(tempFile);
+
+            if (!pCoolingModels.is_open())
             {
                 cerr << "\n file " << tempFile << " was not found - exiting" << endl;
                 exit (1);
-            }
+            }        
 
-            massCurves += 1;
-            carbonCurves = 0;
-            entries = 0;
+            getline(pCoolingModels, line); // get header line
+            getline(pCoolingModels, line); // and another...
 
-            if ((tempAlloc = (void *) realloc (wdCurves, (massCurves + 1) * sizeof (struct wdCoolingCurve))) == NULL)
-                perror ("wdCurves memory allocation error \n");
-            else
-                wdCurves = (struct wdCoolingCurve *) tempAlloc;
+            wdCurves.emplace_back(massModel.mass);
+            wdCurves.back().carbonCurves.emplace_back(newCarbon);
 
-            wdCurves[massCurves].wdCarbons = new double[1]();
-            wdCurves[massCurves].carbonCurve = new struct wdCarbonCurve[1]();
-
-            if ((tempAlloc = (void *) realloc (wdMasses, (massCurves + 1) * sizeof (double))) == NULL)
-                perror ("wdMasses memory allocation error \n");
-            else
-                wdMasses = (double *) tempAlloc;
-
-            fgets (line, 240, pCoolingModels);  // Read in two header lines
-            fgets (line, 240, pCoolingModels);
-
-            while (fgets (line, 240, pCoolingModels) != NULL)
+            while (!pCoolingModels.eof())
             {
-                if (althaus[i].hasHLum) // Has one extra throwaway field
+                if (massModel.hasHLum) // Has one extra throw-away field
                 {
-                    sscanf (line, "%*f %lf %*f %*f %*f %lf %lf %*f %*f %*f", &tempTeff, &tempAge, &tempRadius);
+                    pCoolingModels >> ignore
+                                   >> newTeff
+                                   >> ignore >> ignore >> ignore
+                                   >> newAge
+                                   >> newRadius
+                                   >> ignore >> ignore >> ignore;
                 }
                 else
                 {
-                    sscanf (line, "%*f %lf %*f %*f %*f %lf %lf %*f %*f", &tempTeff, &tempAge, &tempRadius);
+                    pCoolingModels >> ignore
+                                   >> newTeff
+                                   >> ignore >> ignore >> ignore
+                                   >> newAge
+                                   >> newRadius
+                                   >> ignore >> ignore;
                 }
 
-                wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
-                wdCurves[massCurves].mass = wdMasses[massCurves] = althaus[i].mass;
-                wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
-                wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = tempRadius;
-                wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10 (1e6) + tempAge;
-                entries++;
-                assert (entries < MAX_WD_MODEL);
+                if (!pCoolingModels.eof())
+                {
+                    wdCurves.back().carbonCurves.back().records.emplace_back(newRadius, log10(1e6) + newAge, newTeff);
+                }
             }
-
-            wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
-            wdCurves[massCurves].length = carbonCurves + 1;
-
-//            fclose(pCoolingModels);
-            pCoolingModels = 0;
-            i += 1;
         }
     }
     else if (modelSet == RENEDO)
     {
-        int i = 0;
-
-        tempCarbon = 0.6;               // Good extimate per 5 March, 2013 conversation with Dr. von Hippel
-        massCurves = -1;
-
-        while (renedo[i].filename != 0) // Keep going till we hit the last record
+        for (auto massModel : renedo)
         {
-            strcpy (tempFile, path.c_str());
-            strcat (tempFile, "renedo/");
-            strcat (tempFile, renedo[i].filename);
+            tempFile = path;
+            tempFile += "renedo/";
+            tempFile += massModel.filename;
 
-            if ((pCoolingModels = fopen (tempFile, "r")) == NULL)
+            ifstream pCoolingModels;
+            pCoolingModels.open(tempFile);
+
+            if (!pCoolingModels.is_open())
             {
                 cerr << "\n file " << tempFile << " was not found - exiting" << endl;
                 exit (1);
-            }
+            }        
 
-            massCurves += 1;
-            carbonCurves = 0;
-            entries = 0;
+            getline(pCoolingModels, line); // get header line
+            getline(pCoolingModels, line); // and another...
 
-            if ((tempAlloc = (void *) realloc (wdCurves, (massCurves + 1) * sizeof (struct wdCoolingCurve))) == NULL)
-                perror ("wdCurves memory allocation error \n");
-            else
-                wdCurves = (struct wdCoolingCurve *) tempAlloc;
+            wdCurves.emplace_back(massModel.mass);
+            wdCurves.back().carbonCurves.emplace_back(newCarbon);
 
-
-            wdCurves[massCurves].wdCarbons = new double[1]();
-            wdCurves[massCurves].carbonCurve = new struct wdCarbonCurve[1]();
-
-            if ((tempAlloc = (void *) realloc (wdMasses, (massCurves + 1) * sizeof (double))) == NULL)
-                perror ("wdMasses memory allocation error \n");
-            else
-                wdMasses = (double *) tempAlloc;
-
-            fgets (line, 240, pCoolingModels);  // Read in header line
-
-            while (fgets (line, 240, pCoolingModels) != NULL)
+            while (!pCoolingModels.eof())
             {
-                sscanf (line, "%*f %lf %*f %*f %lf %*f %*f %*f %*f %*f %*f %*f %lf", &tempTeff, &tempAge, &tempRadius);
+                pCoolingModels >> ignore
+                               >> newTeff
+                               >> ignore >> ignore
+                               >> newAge
+                               >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
+                               >> newRadius;
 
-                if (tempAge >= 0)
+                if (!pCoolingModels.eof() && newAge >= 0.0)
                 {
-                    wdCurves[massCurves].carbonCurve[carbonCurves].logTeff[entries] = tempTeff;
-                    wdCurves[massCurves].mass = wdMasses[massCurves] = renedo[i].mass;
-                    wdCurves[massCurves].carbonCurve[carbonCurves].x_carbon = wdCurves[massCurves].wdCarbons[carbonCurves] = tempCarbon;
-                    wdCurves[massCurves].carbonCurve[carbonCurves].logRadius[entries] = log10 (tempRadius * R_sun);
-                    wdCurves[massCurves].carbonCurve[carbonCurves].logAge[entries] = log10 (1e6 * tempAge);
-                    entries++;
-                    assert (entries < MAX_WD_MODEL);
+                    wdCurves.back().carbonCurves.back().records.emplace_back(log10(newRadius * R_sun), log10(1e6 + newAge), newTeff);
                 }
-            }
-
-            if (tempAge >= 0)
-            {
-                wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
-                wdCurves[massCurves].length = carbonCurves + 1;
-
-                pCoolingModels = 0;
-                i += 1;
             }
         }
     }
-
-    wdCurves[massCurves].length = carbonCurves + 1;
-    wdCurves[massCurves].carbonCurve[carbonCurves].length = entries;
-
-    nIso = massCurves + 1;
 }
 
 
-double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double *thisWDLogRadius)
+double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius)
+{
+    vector<double> carbonTeff;
+    vector<double> carbonRadius;
+
+    double wdCoolLogAge = 0.0;
+
+    if (logAge > wdPrecLogAge)
+    {                           // age limit check: otherwise wdCoolLogAge
+        wdCoolLogAge = log10(exp10(logAge) - exp10(wdPrecLogAge));
+    }
+    else
+    {                           // mcmc.c can cause this by adjusting masses and ages
+        thisWDLogRadius = 0.0;
+        return 0.0;                     // no need to calculate anything, return to evolve.c here
+    }
+
+    auto massIter = lower_bound(wdCurves.begin(), wdCurves.end(), wdCoolingCurve(wdMass));
+    assert(massIter - wdCurves.begin() > 0);
+
+    if (massIter == wdCurves.end())
+    {
+        massIter -= 2;
+    }
+    else
+    {
+        massIter -= 1;
+    }
+
+    //For each mass entry, interpolate in age
+    for (auto m = massIter; m <= massIter + 1; ++m)
+    {
+        vector<double> ageTeff;
+        vector<double> ageRadius;
+
+        auto carbonIter = lower_bound(m->carbonCurves.begin(), m->carbonCurves.end(), wdCarbonCurve(x_carbon));
+        assert(carbonIter - m->carbonCurves.begin() > 0);
+
+        if (carbonIter == m->carbonCurves.end())
+        {
+            cerr << "Extrapolating carbon" << endl;
+            carbonIter -= 2;
+        }
+        else
+        {
+            carbonIter -= 1;
+        }
+
+
+        for (auto c = carbonIter; c <= carbonIter + 1; ++c)
+        {
+            record r(0, wdCoolLogAge, 0);
+            auto ageIter = lower_bound(c->records.begin(), c->records.end(), r, record::compareAge);
+            assert(ageIter - c->records.begin() > 0);
+
+            if (ageIter == m->carbonCurves[0].records.end())
+            {
+                cerr << "Extrapolating age" << endl;
+                ageIter -= 2;
+            }
+            else
+            {
+                ageIter -= 1;
+            }
+
+            ageTeff.push_back(linInterpExtrap (ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logTeff, ageIter[1].logTeff, wdCoolLogAge));
+
+            ageRadius.push_back(linInterpExtrap (ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logRadius, ageIter[1].logRadius, wdCoolLogAge));
+        }
+
+        // Now interpolate in mass
+        carbonTeff.push_back(linInterpExtrap (carbonIter[0].carbon, carbonIter[1].carbon, ageTeff[0], ageTeff[1], x_carbon));
+
+        carbonRadius.push_back(linInterpExtrap (carbonIter[0].carbon, carbonIter[1].carbon, ageRadius[0], ageRadius[1], x_carbon));
+    }
+
+    thisWDLogRadius = linInterpExtrap (massIter[0].mass, massIter[1].mass, carbonRadius[0], carbonRadius[1], wdMass);
+
+    return linInterpExtrap (massIter[0].mass, massIter[1].mass, carbonTeff[0], carbonTeff[1], wdMass);
+}
+
+double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wdMass, double &thisWDLogRadius)
+{
+    vector<double> ageTeff;
+    vector<double> ageRadius;
+
+    double wdCoolLogAge = 0.0;
+
+    if (logAge > wdPrecLogAge)
+    {                           // age limit check: otherwise wdCoolLogAge
+        wdCoolLogAge = log10(exp10(logAge) - exp10(wdPrecLogAge));
+    }
+    else
+    {                           // mcmc.c can cause this by adjusting masses and ages
+        thisWDLogRadius = 0.0;
+        return 0.0;                     // no need to calculate anything, return to evolve.c here
+    }
+
+    auto massIter = lower_bound(wdCurves.begin(), wdCurves.end(), wdCoolingCurve(wdMass));
+    assert(massIter - wdCurves.begin() > 0);
+
+    if (massIter == wdCurves.end())
+    {
+        massIter -= 2;
+    }
+    else
+    {
+        massIter -= 1;
+    }
+
+    //For each mass entry, interpolate in age
+    for (auto m = massIter; m <= massIter + 1; ++m)
+    {
+        record r(0, wdCoolLogAge, 0);
+        auto ageIter = lower_bound(m->carbonCurves[0].records.begin(), m->carbonCurves[0].records.end(), r, record::compareAge);
+        assert(ageIter - m->carbonCurves[0].records.begin() > 0);
+
+        if (ageIter == m->carbonCurves[0].records.end())
+        {
+            cerr << "Extrapolating age" << endl;
+            ageIter -= 2;
+        }
+        else
+        {
+            ageIter -= 1;
+        }
+
+        ageTeff.push_back(linInterpExtrap (ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logTeff, ageIter[1].logTeff, wdCoolLogAge));
+
+        ageRadius.push_back(linInterpExtrap (ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logRadius, ageIter[1].logRadius, wdCoolLogAge));
+    }
+
+    thisWDLogRadius = linInterpExtrap (massIter[0].mass, massIter[1].mass, ageRadius[0], ageRadius[1], wdMass);
+
+    return linInterpExtrap (massIter[0].mass, massIter[1].mass, ageTeff[0], ageTeff[1], wdMass);
+}
+
+
+double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius)
 {
     if ((coolingModel == WOOD) || (coolingModel == ALTHAUS) || (coolingModel == RENEDO))
     {
@@ -346,114 +396,4 @@ double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAg
     {
         return wdMassToTeffAndRadius_montgomery (logAge, x_carbon, wdPrecLogAge, wdMass, thisWDLogRadius);
     }
-
-}
-
-double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double *thisWDLogRadius)
-{
-    double wdCoolLogAge = 0.0;
-    int massIndex = -1, m, c, ageIndex, carbonIndex;
-    double ageTeff[2] = { 0, 0 };
-    double ageRadius[2] = { 0, 0 };
-    double newTeff[2] = { 0, 0 };
-    double newRadius[2] = { 0, 0 };
-
-    if (logAge > wdPrecLogAge)
-    {                           // age limit check: otherwise wdCoolLogAge
-        wdCoolLogAge = log10 (pow (10.0, logAge) - pow (10.0, wdPrecLogAge));
-    }
-    else
-    {                           // mcmc.c can cause this by adjusting masses and ages
-        (*thisWDLogRadius) = 0.0;
-        return 0.0;                     // no need to calculate anything, return to evolve.c here
-    }
-
-    massIndex = binarySearch (wdMasses, nIso, wdMass);
-
-    carbonIndex = binarySearch (wdCurves[massIndex].wdCarbons, wdCurves[massIndex].length, x_carbon);
-
-    if (massIndex < 0)
-    {
-        cerr << "Error in binary search on mass (wdCooling.c)" << endl;
-        exit (1);
-    }
-
-    //For each mass entry, interpolate in age
-    for (m = massIndex; m <= massIndex + 1; m++)
-    {
-        for (c = carbonIndex; c <= carbonIndex + 1; c++)
-        {
-            ageIndex = binarySearch (wdCurves[m].carbonCurve[c].logAge, wdCurves[m].carbonCurve[c].length, wdCoolLogAge);
-
-            if (ageIndex < 0)
-            {
-                cerr << "Error in binary search on age (wdCooling.c)" << endl;
-                exit (1);
-            }
-
-            ageTeff[c - carbonIndex] = linInterpExtrap (wdCurves[m].carbonCurve[c].logAge[ageIndex], wdCurves[m].carbonCurve[c].logAge[ageIndex + 1], wdCurves[m].carbonCurve[c].logTeff[ageIndex], wdCurves[m].carbonCurve[c].logTeff[ageIndex + 1], wdCoolLogAge);
-
-            ageRadius[c - carbonIndex] = linInterpExtrap (wdCurves[m].carbonCurve[c].logAge[ageIndex], wdCurves[m].carbonCurve[c].logAge[ageIndex + 1], wdCurves[m].carbonCurve[c].logRadius[ageIndex], wdCurves[m].carbonCurve[c].logRadius[ageIndex + 1], wdCoolLogAge);
-        }
-
-        // Now interpolate in mass
-        newTeff[m - massIndex] = linInterpExtrap (wdCurves[m].wdCarbons[carbonIndex], wdCurves[m].wdCarbons[carbonIndex + 1], ageTeff[0], ageTeff[1], x_carbon);
-
-        newRadius[m - massIndex] = linInterpExtrap (wdCurves[m].wdCarbons[carbonIndex], wdCurves[m].wdCarbons[carbonIndex + 1], ageRadius[0], ageRadius[1], x_carbon);
-    }
-
-    (*thisWDLogRadius) = linInterpExtrap (wdMasses[massIndex], wdMasses[massIndex + 1], newRadius[0], newRadius[1], wdMass);
-
-    return linInterpExtrap (wdMasses[massIndex], wdMasses[massIndex + 1], newTeff[0], newTeff[1], wdMass);
-}
-
-
-double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wdMass, double *thisWDLogRadius)
-{
-    double wdCoolLogAge = 0.0, newTeff = 0.0;
-    int massIndex = -1, m, ageIndex;
-    double ageTeff[2] = { 0, 0 };
-    double ageRadius[2] = { 0, 0 };
-
-    if (logAge > wdPrecLogAge)
-    {                           // age limit check: otherwise wdCoolLogAge
-        wdCoolLogAge = log10 (pow (10.0, logAge) - pow (10.0, wdPrecLogAge));
-    }
-    else
-    {                           // mcmc.c can cause this by adjusting masses and ages
-        (*thisWDLogRadius) = 0.0;
-        return 0.0;                     // no need to calculate anything, return to evolve.c here
-    }
-
-    massIndex = binarySearch (wdMasses, nIso, wdMass);
-
-    if (massIndex < 0)
-    {
-        cerr << "Error in binary search on mass (wdCooling.c)" << endl;
-        exit (1);
-    }
-
-    //For each mass entry, interpolate in age
-    for (m = massIndex; m <= massIndex + 1; m++)
-    {
-        ageIndex = binarySearch (wdCurves[m].carbonCurve[0].logAge, wdCurves[m].carbonCurve[0].length, wdCoolLogAge);
-
-        if (ageIndex < 0)
-        {
-            cerr << "Error in binary search on age (wdCooling.c)" << endl;
-            exit (1);
-        }
-
-        ageTeff[m - massIndex] = linInterpExtrap (wdCurves[m].carbonCurve[0].logAge[ageIndex], wdCurves[m].carbonCurve[0].logAge[ageIndex + 1], wdCurves[m].carbonCurve[0].logTeff[ageIndex], wdCurves[m].carbonCurve[0].logTeff[ageIndex + 1], wdCoolLogAge);
-
-        ageRadius[m - massIndex] = linInterpExtrap (wdCurves[m].carbonCurve[0].logAge[ageIndex], wdCurves[m].carbonCurve[0].logAge[ageIndex + 1], wdCurves[m].carbonCurve[0].logRadius[ageIndex], wdCurves[m].carbonCurve[0].logRadius[ageIndex + 1], wdCoolLogAge);
-
-    }
-
-    // Now interpolate in mass
-    newTeff = linInterpExtrap (wdMasses[massIndex], wdMasses[massIndex + 1], ageTeff[0], ageTeff[1], wdMass);
-    (*thisWDLogRadius) = linInterpExtrap (wdMasses[massIndex], wdMasses[massIndex + 1], ageRadius[0], ageRadius[1], wdMass);
-
-    return newTeff;
-
 }

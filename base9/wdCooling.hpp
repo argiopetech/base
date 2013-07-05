@@ -2,29 +2,76 @@
 #define WDCOOL_H
 
 #include <string>
+#include <vector>
 
-const int MAX_WD_MODEL = 1000; // Renedo models have lots of entries
+struct record
+{
+    record(double logRadius, double logAge, double logTeff)
+        : logRadius(logRadius), logAge(logAge), logTeff(logTeff)
+    {;}
+
+    ~record()
+    {;}
+
+    // These are for use with search/sort functions in e.g., <algorithms>
+    static bool compareAge(const record &a, const record &b)
+    {
+        return a.logAge < b.logAge;
+    }
+
+    static bool compareRadius(const record &a, const record &b)
+    {
+        return a.logRadius < b.logRadius;
+    }
+
+    static bool compareTeff(const record &a, const record &b)
+    {
+        return a.logTeff < b.logTeff;
+    }
+
+    double logRadius;
+    double logAge;
+    double logTeff;
+};
 
 struct wdCarbonCurve
 {
-    double x_carbon;
-    int length;
-    double logRadius[MAX_WD_MODEL];
-    double logAge[MAX_WD_MODEL];
-    double logTeff[MAX_WD_MODEL];
+    wdCarbonCurve(double carbon)
+        : carbon(carbon), records()
+    {;}
+
+    ~wdCarbonCurve()
+    {;}
+
+    bool operator<(const struct wdCarbonCurve &b) const
+    {
+        return carbon < b.carbon;
+    }
+
+    const double carbon;
+
+    std::vector<record> records;
 };
 
 struct wdCoolingCurve
 {
-    double mass;
-    int length;
+    wdCoolingCurve(double mass)
+        : mass(mass), carbonCurves()
+    {;}
 
-    double *wdCarbons;
-    struct wdCarbonCurve *carbonCurve;
+    ~wdCoolingCurve()
+    {;}
+
+    bool operator<(const struct wdCoolingCurve &b) const
+    {
+        return mass < b.mass;
+    }
+
+    const double mass;
+
+    std::vector<struct wdCarbonCurve> carbonCurves;
 };
 
 void loadWDCool (std::string path, int modelSet);
-double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double *thisWDLogRadius);
-double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wdMass, double *thisWDLogRadius);
-double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double *thisWDLogRadius);
+double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius);
 #endif

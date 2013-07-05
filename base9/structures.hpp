@@ -101,8 +101,6 @@ struct block
     int nIter;
 };
 
-void allocateGlobalIso (struct globalIso &newIso);
-void freeGlobalIso (struct globalIso &newIso);
 void swapGlobalEntries (struct globalIso &thisIso, int n, int useFilt[FILTS]);
 
 #endif

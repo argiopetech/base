@@ -7,7 +7,6 @@
 
 #include "evolve.hpp"
 #include "loadModels.hpp"
-#include "msRgbEvol.hpp"
 #include "gBergMag.hpp"
 #include "wdCooling.hpp"
 #include "gBaraffeMag.hpp"

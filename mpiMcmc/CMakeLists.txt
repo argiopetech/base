@@ -8,7 +8,7 @@ include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 
 add_executable(mpiMcmc ${MPIMCMC_FILES})
 
-target_link_libraries(mpiMcmc base9 m -ltcmalloc ${MPI_LIBRARIES})
+target_link_libraries(mpiMcmc base9 m ${MPI_LIBRARIES})
 
 install(TARGETS mpiMcmc
         DESTINATION bin)
