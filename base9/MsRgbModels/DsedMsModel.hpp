@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "MsRgbModel.hpp"
+#include "../MsRgbModel.hpp"
 
 const int N_DSED_Z         = 9;    /* number of metallicities in Chaboyer-Dotter isochrones */
 const int N_DSED_AGES      = 52;   /* number of ages in Chaboyer-Dotter isochonres */

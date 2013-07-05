@@ -3,7 +3,14 @@
 
 #include "constants.hpp"
 #include "Model.hpp"
-#include "MsRgbModel.hpp"
+#include "MsRgbModels/ChabMsModel.hpp"
+#include "MsRgbModels/DsedMsModel.hpp"
+#include "MsRgbModels/GirardiMsModel.hpp"
+#include "MsRgbModels/YaleMsModel.hpp"
+#include "WdCoolingModels/AlthausWdModel.hpp"
+#include "WdCoolingModels/MontgomeryWdModel.hpp"
+#include "WdCoolingModels/RenedoWdModel.hpp"
+#include "WdCoolingModels/WoodWdModel.hpp"
 
 using std::cerr;
 using std::endl;
@@ -52,10 +59,16 @@ const Model makeModel(Settings &s)
     switch (s.whiteDwarf.wdModel)
     {
         case WOOD:
+            wdModel = shared_ptr<WoodWdModel>(new WoodWdModel);
+            break;
         case MONTGOMERY:
+            wdModel = shared_ptr<MontgomeryWdModel>(new MontgomeryWdModel);
+            break;
         case ALTHAUS:
+            wdModel = shared_ptr<AlthausWdModel>(new AlthausWdModel);
+            break;
         case RENEDO:
-            wdModel = shared_ptr<WdCoolingModel>(new WdCoolingModel);
+            wdModel = shared_ptr<RenedoWdModel>(new RenedoWdModel);
             break;
         default:
             cerr << "***Error: No model found for white dwarf filter set " << s.whiteDwarf.wdModel << ".***" << endl;

@@ -1,10 +1,12 @@
+#include <utility>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
 
 #include "evolve.hpp"
 #include "gBergMag.hpp"
-#include "wdCooling.hpp"
+#include "WdCoolingModel.hpp"
 #include "structures.hpp"
 #include "Model.hpp"
 #include "ifmr.hpp"
@@ -16,6 +18,7 @@ extern double globalMags[FILTS];
 
 double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int cmpnt)
 {
+    std::pair<double, double> teffRadiusPair;
 
     int filt;
     double thisWDMass = 0.0, thisPrecLogAge = 0.0, thisLogTeff, thisWDLogRadius = 0.0, thisWDLogG = 0.0;
@@ -31,7 +34,10 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int
     thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    thisLogTeff = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.getAge(), pCluster.carbonicity, thisPrecLogAge, thisWDMass, thisWDLogRadius);
+    teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.getAge(), pCluster.carbonicity, thisPrecLogAge, thisWDMass);
+
+    thisLogTeff = teffRadiusPair.first;
+    thisWDLogRadius = teffRadiusPair.second;
 
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
     if (thisPrecLogAge >= pCluster.getAge())

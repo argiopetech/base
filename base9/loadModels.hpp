@@ -2,7 +2,6 @@
 #define LOAD_MODELS_H
 
 #include "gBergMag.hpp"
-#include "wdCooling.hpp"
 #include "gBaraffeMag.hpp"
 #include "Settings.hpp"
 

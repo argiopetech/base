@@ -5,11 +5,7 @@
 
 #include "MsRgbModel.hpp"
 #include "Settings.hpp"
-#include "ChabMsModel.hpp"
-#include "DsedMsModel.hpp"
-#include "GirardiMsModel.hpp"
-#include "wdCooling.hpp"
-#include "YaleMsModel.hpp"
+#include "WdCoolingModel.hpp"
 
 using std::shared_ptr;
 

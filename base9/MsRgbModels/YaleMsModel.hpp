@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "../MsRgbModel.hpp"
+
 const int N_YY_PARAMS    = 17;
 const int N_YY_Z         = 11;
 const int N_YY_AGES      = 41;

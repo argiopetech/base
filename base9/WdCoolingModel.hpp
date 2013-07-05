@@ -2,11 +2,12 @@
 #define WDCOOLING_HPP
 
 #include <string>
+#include <utility>
 #include <vector>
 
 class WdCoolingModel
 {
-  private:
+  protected:
     struct record
     {
         record(double logRadius, double logAge, double logTeff)
@@ -62,7 +63,7 @@ class WdCoolingModel
             : mass(mass), carbonCurves()
         {;}
 
-        ~wdCoolingCurve()
+        virtual ~wdCoolingCurve()
         {;}
 
         bool operator<(const struct wdCoolingCurve &b) const
@@ -76,13 +77,12 @@ class WdCoolingModel
     };
 
   public:
-    void loadWDCool (std::string path, int modelSet);
-    double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius) const;
-    double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius) const;
-    double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wdMass, double &thisWDLogRadius) const;
+    virtual ~WdCoolingModel() {}
 
-  private:
+    virtual void loadModel (std::string path) = 0;
+    virtual std::pair<double, double> wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass) const = 0;
+
+  protected:
     std::vector<struct wdCoolingCurve> wdCurves;
-    int coolingModel;
 };
 #endif

@@ -1,6 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "../Model.hpp"
+#include "../MsRgbModels/GirardiMsModel.hpp"
+#include "../MsRgbModels/ChabMsModel.hpp"
+#include "../MsRgbModels/YaleMsModel.hpp"
+#include "../MsRgbModels/DsedMsModel.hpp"
 
 #include <iostream>
 

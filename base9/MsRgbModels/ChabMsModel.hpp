@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "../MsRgbModel.hpp"
+
 const int N_CHAB_FILTS     = 8;
 const int N_CHAB_Z         = 4;    /* number of metallicities in Chaboyer-Dotter isochrones */
 const int N_CHAB_Y         = 5;    /* number of He abundances in Chaboyer-Dotter isochrones */

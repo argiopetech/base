@@ -14,7 +14,7 @@
 #include "evolve.hpp"
 #include "loadModels.hpp"
 #include "gBergMag.hpp"
-#include "wdCooling.hpp"
+#include "WdCoolingModel.hpp"
 #include "densities.hpp"
 #include "samplers.hpp"
 #include "leastSquares.hpp"

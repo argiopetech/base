@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "../MsRgbModel.hpp"
+
 const int N_GIR_Z         = 8;    /* number of metallicities in Girardi isochrones */
 const int N_GIR_AGES      = 50;   /* number of ages in Girardi isochonres */
 const int N_GIR_FILTS     = 8;
