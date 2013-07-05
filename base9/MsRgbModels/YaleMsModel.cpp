@@ -235,7 +235,7 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
 double YaleMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogAge)
 {
 
-    double newAge = pow (10, newLogAge) / 1e9;
+    double newAge = exp10 (newLogAge) / 1e9;
     double newZ;
 
     newZ = feh2z (newFeH);

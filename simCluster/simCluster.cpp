@@ -325,7 +325,7 @@ int main (int argc, char *argv[])
 
             // Determine a new distance, weighted so
             // there are more stars behind than in front
-            theCluster.parameter[MOD] = tempMod - 12.0 + log10 (pow (10, (pow (pow (26.0, 3.0) * genrand_res53 (), 1.0 / 3.0))));
+            theCluster.parameter[MOD] = tempMod - 12.0 + log10 (exp10 ((pow (pow (26.0, 3.0) * genrand_res53 (), 1.0 / 3.0))));
 
             evolve (theCluster, evoModels, theStar, ltau);
 

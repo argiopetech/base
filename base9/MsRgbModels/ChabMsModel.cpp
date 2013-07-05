@@ -174,7 +174,7 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 
     int iAge = -1, iY = -1, iFeH = -1, newimax = 500, newimin = 0, ioff[2][2][2], neweep;
     int z = 0, y = 0, a = 0, m = 0, filt = 0, n = 0;
-    double newAge = pow (10, newLogAge) / 1e9;
+    double newAge = exp10 (newLogAge) / 1e9;
     double b[2], c[2], d[2];
 
     if (newLogAge < cLogAge[0][0][0])
