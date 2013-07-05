@@ -40,6 +40,7 @@ int aFilt;
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
 bool useFilt[FILTS];
+vector<int> filters;
 
 /*
  * Read data
@@ -67,6 +68,7 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
             if (pch == getFilterName (filt))
             {
                 useFilt[filt] = 1;
+                filters.push_back(filt);
                 ctrl.numFilts++;
                 const_cast<Model&>(evoModels).numFilts++;
                 if (aFilt < 0)

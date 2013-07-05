@@ -1,6 +1,7 @@
 #include <array>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
@@ -17,10 +18,11 @@
 
 using std::array;
 using std::string;
+using std::vector;
 using std::cerr;
 using std::endl;
 
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern double globalMags[FILTS];
 extern struct globalIso isochrone;
 
@@ -244,7 +246,7 @@ double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 {
 
     int newimax = 500, newimin = 0, ioff[2][2], neweep;
-    int z = 0, a = 0, m = 0, filt = 0, n = 0;
+    int z = 0, a = 0, m = 0, n = 0;
     double newAge = exp10 (newLogAge) / 1e9;
     double b[2], d[2];
 
@@ -315,20 +317,20 @@ double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
     for (m = 0; m < neweep; m++)
     {
         isochrone.mass[m] = 0.0;
-        for (filt = 0; filt < N_DSED_FILTS; filt++)
-            if (useFilt[filt])
-                isochrone.mag[m][filt] = 0.0;
+        for (auto f : filters)
+            if (f < N_DSED_FILTS)
+                isochrone.mag[m][f] = 0.0;
 
         for (a = 0; a < 2; a++)
         {
             for (z = 0; z < 2; z++)
             {
                 isochrone.mass[m] += b[a] * d[z] * dIso[iFeH + z][iAge + a].mass.at(m + ioff[z][a]);
-                for (filt = 0; filt < N_DSED_FILTS; filt++)
+                for (auto f : filters)
                 {
-                    if (useFilt[filt])
+                    if (f < N_DSED_FILTS)
                     {
-                        isochrone.mag[m][filt] += b[a] * d[z] * dIso[iFeH + z][iAge + a].mag[m + ioff[z][a]][filt];
+                        isochrone.mag[m][f] += b[a] * d[z] * dIso[iFeH + z][iAge + a].mag[m + ioff[z][a]][f];
                     }
                 }
             }
@@ -344,7 +346,7 @@ double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
             n = m;
             while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
             {
-                swapGlobalEntries (isochrone, n, useFilt);
+                swapGlobalEntries (isochrone, n);
                 n--;
             }
         }
@@ -366,17 +368,17 @@ double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 // Stores output values in external variable globalMags[]
 double DsedMsModel::msRgbEvol (double zamsMass)
 {
-    int m, filt;
+    int m;
 
     m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
 
-    for (filt = 0; filt < N_DSED_FILTS; filt++)
+    for (auto f : filters)
     {
-        if (useFilt[filt])
+        if (f < N_DSED_FILTS)
         {
-            globalMags[filt] = linInterpExtrap (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][filt], isochrone.mag[m + 1][filt], zamsMass);
-            if (fabs (globalMags[filt]) < EPS)
-                globalMags[filt] = 999.99;
+            globalMags[f] = linInterpExtrap (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass);
+            if (fabs (globalMags[f]) < EPS)
+                globalMags[f] = 999.99;
         }
     }
 

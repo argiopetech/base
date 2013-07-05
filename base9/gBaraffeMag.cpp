@@ -1,6 +1,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cmath>
@@ -9,15 +10,17 @@
 
 #include "evolve.hpp"
 #include "linInterp.hpp"
+#include "binSearch.hpp"
 #include "gBaraffeMag.hpp"
 
 using std::ifstream;
 using std::string;
+using std::vector;
 using std::cerr;
 using std::endl;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern double globalMags[FILTS];
 
 static double barAge[N_BAR_AGES];
@@ -26,7 +29,6 @@ static double barMag[N_BAR_AGES][N_BAR_MASSES][N_BAR_FILTS];
 
 void loadBaraffe (string path)
 {
-
     int m, a, mStart, filt;
     ifstream pBaraffe;
     char line[1000];
@@ -91,7 +93,7 @@ void getBaraffeMags (double logAge, double mass)
     int a, m, filt, i;
     double massMag[2][N_BAR_FILTS];
 
-    int binarySearch (double *searchArray, int size, double searchItem);
+    const int bDelta = FILTS - N_BAR_FILTS;
 
     a = binarySearch (barAge, N_BAR_AGES, logAge);
     m = binarySearch (barMass, N_BAR_MASSES, mass);
@@ -99,23 +101,25 @@ void getBaraffeMags (double logAge, double mass)
     //Interpolate in mass first
     for (i = 0; i < 2; i++)
     {
-        for (filt = 0; filt < N_BAR_FILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt + 8])
+            if (f >= bDelta)
             {
-                massMag[i][filt] = linInterpExtrap (barMass[m], barMass[m + 1], barMag[a + i][m][filt], barMag[a + i][m + 1][filt], mass);
+                int fCorr = f - bDelta;
+                massMag[i][fCorr] = linInterpExtrap (barMass[m], barMass[m + 1], barMag[a + i][m][fCorr], barMag[a + i][m + 1][fCorr], mass);
             }
         }
     }
 
     //Interpolate in age
-    for (filt = 0; filt < N_BAR_FILTS; filt++)
+    for (auto f : filters)
     {
-        if (useFilt[filt + 8])
+        if (f >= bDelta)
         {
-            globalMags[filt + 8] = linInterpExtrap (barAge[a], barAge[a + 1], massMag[0][filt], massMag[1][filt], logAge);
+            int fCorr = f - bDelta;
+            globalMags[f] = linInterpExtrap (barAge[a], barAge[a + 1], massMag[0][fCorr], massMag[1][fCorr], logAge);
         }
     }
-    for (filt = 0; filt < 8; filt++)
+    for (int filt = 0; filt < (FILTS - N_BAR_FILTS); filt++)
         globalMags[filt] = 99.99;
 }

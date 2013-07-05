@@ -26,6 +26,8 @@ const int MASS2_FILE      = 12;
 const int CMD_FILE        = 13;
 const int DEBUG_FILE      = 16;
 
+vector<int> filters;
+
 // Used by evolve.c
 double wdLogTeff[2];
 int aFilt = 0;
@@ -36,8 +38,6 @@ double filterPriorMax[FILTS];
 extern struct globalIso isochrone;
 
 // Used by a bunch of different functions.
-int useFilt[FILTS], numFilts;
-
 static void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 
 int main (int argc, char *argv[])
@@ -103,9 +103,11 @@ int main (int argc, char *argv[])
     fgets (line, 240, rDataPtr);        /* skip first header line */
     for (filt = 0; filt < FILTS; filt++)
     {
-        fscanf (rDataPtr, "%d ", &useFilt[filt]);
-        if (useFilt[filt])
+        int useFilt = false;
+        fscanf (rDataPtr, "%d ", &useFilt);
+        if (useFilt)
         {
+            filters.push_back(filt);
             const_cast<Model&>(evoModels).numFilts++;
             aFilt = filt;               // Sets this to a band we know we are using (for evolve)
         }
@@ -172,9 +174,8 @@ int main (int argc, char *argv[])
 
 
     fprintf (wDebugPtr, " mass stage1");
-    for (filt = 0; filt < FILTS; filt++)
-        if (useFilt[filt])
-            fprintf (wDebugPtr, "          %s", getFilterName (filt));
+    for (auto f : filters)
+        fprintf (wDebugPtr, "          %s", getFilterName (f));
     fprintf (wDebugPtr, "\n");
 
     for (j = 0; j < stars.size(); j++)

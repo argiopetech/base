@@ -13,6 +13,7 @@ The appropriate magnitudes are put in globalMags[][].
 
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cmath>
@@ -24,11 +25,12 @@ The appropriate magnitudes are put in globalMags[][].
 #include "gBergMag.hpp"
 
 using std::string;
+using std::vector;
 using std::cerr;
 using std::endl;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern double globalMags[FILTS];
 
 // Arrays to hold the models
@@ -42,7 +44,6 @@ static double bHeLogTeff[BERG_N_DB_TEFF];
 
 void loadBergeron (string path, MsFilterSet filterSet)
 {
-
     int l, t, f;
     FILE *pBergeron;
     char line[1000], tempFile[100] = "\0";
@@ -122,7 +123,7 @@ void loadBergeron (string path, MsFilterSet filterSet)
 
 void bergeronTeffToMags (double wdLogTeff, double wdLogG, int wdType)
 {
-    int l, t, filt, i;
+    int l, t, i;
     double logGMag[2][BERG_NFILTS];
 
     int binarySearch (double *searchArray, int size, double searchItem);
@@ -141,21 +142,21 @@ void bergeronTeffToMags (double wdLogTeff, double wdLogG, int wdType)
         //Interpolate in logTeff
         for (i = 0; i < 2; i++)
         {
-            for (filt = 0; filt < BERG_NFILTS; filt++)
+            for (auto f : filters)
             {
-                if (useFilt[filt])
+                if (f < BERG_NFILTS)
                 {
-                    logGMag[i][filt] = linInterpExtrap (bLogTeff[t], bLogTeff[t + 1], bMag[t][l + i][filt], bMag[t + 1][l + i][filt], wdLogTeff);
+                    logGMag[i][f] = linInterpExtrap (bLogTeff[t], bLogTeff[t + 1], bMag[t][l + i][f], bMag[t + 1][l + i][f], wdLogTeff);
                 }
             }
         }
 
         //Interpolate in log(g)
-        for (filt = 0; filt < BERG_NFILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
+            if (f < BERG_NFILTS)
             {
-                globalMags[filt] = linInterpExtrap (bLogG[l], bLogG[l + 1], logGMag[0][filt], logGMag[1][filt], wdLogG);
+                globalMags[f] = linInterpExtrap (bLogG[l], bLogG[l + 1], logGMag[0][f], logGMag[1][f], wdLogG);
             }
         }
     }
@@ -173,34 +174,34 @@ void bergeronTeffToMags (double wdLogTeff, double wdLogG, int wdType)
         //Interpolate in logTeff
         for (i = 0; i < 2; i++)
         {
-            for (filt = 0; filt < BERG_NFILTS; filt++)
+           for (auto f : filters)
             {
-                if (useFilt[filt])
+                if (f < BERG_NFILTS)
                 {
-                    logGMag[i][filt] = linInterpExtrap (bHeLogTeff[t], bHeLogTeff[t + 1], bHeMag[t][l + i][filt], bHeMag[t + 1][l + i][filt], wdLogTeff);
+                    logGMag[i][f] = linInterpExtrap (bHeLogTeff[t], bHeLogTeff[t + 1], bHeMag[t][l + i][f], bHeMag[t + 1][l + i][f], wdLogTeff);
                 }
             }
         }
 
         //Interpolate in log(g)
-        for (filt = 0; filt < BERG_NFILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
+            if (f < BERG_NFILTS)
             {
-                globalMags[filt] = linInterpExtrap (bHeLogG[l], bHeLogG[l + 1], logGMag[0][filt], logGMag[1][filt], wdLogG);
+                globalMags[f] = linInterpExtrap (bHeLogG[l], bHeLogG[l + 1], logGMag[0][f], logGMag[1][f], wdLogG);
             }
         }
     }
     else
     {
         // NS EDIT: it's not very nice to exit...
-        cerr << "\nInvalid WD type.  Must be 0 (DA) or 1 (DB). Exiting..." << endl;
+        cerr << "\nInvalid WD type.  Must be 0 (DA) or 1 (DB). Not exiting..." << endl;
         // exit(1);
-        for (filt = 0; filt < BERG_NFILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
+            if (f < BERG_NFILTS)
             {
-                globalMags[filt] = 99.99;
+                globalMags[f] = 99.99;
             }
         }
     }

@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
@@ -25,6 +26,7 @@
 using std::array;
 using std::string;
 using std::istringstream;
+using std::vector;
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -57,7 +59,6 @@ struct ifmrGridControl
     int modelSet;
     double filterPriorMin[FILTS];
     double filterPriorMax[FILTS];
-    int useFilt[FILTS];
     int numFilts;
     int nSamples;
     double start[NPARAMS];      /* starting points for grid evaluations */
@@ -102,10 +103,7 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 extern double ageLimit[2];      /* Defined in evolve.c, set in the appropriate model during loadModels. */
 
 /* Used by a bunch of different functions. */
-int useFilt[FILTS];
-
-/* For random number generator (mt19937ar.c) */
-unsigned long seed;
+vector<int> filters;
 
 /* TEMPORARY - global variable */
 double dMass1 = 0.0005;
@@ -120,15 +118,7 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 {
     ctrl->numFilts = 0;
 
-    int ii;
-
-    for (ii = 0; ii < FILTS; ii++)
-    {
-        ctrl->useFilt[ii] = 0;
-    }
-
-    seed = settings.seed;
-    init_genrand (seed);
+    init_genrand (settings.seed);
 
     loadModels (&mc->clust, evoModels, settings);
 
@@ -286,22 +276,13 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
         {                               // Otherwise check to see what this filter's name is
             if (pch == getFilterName (filt))
             {
-                ctrl.useFilt[filt] = 1;
+                ctrl.numFilts++;
+                filters.push_back(filt);
                 const_cast<Model&>(evoModels).numFilts++;
                 if (aFilt < 0)
                     aFilt = filt;               // Sets this to a band we know we are using (for evolve)
                 break;
             }
-        }
-    }
-
-    for (int i = 0; i < FILTS; i++)
-    {
-        if (ctrl.useFilt[i])
-        {
-            ctrl.numFilts++;
-            if (aFilt < 0)
-                aFilt = i;              // Sets this to a band we know we are using (for evolve)
         }
     }
 
@@ -338,12 +319,6 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
         {
             mc.stars.pop_back();
         }
-    }
-
-    // copy to global values
-    for (int i = 0; i < FILTS; i++)
-    {
-        useFilt[i] = ctrl.useFilt[i];
     }
 } /* readCmdData */
 
@@ -533,9 +508,9 @@ int main (int argc, char *argv[])
     }
 
     /*** broadcast control parameters to other processes ***/
-    MPI_Bcast (&seed, 1, MPI_UNSIGNED_LONG, MASTER, MPI_COMM_WORLD);
-    if (taskid != MASTER)
-        init_genrand (seed);
+    // MPI_Bcast (&seed, 1, MPI_UNSIGNED_LONG, MASTER, MPI_COMM_WORLD);
+    // if (taskid != MASTER)
+    //     init_genrand (seed);
     MPI_Bcast (&evoModels.WDcooling, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
     MPI_Bcast (&evoModels.mainSequenceEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
     MPI_Bcast (&evoModels.filterSet, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
@@ -590,8 +565,8 @@ int main (int argc, char *argv[])
     }
 
     MPI_Bcast (&ctrl.numFilts, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (ctrl.useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
+//    MPI_Bcast (ctrl.useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
+//    MPI_Bcast (useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
 
     evoModels.numFilts = ctrl.numFilts;
 

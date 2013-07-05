@@ -60,10 +60,10 @@ int main (int argc, char *argv[])
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
-    double logFieldStarLikelihood = 0.0;
-
     if (mc.stars.size() > 1)
     {
+        double logFieldStarLikelihood = 0.0;
+
         for (int filt = 0; filt < ctrl.numFilts; filt++)
         {
             logFieldStarLikelihood -= log (ctrl.filterPriorMax[filt] - ctrl.filterPriorMin[filt]);
@@ -72,7 +72,6 @@ int main (int argc, char *argv[])
     }
     else
     {
-        logFieldStarLikelihood = -HUGE_VAL;
         fsLike = 0;
     }
 

@@ -14,8 +14,10 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
+extern vector<int> filters;
+
 // Swaps two mass entries in a global isochrone (n and n-1)
-void swapGlobalEntries (struct globalIso &thisIso, int n, bool useFilt[FILTS])
+void swapGlobalEntries (struct globalIso &thisIso, int n)
 {
     int filt, tempEep;
     double tempMass;
@@ -23,19 +25,16 @@ void swapGlobalEntries (struct globalIso &thisIso, int n, bool useFilt[FILTS])
 
     tempMass = thisIso.mass[n];
     tempEep = thisIso.eep[n];
-    for (filt = 0; filt < thisIso.nFilts; filt++)
-        if (useFilt[filt])
-            tempMag[filt] = thisIso.mag[n][filt];
+    for (auto f : filters)
+        tempMag[f] = thisIso.mag[n][f];
 
     thisIso.mass[n] = thisIso.mass[n - 1];
     thisIso.eep[n] = thisIso.eep[n - 1];
-    for (filt = 0; filt < thisIso.nFilts; filt++)
-        if (useFilt[filt])
-            thisIso.mag[n][filt] = thisIso.mag[n - 1][filt];
+    for (auto f : filters)
+            thisIso.mag[n][f] = thisIso.mag[n - 1][f];
 
     thisIso.mass[n - 1] = tempMass;
     thisIso.eep[n - 1] = tempEep;
-    for (filt = 0; filt < thisIso.nFilts; filt++)
-        if (useFilt[filt])
-            thisIso.mag[n - 1][filt] = tempMag[filt];
+    for (auto f : filters)
+        thisIso.mag[n - 1][f] = tempMag[f];
 }

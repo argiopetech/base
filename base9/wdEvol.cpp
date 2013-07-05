@@ -1,4 +1,5 @@
 #include <utility>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
@@ -11,9 +12,11 @@
 #include "Model.hpp"
 #include "ifmr.hpp"
 
+using std::vector;
+
 const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern double globalMags[FILTS];
 
 double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int cmpnt)
@@ -42,9 +45,8 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
     if (thisPrecLogAge >= pCluster.getAge())
     {                           // mcmc.c can cause this by adjusting masses and ages
-        for (filt = 0; filt < FILTS; filt++)
-            if (useFilt[filt])
-                globalMags[filt] = -4.; // place at tip of RGB
+        for (auto f : filters)
+            globalMags[f] = -4.; // place at tip of RGB
     }
     else
     {

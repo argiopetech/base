@@ -18,7 +18,7 @@ using std::cerr;
 using std::endl;
 using std::vector;
 
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern double globalMags[FILTS];
 
 // Defined in evolve.c
@@ -549,15 +549,16 @@ double YaleMsModel::msRgbEvol (double zamsMass)
 //       and creates the isochrone                           //
 **************************************************************/
 
-    int filt, m = 0;
+    int m = 0;
 
     m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
 
-    for (filt = 0; filt < N_YY_FILTS; filt++)
+    for (auto f : filters)
     {
-        if (!useFilt[filt])
-            continue;
-        globalMags[filt] = linInterp (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][filt], isochrone.mag[m + 1][filt], zamsMass);
+        if (f < N_YY_FILTS)
+        {
+            globalMags[f] = linInterp (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass);
+        }
     }
 
     return zamsMass;

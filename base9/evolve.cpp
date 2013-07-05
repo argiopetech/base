@@ -15,7 +15,7 @@
 using std::array;
 using std::vector;
 
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern int aFilt;
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
@@ -73,15 +73,15 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     {
         getBaraffeMags (pCluster.getAge(), mass[0]);
 
-        for (int filt = 0; filt < 8; filt++)
-            if (useFilt[filt])
-                mag[2][filt] = 99.999;
-
-        for (int filt = 8; filt < FILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
+            if ( f < 8 ) // Pre-IFMR
             {
-                mag[2][filt] = globalMags[filt];
+                mag[2][f] = 99.999;
+            }
+            else
+            {
+                mag[2][f] = globalMags[f];
             }
         }
     }

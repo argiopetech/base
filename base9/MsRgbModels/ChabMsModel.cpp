@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
@@ -12,10 +13,11 @@
 #include "linInterp.hpp"
 
 using std::string;
+using std::vector;
 using std::cerr;
 using std::endl;
 
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern double globalMags[FILTS];
 extern struct globalIso isochrone;
 
@@ -255,9 +257,8 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
     for (m = 0; m < neweep; m++)
     {
         isochrone.mass[m] = 0.0;
-        for (filt = 0; filt < N_CHAB_FILTS; filt++)
-            if (useFilt[filt])
-                isochrone.mag[m][filt] = 0.0;
+        for (auto f : filters)
+            isochrone.mag[m][f] = 0.0;
 
         for (a = 0; a < 2; a++)
         {
@@ -266,11 +267,11 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
                 for (z = 0; z < 2; z++)
                 {
                     isochrone.mass[m] += b[a] * c[y] * d[z] * cIso[iFeH + z][iY + y][iAge + a].mass[m + ioff[z][y][a]];
-                    for (filt = 0; filt < N_CHAB_FILTS; filt++)
+                    for (auto f : filters)
                     {
-                        if (useFilt[filt])
+                        if (f < N_CHAB_FILTS)
                         {
-                            isochrone.mag[m][filt] += b[a] * c[y] * d[z] * cIso[iFeH + z][iY + y][iAge + a].mag[m + ioff[z][y][a]][filt];
+                            isochrone.mag[m][f] += b[a] * c[y] * d[z] * cIso[iFeH + z][iY + y][iAge + a].mag[m + ioff[z][y][a]][f];
                         }
                     }
                 }
@@ -287,7 +288,7 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
             n = m;
             while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
             {
-                swapGlobalEntries (isochrone, n, useFilt);
+                swapGlobalEntries (isochrone, n);
                 n--;
             }
         }
@@ -312,17 +313,18 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 double ChabMsModel::msRgbEvol (double zamsMass)
 {
 
-    int m, filt;
+    int m;
 
     m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
 
-    for (filt = 0; filt < N_CHAB_FILTS; filt++)
+    for (auto f : filters)
     {
-        if (useFilt[filt])
+        if (f < N_CHAB_FILTS) // Do we not like the IFMR models here?
         {
-            globalMags[filt] = linInterpExtrap (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][filt], isochrone.mag[m + 1][filt], zamsMass);
-            if (fabs (globalMags[filt]) < EPS)
-                globalMags[filt] = 999.99;
+            globalMags[f] = linInterpExtrap (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass);
+
+            if (fabs (globalMags[f]) < EPS)
+                globalMags[f] = 999.99;
         }
     }
 

@@ -33,14 +33,14 @@ double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
 
 // Used by a bunch of different functions.
-int useFilt[FILTS];
+vector<int> filters;
 
 // For random # generator (mt19937ar.c)
 unsigned long seed = 0;
 
 int main (int argc, char *argv[])
 {
-    int i, filt, nStars, cmpnt, nBrownDwarfs;
+    int i, nStars, cmpnt, nBrownDwarfs;
     double fractionBinary, tempU, massTotal, fractionDB, tempMod, minV, maxV, minMass = 0.15;
     char w_file[100];
     FILE *w_ptr;
@@ -69,10 +69,8 @@ int main (int argc, char *argv[])
 
     const Model evoModels = makeModel(settings);
 
-    for (filt = 0; filt < 8; filt++)
-        useFilt[filt] = 1;              // calculate all of U-K
-    for (filt = 8; filt < FILTS; filt++)
-        useFilt[filt] = 1;              // but not the other crap
+    for (int filt = 0; filt < 8; filt++)
+        filters.push_back(filt); // Calculate all of U-K
 
 //    theCluster.nStars = settings.simCluster.nStars;
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
@@ -120,17 +118,14 @@ int main (int argc, char *argv[])
 
     //Output headers
     fprintf (w_ptr, "id  mass1 ");
-    for (filt = 0; filt < FILTS; filt++)
-        if (useFilt[filt])
-            fprintf (w_ptr, "%s1 ", getFilterName (filt));
+    for (auto f : filters)
+        fprintf (w_ptr, "%s1 ", getFilterName (f));
     fprintf (w_ptr, "stage1 wdM1 wdType1 wdLogTeff1 ltau1 mass2 ");
-    for (filt = 0; filt < FILTS; filt++)
-        if (useFilt[filt])
-            fprintf (w_ptr, "%s2 ", getFilterName (filt));
+    for (auto f : filters)
+        fprintf (w_ptr, "%s2 ", getFilterName (f));
     fprintf (w_ptr, "stage2 wdM2 wdType2 wdLogTeff2 ltau2 ");
-    for (filt = 0; filt < FILTS; filt++)
-        if (useFilt[filt])
-            fprintf (w_ptr, "%s ", getFilterName (filt));
+    for (auto f : filters)
+        fprintf (w_ptr, "%s ", getFilterName (f));
     fprintf (w_ptr, "\n");
 
     minV = 1000.0;
@@ -153,10 +148,9 @@ int main (int argc, char *argv[])
         evolve (theCluster, evoModels, theStar, ltau);      // given inputs, derive mags for first component
 
         fprintf (w_ptr, "%4d %7.3f ", i + 1, theStar.getMass1(theCluster)); // output primary star data
-        for (filt = 0; filt < FILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
-                fprintf (w_ptr, "%6.3f ", theStar.photometry[filt] < 99. ? theStar.photometry[filt] : 99.999);
+                fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);
         }
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], (theStar.status[0] == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
 
@@ -183,10 +177,9 @@ int main (int argc, char *argv[])
         evolve (theCluster, evoModels, theStar, ltau);      // Evolve secondary star by itself
 
         fprintf (w_ptr, "%7.3f ", theStar.getMass1(theCluster));    // output secondary star data
-        for (filt = 0; filt < FILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
-                fprintf (w_ptr, "%6.3f ", theStar.photometry[filt] < 99. ? theStar.photometry[filt] : 99.999);
+                fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);
         }
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], (theStar.status[0] == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
 
@@ -197,9 +190,8 @@ int main (int argc, char *argv[])
         for (cmpnt = 0; cmpnt < 2; cmpnt++)
             updateCount (&theStar, cmpnt);
 
-        for (filt = 0; filt < FILTS; filt++)
-            if (useFilt[filt])
-                fprintf (w_ptr, "%6.3f ", theStar.photometry[filt] < 99. ? theStar.photometry[filt] : 99.999);  // output photometry for whole system
+        for (auto f : filters)
+            fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);  // output photometry for whole system
         fprintf (w_ptr, "\n");
 
         // Update min and max
@@ -227,17 +219,15 @@ int main (int argc, char *argv[])
         evolve (theCluster, evoModels, theStar, ltau);      // given inputs, derive mags for first component
 
         fprintf (w_ptr, "%4d %7.4f ", i + 10001, theStar.getMass1(theCluster));     // output primary star data
-        for (filt = 0; filt < FILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
-                fprintf (w_ptr, "%6.3f ", theStar.photometry[filt] < 99. ? theStar.photometry[filt] : 99.999);
+                fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);
         }
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], 0.0, 0, theStar.wdLogTeff[0], ltau[0]);
 
         fprintf (w_ptr, "%7.3f ", 0.00);        // output secondary star data
-        for (filt = 0; filt < FILTS; filt++)
+        for (auto f : filters)
         {
-            if (useFilt[filt])
                 fprintf (w_ptr, "%6.3f ", 99.999);
         }
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", DNE, 0.0, 0, 0.0, 0.0);
@@ -245,9 +235,8 @@ int main (int argc, char *argv[])
         for (cmpnt = 0; cmpnt < 2; cmpnt++)
             updateCount (&theStar, cmpnt);
 
-        for (filt = 0; filt < FILTS; filt++)
-            if (useFilt[filt])
-                fprintf (w_ptr, "%6.3f ", theStar.photometry[filt] < 99. ? theStar.photometry[filt] : 99.999);  // output photometry for whole system
+        for (auto f : filters)
+            fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);  // output photometry for whole system
         fprintf (w_ptr, "\n");
     }
 
@@ -332,18 +321,15 @@ int main (int argc, char *argv[])
         } while (theStar.photometry[2] < minV || theStar.photometry[2] > maxV || theStar.photometry[1] - theStar.photometry[2] < -0.5 || theStar.photometry[1] - theStar.photometry[2] > 1.7);
 
         fprintf (w_ptr, "%4d %7.3f ", i + 20001, theStar.getMass1(theCluster));
-        for (filt = 0; filt < FILTS; filt++)
-            if (useFilt[filt])
-                fprintf (w_ptr, "%6.3f ", 99.999);
+        for (auto f : filters)
+            fprintf (w_ptr, "%6.3f ", 99.999);
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], (theStar.status[0] == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
         fprintf (w_ptr, "%7.3f ", theStar.getMass2(theCluster));
-        for (filt = 0; filt < FILTS; filt++)
-            if (useFilt[filt])
-                fprintf (w_ptr, "%6.3f ", 99.999);
+        for (auto f : filters)
+            fprintf (w_ptr, "%6.3f ", 99.999);
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[1], 0.0, 0, theStar.wdLogTeff[1], ltau[1]);
-        for (filt = 0; filt < FILTS; filt++)
-            if (useFilt[filt])
-                fprintf (w_ptr, "%9.6f ", theStar.photometry[filt]);
+        for (auto f : filters)
+            fprintf (w_ptr, "%9.6f ", theStar.photometry[f]);
         fprintf (w_ptr, "\n");
 
         i++;

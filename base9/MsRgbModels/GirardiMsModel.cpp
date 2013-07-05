@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cmath>
@@ -12,10 +13,11 @@
 #include "GirardiMsModel.hpp"
 
 using std::string;
+using std::vector;
 using std::cerr;
 using std::endl;
 
-extern bool useFilt[FILTS];
+extern vector<int> filters;
 extern double globalMags[FILTS];
 extern double ageLimit[2];
 
@@ -63,7 +65,7 @@ void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
      ** "stan" becomes "acs".                                                  **
      ***************************************************************************/
 
-    int z, a, i, filt;
+    int z, a, i;
     double thisLogAge, lastLogAge;
     FILE *pGirardi;
     char line[240];
@@ -88,7 +90,7 @@ void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
         {                               // initialize array of model parameters
             gIsoMass[ZAMS][z][i] = 0.0; // ZAMS mass
             gIsoMass[NOW][z][i] = 0.0;  // actual mass of star after mass loss
-            for (filt = 0; filt < N_GIR_FILTS; filt++)
+            for (int filt = 0; filt < N_GIR_FILTS; filt++)
                 gIsoMag[z][filt][i] = 99.999;   // U through K absolute mags
         }
 
@@ -246,7 +248,7 @@ in increasing mass order and all have the same low mass value.
 Uses static variables iAge and iFeH.
 ****************************************************************************************/
 {
-    int a, f, filt;
+    int a, f;
     double massNow = 0.0;
     double modelAge[2], ageMassNow[2][2], ageMag[2][2][N_GIR_FILTS];
     double modelFeH[2], fehMassNow[2], fehMag[2][N_GIR_FILTS];
@@ -268,22 +270,20 @@ Uses static variables iAge and iFeH.
         for (a = 0; a < 2; a++)
             ageMassNow[f][a] = interpInMass (iAge + a, zamsMass, iFeH + f, &(ageMag[f][a][0]));
         // Interpolate in Age for each FeH
-        for (filt = 0; filt < N_GIR_FILTS; filt++)
+        for (auto filt : filters)
         {
-            if (useFilt[filt] == 0)
-                continue;               // for speed, don't bother with this calculation
-            fehMag[f][filt] = linInterp (modelAge[LOW], modelAge[HIGH], ageMag[f][LOW][filt], ageMag[f][HIGH][filt], currentAge);
+            if (f < N_GIR_FILTS)
+                fehMag[f][filt] = linInterp (modelAge[LOW], modelAge[HIGH], ageMag[f][LOW][filt], ageMag[f][HIGH][filt], currentAge);
         }
 
         fehMassNow[f] = linInterp (modelAge[LOW], modelAge[HIGH], ageMassNow[f][LOW], ageMassNow[f][HIGH], currentAge);
     }
 
     // Interpolate in FeH
-    for (filt = 0; filt < N_GIR_FILTS; filt++)
+    for (auto filt : filters)
     {
-        if (useFilt[filt] == 0)
-            continue;                   // for speed, don't bother with this calculation
-        globalMags[filt] = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMag[LOW][filt], fehMag[HIGH][filt], currentFeH);
+        if (f < N_GIR_FILTS)
+            globalMags[filt] = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMag[LOW][filt], fehMag[HIGH][filt], currentFeH);
     }
 
     massNow = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMassNow[LOW], fehMassNow[HIGH], currentFeH);
@@ -296,7 +296,7 @@ Uses static variables iAge and iFeH.
 double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whichFeHIndex, double *ageMag)
 {
 
-    int filt, lo, mid, hi, i;
+    int lo, mid, hi, i;
     double modelMass[2][2], modelMag[2][N_GIR_FILTS];
     double tempMass = 0.0;
 
@@ -307,10 +307,10 @@ double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whi
 
     if (zamsMass >= gIsoMass[ZAMS][whichFeHIndex][hi])
     {                           // if zamsMass larger than largest value, use largest
-        for (filt = 0; filt < N_GIR_FILTS; filt++)
+        for (auto f : filters)
         {                               // (this can happen when the mass is higher than the ABGt
-            if (useFilt[filt])
-                ageMag[filt] = gIsoMag[whichFeHIndex][filt][hi];        //   for this particular age)and FeH)
+            if (f < N_GIR_FILTS)
+                ageMag[f] = gIsoMag[whichFeHIndex][f][hi];        //   for this particular age)and FeH)
         }
 
         tempMass = gIsoMass[ZAMS][whichFeHIndex][hi];
@@ -352,19 +352,21 @@ double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whi
     modelMass[HIGH][ZAMS] = gIsoMass[ZAMS][whichFeHIndex][i + 1];
     modelMass[LOW][NOW] = gIsoMass[NOW][whichFeHIndex][i];
     modelMass[HIGH][NOW] = gIsoMass[NOW][whichFeHIndex][i + 1];
-    for (filt = 0; filt < N_GIR_FILTS; filt++)
+    for (auto f : filters)
     {
-        if (useFilt[filt] == 0)
-            continue;                   // for speed, don't bother with this calculation
-        modelMag[LOW][filt] = gIsoMag[whichFeHIndex][filt][i];
-        modelMag[HIGH][filt] = gIsoMag[whichFeHIndex][filt][i + 1];
+        if (f < N_GIR_FILTS)
+        {
+            modelMag[LOW][f] = gIsoMag[whichFeHIndex][f][i];
+            modelMag[HIGH][f] = gIsoMag[whichFeHIndex][f][i + 1];
+        }
     }
 
-    for (filt = 0; filt < N_GIR_FILTS; filt++)
-    {                           // grids. so move along age, i.e. interpolate first in mass)
-        if (useFilt[filt] == 0)
-            continue;                   // for speed, don't bother with this calculation
-        ageMag[filt] = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMag[LOW][filt], modelMag[HIGH][filt], zamsMass);
+    for (auto f : filters)
+    {
+        if (f < N_GIR_FILTS)
+        {
+            ageMag[f] = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMag[LOW][f], modelMag[HIGH][f], zamsMass);
+        }
     }
 
 
