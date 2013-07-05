@@ -25,7 +25,7 @@ class Settings
     struct WhiteDwarfSettings
     {
         int ifmr;
-        int wdModel;
+        WdModel wdModel;
         double carbonicity;
         double M_wd_up;
     };

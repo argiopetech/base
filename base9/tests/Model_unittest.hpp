@@ -14,7 +14,7 @@ double *ltau, *aFilt;
 TEST(Model, FilterSet)
 {
     Settings s;
-    s.whiteDwarf.wdModel = WOOD;
+    s.whiteDwarf.wdModel = WdModel::WOOD;
     s.mainSequence.msRgbModel = MsModel::GIRARDI;
 
     s.mainSequence.filterSet = MsFilterSet::UBVRIJHK;

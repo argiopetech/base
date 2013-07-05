@@ -57,7 +57,7 @@ void Settings::fromYaml (const string yamlFile)
     mainSequence.msRgbModel = static_cast<MsModel>(getOrDie<int>(mainSequenceNode, "msRgbModel"));
 
     whiteDwarf.ifmr = getOrDie<int>(whiteDwarfNode, "ifmr");
-    whiteDwarf.wdModel = getOrDie<int>(whiteDwarfNode, "wdModel");
+    whiteDwarf.wdModel = static_cast<WdModel>(getOrDie<int>(whiteDwarfNode, "wdModel"));
     whiteDwarf.carbonicity = getOrDie<double>(whiteDwarfNode, "carbonicity");
     whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfNode, "M_wd_up");
 
@@ -208,7 +208,8 @@ void Settings::fromCLI (int argc, char **argv)
                 break;
 
             case 0xFC:
-                istringstream (string (optarg)) >> whiteDwarf.wdModel;
+                istringstream (string (optarg)) >> i;
+                whiteDwarf.wdModel = static_cast<WdModel>(i);
                 break;
 
             case 0xFB:

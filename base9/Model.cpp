@@ -58,20 +58,20 @@ const Model makeModel(Settings &s)
 
     switch (s.whiteDwarf.wdModel)
     {
-        case WOOD:
+        case WdModel::WOOD:
             wdModel = shared_ptr<WoodWdModel>(new WoodWdModel);
             break;
-        case MONTGOMERY:
+        case WdModel::MONTGOMERY:
             wdModel = shared_ptr<MontgomeryWdModel>(new MontgomeryWdModel);
             break;
-        case ALTHAUS:
+        case WdModel::ALTHAUS:
             wdModel = shared_ptr<AlthausWdModel>(new AlthausWdModel);
             break;
-        case RENEDO:
+        case WdModel::RENEDO:
             wdModel = shared_ptr<RenedoWdModel>(new RenedoWdModel);
             break;
         default:
-            cerr << "***Error: No model found for white dwarf filter set " << s.whiteDwarf.wdModel << ".***" << endl;
+            cerr << "***Error: No model found for white dwarf filter set " << static_cast<int>(s.whiteDwarf.wdModel) << ".***" << endl;
             cerr << "[Exiting...]" << endl;
             exit (1);
     }
