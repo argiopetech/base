@@ -23,8 +23,6 @@ double ageLimit[2];
 
 struct globalIso isochrone;
 
-static array<double, FILTS> clusterAbs;
-
 /**************************************************************************************
 last update: 25Aug10
 
@@ -67,9 +65,6 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
 
     clusterAv = pCluster.getAbs();
 
-    if (fabs (clusterAbs[0]) < EPS)
-        clusterAbs = calcAbsCoeffs (evoModels.filterSet);
-
     mass[0] = star.getMass1(pCluster);
     mass[1] = star.getMass2(pCluster);
 
@@ -96,6 +91,6 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
             setMags(mag, cmpnt, mass, pCluster, star, evoModels, ltau);
         }
 
-        deriveCombinedMags(mag, clusterAv, &flux, pCluster, star);
+        deriveCombinedMags(mag, clusterAv, &flux, pCluster, star, evoModels);
     }
 }

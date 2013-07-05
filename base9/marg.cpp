@@ -23,7 +23,7 @@ extern double globalMags[FILTS];
 extern double ageLimit[2];
 
 extern struct globalIso isochrone;
-static array<double, FILTS> clusterAbs;
+//static array<double, FILTS> clusterAbs;
 
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&, array<double, 2> &ltau);
 
@@ -35,7 +35,10 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
-    pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(pCluster.getFeH(), pCluster.getY(), pCluster.getAge());        // determine AGBt ZAMS mass, to find evol state
+    if (fabs (isochrone.FeH - pCluster.getFeH()) > EPS || fabs (isochrone.logAge - pCluster.getAge()) > EPS || fabs (isochrone.Y - pCluster.getY()) > EPS)
+    {
+        pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(pCluster.getFeH(), pCluster.getY(), pCluster.getAge());        // determine AGBt ZAMS mass, to find evol state
+    }
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster.AGBt_zmass < EPS)
@@ -45,10 +48,7 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
 
     clusterAv = pCluster.getAbs();
 
-    if (fabs (clusterAbs[0]) < EPS)
-    {
-        clusterAbs = calcAbsCoeffs (evoModels.filterSet);
-    }
+//    auto clusterAbs = calcAbsCoeffs (evoModels.filteret);
 
     int m;
     double dMass;
@@ -129,9 +129,10 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, S
     }
 }
 
-void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar)
+void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar, const Model &evoModels)
 {
     int filt;
+    auto clusterAbs = calcAbsCoeffs (evoModels.filterSet);
 
     // can now derive combined mags
     if (mag[1][aFilt] < 99.)
@@ -186,7 +187,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
     pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
     setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, ltau);
 
-    deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar);
+    deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass[0] / mass[0]);    /* dMassRatio */
@@ -257,7 +258,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
             pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
             setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, ltau);
 
-            deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar);
+            deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels);
             /* now have magnitudes, want posterior probability */
             tmpLogPost = logPost1Star (pStar, pCluster, evoModels);
             tmpLogPost += log (dMass);
