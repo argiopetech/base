@@ -25,7 +25,6 @@ extern double ageLimit[2];
 extern struct globalIso isochrone;
 static array<double, FILTS> clusterAbs;
 
-void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar);
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&, array<double, 2> &ltau);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
@@ -154,16 +153,13 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
                 mag[2][filt] = mag[0][filt];
     }
 
-    int i = 0;
-
     for (filt = 0; filt < FILTS; filt++)
     {                           // can now add distance and absorption
         if (useFilt[filt])
         {
             mag[2][filt] += pCluster.getMod();
             mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;       // add A_[u-k] (standard defn of modulus already includes Av)
-            pStar.photometry[i++] = mag[2][filt];
-            //i++;
+            pStar.photometry[filt] = mag[2][filt];
         }
     }
 }

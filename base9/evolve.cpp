@@ -52,7 +52,6 @@ get the photometry of a single star. -- SD
 ***************************************************************************************/
 void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double, 2> &ltau)
 {
-    int filt, i, cmpnt;
     double mag[3][FILTS], mass[2], flux, clusterAv;
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
@@ -80,11 +79,11 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     {
         getBaraffeMags (pCluster.getAge(), mass[0]);
 
-        for (filt = 0; filt < 8; filt++)
+        for (int filt = 0; filt < 8; filt++)
             if (useFilt[filt])
                 mag[2][filt] = 99.999;
 
-        for (filt = 8; filt < FILTS; filt++)
+        for (int filt = 8; filt < FILTS; filt++)
         {
             if (useFilt[filt])
             {
@@ -94,39 +93,11 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     }
     else
     {
-        for (cmpnt = 0; cmpnt < 2; cmpnt++)
+        for (int cmpnt = 0; cmpnt < 2; cmpnt++)
         {
             setMags(mag, cmpnt, mass, pCluster, star, evoModels, ltau);
         }
 
-        // can now derive combined mags
-        if (mag[1][aFilt] < 99.)
-        {                           // if there is a secondary star (aFilt set in parent program)
-            for (filt = 0; filt < FILTS; filt++)
-            {                       // (NOTE: useFilt shortcut may help once doing binaries)
-                if (useFilt[filt])
-                {
-                    flux = pow (10.0, (mag[0][filt] / -2.5));       // add up the fluxes of the primary
-                    flux += pow (10.0, (mag[1][filt] / -2.5));      // and the secondary
-                    mag[2][filt] = -2.5 * log10 (flux);     // (these 3 lines take 5% of run time for N large)
-                }                   // if primary mag = 99.999, then this works
-            }
-        }                           // to make the combined mag = secondary mag
-        else
-        {
-            for (filt = 0; filt < FILTS; filt++)
-                if (useFilt[filt])
-                    mag[2][filt] = mag[0][filt];
-        }
-    }
-    i = 0;
-    for (filt = 0; filt < FILTS; filt++)
-    {                               // can now add distance and absorption
-        if (useFilt[filt])
-        {
-            mag[2][filt] += pCluster.getMod();
-            mag[2][filt] += (clusterAbs[filt] - 1.0) * clusterAv;   // add A_[u-k] (standard defn of modulus already includes Av)
-            star.photometry[i++] = mag[2][filt];
-        }
+        deriveCombinedMags(mag, clusterAv, &flux, pCluster, star);
     }
 }
