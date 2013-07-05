@@ -39,7 +39,7 @@ using std::istringstream;
 int aFilt;
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
-int useFilt[FILTS];
+bool useFilt[FILTS];
 
 /*
  * Read data

@@ -18,7 +18,7 @@ using std::cerr;
 using std::endl;
 using std::vector;
 
-extern int useFilt[FILTS];
+extern bool useFilt[FILTS];
 extern double globalMags[FILTS];
 
 // Defined in evolve.c

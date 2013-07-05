@@ -15,7 +15,8 @@
 using std::array;
 using std::vector;
 
-extern int useFilt[FILTS], aFilt;
+extern bool useFilt[FILTS];
+extern int aFilt;
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
 double globalMags[FILTS];

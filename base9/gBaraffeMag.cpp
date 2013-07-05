@@ -17,7 +17,7 @@ using std::cerr;
 using std::endl;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
-extern int useFilt[FILTS];
+extern bool useFilt[FILTS];
 extern double globalMags[FILTS];
 
 static double barAge[N_BAR_AGES];

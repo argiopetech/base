@@ -15,7 +15,7 @@ using std::cerr;
 using std::endl;
 
 // Swaps two mass entries in a global isochrone (n and n-1)
-void swapGlobalEntries (struct globalIso &thisIso, int n, int useFilt[FILTS])
+void swapGlobalEntries (struct globalIso &thisIso, int n, bool useFilt[FILTS])
 {
     int filt, tempEep;
     double tempMass;

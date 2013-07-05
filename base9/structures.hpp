@@ -101,6 +101,6 @@ struct block
     int nIter;
 };
 
-void swapGlobalEntries (struct globalIso &thisIso, int n, int useFilt[FILTS]);
+void swapGlobalEntries (struct globalIso &thisIso, int n, bool useFilt[FILTS]);
 
 #endif

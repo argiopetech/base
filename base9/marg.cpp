@@ -16,7 +16,8 @@ using std::array;
 
 const int MAX_ENTRIES = 370;
 
-extern int useFilt[FILTS], aFilt;
+extern bool useFilt[FILTS];
+extern int aFilt;
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
 extern double globalMags[FILTS];

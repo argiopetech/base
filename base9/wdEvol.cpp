@@ -13,7 +13,7 @@
 
 const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 
-extern int useFilt[FILTS];
+extern bool useFilt[FILTS];
 extern double globalMags[FILTS];
 
 double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int cmpnt)

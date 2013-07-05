@@ -15,7 +15,7 @@ using std::string;
 using std::cerr;
 using std::endl;
 
-extern int useFilt[FILTS];
+extern bool useFilt[FILTS];
 extern double globalMags[FILTS];
 extern double ageLimit[2];
 
