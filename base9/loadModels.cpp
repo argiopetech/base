@@ -30,8 +30,8 @@ void loadModels (Cluster *theCluster, const Model &evoModels, Settings &settings
         loadBaraffe (settings.files.models);
 
     evoModels.mainSequenceEvol->loadModel(settings.files.models, settings.mainSequence.filterSet);
+    evoModels.WDcooling->loadWDCool(settings.files.models, settings.whiteDwarf.wdModel);
 
-    loadWDCool (settings.files.models, evoModels.WDcooling);
     loadBergeron (settings.files.models, evoModels.filterSet);
 
     cout << "Models read." << endl;

@@ -8,6 +8,7 @@
 #include "ChabMsModel.hpp"
 #include "DsedMsModel.hpp"
 #include "GirardiMsModel.hpp"
+#include "wdCooling.hpp"
 #include "YaleMsModel.hpp"
 
 using std::shared_ptr;
@@ -16,16 +17,18 @@ using std::shared_ptr;
 class Model
 {
   public:
-    Model(shared_ptr<MsRgbModel> msRgbModel, MsFilterSet filterSet)
-        : mainSequenceEvol(msRgbModel), filterSet(filterSet)
+    Model(shared_ptr<MsRgbModel> msRgbModel, shared_ptr<WdCoolingModel> wdCool, MsFilterSet filterSet)
+        : mainSequenceEvol(msRgbModel), WDcooling(wdCool), filterSet(filterSet)
     {;}
+
+    shared_ptr<MsRgbModel> mainSequenceEvol;
+    shared_ptr<WdCoolingModel> WDcooling;
+
+    MsFilterSet filterSet;
 
     int evoModel = 0;
     int brownDwarfEvol = 0;
-    shared_ptr<MsRgbModel> mainSequenceEvol;
-    MsFilterSet filterSet;
     int IFMR = 0;
-    int WDcooling = 0;
     int WDatm = 0;
     int numFilts = 0;
 };

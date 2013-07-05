@@ -12,6 +12,7 @@ using std::shared_ptr;
 const Model makeModel(Settings &s)
 {
     shared_ptr<MsRgbModel> msModel;
+    shared_ptr<WdCoolingModel> wdModel;
     MsFilterSet filterSet;
 
     // !!! FIX ME !!!
@@ -48,20 +49,25 @@ const Model makeModel(Settings &s)
             exit (1);
     }
 
-    Model model(msModel, filterSet);
+    switch (s.whiteDwarf.wdModel)
+    {
+        case WOOD:
+        case MONTGOMERY:
+        case ALTHAUS:
+        case RENEDO:
+            wdModel = shared_ptr<WdCoolingModel>(new WdCoolingModel);
+            break;
+        default:
+            cerr << "***Error: No model found for white dwarf filter set " << s.whiteDwarf.wdModel << ".***" << endl;
+            cerr << "[Exiting...]" << endl;
+            exit (1);
+    }
+
+    Model model(msModel, wdModel, filterSet);
 
 // !!! FIX ME !!!
 
     model.IFMR = s.whiteDwarf.ifmr;
-
-    model.WDcooling = s.whiteDwarf.wdModel;
-
-    if (model.WDcooling < 0 || model.WDcooling > 3)
-    {
-        cerr << "***Error: No model found for white dwarf filter set " << model.WDcooling << ".***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
 
     model.brownDwarfEvol = s.brownDwarf.bdModel;
 

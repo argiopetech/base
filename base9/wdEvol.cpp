@@ -31,7 +31,7 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int
     thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    thisLogTeff = wdMassToTeffAndRadius (pCluster.getAge(), pCluster.carbonicity, thisPrecLogAge, thisWDMass, thisWDLogRadius);
+    thisLogTeff = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.getAge(), pCluster.carbonicity, thisPrecLogAge, thisWDMass, thisWDLogRadius);
 
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
     if (thisPrecLogAge >= pCluster.getAge())

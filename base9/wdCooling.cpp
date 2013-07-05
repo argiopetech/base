@@ -21,9 +21,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-static vector<struct wdCoolingCurve> wdCurves;
-static int coolingModel;
-
 struct althausModel
 {
     const string filename;
@@ -37,7 +34,7 @@ struct renedoModel
     const double mass;
 };
 
-void loadWDCool (string path, int modelSet)
+void WdCoolingModel::loadWDCool (string path, int modelSet)
 {
     static struct althausModel althaus[] = {
         {"T045_1E4.Z0", false, 0.45},
@@ -248,7 +245,7 @@ void loadWDCool (string path, int modelSet)
 }
 
 
-double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius)
+double WdCoolingModel::wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius) const
 {
     vector<double> carbonTeff;
     vector<double> carbonRadius;
@@ -329,7 +326,7 @@ double wdMassToTeffAndRadius_montgomery (double logAge, double x_carbon, double 
     return linInterpExtrap (massIter[0].mass, massIter[1].mass, carbonTeff[0], carbonTeff[1], wdMass);
 }
 
-double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wdMass, double &thisWDLogRadius)
+double WdCoolingModel::wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wdMass, double &thisWDLogRadius) const
 {
     vector<double> ageTeff;
     vector<double> ageRadius;
@@ -386,7 +383,7 @@ double wdMassToTeffAndRadius_wood (double logAge, double wdPrecLogAge, double wd
 }
 
 
-double wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius)
+double WdCoolingModel::wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass, double &thisWDLogRadius) const
 {
     if ((coolingModel == WOOD) || (coolingModel == ALTHAUS) || (coolingModel == RENEDO))
     {

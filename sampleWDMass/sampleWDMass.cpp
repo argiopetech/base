@@ -551,7 +551,7 @@ int main (int argc, char *argv[])
             loadBaraffe (settings.files.models);
 
         evoModels.mainSequenceEvol->loadModel(settings.files.models, MsFilterSet::UBVRIJHK);
-        loadWDCool (settings.files.models, evoModels.WDcooling);
+//        loadWDCool (settings.files.models, evoModels.WDcooling);
         loadBergeron (settings.files.models, evoModels.filterSet);
     }
 
