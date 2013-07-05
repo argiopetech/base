@@ -25,7 +25,6 @@ extern double ageLimit[2];
 extern struct globalIso isochrone;
 static array<double, FILTS> clusterAbs;
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model&, array<double, 2>&);
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar);
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&, array<double, 2> &ltau);
 

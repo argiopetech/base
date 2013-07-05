@@ -29,6 +29,9 @@ static double wdMassTotal = 0.0, MSRGMassTotal = 0.0;
 // Used by evolve.c
 int aFilt = 0;
 
+double filterPriorMin[FILTS];
+double filterPriorMax[FILTS];
+
 // Used by a bunch of different functions.
 int useFilt[FILTS];
 

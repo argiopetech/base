@@ -30,6 +30,9 @@ const int DEBUG_FILE      = 16;
 double wdLogTeff[2];
 int aFilt = 0;
 
+double filterPriorMin[FILTS];
+double filterPriorMax[FILTS];
+
 extern struct globalIso isochrone;
 
 // Used by a bunch of different functions.

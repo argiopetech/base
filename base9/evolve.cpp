@@ -6,6 +6,7 @@
 #include <cstdlib>
 
 #include "evolve.hpp"
+#include "marg.hpp"
 #include "gBaraffeMag.hpp"
 #include "wdEvol.hpp"
 #include "FilterSet.hpp"
@@ -95,52 +96,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     {
         for (cmpnt = 0; cmpnt < 2; cmpnt++)
         {
-            for (filt = 0; filt < FILTS; filt++)
-                if (useFilt[filt])
-                    globalMags[filt] = 99.999;
-
-            star.massNow[cmpnt] = 0.0;
-            ltau[cmpnt] = 0.0;      // may not be a WD, so no precursor age,
-            star.wdLogTeff[cmpnt] = 0.0;        // no WD Teff,
-
-            if (mass[cmpnt] <= 0.0001)
-            {                       // for non-existent secondary stars
-                for (filt = 0; filt < FILTS; filt++)
-                    if (useFilt[filt])
-                        mag[cmpnt][filt] = 99.999;
-                star.status[cmpnt] = DNE;
-                star.massNow[cmpnt] = 0.0;
-            }
-            else if (mass[cmpnt] <= pCluster.AGBt_zmass)
-            {                       // for main seq or giant star
-                star.massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol (mass[cmpnt]);
-                for (filt = 0; filt < FILTS; filt++)
-                    if (useFilt[filt])
-                        mag[cmpnt][filt] = globalMags[filt];
-                star.status[cmpnt] = MSRG;      // keep track of evolutionary state
-            }
-            else if (mass[cmpnt] <= pCluster.M_wd_up)
-            {                       // for white dwarf
-                ltau[cmpnt] = wdEvol (pCluster, evoModels, star, cmpnt);
-                for (filt = 0; filt < FILTS; filt++)
-                    if (useFilt[filt])
-                        mag[cmpnt][filt] = globalMags[filt];
-            }
-            else if (mass[cmpnt] <= 100.)
-            {                       // for neutron star or black hole remnant
-                for (filt = 0; filt < FILTS; filt++)
-                    if (useFilt[filt])
-                        mag[cmpnt][filt] = 99.999;
-                star.status[cmpnt] = NSBH;
-            }
-            else
-            {
-                //     log << (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
-                for (filt = 0; filt < FILTS; filt++)
-                    if (useFilt[filt])
-                        mag[cmpnt][filt] = 99.999;
-                star.status[cmpnt] = DNE;
-            }
+            setMags(mag, cmpnt, mass, pCluster, star, evoModels, ltau);
         }
 
         // can now derive combined mags

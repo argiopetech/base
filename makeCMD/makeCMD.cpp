@@ -37,6 +37,9 @@ const int  DEBUG_FILE      = 16;
 double wdLogTeff[2];
 int aFilt = 0;
 
+double filterPriorMin[FILTS];
+double filterPriorMax[FILTS];
+
 // Used by a bunch of different functions.
 int useFilt[FILTS];   //, numFilts;
 
