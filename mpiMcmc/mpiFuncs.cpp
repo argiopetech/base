@@ -66,22 +66,13 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
         {                               // Otherwise check to see what this filter's name is
             if (pch == getFilterName (filt))
             {
-                ctrl.useFilt[filt] = 1;
+                useFilt[filt] = 1;
+                ctrl.numFilts++;
                 const_cast<Model&>(evoModels).numFilts++;
                 if (aFilt < 0)
                     aFilt = filt;               // Sets this to a band we know we are using (for evolve)
                 break;
             }
-        }
-    }
-
-    for (int i = 0; i < FILTS; i++)
-    {
-        if (ctrl.useFilt[i])
-        {
-            ctrl.numFilts++;
-            if (aFilt < 0)
-                aFilt = i;              // Sets this to a band we know we are using (for evolve)
         }
     }
 
@@ -118,12 +109,6 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
         {
             stars.pop_back();
         }
-    }
-
-    // copy to global values
-    for (int i = 0; i < FILTS; i++)
-    {
-        useFilt[i] = ctrl.useFilt[i];
     }
 } /* readCmdData */
 
@@ -246,7 +231,7 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     ctrl.numFilts = 0;
 
     for (int ii = 0; ii < FILTS; ii++)
-        ctrl.useFilt[ii] = 0;
+        useFilt[ii] = 0;
 
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings.seed);
