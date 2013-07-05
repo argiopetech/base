@@ -47,7 +47,7 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
 
     if (fabs (clusterAbs[0]) < EPS)
     {
-        calcAbsCoeffs (evoModels.filterSet, clusterAbs);
+        clusterAbs = calcAbsCoeffs (evoModels.filterSet);
     }
 
     int m;

@@ -8,6 +8,5 @@
 #include "structures.hpp"
 
 void evolve (Cluster &the_cluster, Model const &, Star &star, std::array<double, 2>&);
-void calcAbsCoeffs (int filterSet);
 
 #endif

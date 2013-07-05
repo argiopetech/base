@@ -25,8 +25,6 @@ struct globalIso isochrone;
 
 static array<double, FILTS> clusterAbs;
 
-void calcAbsCoeffs (int filterSet);
-
 /**************************************************************************************
 last update: 25Aug10
 
@@ -70,7 +68,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     clusterAv = pCluster.getAbs();
 
     if (fabs (clusterAbs[0]) < EPS)
-        calcAbsCoeffs (evoModels.filterSet, clusterAbs);
+        clusterAbs = calcAbsCoeffs (evoModels.filterSet);
 
     mass[0] = star.getMass1(pCluster);
     mass[1] = star.getMass2(pCluster);

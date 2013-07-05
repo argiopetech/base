@@ -2,7 +2,7 @@
 
 #include "constants.hpp"
 
-void calcAbsCoeffs (MsFilterSet filterSet, std::array<double, FILTS> &clusterAbs);
+std::array<double, FILTS> calcAbsCoeffs (MsFilterSet filterSet);
 
 void setFilterNames (MsFilterSet filterSet);
 char *getFilterName (int index);
