@@ -10,17 +10,14 @@
 #include "gBergMag.hpp"
 #include "WdCoolingModel.hpp"
 #include "gBaraffeMag.hpp"
-#include "FilterSet.hpp"
 
 using std::cout;
 using std::cerr;
 using std::endl;
 
-void loadModels (Cluster *theCluster, const Model &evoModels, Settings &settings)
+void loadModels (Cluster &theCluster, const Model &evoModels, Settings &settings)
 {
-    setFilterNames (evoModels.filterSet);
-
-    theCluster->carbonicity = settings.whiteDwarf.carbonicity;
+    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 
     cout << "\nReading models..." << endl;
 
@@ -30,7 +27,7 @@ void loadModels (Cluster *theCluster, const Model &evoModels, Settings &settings
     evoModels.mainSequenceEvol->loadModel(settings.files.models, settings.mainSequence.filterSet);
     evoModels.WDcooling->loadModel(settings.files.models);
 
-    loadBergeron (settings.files.models, evoModels.filterSet);
+    loadBergeron (settings.files.models, settings.mainSequence.filterSet);
 
     cout << "Models read." << endl;
 

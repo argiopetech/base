@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
@@ -10,8 +11,9 @@
 #include "evolve.hpp"
 #include "structures.hpp"
 #include "Settings.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 
+using std::vector;
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -29,7 +31,10 @@ int scatterPhot (double limitSigToNoise);
 double gen_norm (double mean, double std_dev);  // Returns a normal rv
 int outputScatter (FILE * w_ptr, int isFS, double clusterMemberPrior);
 
-
+vector<int> filters;
+int aFilt;
+int *filterPriorMin;
+int *filterPriorMax;
 
 int main (int argc, char *argv[])
 {
@@ -52,6 +57,8 @@ int main (int argc, char *argv[])
     }
 
     settings.fromCLI (argc, argv);
+
+    Model evoModels = makeModel(settings);
 
     strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".sim.out");
@@ -76,9 +83,8 @@ int main (int argc, char *argv[])
 
     for (filterSet = 0; filterSet < 3; filterSet++)
     {
-        setFilterNames (static_cast<MsFilterSet>(filterSet));
-        cout << filterSet << ' ' << aFilterName << ' ' << getFilterName (0) << endl;
-        if (strcmp (aFilterName, getFilterName (0)) == 0)
+        cout << filterSet << ' ' << aFilterName << ' ' << evoModels.filterSet->getFilterName(0) << endl;
+        if (evoModels.filterSet->getFilterName(0) == aFilterName)
             break;
     }
     cout << "filterSet = " << filterSet << endl;
@@ -116,17 +122,17 @@ int main (int argc, char *argv[])
 
     //Output headers
     for (filt = 0; filt < FILTS; filt++)
-        fprintf (w_ptr, "%s ", getFilterName (filt));
+        fprintf (w_ptr, "%s ", evoModels.filterSet->getFilterName (filt).c_str());
 
     fprintf (w_ptr, "id ");
 
     for (filt = 0; filt < FILTS; filt++)
         if (exptime[filt] > EPS)
-            fprintf (w_ptr, "%6s ", getFilterName (filt));
+            fprintf (w_ptr, "%6s ", evoModels.filterSet->getFilterName (filt).c_str());
 
     for (filt = 0; filt < FILTS; filt++)
         if (exptime[filt] > EPS)
-            fprintf (w_ptr, "sig%-5s ", getFilterName (filt));
+            fprintf (w_ptr, "sig%-5s ", evoModels.filterSet->getFilterName (filt).c_str());
 
     fprintf (w_ptr, "mass1 massRatio stage1 CMprior useDuringBurnIn\n");
 

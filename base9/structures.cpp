@@ -19,7 +19,7 @@ extern vector<int> filters;
 // Swaps two mass entries in a global isochrone (n and n-1)
 void swapGlobalEntries (struct globalIso &thisIso, int n)
 {
-    int filt, tempEep;
+    int tempEep;
     double tempMass;
     vector<double> tempMag(thisIso.nFilts);
 

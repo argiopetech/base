@@ -15,7 +15,7 @@
 #include "loadModels.hpp"
 #include "Settings.hpp"
 #include "ifmr.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 
 using std::array;
 using std::string;
@@ -208,7 +208,7 @@ int main (int argc, char *argv[])
     // if (verbose < 0 || verbose > 2)
     //     verbose = 1;            // give standard feedback if incorrectly specified
 
-    loadModels (&theCluster, evoModels, settings);      // read in stellar evol & WD models
+    loadModels (theCluster, evoModels, settings);      // read in stellar evol & WD models
 
 
     //////////////////////////////
@@ -226,14 +226,12 @@ int main (int argc, char *argv[])
 
     for (auto f : filters)
     {
-        char tmpString[100] = "mean\0";
+        string tmpString = "mean";
 
-        strcat (tmpString, getFilterName (f));
-        fprintf (wCmdPtr, "%8s ", tmpString);
-        tmpString[0] = '\0';
-        strcat (tmpString, "var");
-        strcat (tmpString, getFilterName (f));
-        fprintf (wCmdPtr, "  %8s   ", tmpString);
+        tmpString += evoModels.filterSet->getFilterName(f);
+        fprintf (wCmdPtr, "%8s ", tmpString.c_str());
+        tmpString = "var" + evoModels.filterSet->getFilterName(f);
+        fprintf (wCmdPtr, "  %8s   ", tmpString.c_str());
 
     }
     fprintf (wCmdPtr, "\n");
@@ -480,7 +478,7 @@ int main (int argc, char *argv[])
     fprintf (wDebugPtr, " mass stage1");
     for (auto f : filters)
     {
-        fprintf (wDebugPtr, "          %s", getFilterName (f));
+        fprintf (wDebugPtr, "          %s", evoModels.filterSet->getFilterName(f).c_str());
     }
     fprintf (wDebugPtr, "\n");
 

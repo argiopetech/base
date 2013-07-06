@@ -20,7 +20,7 @@ const Model makeModel(Settings &s)
 {
     shared_ptr<MsRgbModel> msModel;
     shared_ptr<WdCoolingModel> wdModel;
-    MsFilterSet filterSet;
+    shared_ptr<MsFilterSet> msFilter;
 
     // !!! FIX ME !!!
     switch (s.mainSequence.msRgbModel) //    evoModels.mainSequenceEvol = settings.mainSequence.msRgbModel;
@@ -45,10 +45,14 @@ const Model makeModel(Settings &s)
 
     switch (s.mainSequence.filterSet)
     {
-        case MsFilterSet::UBVRIJHK:
-        case MsFilterSet::ACS:
-        case MsFilterSet::SDSS:
-            filterSet = s.mainSequence.filterSet;
+        case MsFilter::UBVRIJHK:
+            msFilter = shared_ptr<UBVRIJHK>(new UBVRIJHK);
+            break;
+        case MsFilter::ACS:
+            msFilter = shared_ptr<ACS>(new ACS);
+            break;
+        case MsFilter::SDSS:
+            msFilter = shared_ptr<SDSS>(new SDSS);
             break;
         default:
             cerr << "***Error: No models found for filter set " << static_cast<int>(s.mainSequence.filterSet) << ".***" << endl;
@@ -76,7 +80,7 @@ const Model makeModel(Settings &s)
             exit (1);
     }
 
-    Model model(msModel, wdModel, filterSet);
+    Model model(msModel, msFilter, wdModel);
 
 // !!! FIX ME !!!
 

@@ -3,7 +3,7 @@
 
 #include <string>
 
-void loadBergeron (std::string path, MsFilterSet filterSet);
+void loadBergeron (std::string path, MsFilter filterSet);
 void bergeronTeffToMags (double wdLogTeff, double wdLogG, int wdType);
 
 #endif

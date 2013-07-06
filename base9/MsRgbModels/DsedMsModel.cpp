@@ -77,7 +77,7 @@ static void initIso (struct dIsochrone &iso);
 
 static void calcCoeff (double a[], double b[], double x);
 
-void DsedMsModel::loadModel (string path, MsFilterSet filterSet)
+void DsedMsModel::loadModel (string path, MsFilter filterSet)
 {
 
     FILE *pDsed;                        // = NULL;
@@ -85,7 +85,7 @@ void DsedMsModel::loadModel (string path, MsFilterSet filterSet)
     char line[240];
     string tempFile;
 
-    if (filterSet != MsFilterSet::SDSS && filterSet != MsFilterSet::UBVRIJHK)
+    if (filterSet != MsFilter::SDSS && filterSet != MsFilter::UBVRIJHK)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on DSED models.  Exiting..." << endl;
         exit (1);
@@ -167,9 +167,9 @@ void DsedMsModel::loadModel (string path, MsFilterSet filterSet)
     ageLimit[1] = dLogAge[0][N_DSED_AGES - 1];
 
     //Load in JHK from the UBVRIJHK models
-    if (filterSet == MsFilterSet::SDSS)
+    if (filterSet == MsFilter::SDSS)
     {
-        filterSet = MsFilterSet::UBVRIJHK;
+        filterSet = MsFilter::UBVRIJHK;
 
         for (z = 0; z < N_DSED_Z; z++)
         {                               // foreach Dsed metallicity/isochrone file
@@ -215,12 +215,12 @@ void DsedMsModel::loadModel (string path, MsFilterSet filterSet)
 }
 
 
-string DsedMsModel::getFileName (string path, int z, int f, MsFilterSet filterSet)
+string DsedMsModel::getFileName (string path, int z, int f, MsFilter filterSet)
 {
 
     const array<string, 9> fileNames = {{ "m25", "m20", "m15", "m10", "m05", "p00", "p02", "p03", "p05" }};
 
-    if (filterSet == MsFilterSet::SDSS)
+    if (filterSet == MsFilter::SDSS)
         path += "sdss/feh";
     else
         path += "jc2mass/feh";
@@ -228,7 +228,7 @@ string DsedMsModel::getFileName (string path, int z, int f, MsFilterSet filterSe
     path += fileNames[z];
     path += "afep0.";
 
-    if (filterSet == MsFilterSet::SDSS)
+    if (filterSet == MsFilter::SDSS)
         path += "ugriz";
     else
         path += "jc2mass";

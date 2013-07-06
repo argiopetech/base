@@ -52,7 +52,7 @@ static void initIso (struct cIsochrone *iso);
 static void getFileName (string path, int z, int y);
 static char tempFile[100];
 
-void ChabMsModel::loadModel (string path, MsFilterSet filterSet)
+void ChabMsModel::loadModel (string path, MsFilter filterSet)
 {
     // ************************************************************************************
     // **********************    Chaboyer models   ****************************************
@@ -65,7 +65,7 @@ void ChabMsModel::loadModel (string path, MsFilterSet filterSet)
     char line[240];             //,tempFile[100];
     FILE *pChaboyer;
 
-    if (filterSet != MsFilterSet::UBVRIJHK)
+    if (filterSet != MsFilter::UBVRIJHK)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Chaboyer helium models.  Exiting..." << endl;
         exit (1);
@@ -175,7 +175,7 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 {
 
     int iAge = -1, iY = -1, iFeH = -1, newimax = 500, newimin = 0, ioff[2][2][2], neweep;
-    int z = 0, y = 0, a = 0, m = 0, filt = 0, n = 0;
+    int z = 0, y = 0, a = 0, m = 0, n = 0;
     double newAge = exp10 (newLogAge) / 1e9;
     double b[2], c[2], d[2];
 

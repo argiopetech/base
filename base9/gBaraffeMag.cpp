@@ -90,7 +90,7 @@ void loadBaraffe (string path)
 
 void getBaraffeMags (double logAge, double mass)
 {
-    int a, m, filt, i;
+    int a, m, i;
     double massMag[2][N_BAR_FILTS];
 
     const int bDelta = FILTS - N_BAR_FILTS;

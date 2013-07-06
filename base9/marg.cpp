@@ -10,7 +10,7 @@
 #include "densities.hpp"
 #include "Model.hpp"
 #include "wdEvol.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;
@@ -127,7 +127,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, S
 
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cluster &pCluster, Star &pStar, const Model &evoModels)
 {
-    auto clusterAbs = calcAbsCoeffs (evoModels.filterSet);
+    auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
     // can now derive combined mags
     if (mag[1][aFilt] < 99.)

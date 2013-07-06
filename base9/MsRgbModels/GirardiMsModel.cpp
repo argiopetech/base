@@ -29,10 +29,10 @@ static int iAge, iFeH;
 static double currentAge, currentFeH;
 
 static char tempFile[100];
-static void getFileName (string path, int z, MsFilterSet filterSet);
+static void getFileName (string path, int z, MsFilter filterSet);
 
 
-void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
+void GirardiMsModel::loadModel (string path, MsFilter filterSet)
 {
 
     /****************************************************************************
@@ -70,7 +70,7 @@ void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
     FILE *pGirardi;
     char line[240];
 
-    if (filterSet != MsFilterSet::UBVRIJHK && filterSet != MsFilterSet::SDSS && filterSet != MsFilterSet::ACS)
+    if (filterSet != MsFilter::UBVRIJHK && filterSet != MsFilter::SDSS && filterSet != MsFilter::ACS)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Girardi models.  Exiting..." << endl;
         exit (1);
@@ -110,13 +110,13 @@ void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
         {                               // load first Z=# Girardi model for all ages
             if (line[0] != '#')
             {
-                if (filterSet == MsFilterSet::UBVRIJHK)
+                if (filterSet == MsFilter::UBVRIJHK)
                 {                       // Girardi UBVRIJHK isocrhones
                     sscanf (line, "%lf %lf %lf %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf %lf %lf %*f", &thisLogAge, &gIsoMass[ZAMS][z][i], &gIsoMass[NOW][z][i], &gIsoMag[z][0][i], &gIsoMag[z][1][i], &gIsoMag[z][2][i], &gIsoMag[z][3][i], &gIsoMag[z][4][i], &gIsoMag[z][5][i], &gIsoMag[z][6][i], &gIsoMag[z][7][i]);
                 }
                 // for filterSet == ACS, use same set of variables but now have F435W F475W F550M F555W F606W F625W F775W F814W
                 // absolute mags, instead of UBVRIJHK absolute mags
-                if (filterSet == MsFilterSet::ACS)
+                if (filterSet == MsFilter::ACS)
                 {                       // Girardi hST/ACS/WF isochrones
                     sscanf (line, "%lf %lf %lf %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf %*f %*f %lf %lf %*f %*f %*f", &thisLogAge, &gIsoMass[ZAMS][z][i], &gIsoMass[NOW][z][i], &gIsoMag[z][0][i], &gIsoMag[z][1][i], &gIsoMag[z][2][i], &gIsoMag[z][3][i], &gIsoMag[z][4][i], &gIsoMag[z][5][i], &gIsoMag[z][6][i], &gIsoMag[z][7][i]);
                 }
@@ -159,14 +159,14 @@ void GirardiMsModel::loadModel (string path, MsFilterSet filterSet)
 
 }
 
-static void getFileName (string path, int z, MsFilterSet filterSet)
+static void getFileName (string path, int z, MsFilter filterSet)
 {
 
     char fileNames[][5] = { "0", "0001", "0004", "001", "004", "008", "019", "030" };
 
     strcpy (tempFile, "\0");
     strcat (tempFile, path.c_str());
-    if (filterSet == MsFilterSet::ACS)
+    if (filterSet == MsFilter::ACS)
         strcat (tempFile, "gIsoACS/iso_acs_z\0");
     else
         strcat (tempFile, "gIsoStan/iso_stan_z\0");

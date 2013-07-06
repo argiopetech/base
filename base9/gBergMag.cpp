@@ -42,14 +42,14 @@ static double bHeLogG[BERG_N_DB_LOG_G];
 static double bHeMag[BERG_N_DB_TEFF][BERG_N_DB_LOG_G][BERG_NFILTS];
 static double bHeLogTeff[BERG_N_DB_TEFF];
 
-void loadBergeron (string path, MsFilterSet filterSet)
+void loadBergeron (string path, MsFilter filterSet)
 {
     int l, t, f;
     FILE *pBergeron;
     char line[1000], tempFile[100] = "\0";
     double tempTeff;
 
-    if (filterSet != MsFilterSet::SDSS && filterSet != MsFilterSet::UBVRIJHK)
+    if (filterSet != MsFilter::SDSS && filterSet != MsFilter::UBVRIJHK)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Bergeron models.  Exiting..." << endl;
         exit (1);
@@ -78,7 +78,7 @@ void loadBergeron (string path, MsFilterSet filterSet)
             fscanf (pBergeron, "%lf %lf %*f %*f %*f ", &tempTeff, &bLogG[l]);
             for (f = 0; f < BERG_NFILTS; f++)
                 fscanf (pBergeron, "%lf ", &bMag[t][l][f]);
-            if (filterSet == MsFilterSet::SDSS)
+            if (filterSet == MsFilter::SDSS)
                 for (f = 0; f < 5; f++)
                     fscanf (pBergeron, "%lf ", &bMag[t][l][f]);
             fgets (line, 1000, pBergeron);
@@ -110,7 +110,7 @@ void loadBergeron (string path, MsFilterSet filterSet)
             fscanf (pBergeron, "%lf %lf %*f %*f %*f ", &tempTeff, &bHeLogG[l]);
             for (f = 0; f < BERG_NFILTS; f++)
                 fscanf (pBergeron, "%lf ", &bHeMag[t][l][f]);
-            if (filterSet == MsFilterSet::SDSS)
+            if (filterSet == MsFilter::SDSS)
                 for (f = 0; f < 5; f++)
                     fscanf (pBergeron, "%lf ", &bHeMag[t][l][f]);
             bHeLogTeff[t] = log10 (tempTeff);

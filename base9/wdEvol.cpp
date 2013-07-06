@@ -23,7 +23,6 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int
 {
     std::pair<double, double> teffRadiusPair;
 
-    int filt;
     double thisWDMass = 0.0, thisPrecLogAge = 0.0, thisLogTeff, thisWDLogRadius = 0.0, thisWDLogG = 0.0;
     double mass;
 

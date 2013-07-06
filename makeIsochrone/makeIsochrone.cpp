@@ -11,7 +11,7 @@
 #include "evolve.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 
 using std::array;
 using std::vector;
@@ -121,7 +121,7 @@ int main (int argc, char *argv[])
     ///////////////////////////////////
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
 
-    loadModels (&theCluster, evoModels, settings);      /* read in stellar evol & WD models */
+    loadModels (theCluster, evoModels, settings);      /* read in stellar evol & WD models */
 
 
     /* read cluster parameters */
@@ -175,7 +175,7 @@ int main (int argc, char *argv[])
 
     fprintf (wDebugPtr, " mass stage1");
     for (auto f : filters)
-        fprintf (wDebugPtr, "          %s", getFilterName (f));
+        fprintf (wDebugPtr, "          %s", evoModels.filterSet->getFilterName(f).c_str());
     fprintf (wDebugPtr, "\n");
 
     for (j = 0; j < stars.size(); j++)

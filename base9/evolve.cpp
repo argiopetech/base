@@ -9,7 +9,7 @@
 #include "marg.hpp"
 #include "gBaraffeMag.hpp"
 #include "wdEvol.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;

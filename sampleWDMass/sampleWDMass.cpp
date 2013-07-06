@@ -20,7 +20,7 @@
 #include "samplers.hpp"
 #include "leastSquares.hpp"
 #include "mt19937ar.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;
@@ -120,7 +120,7 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     init_genrand (settings.seed);
 
-    loadModels (&mc->clust, evoModels, settings);
+    loadModels (mc->clust, evoModels, settings);
 
     ctrl->priorMean[FEH] = settings.cluster.Fe_H;
     ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;
@@ -274,7 +274,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
 
         for (int filt = 0; filt < FILTS; filt++)
         {                               // Otherwise check to see what this filter's name is
-            if (pch == getFilterName (filt))
+            if (pch == evoModels.filterSet->getFilterName(filt))
             {
                 ctrl.numFilts++;
                 filters.push_back(filt);
@@ -525,9 +525,9 @@ int main (int argc, char *argv[])
         if (evoModels.brownDwarfEvol == BARAFFE)
             loadBaraffe (settings.files.models);
 
-        evoModels.mainSequenceEvol->loadModel(settings.files.models, MsFilterSet::UBVRIJHK);
+        evoModels.mainSequenceEvol->loadModel(settings.files.models, MsFilter::UBVRIJHK);
 //        loadWDCool (settings.files.models, evoModels.WDcooling);
-        loadBergeron (settings.files.models, evoModels.filterSet);
+        loadBergeron (settings.files.models, settings.mainSequence.filterSet);
     }
 
 

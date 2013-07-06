@@ -10,7 +10,7 @@
 #include "mt19937ar.hpp"
 #include "Settings.hpp"
 #include "loadModels.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 
 #include "../mpiFuncs.hpp"
 

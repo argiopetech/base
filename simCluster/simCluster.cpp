@@ -14,7 +14,7 @@
 #include "structures.hpp"
 #include "loadModels.hpp"
 #include "Settings.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 
 using std::array;
 using std::vector;
@@ -96,7 +96,7 @@ int main (int argc, char *argv[])
     // !!! FIX ME !!!
     cerr << "This is broken. If we need field stars and are using the YALE models, we also have to load the DSED models.";
 //    loadModels (nFieldStars, &theCluster, evoModels, settings);
-    loadModels (&theCluster, evoModels, settings);
+    loadModels (theCluster, evoModels, settings);
 
     if (settings.mainSequence.msRgbModel == MsModel::YALE)
         minMass = 0.4;
@@ -119,13 +119,13 @@ int main (int argc, char *argv[])
     //Output headers
     fprintf (w_ptr, "id  mass1 ");
     for (auto f : filters)
-        fprintf (w_ptr, "%s1 ", getFilterName (f));
+        fprintf (w_ptr, "%s1 ", evoModels.filterSet->getFilterName(f).c_str());
     fprintf (w_ptr, "stage1 wdM1 wdType1 wdLogTeff1 ltau1 mass2 ");
     for (auto f : filters)
-        fprintf (w_ptr, "%s2 ", getFilterName (f));
+        fprintf (w_ptr, "%s2 ", evoModels.filterSet->getFilterName(f).c_str());
     fprintf (w_ptr, "stage2 wdM2 wdType2 wdLogTeff2 ltau2 ");
     for (auto f : filters)
-        fprintf (w_ptr, "%s ", getFilterName (f));
+        fprintf (w_ptr, "%s ", evoModels.filterSet->getFilterName(f).c_str());
     fprintf (w_ptr, "\n");
 
     minV = 1000.0;

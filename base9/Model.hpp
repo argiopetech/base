@@ -6,6 +6,7 @@
 #include "MsRgbModel.hpp"
 #include "Settings.hpp"
 #include "WdCoolingModel.hpp"
+#include "MsFilterSet.hpp"
 
 using std::shared_ptr;
 
@@ -13,14 +14,13 @@ using std::shared_ptr;
 class Model
 {
   public:
-    Model(shared_ptr<MsRgbModel> msRgbModel, shared_ptr<WdCoolingModel> wdCool, MsFilterSet filterSet)
-        : mainSequenceEvol(msRgbModel), WDcooling(wdCool), filterSet(filterSet)
+    Model(shared_ptr<MsRgbModel> msRgbModel, shared_ptr<MsFilterSet> filterSet, shared_ptr<WdCoolingModel> wdCool)
+        : mainSequenceEvol(msRgbModel), filterSet(filterSet), WDcooling(wdCool)
     {;}
 
     shared_ptr<MsRgbModel> mainSequenceEvol;
+    shared_ptr<MsFilterSet> filterSet;
     shared_ptr<WdCoolingModel> WDcooling;
-
-    MsFilterSet filterSet;
 
     int evoModel = 0;
     int brownDwarfEvol = 0;

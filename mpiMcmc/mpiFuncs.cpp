@@ -16,7 +16,7 @@
 #include <gsl/gsl_linalg.h>
 
 #include "densities.hpp"
-#include "FilterSet.hpp"
+#include "MsFilterSet.hpp"
 #include "loadModels.hpp"
 #include "marg.hpp"
 #include "Model.hpp"
@@ -65,7 +65,7 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
 
         for (int filt = 0; filt < FILTS; filt++)
         {                               // Otherwise check to see what this filter's name is
-            if (pch == getFilterName (filt))
+            if (pch == evoModels.filterSet->getFilterName(filt))
             {
                 useFilt[filt] = 1;
                 filters.push_back(filt);
@@ -239,7 +239,7 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     init_genrand (settings.seed);
 
     /* load models */
-    loadModels (&clust, evoModels, settings);
+    loadModels (clust, evoModels, settings);
 
     clust.parameter[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;

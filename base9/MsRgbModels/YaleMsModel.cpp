@@ -45,7 +45,7 @@ static double feh2z (double FeH);
 static void intpolZ (int iZ, int iAge, double newZ);
 static void intpolAge (int iAge, double newAge);
 
-void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
+void YaleMsModel::loadModel (string path, MsFilter filterSet)
 {
     FILE *pYY;
     int z, a, n, p;
@@ -57,7 +57,7 @@ void YaleMsModel::loadModel (string path, MsFilterSet filterSet)
     double temar[MAX_YY_ENTRIES][N_YY_PARAMS], xxeep, xim;
     double param[MAX_YY_ENTRIES][N_YY_PARAMS];
 
-    if (filterSet != MsFilterSet::UBVRIJHK)
+    if (filterSet != MsFilter::UBVRIJHK)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on YY models.  Exiting...";
         exit (1);

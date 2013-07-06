@@ -37,6 +37,6 @@ modified for different model sets.
 ****************************************************************************************/
     virtual double wdPrecLogAge(double, double, double) = 0;
 
-    virtual void loadModel(std::string, MsFilterSet) = 0;
+    virtual void loadModel(std::string, MsFilter) = 0;
 };
 #endif
