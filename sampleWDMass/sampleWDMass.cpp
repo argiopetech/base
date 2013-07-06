@@ -18,7 +18,6 @@
 #include "WdCoolingModel.hpp"
 #include "densities.hpp"
 #include "samplers.hpp"
-#include "leastSquares.hpp"
 #include "mt19937ar.hpp"
 #include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
