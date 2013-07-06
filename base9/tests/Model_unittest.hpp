@@ -9,7 +9,7 @@
 #include <iostream>
 
 int *useFilt;
-double *ltau, *aFilt;
+double *ltau;
 
 TEST(Model, FilterSet)
 {

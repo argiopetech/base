@@ -35,18 +35,16 @@ const int  DEBUG_FILE      = 16;
 
 // Used by evolve.c
 double wdLogTeff[2];
-int aFilt = 0;
 
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
-
-vector<int> filters;
 
 // Used by a bunch of different functions.
 void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 
 int main (int argc, char *argv[])
 {
+    vector<int> filters;
 
     /////////////////////////////////
     /////// Declare Variables ///////
@@ -191,7 +189,6 @@ int main (int argc, char *argv[])
         {
             filters.push_back(filt);
             const_cast<Model&>(evoModels).numFilts++;
-            aFilt = filt;               // Sets this to a band we know we are using (for evolve)
         }
     }
     fgets (line, 240, rDataPtr);        // and next header line
@@ -371,7 +368,7 @@ int main (int argc, char *argv[])
         }
 
         for (auto s : stars)
-            evolve (theCluster, evoModels, s, ltau);
+            evolve (theCluster, evoModels, filters, s, ltau);
 
         for (j = 0; j < stars.size(); j++)
         {
@@ -473,7 +470,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, s, ltau);
+        evolve (theCluster, evoModels, filters, s, ltau);
 
     fprintf (wDebugPtr, " mass stage1");
     for (auto f : filters)

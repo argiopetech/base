@@ -20,7 +20,6 @@ using std::cerr;
 using std::endl;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
-extern vector<int> filters;
 extern double globalMags[FILTS];
 
 static double barAge[N_BAR_AGES];
@@ -88,7 +87,7 @@ void loadBaraffe (string path)
 
 
 
-void getBaraffeMags (double logAge, double mass)
+void getBaraffeMags (const vector<int> &filters, double logAge, double mass)
 {
     int a, m, i;
     double massMag[2][N_BAR_FILTS];

@@ -94,9 +94,6 @@ typedef struct
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
 
-/* Used by evolve.c */
-int aFilt = -1;
-
 /* Used in densities.c. */
 double priorMean[NPARAMS], priorVar[NPARAMS];
 extern double ageLimit[2];      /* Defined in evolve.c, set in the appropriate model during loadModels. */
@@ -278,8 +275,6 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
                 ctrl.numFilts++;
                 filters.push_back(filt);
                 const_cast<Model&>(evoModels).numFilts++;
-                if (aFilt < 0)
-                    aFilt = filt;               // Sets this to a band we know we are using (for evolve)
                 break;
             }
         }
@@ -737,7 +732,7 @@ int main (int argc, char *argv[])
 
                     try
                     {
-                        evolve (mc.clust, evoModels, star, ltau);
+                        evolve (mc.clust, evoModels, filters, star, ltau);
 
                         wdLogPost[im] = logPost1Star (star, mc.clust, evoModels);
                         postClusterStar += exp (wdLogPost[im]);

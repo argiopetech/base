@@ -73,8 +73,6 @@ static double dAgbCoeff[N_DSED_Z][2] = { {-3.3734996, 0.8357878},
                                          {-3.5500060, 0.6773844}
 };
 
-static void initIso (struct dIsochrone &iso);
-
 static void calcCoeff (double a[], double b[], double x);
 
 void DsedMsModel::loadModel (string path, MsFilter filterSet)
@@ -100,7 +98,6 @@ void DsedMsModel::loadModel (string path, MsFilter filterSet)
         {                               // initialize age/boundary pointers
             dLogAge[z][a] = 0.0;
             dAge[z][a] = 0.0;
-            initIso (dIso[z][a]);    // initialize array of model parameters
         }
         a = -1;                 // a = [0,18], dLogAge contains the 52 ages
         i = 0;
@@ -242,7 +239,7 @@ string DsedMsModel::getFileName (string path, int z, int f, MsFilter filterSet)
 // Interpolates between isochrones for two ages using linear interpolation
 // Must run loadDsed() first for this to work.
 // Currently ignores newY
-double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogAge)
+double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newLogAge)
 {
 
     int newimax = 500, newimin = 0, ioff[2][2], neweep;
@@ -346,7 +343,7 @@ double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
             n = m;
             while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
             {
-                swapGlobalEntries (isochrone, n);
+                swapGlobalEntries (isochrone, filters, n);
                 n--;
             }
         }
@@ -366,7 +363,7 @@ double DsedMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 // Must run loadDsed() and deriveDsedAgbTip()
 // to load and interpolate an isochrone before this subroutine will work
 // Stores output values in external variable globalMags[]
-double DsedMsModel::msRgbEvol (double zamsMass)
+double DsedMsModel::msRgbEvol (const vector<int> &filters, double zamsMass)
 {
     int m;
 
@@ -448,9 +445,4 @@ static void calcCoeff (double a[], double b[], double x)
     b[0] = (a[1] - x) / (a[1] - a[0]);
     b[1] = (x - a[0]) / (a[1] - a[0]);
     return;
-}
-
-
-static void initIso (struct dIsochrone &iso)
-{
 }

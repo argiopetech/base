@@ -17,7 +17,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern vector<int> filters;
 extern double globalMags[FILTS];
 extern struct globalIso isochrone;
 
@@ -171,7 +170,7 @@ static void getFileName (string path, int z, int y)
 
 // Interpolates between isochrones for two ages using linear interpolation
 // Must run loadChaboyer() first for this to work.
-double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogAge)
+double ChabMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newLogAge)
 {
 
     int iAge = -1, iY = -1, iFeH = -1, newimax = 500, newimin = 0, ioff[2][2][2], neweep;
@@ -288,7 +287,7 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
             n = m;
             while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
             {
-                swapGlobalEntries (isochrone, n);
+                swapGlobalEntries (isochrone, filters, n);
                 n--;
             }
         }
@@ -310,7 +309,7 @@ double ChabMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogA
 // Must run loadChaboyer() and deriveChabAgbTip()
 // to load and interpolate an isochrone before this subroutine will work
 // Stores output values in globalMags[]
-double ChabMsModel::msRgbEvol (double zamsMass)
+double ChabMsModel::msRgbEvol (const std::vector<int> &filters, double zamsMass)
 {
 
     int m;

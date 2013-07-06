@@ -2,6 +2,7 @@
 #define MSRGBEVOL_HPP
 
 #include <string>
+#include <vector>
 
 #include "constants.hpp"
 
@@ -17,7 +18,7 @@ class MsRgbModel
 
  * Array indices are defined in evolve.h
 ****************************************************************************************/
-    virtual double deriveAgbTipMass(double, double, double) = 0;
+    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double) = 0;
 
 /****************************************************************************************
 Perform interpolation via  calls to getGirardiMags() or similar.
@@ -25,7 +26,7 @@ The former does 3-D interpolation of the Girardi isochrones.
 
 deriveAgbTipMass() needs to be called first
 ****************************************************************************************/
-    virtual double msRgbEvol(double) = 0;
+    virtual double msRgbEvol(const std::vector<int>&, double) = 0;
 
 /****************************************************************************************
 Derive WD precursor age for a given metallicity, calling in turn wd_prec_g_lage to

@@ -2,6 +2,7 @@
 #define GCHABMAG_H
 
 #include <string>
+#include <vector>
 
 #include "../MsRgbModel.hpp"
 
@@ -17,8 +18,8 @@ class ChabMsModel : public MsRgbModel
     ChabMsModel() {;}
     virtual ~ChabMsModel() {;}
 
-    virtual double deriveAgbTipMass(double, double, double);
-    virtual double msRgbEvol(double);
+    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
+    virtual double msRgbEvol(const std::vector<int>&, double);
     virtual double wdPrecLogAge(double, double, double);
     virtual void loadModel(std::string, MsFilter);
 };

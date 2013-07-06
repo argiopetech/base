@@ -15,9 +15,6 @@
 using std::array;
 using std::vector;
 
-extern vector<int> filters;
-extern int aFilt;
-
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
 double globalMags[FILTS];
 double ageLimit[2];
@@ -47,7 +44,7 @@ NUMSTARS NEEDS TO BE INPUT CORRECTLY.  If the index is positive, it will use tha
 of the stars array.  You can also feed it a pointer to a single star and an index of 0 to
 get the photometry of a single star. -- SD
 ***************************************************************************************/
-void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double, 2> &ltau)
+void evolve (Cluster &pCluster, const Model &evoModels, const vector<int> &filters,  Star &star, array<double, 2> &ltau)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
 
@@ -55,7 +52,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     //were last time through
     if (fabs (isochrone.FeH - pCluster.getFeH()) > EPS || fabs (isochrone.logAge - pCluster.getAge()) > EPS || fabs (isochrone.Y - pCluster.getY()) > EPS)
     {
-        pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(pCluster.getFeH(), pCluster.getY(), pCluster.getAge());    // determine AGBt ZAMS mass, to find evol state
+        pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, pCluster.getFeH(), pCluster.getY(), pCluster.getAge());    // determine AGBt ZAMS mass, to find evol state
     }
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
@@ -71,7 +68,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
 
     if (star.status[0] == BD)
     {
-        getBaraffeMags (pCluster.getAge(), mass[0]);
+        getBaraffeMags (filters, pCluster.getAge(), mass[0]);
 
         for (auto f : filters)
         {
@@ -89,9 +86,9 @@ void evolve (Cluster &pCluster, const Model &evoModels, Star &star, array<double
     {
         for (int cmpnt = 0; cmpnt < 2; cmpnt++)
         {
-            setMags(mag, cmpnt, mass, pCluster, star, evoModels, ltau);
+            setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau);
         }
 
-        deriveCombinedMags(mag, clusterAv, &flux, pCluster, star, evoModels);
+        deriveCombinedMags(mag, clusterAv, &flux, pCluster, star, evoModels, filters);
     }
 }

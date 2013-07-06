@@ -2,6 +2,7 @@
 #define GGIRMAG_H
 
 #include <string>
+#include <vector>
 
 #include "../MsRgbModel.hpp"
 
@@ -16,13 +17,13 @@ class GirardiMsModel : public MsRgbModel
     GirardiMsModel() {;}
     virtual ~GirardiMsModel() {;}
 
-    virtual double deriveAgbTipMass(double, double, double);
-    virtual double msRgbEvol(double);
+    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
+    virtual double msRgbEvol(const std::vector<int>&, double);
     virtual double wdPrecLogAge(double, double, double);
     virtual void loadModel(std::string, MsFilter);
 
   private:
-    double interpInMass (int, double, int, double *);
+    double interpInMass (const std::vector<int>&, int, double, int, double *);
 };
 
 #endif

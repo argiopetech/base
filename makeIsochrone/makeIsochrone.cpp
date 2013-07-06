@@ -30,7 +30,6 @@ vector<int> filters;
 
 // Used by evolve.c
 double wdLogTeff[2];
-int aFilt = 0;
 
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
@@ -109,7 +108,6 @@ int main (int argc, char *argv[])
         {
             filters.push_back(filt);
             const_cast<Model&>(evoModels).numFilts++;
-            aFilt = filt;               // Sets this to a band we know we are using (for evolve)
         }
     }
     fgets (line, 240, rDataPtr);        // and next header line
@@ -148,7 +146,7 @@ int main (int argc, char *argv[])
     stars.front().massRatio = 0.0;
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, s, ltau);
+        evolve (theCluster, evoModels, filters, s, ltau);
 
     int nWD = 10000;
 
@@ -170,7 +168,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, s, ltau);
+        evolve (theCluster, evoModels, filters, s, ltau);
 
 
     fprintf (wDebugPtr, " mass stage1");

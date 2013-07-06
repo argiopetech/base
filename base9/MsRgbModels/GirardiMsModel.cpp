@@ -17,7 +17,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern vector<int> filters;
 extern double globalMags[FILTS];
 extern double ageLimit[2];
 
@@ -176,7 +175,7 @@ static void getFileName (string path, int z, MsFilter filterSet)
 }
 
 
-double GirardiMsModel::deriveAgbTipMass (double newFeH, double newY, double newAge)
+double GirardiMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newAge)
 /****************************************************************************************
 last update: 12nov07
 
@@ -237,7 +236,7 @@ cluster age, interpolating in isochrones as necessary.
 }
 
 
-double GirardiMsModel::msRgbEvol (double zamsMass)
+double GirardiMsModel::msRgbEvol (const vector<int> &filters, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 
@@ -268,7 +267,7 @@ Uses static variables iAge and iFeH.
     {
         // Interpolate in Mass for each Age
         for (a = 0; a < 2; a++)
-            ageMassNow[f][a] = interpInMass (iAge + a, zamsMass, iFeH + f, &(ageMag[f][a][0]));
+            ageMassNow[f][a] = interpInMass (filters, iAge + a, zamsMass, iFeH + f, &(ageMag[f][a][0]));
         // Interpolate in Age for each FeH
         for (auto filt : filters)
         {
@@ -293,7 +292,7 @@ Uses static variables iAge and iFeH.
 }
 
 // Helper function for getGirardiMags
-double GirardiMsModel::interpInMass (int whichAgeIndex, double zamsMass, int whichFeHIndex, double *ageMag)
+double GirardiMsModel::interpInMass (const vector<int> &filters, int whichAgeIndex, double zamsMass, int whichFeHIndex, double *ageMag)
 {
 
     int lo, mid, hi, i;

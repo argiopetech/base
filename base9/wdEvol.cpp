@@ -16,10 +16,9 @@ using std::vector;
 
 const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 
-extern vector<int> filters;
 extern double globalMags[FILTS];
 
-double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int cmpnt)
+double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, Star &pStar, int cmpnt)
 {
     std::pair<double, double> teffRadiusPair;
 
@@ -51,7 +50,7 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, Star &pStar, int
     {
         //Calculate logg
         thisWDLogG = LOG_G_PLUS_LOG_M_SUN + log (thisWDMass) - 2 * thisWDLogRadius;
-        bergeronTeffToMags (thisLogTeff, thisWDLogG, pStar.wdType[cmpnt]);
+        bergeronTeffToMags (filters, thisLogTeff, thisWDLogG, pStar.wdType[cmpnt]);
     }
 
     pStar.massNow[cmpnt] = thisWDMass;

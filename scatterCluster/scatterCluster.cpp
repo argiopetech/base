@@ -32,7 +32,7 @@ double gen_norm (double mean, double std_dev);  // Returns a normal rv
 int outputScatter (FILE * w_ptr, int isFS, double clusterMemberPrior);
 
 vector<int> filters;
-int aFilt;
+
 int *filterPriorMin;
 int *filterPriorMax;
 

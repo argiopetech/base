@@ -30,7 +30,6 @@ using std::cerr;
 using std::endl;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
-extern vector<int> filters;
 extern double globalMags[FILTS];
 
 // Arrays to hold the models
@@ -121,7 +120,7 @@ void loadBergeron (string path, MsFilter filterSet)
 }
 
 
-void bergeronTeffToMags (double wdLogTeff, double wdLogG, int wdType)
+void bergeronTeffToMags (const vector<int> &filters, double wdLogTeff, double wdLogG, int wdType)
 {
     int l, t, i;
     double logGMag[2][BERG_NFILTS];

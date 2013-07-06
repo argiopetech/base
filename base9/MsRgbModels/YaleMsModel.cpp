@@ -18,7 +18,6 @@ using std::cerr;
 using std::endl;
 using std::vector;
 
-extern vector<int> filters;
 extern double globalMags[FILTS];
 
 // Defined in evolve.c
@@ -232,7 +231,7 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
 // Currently ignores newY
 **********************************************************************************/
 
-double YaleMsModel::deriveAgbTipMass (double newFeH, double newY, double newLogAge)
+double YaleMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newLogAge)
 {
 
     double newAge = exp10 (newLogAge) / 1e9;
@@ -538,7 +537,7 @@ static double feh2z (double FeH)
     return Z;
 }
 
-double YaleMsModel::msRgbEvol (double zamsMass)
+double YaleMsModel::msRgbEvol (const vector<int> &filters, double zamsMass)
 {
 
 /**************************************************************

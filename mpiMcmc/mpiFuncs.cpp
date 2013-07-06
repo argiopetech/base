@@ -36,10 +36,8 @@ using std::isfinite;
 using std::ofstream;
 using std::istringstream;
 
-int aFilt;
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
-bool useFilt[FILTS];
 vector<int> filters;
 
 /*
@@ -67,12 +65,9 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
         {                               // Otherwise check to see what this filter's name is
             if (pch == evoModels.filterSet->getFilterName(filt))
             {
-                useFilt[filt] = 1;
                 filters.push_back(filt);
                 ctrl.numFilts++;
                 const_cast<Model&>(evoModels).numFilts++;
-                if (aFilt < 0)
-                    aFilt = filt;               // Sets this to a band we know we are using (for evolve)
                 break;
             }
         }
@@ -232,9 +227,6 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 {
     ctrl.numFilts = 0;
 
-    for (int ii = 0; ii < FILTS; ii++)
-        useFilt[ii] = 0;
-
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings.seed);
 
@@ -369,7 +361,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoM
         star.massRatioStepSize = 0.001;
 
         // find photometry for initial values of currentClust and mc.stars
-        evolve (mc.clust, evoModels, star, ltau);
+        evolve (mc.clust, evoModels, filters, star, ltau);
 
         if (star.status[0] == WD)
         {
@@ -527,7 +519,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
                     wd.U = wdMass1Grid[j];
                     wd.massRatio = 0.0;
                            
-                    evolve (propClust, evoModels, wd, ltau);
+                    evolve (propClust, evoModels, filters, wd, ltau);
 
                     try
                     {
@@ -545,7 +537,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, ltau);
+                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau);
             }
 
             postClusterStar = postClusterStar * star.clustStarPriorDens;

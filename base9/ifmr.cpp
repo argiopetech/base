@@ -58,7 +58,7 @@ double intlFinalMassReln (const Cluster &pCluster, const Model &evoModels, doubl
 
 double linearIFMRshift (const Cluster &pCluster, double zamsMass)
 {
-    static double shiftMass = 3.0;
+    constexpr double shiftMass = 3.0;
     double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - shiftMass);
 
     return wdMass;
@@ -80,7 +80,7 @@ double linearIFMR0 (const Cluster &pCluster, double zamsMass)
 
 double linearIFMRhighShift (const Cluster &pCluster, double zamsMass)
 {
-    static double shiftMass = 5.0;
+    constexpr double shiftMass = 5.0;
     double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - shiftMass);
 
     return wdMass;
@@ -88,7 +88,7 @@ double linearIFMRhighShift (const Cluster &pCluster, double zamsMass)
 
 double linearIFMRedit (const Cluster &pCluster, double zamsMass)
 {
-    static double shiftMass = 2.0;
+    constexpr double shiftMass = 2.0;
     double wdMass = 0.985 + 0.13 * (zamsMass - shiftMass);
 
     return wdMass;
@@ -147,8 +147,7 @@ double salarisPiecewiseIFMR (double zamsMass)
 
 double quadraticIFMRshift (const Cluster &pCluster, double zamsMass)
 {
-    //static double shiftMass = 2.0;
-    static double shiftMass = 3.0;
+    constexpr double shiftMass = 3.0;
     double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - shiftMass) + pCluster.parameter[IFMR_QUADCOEF] * (zamsMass - shiftMass) * (zamsMass - shiftMass);
 
     return wdMass;
@@ -156,8 +155,8 @@ double quadraticIFMRshift (const Cluster &pCluster, double zamsMass)
 
 double quadraticIFMRrotate (const Cluster &pCluster, double zamsMass)
 {
-    static double shiftMass = 3.0;
-    static double massLower = 0.15;
+    constexpr double shiftMass = 3.0;
+    constexpr double massLower = 0.15;
     double massUpper = pCluster.M_wd_up;
 
     double angle = atan (pCluster.parameter[IFMR_SLOPE]);
@@ -193,9 +192,6 @@ double piecewiseLinearIFMR (const Cluster &pCluster, double zamsMass)
     return wdMass;
 }
 
-static double initMassW[10] = { 1.0, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 };
-static double finalMassW[10] = { 0.55, 0.60, 0.63, 0.68, 0.80, 0.88, 0.95, 1.02, 1.2, 1.4 };
-
 double weidemannIFMR (double zamsMass)
 /***************************************************************************************
 last update: 18sep05
@@ -215,6 +211,9 @@ Extend the Weidemann et al. relation artificially to 9 Mo, so that M_wd_up can b
 large as 9.0.
 ***************************************************************************************/
 {
+    constexpr std::array<double, 10> initMassW = {{1.0, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0}};
+    constexpr std::array<double, 10> finalMassW = {{0.55, 0.60, 0.63, 0.68, 0.80, 0.88, 0.95, 1.02, 1.2, 1.4}};
+
     double wdMass = 0.0;
 
     if (zamsMass <= initMassW[0])

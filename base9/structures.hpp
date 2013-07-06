@@ -101,6 +101,6 @@ struct block
     int nIter;
 };
 
-void swapGlobalEntries (struct globalIso &thisIso, int n);
+void swapGlobalEntries (struct globalIso &thisIso, const std::vector<int>&, int n);
 
 #endif

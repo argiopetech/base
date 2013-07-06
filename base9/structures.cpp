@@ -14,10 +14,8 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern vector<int> filters;
-
 // Swaps two mass entries in a global isochrone (n and n-1)
-void swapGlobalEntries (struct globalIso &thisIso, int n)
+void swapGlobalEntries (struct globalIso &thisIso, const vector<int> &filters, int n)
 {
     int tempEep;
     double tempMass;

@@ -6,4 +6,3 @@
 
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
-std::vector<int> filters;
