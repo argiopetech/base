@@ -21,7 +21,8 @@ using std::array;
 using std::string;
 using std::ofstream;
 
-extern int numFilts;
+extern double filterPriorMin[FILTS];
+extern double filterPriorMax[FILTS];
 
 Model yamlChunk();
 double run1step(void);
@@ -86,7 +87,7 @@ double run1step()
 
     for (int filt = 0; filt < ctrl.numFilts; filt++)
     {
-        logFieldStarLikelihood -= log (ctrl.filterPriorMax[filt] - ctrl.filterPriorMin[filt]);
+        logFieldStarLikelihood -= log (filterPriorMax[filt] - filterPriorMin[filt]);
     }
     fsLike = exp (logFieldStarLikelihood);
 

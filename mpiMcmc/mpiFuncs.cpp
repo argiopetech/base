@@ -87,18 +87,15 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
-            if (stars.back().obsPhot[i] < ctrl.filterPriorMin[i])
+            if (stars.back().obsPhot[i] < filterPriorMin[i])
             {
-                ctrl.filterPriorMin[i] = stars.back().obsPhot[i];
+                filterPriorMin[i] = stars.back().obsPhot[i];
             }
 
-            if (stars.back().obsPhot[i] > ctrl.filterPriorMax[i])
+            if (stars.back().obsPhot[i] > filterPriorMax[i])
             {
-                ctrl.filterPriorMax[i] = stars.back().obsPhot[i];
+                filterPriorMax[i] = stars.back().obsPhot[i];
             }
-
-            filterPriorMin[i] = ctrl.filterPriorMin[i];
-            filterPriorMax[i] = ctrl.filterPriorMax[i];
         }
 
         if (!(stars.back().status[0] == 3 || (stars.back().obsPhot[ctrl.iMag] >= ctrl.minMag && stars.back().obsPhot[ctrl.iMag] <= ctrl.maxMag)))
@@ -333,8 +330,8 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 
     for (j = 0; j < FILTS; j++)
     {
-        ctrl.filterPriorMin[j] = 1000;
-        ctrl.filterPriorMax[j] = -1000;
+        filterPriorMin[j] = 1000;
+        filterPriorMax[j] = -1000;
     }
 
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.mean.begin());

@@ -19,7 +19,7 @@ void swapGlobalEntries (struct globalIso &thisIso, const vector<int> &filters, i
 {
     int tempEep;
     double tempMass;
-    vector<double> tempMag(thisIso.nFilts);
+    vector<double> tempMag(filters.size());
 
     tempMass = thisIso.mass[n];
     tempEep = thisIso.eep[n];

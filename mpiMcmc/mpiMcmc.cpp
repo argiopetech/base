@@ -11,6 +11,9 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+extern double filterPriorMin[FILTS];
+extern double filterPriorMax[FILTS];
+
 int main (int argc, char *argv[])
 {
     int accept = 0, reject = 0;
@@ -68,7 +71,7 @@ int main (int argc, char *argv[])
 
         for (int filt = 0; filt < ctrl.numFilts; filt++)
         {
-            logFieldStarLikelihood -= log (ctrl.filterPriorMax[filt] - ctrl.filterPriorMin[filt]);
+            logFieldStarLikelihood -= log (filterPriorMax[filt] - filterPriorMin[filt]);
         }
         fsLike = exp (logFieldStarLikelihood);
     }

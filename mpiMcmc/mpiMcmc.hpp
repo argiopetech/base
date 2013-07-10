@@ -40,8 +40,6 @@ struct ifmrMcmcControl
     double maxMag;
     int iMag;
     int iStart;
-    double filterPriorMin[FILTS];
-    double filterPriorMax[FILTS];
     int numFilts;
     double propMatrix[NPARAMS][NPARAMS];
 };
