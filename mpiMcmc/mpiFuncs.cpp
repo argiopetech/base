@@ -226,6 +226,9 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings.seed);
 
+    ctrl.priorVar.fill(0);
+    clust.parameter.fill(0);
+
     /* load models */
     loadModels (clust, evoModels, settings);
 

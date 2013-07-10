@@ -26,6 +26,9 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
     double mag[3][FILTS], mass[2], flux, clusterAv;
     double post = 0.0;
 
+    mass[0] = 0.0;
+    mass[1] = 0.0;
+
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
