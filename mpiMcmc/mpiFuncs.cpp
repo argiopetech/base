@@ -36,8 +36,8 @@ using std::isfinite;
 using std::ofstream;
 using std::istringstream;
 
-double filterPriorMin[FILTS];
-double filterPriorMax[FILTS];
+array<double, FILTS> filterPriorMin;
+array<double, FILTS> filterPriorMax;
 
 /*
  * Read data
@@ -522,7 +522,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
 
                     try
                     {
-                        tmpLogPost = logPost1Star (wd, propClust, evoModels);
+                        tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
                         tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                         postClusterStar = postClusterStar +  exp (tmpLogPost);
@@ -536,7 +536,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau, globalMags);
+                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
             }
 
             postClusterStar = postClusterStar * star.clustStarPriorDens;
