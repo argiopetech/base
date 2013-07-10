@@ -22,7 +22,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern vector<int> filters;
 extern double globalMags[FILTS];
 extern struct globalIso isochrone;
 

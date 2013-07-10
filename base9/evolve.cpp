@@ -16,7 +16,7 @@ using std::array;
 using std::vector;
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
-double globalMags[FILTS];
+array<double, FILTS> globalMags;
 double ageLimit[2];
 
 struct globalIso isochrone;
@@ -86,7 +86,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, const vector<int> &filte
     {
         for (int cmpnt = 0; cmpnt < 2; cmpnt++)
         {
-            setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau);
+            setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau, globalMags);
         }
 
         deriveCombinedMags(mag, clusterAv, &flux, pCluster, star, evoModels, filters);

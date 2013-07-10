@@ -50,13 +50,15 @@ int main (int argc, char *argv[])
 
     const Model evoModels = makeModel(settings);
 
+    std::vector<int> filters;
+
     increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
     initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
 
-    readCmdData (mc.stars, ctrl, evoModels);
+    readCmdData (mc.stars, ctrl, evoModels, filters);
 
-    initChain (mc, ctrl, evoModels, ltau);
+    initChain (mc, ctrl, evoModels, ltau, filters);
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
@@ -114,7 +116,7 @@ int main (int argc, char *argv[])
             propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
         }
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp, ltau))
@@ -175,7 +177,7 @@ int main (int argc, char *argv[])
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp, ltau))

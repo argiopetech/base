@@ -36,14 +36,14 @@ using std::isfinite;
 using std::ofstream;
 using std::istringstream;
 
+extern array<double, FILTS> globalMags;
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
-vector<int> filters;
 
 /*
  * Read data
  */
-void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels)
+void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters)
 {
     string line, pch;
 
@@ -347,7 +347,7 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 /*
  * Initialize chain
  */
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, array<double, 2> &ltau)
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, array<double, 2> &ltau, const vector<int> &filters)
 {
     for (int p = 0; p < NPARAMS; p++)
     {
@@ -495,7 +495,7 @@ void parallelFor(const unsigned int size, std::function<void(const unsigned int)
         t.join();
 }
 
-double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau)
+double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau, const vector<int> &filters)
 {
     atomic<double> postClusterStar(0.0);
 
@@ -537,7 +537,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau);
+                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau, globalMags);
             }
 
             postClusterStar = postClusterStar * star.clustStarPriorDens;
