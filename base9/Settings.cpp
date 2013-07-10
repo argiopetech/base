@@ -7,7 +7,6 @@
 #include <cstring>
 #include <getopt.h>
 #include <iostream>
-#include <mpi.h>
 
 #include "yaml-cpp/yaml.h"
 #include "Settings.hpp"
@@ -342,7 +341,6 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0xDB:                  // --help
                 printUsage ();
-                MPI_Finalize ();
                 exit (EXIT_SUCCESS);
 
             case 0xDA:
@@ -352,7 +350,6 @@ void Settings::fromCLI (int argc, char **argv)
             case '?':
                 // getopt_long already printed an error message.
                 printUsage ();
-                MPI_Finalize ();
                 exit (EXIT_FAILURE);
                 break;
 
@@ -416,53 +413,44 @@ Node Settings::getNode (Node & n, string && f)
 void Settings::printUsage ()
 {
     int taskId;
-
-    MPI_Barrier (MPI_COMM_WORLD);
-    MPI_Comm_rank (MPI_COMM_WORLD, &taskId);
-
-    if (taskId == 0)
-    {
-        cerr << "\nUsage:" << endl;
-        cerr << "=======" << endl;
-        cerr << "\t--config\t\tYAML configuration file" << endl << endl;
-        cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
-        cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
-        cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;;
-        cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery" << endl << endl;
-        cerr << "\t--carbonicity\t\t" << endl;
-        cerr << "\t--M_wd_up\t\tThe maximum mass for a WD-producing star" << endl << endl;
-        cerr << "\t--bdModel\t\t0 = None\n\t\t\t\t1 = Baraffe" << endl << endl;
-        cerr << "\t--priorFe_H" << endl;
-        cerr << "\t--sigmaFe_H" << endl << endl;;
-        cerr << "\t--priordistMod" << endl;
-        cerr << "\t--sigmadistMod" << endl << endl;;
-        cerr << "\t--priorAv" << endl;
-        cerr << "\t--sigmaAv" << endl << endl;;
-        cerr << "\t--priorY" << endl;
-        cerr << "\t--sigmaY" << endl << endl;;
-        cerr << "\t--logClusAge" << endl;
-        cerr << "\t--minMag" << endl;
-        cerr << "\t--maxMag" << endl;
-        cerr << "\t--index\t\t\t0 being the first filter in the dataset" << endl;
-        cerr << "\t--burnIter" << endl;
-        cerr << "\t--maxIter" << endl;
-        cerr << "\t--thin" << endl;
-        cerr << "\t--nStars" << endl;
-        cerr << "\t--percentBinary\t\tpercent binaries (drawn randomly)" << endl;
-        cerr << "\t--percentDB\t\tpercent of WDs that have He atmospheres (drawn randomly)" << endl;
-        cerr << "\t--nFieldStars" << endl;
-        cerr << "\t--nBrownDwarfs" << endl;
-        cerr << "\t--brightLimit\t\tapparant mags, can remove bright stars, e.g. RGB" << endl;
-        cerr << "\t--faintLimit\t\tapparant mags, can remove faint stars, e.g. faint MS and WDs" << endl;
-        cerr << "\t--relevantFilt\t\t0=bluest band available" << endl;
-        cerr << "\t--limitS2N\t\tuse to remove objects with overly low signal-to-noise" << endl;
-        cerr << "\t--seed\t\t\tinitialize the random number generator" << endl;
-        cerr << "\t--photFile" << endl;
-        cerr << "\t--scatterFile" << endl;
-        cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
-        cerr << "\t--modelDirectory\tThe directory in which models are located" << endl;
-        cerr << endl;
-    }
-
-    MPI_Barrier (MPI_COMM_WORLD);
+    cerr << "\nUsage:" << endl;
+    cerr << "=======" << endl;
+    cerr << "\t--config\t\tYAML configuration file" << endl << endl;
+    cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
+    cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
+    cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;;
+    cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery" << endl << endl;
+    cerr << "\t--carbonicity\t\t" << endl;
+    cerr << "\t--M_wd_up\t\tThe maximum mass for a WD-producing star" << endl << endl;
+    cerr << "\t--bdModel\t\t0 = None\n\t\t\t\t1 = Baraffe" << endl << endl;
+    cerr << "\t--priorFe_H" << endl;
+    cerr << "\t--sigmaFe_H" << endl << endl;;
+    cerr << "\t--priordistMod" << endl;
+    cerr << "\t--sigmadistMod" << endl << endl;;
+    cerr << "\t--priorAv" << endl;
+    cerr << "\t--sigmaAv" << endl << endl;;
+    cerr << "\t--priorY" << endl;
+    cerr << "\t--sigmaY" << endl << endl;;
+    cerr << "\t--logClusAge" << endl;
+    cerr << "\t--minMag" << endl;
+    cerr << "\t--maxMag" << endl;
+    cerr << "\t--index\t\t\t0 being the first filter in the dataset" << endl;
+    cerr << "\t--burnIter" << endl;
+    cerr << "\t--maxIter" << endl;
+    cerr << "\t--thin" << endl;
+    cerr << "\t--nStars" << endl;
+    cerr << "\t--percentBinary\t\tpercent binaries (drawn randomly)" << endl;
+    cerr << "\t--percentDB\t\tpercent of WDs that have He atmospheres (drawn randomly)" << endl;
+    cerr << "\t--nFieldStars" << endl;
+    cerr << "\t--nBrownDwarfs" << endl;
+    cerr << "\t--brightLimit\t\tapparant mags, can remove bright stars, e.g. RGB" << endl;
+    cerr << "\t--faintLimit\t\tapparant mags, can remove faint stars, e.g. faint MS and WDs" << endl;
+    cerr << "\t--relevantFilt\t\t0=bluest band available" << endl;
+    cerr << "\t--limitS2N\t\tuse to remove objects with overly low signal-to-noise" << endl;
+    cerr << "\t--seed\t\t\tinitialize the random number generator" << endl;
+    cerr << "\t--photFile" << endl;
+    cerr << "\t--scatterFile" << endl;
+    cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
+    cerr << "\t--modelDirectory\tThe directory in which models are located" << endl;
+    cerr << endl;
 }

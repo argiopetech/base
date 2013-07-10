@@ -18,7 +18,7 @@ add_executable(mpiMcmc_tests
     mpiFuncs.cpp
 )
 
-target_link_libraries(mpiMcmc_tests gtest gtest_main base9 ${MPI_LIBRARIES})
+target_link_libraries(mpiMcmc_tests gtest gtest_main base9)
 
 add_test(
     NAME mpiMcmc_tests
