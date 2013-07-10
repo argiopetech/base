@@ -8,9 +8,6 @@
 
 #include <iostream>
 
-int *useFilt;
-double *ltau;
-
 TEST(Model, FilterSet)
 {
     Settings s;
