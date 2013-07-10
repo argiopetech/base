@@ -1,3 +1,4 @@
+#include <array>
 #include <utility>
 #include <vector>
 
@@ -12,13 +13,12 @@
 #include "Model.hpp"
 #include "ifmr.hpp"
 
+using std::array;
 using std::vector;
 
 const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
 
-extern double globalMags[FILTS];
-
-double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, Star &pStar, int cmpnt)
+double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, array<double, FILTS> &globalMags, Star &pStar, int cmpnt)
 {
     std::pair<double, double> teffRadiusPair;
 

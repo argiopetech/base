@@ -83,7 +83,7 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
     }
 }
 
-void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters,  array<double, 2> &ltau, const array<double, FILTS> &globalMags)
+void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters,  array<double, 2> &ltau, array<double, FILTS> &globalMags)
 {
     if (mass[cmpnt] <= 0.0001)
     {                           // for non-existent secondary stars
@@ -101,7 +101,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, S
     }
     else if (mass[cmpnt] <= pCluster.M_wd_up)
     {                           // for white dwarf
-        ltau[cmpnt] = wdEvol (pCluster, evoModels, filters, pStar, cmpnt);
+        ltau[cmpnt] = wdEvol (pCluster, evoModels, filters, globalMags, pStar, cmpnt);
         for (auto f : filters)
             mag[cmpnt][f] = globalMags[f];
     }
