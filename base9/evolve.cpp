@@ -68,7 +68,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, const vector<int> &filte
 
     if (star.status[0] == BD)
     {
-        getBaraffeMags (filters, pCluster.getAge(), mass[0]);
+        getBaraffeMags (filters, globalMags, pCluster.getAge(), mass[0]);
 
         for (auto f : filters)
         {

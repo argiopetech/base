@@ -1,3 +1,4 @@
+#include <array>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -13,6 +14,7 @@
 #include "binSearch.hpp"
 #include "gBaraffeMag.hpp"
 
+using std::array;
 using std::ifstream;
 using std::string;
 using std::vector;
@@ -20,8 +22,6 @@ using std::cerr;
 using std::endl;
 
 // Declared in parent program (simCluster or mcmc, or makeCMD)
-extern double globalMags[FILTS];
-
 static double barAge[N_BAR_AGES];
 static double barMass[N_BAR_MASSES];
 static double barMag[N_BAR_AGES][N_BAR_MASSES][N_BAR_FILTS];
@@ -87,7 +87,7 @@ void loadBaraffe (string path)
 
 
 
-void getBaraffeMags (const vector<int> &filters, double logAge, double mass)
+void getBaraffeMags (const vector<int> &filters, array<double, FILTS> &globalMags, double logAge, double mass)
 {
     int a, m, i;
     double massMag[2][N_BAR_FILTS];
