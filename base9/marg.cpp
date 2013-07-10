@@ -18,8 +18,6 @@ using std::vector;
 
 const int MAX_ENTRIES = 370;
 
-extern struct globalIso isochrone;
-
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&, const vector<int>&, array<double, 2> &ltau, array<double, FILTS>&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
@@ -27,6 +25,8 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
     double post = 0.0;
+
+    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through
@@ -147,6 +147,8 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, Cl
 
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags)
 {
+    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
+
     pStar.setMass1 (pCluster, mass[0]);
 
     int cmpnt = 0;

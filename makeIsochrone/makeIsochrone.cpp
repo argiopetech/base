@@ -34,7 +34,6 @@ double wdLogTeff[2];
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
 
-extern struct globalIso isochrone;
 
 // Used by a bunch of different functions.
 static void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
@@ -53,6 +52,8 @@ int main (int argc, char *argv[])
     Cluster theCluster;
     vector<Star> stars;
     array<double, FILTS> globalMags;
+
+    struct globalIso isochrone;
 
     Settings settings;
 

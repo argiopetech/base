@@ -18,9 +18,6 @@ using std::cerr;
 using std::endl;
 using std::vector;
 
-// Defined in evolve.c
-extern struct globalIso isochrone;
-
 //global variables
 static int iZ, iAge;
 static double yyFeH[N_YY_Z], yyZ[N_YY_Z];
@@ -39,7 +36,6 @@ static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorde
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS]);
 static double feh2z (double FeH);
 static void intpolZ (int iZ, int iAge, double newZ);
-static void intpolAge (int iAge, double newAge);
 
 void YaleMsModel::loadModel (string path, MsFilter filterSet)
 {
@@ -312,7 +308,7 @@ static void intpolZ (int iZ, int iAge, double newZ)
 }
 
 
-void intpolAge (int iAge, double newAge)
+void YaleMsModel::intpolAge (int iAge, double newAge)
 {
 
     int iYYm, m, p;

@@ -22,8 +22,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern struct globalIso isochrone;
-
 struct dIsochrone
 {
     dIsochrone()

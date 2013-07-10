@@ -15,8 +15,6 @@
 using std::array;
 using std::vector;
 
-struct globalIso isochrone;
-
 /**************************************************************************************
 last update: 25Aug10
 
@@ -43,6 +41,8 @@ get the photometry of a single star. -- SD
 void evolve (Cluster &pCluster, const Model &evoModels, array<double, FILTS> &globalMags, const vector<int> &filters,  Star &star, array<double, 2> &ltau)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
+
+    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
     //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
     //were last time through

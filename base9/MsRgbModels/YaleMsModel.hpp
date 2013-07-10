@@ -66,6 +66,9 @@ class YaleMsModel : public MsRgbModel
     virtual double msRgbEvol(const std::vector<int>&, std::array<double, FILTS>&, double);
     virtual double wdPrecLogAge(double, double, double);
     virtual void loadModel(std::string, MsFilter);
+
+  private:
+    void intpolAge(int, double);
 };
 
 #endif

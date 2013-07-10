@@ -4,8 +4,6 @@
 #include <array>
 
 #include "constants.hpp"
-#include "Model.hpp"
-#include "MsRgbModel.hpp"
 
 class Cluster
 {

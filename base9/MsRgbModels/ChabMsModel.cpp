@@ -17,8 +17,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern struct globalIso isochrone;
-
 struct cIsochrone
 {
     double age;                 //In Gyr
@@ -36,12 +34,8 @@ static double cFeH[N_CHAB_Z], cY[N_CHAB_Z][N_CHAB_Y];
 static double cLogAge[N_CHAB_Z][N_CHAB_Y][N_CHAB_AGES], cAge[N_CHAB_Z][N_CHAB_Y][N_CHAB_AGES];
 static struct cIsochrone cIso[N_CHAB_Z][N_CHAB_Y][N_CHAB_AGES];
 
-// Set in deriveChabAgbTip, used in getChaboyerMags
-//static struct cIsochrone newIso;
-
 static void calcCoeff (double a[], double b[], double x);
 
-//static  void outputIso(struct cIsochrone *iso, FILE *wPtr);
 static void initIso (struct cIsochrone *iso);
 static void getFileName (string path, int z, int y);
 static char tempFile[100];

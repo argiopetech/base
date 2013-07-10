@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "constants.hpp"
+#include "structures.hpp"
 
 class MsRgbModel
 {
@@ -42,11 +43,14 @@ modified for different model sets.
 
     virtual void loadModel(std::string, MsFilter) = 0;
 
-    double getMinAge() { return ageLimit.first; }
-    double getMaxAge() { return ageLimit.second; }
+    double getMinAge() const { return ageLimit.first; }
+    double getMaxAge() const { return ageLimit.second; }
 
+    const struct globalIso& getIsochrone() const { return isochrone; }
 
   protected:
     std::pair<double, double> ageLimit;
+
+    struct globalIso isochrone;
 };
 #endif

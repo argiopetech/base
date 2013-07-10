@@ -1,11 +1,11 @@
-#ifndef STRUCT_H
-#define STRUCT_H
+#ifndef STRUCTURES_HPP
+#define STRUCTURES_HPP
 
 #include <vector>
 
+#include <cassert>
+
 #include "constants.hpp"
-#include "Cluster.hpp"
-#include "Star.hpp"
 #include "Chain.hpp"
 
 struct globalIso

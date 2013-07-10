@@ -1,6 +1,8 @@
 #include <sstream>
 #include <string>
 
+#include <cmath>
+
 #include "Cluster.hpp"
 #include "Star.hpp"
 

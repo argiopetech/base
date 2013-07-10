@@ -1,6 +1,9 @@
 #include <array>
 #include <vector>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 class Chain
 {
   public:
