@@ -48,17 +48,15 @@ double margEvolveWithBinary (Cluster &pCluster, Star &pStar, const Model &evoMod
 
 //    auto clusterAbs = calcAbsCoeffs (evoModels.filteret);
 
-    int m;
     double dMass;
 
     double dIsoMass = 0.0;
-    double k = 0.0;
 
     double isoIncrem = 80.0;    /* ok for YY models? */
 
-    for (m = 0; m < isochrone.nEntries - 2; m++)
+    for (int m = 0; m < isochrone.nEntries - 2; m++)
     {
-        for (k = 0.0; k < isoIncrem; k += 1.0)
+        for (int k = 0; k < isoIncrem; k += 1)
         {
 
             dIsoMass = isochrone.mass[m + 1] - isochrone.mass[m];
