@@ -187,8 +187,6 @@ cluster age, interpolating in isochrones as necessary.
     double AGBt_zmass, AGBt_zmass_lo, AGBt_zmass_hi;
     double interpAge[2], interpFeH[2];
 
-    int binarySearch (double *searchArray, int size, double searchItem);
-
     if (newAge < 7.80)
     {
         //     log << ("\n Requested age too young. (drv_g_AGB_m.c)");

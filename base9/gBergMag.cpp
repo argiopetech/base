@@ -11,6 +11,7 @@ et al. atmospheres span a wider mass range than the Wood model WDs.)
 The appropriate magnitudes are put in globalMags[][].
 ********************************************************************************/
 
+#include <array>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -23,14 +24,13 @@ The appropriate magnitudes are put in globalMags[][].
 #include "evolve.hpp"
 #include "linInterp.hpp"
 #include "gBergMag.hpp"
+#include "binSearch.hpp"
 
+using std::array;
 using std::string;
 using std::vector;
 using std::cerr;
 using std::endl;
-
-// Declared in parent program (simCluster or mcmc, or makeCMD)
-extern double globalMags[FILTS];
 
 // Arrays to hold the models
 static double bLogG[BERG_N_DA_LOG_G];
@@ -120,12 +120,10 @@ void loadBergeron (string path, MsFilter filterSet)
 }
 
 
-void bergeronTeffToMags (const vector<int> &filters, double wdLogTeff, double wdLogG, int wdType)
+void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globalMags, double wdLogTeff, double wdLogG, int wdType)
 {
     int l, t, i;
     double logGMag[2][BERG_NFILTS];
-
-    int binarySearch (double *searchArray, int size, double searchItem);
 
     if (wdType == DA)
     {
