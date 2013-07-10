@@ -3,6 +3,7 @@
 
 #include <array>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "constants.hpp"
@@ -40,5 +41,12 @@ modified for different model sets.
     virtual double wdPrecLogAge(double, double, double) = 0;
 
     virtual void loadModel(std::string, MsFilter) = 0;
+
+    double getMinAge() { return ageLimit.first; }
+    double getMaxAge() { return ageLimit.second; }
+
+
+  protected:
+    std::pair<double, double> ageLimit;
 };
 #endif

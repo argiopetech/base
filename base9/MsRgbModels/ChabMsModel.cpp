@@ -19,10 +19,6 @@ using std::endl;
 
 extern struct globalIso isochrone;
 
-// defined in evolve.c, used to determine the normalization
-// for the prior on age.
-extern double ageLimit[2];
-
 struct cIsochrone
 {
     double age;                 //In Gyr
@@ -137,8 +133,8 @@ void ChabMsModel::loadModel (string path, MsFilter filterSet)
             cIso[z][y][a - 1].numEeps = i;
         }
     }
-    ageLimit[0] = cLogAge[0][0][0];
-    ageLimit[1] = cLogAge[0][0][N_CHAB_AGES - 1];
+    ageLimit.first = cLogAge[0][0][0];
+    ageLimit.second = cLogAge[0][0][N_CHAB_AGES - 1];
 
     /*
       for(z=0 ; z < N_CHAB_Z ; z++) {                                       // foreach Chaboyer metallicity/isochrone file

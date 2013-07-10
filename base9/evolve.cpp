@@ -15,9 +15,6 @@
 using std::array;
 using std::vector;
 
-// Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
-double ageLimit[2];
-
 struct globalIso isochrone;
 
 /**************************************************************************************

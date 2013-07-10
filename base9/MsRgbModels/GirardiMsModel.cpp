@@ -17,8 +17,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern double ageLimit[2];
-
 static int gNumEntries[N_GIR_Z], gBoundary[2][N_GIR_Z][N_GIR_AGES];
 static double gIsoMass[2][N_GIR_Z][MAX_GIR_ENTRIES], gIsoMag[N_GIR_Z][N_GIR_FILTS][MAX_GIR_ENTRIES], gLogAge[N_GIR_Z][N_GIR_AGES], gFeH[N_GIR_Z], gAGBt[N_GIR_Z][N_GIR_AGES];
 
@@ -150,8 +148,8 @@ void GirardiMsModel::loadModel (string path, MsFilter filterSet)
     gFeH[6] = 0.0;              // (i.e., Z_solar=0.019)                       0.019
     gFeH[7] = 0.198368;         //                                             0.030
 
-    ageLimit[0] = gLogAge[0][0];
-    ageLimit[1] = gLogAge[0][N_GIR_AGES - 1];
+    ageLimit.first = gLogAge[0][0];
+    ageLimit.second = gLogAge[0][N_GIR_AGES - 1];
 
     fclose (pGirardi);
 

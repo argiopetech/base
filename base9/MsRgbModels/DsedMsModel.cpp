@@ -24,10 +24,6 @@ using std::endl;
 
 extern struct globalIso isochrone;
 
-// defined in evolve.c, used to determine the normalization
-// for the prior on age.
-extern double ageLimit[2];
-
 struct dIsochrone
 {
     dIsochrone()
@@ -158,8 +154,8 @@ void DsedMsModel::loadModel (string path, MsFilter filterSet)
         }
     }
 
-    ageLimit[0] = dLogAge[0][0];
-    ageLimit[1] = dLogAge[0][N_DSED_AGES - 1];
+    ageLimit.first = dLogAge[0][0];
+    ageLimit.second = dLogAge[0][N_DSED_AGES - 1];
 
     //Load in JHK from the UBVRIJHK models
     if (filterSet == MsFilter::SDSS)

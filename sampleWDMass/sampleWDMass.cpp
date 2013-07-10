@@ -96,7 +96,6 @@ double filterPriorMax[FILTS];
 
 /* Used in densities.c. */
 double priorMean[NPARAMS], priorVar[NPARAMS];
-extern double ageLimit[2];      /* Defined in evolve.c, set in the appropriate model during loadModels. */
 
 /* Used by a bunch of different functions. */
 vector<int> filters;

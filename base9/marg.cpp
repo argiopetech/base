@@ -18,9 +18,6 @@ using std::vector;
 
 const int MAX_ENTRIES = 370;
 
-// Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
-extern double ageLimit[2];
-
 extern struct globalIso isochrone;
 
 void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, Cluster &pCluster, Star &pStar, const Model&, const vector<int>&, array<double, 2> &ltau, array<double, FILTS>&);

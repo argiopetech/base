@@ -19,7 +19,6 @@ static double logMassNorm = 0.0;
 static int calcMassNorm = 0;
 
 extern double filterPriorMin[FILTS], filterPriorMax[FILTS];
-extern double ageLimit[2];
 
 double logPriorMass (Star &pStar, Cluster &pCluster)
 // Compute log prior density
@@ -74,9 +73,9 @@ double logPriorMass (Star &pStar, Cluster &pCluster)
 // Compute log prior density for cluster properties
 double logPriorClust (Cluster &pCluster, const Model &evoModels)
 {
-    if (pCluster.getAge() < ageLimit[0])
+    if (pCluster.getAge() < evoModels.mainSequenceEvol->getMinAge())
         return -HUGE_VAL;               // these are possible, we just don't have models for them YET
-    else if (pCluster.getAge() > ageLimit[1])
+    else if (pCluster.getAge() > evoModels.mainSequenceEvol->getMaxAge())
         return -HUGE_VAL;               // appropriate for the MS/RGB models but not the WDs
     else if (pCluster.parameter[IFMR_SLOPE] < 0.0)
         return -HUGE_VAL;

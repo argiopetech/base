@@ -19,7 +19,6 @@ using std::endl;
 using std::vector;
 
 // Defined in evolve.c
-extern double ageLimit[2];
 extern struct globalIso isochrone;
 
 //global variables
@@ -214,8 +213,8 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
     }
 
     //Set the min and max age in this model set (for use in densities.c)
-    ageLimit[0] = yyLogAge[0][0];
-    ageLimit[1] = yyLogAge[0][N_YY_AGES - 1];
+    ageLimit.first = yyLogAge[0][0];
+    ageLimit.second = yyLogAge[0][N_YY_AGES - 1];
 
     fclose (pYY);
     return;
