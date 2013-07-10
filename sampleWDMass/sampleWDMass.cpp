@@ -91,8 +91,8 @@ typedef struct
 // double margEvolveWithBinary (Cluster *pCluster, Star *pStar);
 
 /* declare global variables */
-double filterPriorMin[FILTS];
-double filterPriorMax[FILTS];
+array<double, FILTS> filterPriorMin;
+array<double, FILTS> filterPriorMax;
 
 /* Used in densities.c. */
 double priorMean[NPARAMS], priorVar[NPARAMS];
@@ -565,8 +565,8 @@ int main (int argc, char *argv[])
 
     MPI_Bcast (ctrl.filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
     MPI_Bcast (ctrl.filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+//    MPI_Bcast (filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+//    MPI_Bcast (filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 //    MPI_Bcast (&mc.clust.nStars, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
 
     MPI_Barrier (MPI_COMM_WORLD);
@@ -734,7 +734,7 @@ int main (int argc, char *argv[])
                         array<double, FILTS> globalMags;
                         evolve (mc.clust, evoModels, globalMags, filters, star, ltau);
 
-                        wdLogPost[im] = logPost1Star (star, mc.clust, evoModels);
+                        wdLogPost[im] = logPost1Star (star, mc.clust, evoModels, filterPriorMin, filterPriorMax);
                         postClusterStar += exp (wdLogPost[im]);
                     }
                     catch ( WDBoundsError &e )
