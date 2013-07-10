@@ -21,8 +21,8 @@ using std::array;
 using std::string;
 using std::ofstream;
 
-extern double filterPriorMin[FILTS];
-extern double filterPriorMax[FILTS];
+extern array<double, FILTS> filterPriorMin;
+extern array<double, FILTS> filterPriorMax;
 
 Model yamlChunk();
 double run1step(void);
@@ -75,7 +75,7 @@ double run1step()
 
     std::vector<int> filters;
 
-    readCmdData (mc.stars, ctrl, evoModels, filters);
+    readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax);
 
     evoModels.numFilts = ctrl.numFilts;
 

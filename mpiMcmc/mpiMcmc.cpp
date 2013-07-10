@@ -11,8 +11,8 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-extern double filterPriorMin[FILTS];
-extern double filterPriorMax[FILTS];
+extern array<double, FILTS> filterPriorMin;
+extern array<double, FILTS> filterPriorMax;
 
 int main (int argc, char *argv[])
 {
@@ -59,7 +59,7 @@ int main (int argc, char *argv[])
 
     initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
 
-    readCmdData (mc.stars, ctrl, evoModels, filters);
+    readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax);
 
     initChain (mc, ctrl, evoModels, ltau, filters);
 

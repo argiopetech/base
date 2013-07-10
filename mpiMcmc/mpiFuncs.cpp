@@ -42,7 +42,7 @@ array<double, FILTS> filterPriorMax;
 /*
  * Read data
  */
-void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters)
+void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMins, std::array<double, FILTS> &filterPriorMaxen)
 {
     string line, pch;
 
@@ -87,14 +87,14 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
-            if (stars.back().obsPhot[i] < filterPriorMin[i])
+            if (stars.back().obsPhot[i] < filterPriorMins[i])
             {
-                filterPriorMin[i] = stars.back().obsPhot[i];
+                filterPriorMins[i] = stars.back().obsPhot[i];
             }
 
-            if (stars.back().obsPhot[i] > filterPriorMax[i])
+            if (stars.back().obsPhot[i] > filterPriorMaxen[i])
             {
-                filterPriorMax[i] = stars.back().obsPhot[i];
+                filterPriorMaxen[i] = stars.back().obsPhot[i];
             }
         }
 
