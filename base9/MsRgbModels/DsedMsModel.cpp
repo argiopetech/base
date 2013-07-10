@@ -31,8 +31,6 @@ struct dIsochrone
 
         for (auto a : mag)
             a.fill(99.9);
-
-//        assert(false);
     }
 
     Matrix<double, MAX_DSED_ENTRIES, N_DSED_FILTS> mag;
@@ -354,7 +352,6 @@ double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
 // Calculates magnitudes for a given mass.
 // Must run loadDsed() and deriveDsedAgbTip()
 // to load and interpolate an isochrone before this subroutine will work
-// Stores output values in external variable globalMags[]
 double DsedMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
 {
     int m;
