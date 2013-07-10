@@ -45,6 +45,7 @@ void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 int main (int argc, char *argv[])
 {
     vector<int> filters;
+    array<double, FILTS> globalMags;
 
     /////////////////////////////////
     /////// Declare Variables ///////
@@ -368,7 +369,7 @@ int main (int argc, char *argv[])
         }
 
         for (auto s : stars)
-            evolve (theCluster, evoModels, filters, s, ltau);
+            evolve (theCluster, evoModels, globalMags, filters, s, ltau);
 
         for (j = 0; j < stars.size(); j++)
         {
@@ -470,7 +471,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, filters, s, ltau);
+        evolve (theCluster, evoModels, globalMags, filters, s, ltau);
 
     fprintf (wDebugPtr, " mass stage1");
     for (auto f : filters)

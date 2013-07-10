@@ -52,6 +52,7 @@ int main (int argc, char *argv[])
 
     Cluster theCluster;
     vector<Star> stars;
+    array<double, FILTS> globalMags;
 
     Settings settings;
 
@@ -146,7 +147,7 @@ int main (int argc, char *argv[])
     stars.front().massRatio = 0.0;
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, filters, s, ltau);
+        evolve (theCluster, evoModels, globalMags, filters, s, ltau);
 
     int nWD = 10000;
 
@@ -168,7 +169,7 @@ int main (int argc, char *argv[])
     }
 
     for (auto s : stars)
-        evolve (theCluster, evoModels, filters, s, ltau);
+        evolve (theCluster, evoModels, globalMags, filters, s, ltau);
 
 
     fprintf (wDebugPtr, " mass stage1");
