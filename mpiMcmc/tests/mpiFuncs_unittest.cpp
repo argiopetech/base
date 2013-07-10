@@ -67,6 +67,11 @@ double run1step()
 
     initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
 
+    /* Initialize filter prior mins and maxes */
+    filterPriorMin.fill(1000);
+    filterPriorMax.fill(-1000);
+
+
     for (int p = 0; p < NPARAMS; p++)
     {
         mc.clust.priorVar[p] = ctrl.priorVar[p];

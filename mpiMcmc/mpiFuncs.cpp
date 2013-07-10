@@ -325,15 +325,6 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 
     ctrl.iStart = 0;
 
-    /* Initialize filter prior mins and maxes */
-    int j;
-
-    for (j = 0; j < FILTS; j++)
-    {
-        filterPriorMin[j] = 1000;
-        filterPriorMax[j] = -1000;
-    }
-
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.mean.begin());
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.priorMean.begin());
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());

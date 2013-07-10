@@ -59,6 +59,10 @@ int main (int argc, char *argv[])
 
     initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
 
+    /* Initialize filter prior mins and maxes */
+    filterPriorMin.fill(1000);
+    filterPriorMax.fill(-1000);
+
     readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax);
 
     initChain (mc, ctrl, evoModels, ltau, filters);
