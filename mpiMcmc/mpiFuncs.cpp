@@ -36,13 +36,10 @@ using std::isfinite;
 using std::ofstream;
 using std::istringstream;
 
-array<double, FILTS> filterPriorMin;
-array<double, FILTS> filterPriorMax;
-
 /*
  * Read data
  */
-void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMins, std::array<double, FILTS> &filterPriorMaxen)
+void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     string line, pch;
 
@@ -87,14 +84,14 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
-            if (stars.back().obsPhot[i] < filterPriorMins[i])
+            if (stars.back().obsPhot[i] < filterPriorMin[i])
             {
-                filterPriorMins[i] = stars.back().obsPhot[i];
+                filterPriorMin[i] = stars.back().obsPhot[i];
             }
 
-            if (stars.back().obsPhot[i] > filterPriorMaxen[i])
+            if (stars.back().obsPhot[i] > filterPriorMax[i])
             {
-                filterPriorMaxen[i] = stars.back().obsPhot[i];
+                filterPriorMax[i] = stars.back().obsPhot[i];
             }
         }
 
@@ -487,7 +484,7 @@ void parallelFor(const unsigned int size, std::function<void(const unsigned int)
         t.join();
 }
 
-double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau, const vector<int> &filters)
+double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     array<double, FILTS> globalMags;
     atomic<double> postClusterStar(0.0);
@@ -511,7 +508,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
                     wd.isFieldStar = 0;
                     wd.U = wdMass1Grid[j];
                     wd.massRatio = 0.0;
-                           
+
                     evolve (propClust, evoModels, globalMags, filters, wd, ltau);
 
                     try

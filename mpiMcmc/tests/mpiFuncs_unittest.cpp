@@ -21,9 +21,6 @@ using std::array;
 using std::string;
 using std::ofstream;
 
-extern array<double, FILTS> filterPriorMin;
-extern array<double, FILTS> filterPriorMax;
-
 Model yamlChunk();
 double run1step(void);
 
@@ -56,6 +53,9 @@ double run1step()
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
     array<double, N_WD_MASS1> wdMass1Grid;
+
+    array<double, FILTS> filterPriorMin;
+    array<double, FILTS> filterPriorMax;
 
     settings.fromYaml ("/home/elliot/Projects/stellar_evolution/test/hyades2/base9.yaml");
 
@@ -111,7 +111,7 @@ double run1step()
         propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
     }
 
-    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters);
+    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters, filterPriorMin, filterPriorMax);
 
     return logPostProp;
 }

@@ -11,9 +11,6 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-extern array<double, FILTS> filterPriorMin;
-extern array<double, FILTS> filterPriorMax;
-
 int main (int argc, char *argv[])
 {
     int accept = 0, reject = 0;
@@ -31,6 +28,9 @@ int main (int argc, char *argv[])
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
     array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
     array<double, N_WD_MASS1> wdMass1Grid;
+
+    array<double, FILTS> filterPriorMin;
+    array<double, FILTS> filterPriorMax;
 
     Matrix<double, NPARAMS, nSave> params;
 
@@ -123,7 +123,7 @@ int main (int argc, char *argv[])
             propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
         }
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters, filterPriorMin, filterPriorMax);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp, ltau))
@@ -184,7 +184,7 @@ int main (int argc, char *argv[])
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters, filterPriorMin, filterPriorMax);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp, ltau))
