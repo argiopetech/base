@@ -18,8 +18,6 @@ using std::cerr;
 using std::endl;
 using std::vector;
 
-extern double globalMags[FILTS];
-
 // Defined in evolve.c
 extern double ageLimit[2];
 extern struct globalIso isochrone;
@@ -537,7 +535,7 @@ static double feh2z (double FeH)
     return Z;
 }
 
-double YaleMsModel::msRgbEvol (const vector<int> &filters, double zamsMass)
+double YaleMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
 {
 
 /**************************************************************

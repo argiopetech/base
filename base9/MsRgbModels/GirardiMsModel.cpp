@@ -17,7 +17,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern double globalMags[FILTS];
 extern double ageLimit[2];
 
 static int gNumEntries[N_GIR_Z], gBoundary[2][N_GIR_Z][N_GIR_AGES];
@@ -234,7 +233,7 @@ cluster age, interpolating in isochrones as necessary.
 }
 
 
-double GirardiMsModel::msRgbEvol (const vector<int> &filters, double zamsMass)
+double GirardiMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
 /****************************************************************************************
 last update: 20jul10
 

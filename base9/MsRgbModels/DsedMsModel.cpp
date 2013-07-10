@@ -22,7 +22,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern double globalMags[FILTS];
 extern struct globalIso isochrone;
 
 // defined in evolve.c, used to determine the normalization
@@ -362,7 +361,7 @@ double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
 // Must run loadDsed() and deriveDsedAgbTip()
 // to load and interpolate an isochrone before this subroutine will work
 // Stores output values in external variable globalMags[]
-double DsedMsModel::msRgbEvol (const vector<int> &filters, double zamsMass)
+double DsedMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
 {
     int m;
 

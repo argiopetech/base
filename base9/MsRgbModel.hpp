@@ -1,6 +1,7 @@
 #ifndef MSRGBEVOL_HPP
 #define MSRGBEVOL_HPP
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -26,7 +27,7 @@ The former does 3-D interpolation of the Girardi isochrones.
 
 deriveAgbTipMass() needs to be called first
 ****************************************************************************************/
-    virtual double msRgbEvol(const std::vector<int>&, double) = 0;
+    virtual double msRgbEvol(const std::vector<int>&, std::array<double, FILTS>&, double) = 0;
 
 /****************************************************************************************
 Derive WD precursor age for a given metallicity, calling in turn wd_prec_g_lage to

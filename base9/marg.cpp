@@ -92,7 +92,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, Cluster &pCluster, S
     }
     else if (mass[cmpnt] <= pCluster.AGBt_zmass)
     {                           // for main seq or giant star
-        pStar.massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol(filters, mass[cmpnt]);
+        pStar.massNow[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol(filters, globalMags, mass[cmpnt]);
         for (auto f : filters)
             mag[cmpnt][f] = globalMags[f];
         pStar.status[cmpnt] = MSRG;    // keep track of evolutionary state

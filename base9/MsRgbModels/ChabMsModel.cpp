@@ -17,7 +17,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-extern double globalMags[FILTS];
 extern struct globalIso isochrone;
 
 // defined in evolve.c, used to determine the normalization
@@ -309,7 +308,7 @@ double ChabMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
 // Must run loadChaboyer() and deriveChabAgbTip()
 // to load and interpolate an isochrone before this subroutine will work
 // Stores output values in globalMags[]
-double ChabMsModel::msRgbEvol (const std::vector<int> &filters, double zamsMass)
+double ChabMsModel::msRgbEvol (const std::vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
 {
 
     int m;
