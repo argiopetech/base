@@ -72,11 +72,13 @@ double run1step()
         // mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
-    readCmdData (mc.stars, ctrl, evoModels);
+    std::vector<int> filters;
+
+    readCmdData (mc.stars, ctrl, evoModels, filters);
 
     evoModels.numFilts = ctrl.numFilts;
 
-    initChain (mc, ctrl, evoModels, ltau);
+    initChain (mc, ctrl, evoModels, ltau, filters);
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
@@ -103,7 +105,7 @@ double run1step()
         propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
     }
 
-    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau);
+    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters);
 
     return logPostProp;
 }

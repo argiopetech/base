@@ -732,7 +732,8 @@ int main (int argc, char *argv[])
 
                     try
                     {
-                        evolve (mc.clust, evoModels, filters, star, ltau);
+                        array<double, FILTS> globalMags;
+                        evolve (mc.clust, evoModels, globalMags, filters, star, ltau);
 
                         wdLogPost[im] = logPost1Star (star, mc.clust, evoModels);
                         postClusterStar += exp (wdLogPost[im]);

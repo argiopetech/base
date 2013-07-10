@@ -16,7 +16,6 @@ using std::array;
 using std::vector;
 
 // Used by sub-methods of msRgbEvol (gGirMag, gChabMag, etc...) and wdEvol (gBergMag)
-double globalMags[FILTS];
 double ageLimit[2];
 
 struct globalIso isochrone;
@@ -44,7 +43,7 @@ NUMSTARS NEEDS TO BE INPUT CORRECTLY.  If the index is positive, it will use tha
 of the stars array.  You can also feed it a pointer to a single star and an index of 0 to
 get the photometry of a single star. -- SD
 ***************************************************************************************/
-void evolve (Cluster &pCluster, const Model &evoModels, const vector<int> &filters,  Star &star, array<double, 2> &ltau)
+void evolve (Cluster &pCluster, const Model &evoModels, array<double, FILTS> &globalMags, const vector<int> &filters,  Star &star, array<double, 2> &ltau)
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
 
@@ -68,7 +67,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, const vector<int> &filte
 
     if (star.status[0] == BD)
     {
-        getBaraffeMags (filters, pCluster.getAge(), mass[0]);
+        getBaraffeMags (filters, globalMags, pCluster.getAge(), mass[0]);
 
         for (auto f : filters)
         {
@@ -86,7 +85,7 @@ void evolve (Cluster &pCluster, const Model &evoModels, const vector<int> &filte
     {
         for (int cmpnt = 0; cmpnt < 2; cmpnt++)
         {
-            setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau);
+            setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau, globalMags);
         }
 
         deriveCombinedMags(mag, clusterAv, &flux, pCluster, star, evoModels, filters);

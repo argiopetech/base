@@ -38,12 +38,11 @@ using std::istringstream;
 
 double filterPriorMin[FILTS];
 double filterPriorMax[FILTS];
-vector<int> filters;
 
 /*
  * Read data
  */
-void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels)
+void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters)
 {
     string line, pch;
 
@@ -347,8 +346,10 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 /*
  * Initialize chain
  */
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, array<double, 2> &ltau)
+void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, array<double, 2> &ltau, const vector<int> &filters)
 {
+    array<double, FILTS> globalMags;
+
     for (int p = 0; p < NPARAMS; p++)
     {
         mc.acceptClust[p] = mc.rejectClust[p] = 0;
@@ -361,7 +362,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoM
         star.massRatioStepSize = 0.001;
 
         // find photometry for initial values of currentClust and mc.stars
-        evolve (mc.clust, evoModels, filters, star, ltau);
+        evolve (mc.clust, evoModels, globalMags, filters, star, ltau);
 
         if (star.status[0] == WD)
         {
@@ -495,8 +496,9 @@ void parallelFor(const unsigned int size, std::function<void(const unsigned int)
         t.join();
 }
 
-double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau)
+double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau, const vector<int> &filters)
 {
+    array<double, FILTS> globalMags;
     atomic<double> postClusterStar(0.0);
 
     double logPostProp = logPriorClust (propClust, evoModels);
@@ -519,7 +521,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
                     wd.U = wdMass1Grid[j];
                     wd.massRatio = 0.0;
                            
-                    evolve (propClust, evoModels, filters, wd, ltau);
+                    evolve (propClust, evoModels, globalMags, filters, wd, ltau);
 
                     try
                     {
@@ -537,7 +539,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau);
+                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau, globalMags);
             }
 
             postClusterStar = postClusterStar * star.clustStarPriorDens;
