@@ -43,9 +43,9 @@ static void intpolZ (int iZ, int iAge, double newZ);
 void YaleMsModel::loadModel (string path, MsFilter filterSet)
 {
     ifstream fin;
-    int z, a, p;
+    int a, p;
     string line;
-    int m = 0, im = 0, ii = 0;
+    int m = 0;
 
     string tempFile;
 
@@ -60,11 +60,11 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
         exit (1);
     }
 
-    for (z = 0; z < N_YY_Z; z++)
+    for (int z = 0; z < N_YY_Z; z++)
     {                           // foreach Dsed metallicity/isochrone file
         yyFeH[z] = 0.0;
 
-        for (a = 0; a < N_YY_AGES; a++)
+        for (int a = 0; a < N_YY_AGES; a++)
         {                               // initialize age/boundary pointers
             yyLogAge[z][a] = 0.0;
             yyAge[z][a] = 0.0;
@@ -89,7 +89,7 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
 
         fin.ignore(maxIgnore, '\n'); // Eat the rest of the line
 
-        for (a = 0; a < N_YY_AGES; a++)
+        for (int a = 0; a < N_YY_AGES; a++)
         {
             yyIso[z][a].FeH = yyFeH[z];
             yyIso[z][a].z = yyZ[z];
@@ -120,11 +120,9 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
                 }
                 else if (line.size() > 1 && line.at(1) != ' ')
                 {
-                    //       m,t,l,g,mv,ub,bv,vr,vi,vj,vh,vk,vl,vm,n1,n135,n3
-                    //  M/Msun     logT  logL/Ls   logg    Mv     U-B    B-V    V-R    V-I    V-J    V-H    V-K    V-L    V-M     #(x=-1)    #(x=1.35)    #(x=3)
                     p = 0;
 
-                     while (!strs.eof())
+                    while (!strs.eof())
                     {
                         strs >> param[m][p];
                         p++;
@@ -159,13 +157,13 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
                         eepset (eep, xeep, yyIso[z][a].nEntries, kipnm, &slope);
                     }
 
-                    for (im = 0; im < yyIso[z][a].nEntries; im++)
+                    for (int im = 0; im < yyIso[z][a].nEntries; im++)
                     {
                         xim = im * slope;
                         xeep[im] = atan (xim) * (eep[yyIso[z][a].nEntries - 1] - eep[0]) / (atan (slope * (yyIso[z][a].nEntries - 1))) + eep[0];
                     }
 
-                    for (im = 0; im < yyIso[z][a].nEntries; im++)
+                    for (int im = 0; im < yyIso[z][a].nEntries; im++)
                     {
                         xxeep = xeep[im];
                         meep = binarySearch (eep, yyIso[z][a].nEntries, xxeep);
@@ -174,16 +172,16 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
                             meep = yyIso[z][a].nEntries - 2;
                         if (meep <= 0)
                             meep = 0;
-                        for (ii = 0; ii < N_YY_PARAMS; ii++)
+                        for (int ii = 0; ii < N_YY_PARAMS; ii++)
                         {
                             temar[im][ii] = POLLIN (eep[meep], param[meep][ii], eep[meep + 1], param[meep + 1][ii], xxeep);
                         }
                     }
 
                     // normalized
-                    for (im = 0; im < yyIso[z][a].nEntries; im++)
+                    for (int im = 0; im < yyIso[z][a].nEntries; im++)
                     {
-                        for (ii = 0; ii < N_YY_PARAMS; ii++)
+                        for (int ii = 0; ii < N_YY_PARAMS; ii++)
                         {
                             param[im][ii] = temar[im][ii];
                         }
@@ -215,12 +213,10 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
         exit (1);
     }
 
-    int i, j;
-
     // Read in the coefficients needed to calculate the precurser ages
-    for (i = 0; i < 6; i++)
+    for (int i = 0; i < 6; i++)
     {
-        for (j = 0; j < 8; j++)
+        for (int j = 0; j < 8; j++)
         {
             fin >> coeff[i][j];
         }
