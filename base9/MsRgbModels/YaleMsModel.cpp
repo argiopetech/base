@@ -1,11 +1,11 @@
 #include <string>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
-#include <cstdio>
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
+
+#include <boost/lexical_cast.hpp>
 
 #include "evolve.hpp"
 #include "linInterp.hpp"
@@ -13,10 +13,14 @@
 #include "YaleMsModel.hpp"
 #include "binSearch.hpp"
 
+using std::getline;
+using std::ifstream;
 using std::string;
 using std::cerr;
 using std::endl;
 using std::vector;
+
+const uint maxIgnore = std::numeric_limits<char>::max();
 
 //global variables
 static int iZ, iAge;
@@ -24,13 +28,12 @@ static double yyFeH[N_YY_Z], yyZ[N_YY_Z];
 static double yyLogAge[N_YY_Z][N_YY_AGES], yyAge[N_YY_Z][N_YY_AGES];
 static struct yyIsochrone yyIso[N_YY_Z][N_YY_AGES];
 static double yyAGBt[N_YY_Z][N_YY_AGES];
-static char tempFile[100];
 static struct globalIso tempIso[2] {globalIso(MAX_YY_ENTRIES, N_YY_FILTS), globalIso(MAX_YY_ENTRIES, N_YY_FILTS)};
 static double coeff[6][8];
 
 //Static funtions
 static void initIso (struct yyIsochrone *newIso);
-static void getFileName (string path, int z);
+static string getFileName (string path, int z);
 static void eepset (double x[], double y[], int nstep, int igrd, double *slope);
 static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorder);
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS]);
@@ -39,10 +42,12 @@ static void intpolZ (int iZ, int iAge, double newZ);
 
 void YaleMsModel::loadModel (string path, MsFilter filterSet)
 {
-    FILE *pYY;
-    int z, a, n, p;
-    char line[500], temp[50], *lineCopy = 0;
+    ifstream fin;
+    int z, a, p;
+    string line;
     int m = 0, im = 0, ii = 0;
+
+    string tempFile;
 
     int meep, kipnm = 0;
     double eep[MAX_YY_ENTRIES], xeep[MAX_YY_ENTRIES], tlkip = 0.0, blkip = 0.0, slope = 0.0;
@@ -66,21 +71,24 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
             initIso (&(yyIso[z][a]));   // initialize array of model parameters
         }
 
-        getFileName (path, z);  // work on one Dsed model at a time
-        if ((pYY = fopen (tempFile, "r")) == NULL) // open file
+        tempFile = getFileName (path, z);
+        fin.open(tempFile);
+
+        if (!fin)
         {
             cerr << "\n file " << tempFile << " was not found - exiting" << endl;
             exit (1);
         }
 
         // Read header line
-        fgets (line, 500, pYY);
-        strncpy (temp, &line[2], 8);
-        temp[8] = '\0';
-        yyZ[z] = atof (temp);
-        strncpy (temp, &line[51], 9);
-        temp[9] = '\0';
-        yyFeH[z] = atof (temp);
+        fin.ignore(maxIgnore, '='); // Ignore the first variable name
+        fin >> yyZ[z];              // Grab the value
+
+        fin.ignore(maxIgnore, '='); // Ignore the second variable name
+        fin >> yyFeH[z];            // Grab the value.
+
+        fin.ignore(maxIgnore, '\n'); // Eat the rest of the line
+
         for (a = 0; a < N_YY_AGES; a++)
         {
             yyIso[z][a].FeH = yyFeH[z];
@@ -88,98 +96,107 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
         }
 
         a = -1;
-        while (fgets (line, 500, pYY) != NULL) // YY model for all ages
+        while (!fin.eof()) // YY model for all ages
         {
-            if (line[0] == 'a')
+            getline(fin, line);
+
+            if (!fin.eof())
             {
-                a++;
-                strncpy (temp, &line[9], 6);
-                temp[6] = '\0';
-                yyIso[z][a].age = yyAge[z][a] = atof (temp);
-                yyIso[z][a].logAge = yyLogAge[z][a] = log10 (yyIso[z][a].age * 1e9);
-                strncpy (temp, &line[16], 3);
-                temp[3] = '\0';
-                yyIso[z][a].nEntries = atoi (temp);
-                m = 0;
-            }
-            else if (line[1] != '\n')
-            {
-                //       m,t,l,g,mv,ub,bv,vr,vi,vj,vh,vk,vl,vm,n1,n135,n3
-                //  M/Msun     logT  logL/Ls   logg    Mv     U-B    B-V    V-R    V-I    V-J    V-H    V-K    V-L    V-M     #(x=-1)    #(x=1.35)    #(x=3)
-                p = 0;
-                lineCopy = line;
-                while (sscanf (lineCopy, "%s%n", temp, &n) == 1)
+                std::stringstream strs(line);
+                
+                if (line[0] == 'a')
                 {
-                    param[m][p] = atof (temp);
-                    lineCopy += n;
-                    p++;
-                }
+                    a++;
 
-                // >>> YCK modified for the eep
-                //--------------yi----------------
-                if (m <= 0)
-                {
-                    tlkip = param[m][1];
-                    blkip = param[m][2];
-                    eep[m] = 1.0;
-                }
-                else
-                {
-                    eep[m] = eep[m - 1] + sqrt (100 * SQR (param[m][1] - tlkip) + SQR (param[m][2] - blkip));
-                    tlkip = param[m][1];
-                    blkip = param[m][2];
-                }
-                xeep[m] = param[m][1];
-                if (yyIso[z][a].nEntries < MAX_YY_ENTRIES)
-                    kipnm = yyIso[z][a].nEntries;
-                m++;
-            }
-            else
-            {                           //i.e., at the end of each age entry
+                    strs.ignore(maxIgnore, '=');
+                    strs >> yyAge[z][a];
 
-                // >>> YCK modified for the eep
-                slope = 3.0e-2;
-                // to find the turnoff mass to utilize it as an anchor point
-                if (yyIso[z][a].nEntries != kipnm)
-                {
-                    eepset (eep, xeep, yyIso[z][a].nEntries, kipnm, &slope);
+                    yyIso[z][a].age = yyAge[z][a];
+                    yyIso[z][a].logAge = yyLogAge[z][a] = log10 (yyIso[z][a].age * 1e9);
+
+                    strs >> yyIso[z][a].nEntries;
+
+                    m = 0;
                 }
-
-                for (im = 0; im < yyIso[z][a].nEntries; im++)
+                else if (line.size() > 1 && line.at(1) != ' ')
                 {
-                    xim = im * slope;
-                    xeep[im] = atan (xim) * (eep[yyIso[z][a].nEntries - 1] - eep[0]) / (atan (slope * (yyIso[z][a].nEntries - 1))) + eep[0];
-                }
+                    //       m,t,l,g,mv,ub,bv,vr,vi,vj,vh,vk,vl,vm,n1,n135,n3
+                    //  M/Msun     logT  logL/Ls   logg    Mv     U-B    B-V    V-R    V-I    V-J    V-H    V-K    V-L    V-M     #(x=-1)    #(x=1.35)    #(x=3)
+                    p = 0;
 
-                for (im = 0; im < yyIso[z][a].nEntries; im++)
-                {
-                    xxeep = xeep[im];
-                    meep = binarySearch (eep, yyIso[z][a].nEntries, xxeep);
-
-                    if (meep >= (yyIso[z][a].nEntries - 2))
-                        meep = yyIso[z][a].nEntries - 2;
-                    if (meep <= 0)
-                        meep = 0;
-                    for (ii = 0; ii < N_YY_PARAMS; ii++)
+                     while (!strs.eof())
                     {
-                        temar[im][ii] = POLLIN (eep[meep], param[meep][ii], eep[meep + 1], param[meep + 1][ii], xxeep);
+                        strs >> param[m][p];
+                        p++;
                     }
-                }
 
-                // normalized
-                for (im = 0; im < yyIso[z][a].nEntries; im++)
-                {
-                    for (ii = 0; ii < N_YY_PARAMS; ii++)
+                    // >>> YCK modified for the eep
+                    //--------------yi----------------
+                    if (m <= 0)
                     {
-                        param[im][ii] = temar[im][ii];
+                        tlkip = param[m][1];
+                        blkip = param[m][2];
+                        eep[m] = 1.0;
                     }
+                    else
+                    {
+                        eep[m] = eep[m - 1] + sqrt (100 * SQR (param[m][1] - tlkip) + SQR (param[m][2] - blkip));
+                        tlkip = param[m][1];
+                        blkip = param[m][2];
+                    }
+                    xeep[m] = param[m][1];
+                    if (yyIso[z][a].nEntries < MAX_YY_ENTRIES)
+                        kipnm = yyIso[z][a].nEntries;
+                    m++;
                 }
+                else if (line.size() == 1) //i.e., at the end of each age entry
+                {
+                    // >>> YCK modified for the eep
+                    slope = 3.0e-2;
+                    // to find the turnoff mass to utilize it as an anchor point
+                    if (yyIso[z][a].nEntries != kipnm)
+                    {
+                        eepset (eep, xeep, yyIso[z][a].nEntries, kipnm, &slope);
+                    }
 
-                convertColorsToMags (&(yyIso[z][a]), param);
+                    for (im = 0; im < yyIso[z][a].nEntries; im++)
+                    {
+                        xim = im * slope;
+                        xeep[im] = atan (xim) * (eep[yyIso[z][a].nEntries - 1] - eep[0]) / (atan (slope * (yyIso[z][a].nEntries - 1))) + eep[0];
+                    }
 
-                yyAGBt[z][a] = yyIso[z][a].AgbTurnoffMass = yyIso[z][a].mass[yyIso[z][a].nEntries - 1];
+                    for (im = 0; im < yyIso[z][a].nEntries; im++)
+                    {
+                        xxeep = xeep[im];
+                        meep = binarySearch (eep, yyIso[z][a].nEntries, xxeep);
+
+                        if (meep >= (yyIso[z][a].nEntries - 2))
+                            meep = yyIso[z][a].nEntries - 2;
+                        if (meep <= 0)
+                            meep = 0;
+                        for (ii = 0; ii < N_YY_PARAMS; ii++)
+                        {
+                            temar[im][ii] = POLLIN (eep[meep], param[meep][ii], eep[meep + 1], param[meep + 1][ii], xxeep);
+                        }
+                    }
+
+                    // normalized
+                    for (im = 0; im < yyIso[z][a].nEntries; im++)
+                    {
+                        for (ii = 0; ii < N_YY_PARAMS; ii++)
+                        {
+                            param[im][ii] = temar[im][ii];
+                        }
+                    }
+
+                    convertColorsToMags (&(yyIso[z][a]), param);
+
+                    yyAGBt[z][a] = yyIso[z][a].AgbTurnoffMass = yyIso[z][a].mass[yyIso[z][a].nEntries - 1];
+                }
             }
         }
+
+        fin.close();
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -187,11 +204,12 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
     /////////////////////////////////////////////////////////////////////
 
     // Open coeff file for reading
-    strcpy (tempFile, path.c_str());
-    strcat (tempFile, "YYiso/yyAGBtcoeff.dat\0");
+    tempFile = path + "YYiso/yyAGBtcoeff.dat\0";
+
+    fin.open(tempFile);
 
     //fscanf(pModelList,"%s",tempFile);
-    if ((pYY = fopen (tempFile, "r")) == NULL)
+    if (!fin)
     {
         cerr << "\n file " << tempFile << " was not found - exiting" << endl;
         exit (1);
@@ -204,7 +222,7 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
     {
         for (j = 0; j < 8; j++)
         {
-            fscanf (pYY, "%lf ", &coeff[i][j]);
+            fin >> coeff[i][j];
         }
     }
 
@@ -212,7 +230,7 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
     ageLimit.first = yyLogAge[0][0];
     ageLimit.second = yyLogAge[0][N_YY_AGES - 1];
 
-    fclose (pYY);
+    fin.close();
     return;
 
 }
@@ -493,27 +511,24 @@ static void initIso (struct yyIsochrone *newIso)
     }
 }
 
-static void getFileName (string path, int z)
+static string getFileName (string path, int z)
 {
 
-    char fileNames[][19] = {
-        "76997z00001a0o2v2\0",
-        "7697z0001a0o2v2\0",
-        "7688z0004a0o2v2\0",
-        "767z001a0o2v2\0",
-        "758z004a0o2v2\0",
-        "749z007a0o2v2\0",
-        "74z01a0o2v2\0",
-        "71z02a0o2v2\0",
-        "65z04a0o2v2\0",
-        "59z06a0o2v2\0",
-        "53z08a0o2v2\0"
+    string fileNames[] = {
+        "76997z00001a0o2v2",
+        "7697z0001a0o2v2",
+        "7688z0004a0o2v2",
+        "767z001a0o2v2",
+        "758z004a0o2v2",
+        "749z007a0o2v2",
+        "74z01a0o2v2",
+        "71z02a0o2v2",
+        "65z04a0o2v2",
+        "59z06a0o2v2",
+        "53z08a0o2v2"
     };
 
-    strcpy (tempFile, "\0");
-    strcat (tempFile, path.c_str());
-    strcat (tempFile, "YYiso/yy00l.x");
-    strcat (tempFile, fileNames[z]);
+    return path + "YYiso/yy00l.x" + fileNames[z];
 
 }
 
