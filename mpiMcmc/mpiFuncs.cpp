@@ -468,7 +468,8 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
 
 void parallelFor(const unsigned int size, std::function<void(const unsigned int)> func)
 {
-    const unsigned int nbThreads = std::thread::hardware_concurrency();
+    const unsigned int cores     = std::thread::hardware_concurrency();
+    const unsigned int nbThreads = size < cores ? size : cores;
 
     std::vector < std::thread > threads;
 
