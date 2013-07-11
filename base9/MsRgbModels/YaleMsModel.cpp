@@ -524,7 +524,7 @@ static double feh2z (double FeH)
     double YYaf = 0.0;
 
     FeH0 = FeH - QUAD (0., 0., 0.3, FeHa2, 0.6, FeHa4, YYaf);
-    ZovX = pow (10.0, FeH0) * Zsun / Xsun;
+    ZovX = exp10(FeH0) * Zsun / Xsun;
     Z = ZovX * (1.0 + dydz * zp - yp) / (1.0 + ZovX * (1.0 + dydz));
 
     return Z;

@@ -25,7 +25,7 @@ double drawFromIMF ()
         logMass = gen_norm (mf_mu, mf_sigma);
     } while (logMass < -4 /*-0.8238*/  || logMass > 2.0);       /* keep within mass (0.15 + EPS to 100 Mo) limits */
 
-    zamsMass = pow (10.0, logMass);     /* costs about 17% of run time */
+    zamsMass = exp10(logMass);     /* costs about 17% of run time */
 
     //     log << (" drawFromIMF: zamsMass = %.3f\n", zamsMass);
 

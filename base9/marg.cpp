@@ -127,8 +127,8 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, co
     {                           // if there is a secondary star
         for (auto f : filters)
         {
-                (*flux) = pow (10.0, (mag[0][f] / -2.5));    // add up the fluxes of the primary
-                (*flux) += pow (10.0, (mag[1][f] / -2.5));   // and the secondary
+                (*flux) = exp10((mag[0][f] / -2.5));    // add up the fluxes of the primary
+                (*flux) += exp10((mag[1][f] / -2.5));   // and the secondary
                 mag[2][f] = -2.5 * log10 (*flux);    // (these 3 lines take 5% of run time for N large)
                 // if primary mag = 99.999, then this works
         }
@@ -181,22 +181,18 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
 
 
     /**** now see if any binary companions are OK ****/
-    double magLower;
-    double magUpper;
     double nSD = 4.0;           /* num of st dev from obs that will contribute to likelihood */
     int obsFilt = 0;
     int i;
 
     bool isOverlap = true;          /* do the allowable masses in each filter overlap? */
-    double diffLow = 0.0;
-    double diffUp = 0.0;
     int okMass[MAX_ENTRIES] = { 1 };
     for (auto f : filters)
     {
         if (isOverlap)
         {
-            diffLow = pow (10.0, ((pStar.obsPhot[obsFilt] - nSD * sqrt (pStar.variance[obsFilt])) / -2.5)) - pow (10.0, (mag[0][f] / -2.5));
-            diffUp = pow (10.0, ((pStar.obsPhot[obsFilt] + nSD * sqrt (pStar.variance[obsFilt])) / -2.5)) - pow (10.0, (mag[0][f] / -2.5));
+            double diffLow = exp10(((pStar.obsPhot[obsFilt] - nSD * sqrt (pStar.variance[obsFilt])) / -2.5)) - exp10((mag[0][f] / -2.5));
+            double diffUp = exp10(((pStar.obsPhot[obsFilt] + nSD * sqrt (pStar.variance[obsFilt])) / -2.5)) - exp10((mag[0][f] / -2.5));
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
                 isOverlap = false;
@@ -207,8 +203,8 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
             }
             else
             {
-                magLower = -2.5 * log10 (diffLow);
-                magUpper = -2.5 * log10 (diffUp);
+                double magLower = -2.5 * log10 (diffLow);
+                double magUpper = -2.5 * log10 (diffUp);
 
                 for (i = 0; i < isochrone.nEntries - 1; i++)
                 {
