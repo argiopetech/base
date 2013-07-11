@@ -36,13 +36,10 @@ using std::isfinite;
 using std::ofstream;
 using std::istringstream;
 
-double filterPriorMin[FILTS];
-double filterPriorMax[FILTS];
-
 /*
  * Read data
  */
-void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters)
+void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     string line, pch;
 
@@ -226,6 +223,9 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings.seed);
 
+    ctrl.priorVar.fill(0);
+    clust.parameter.fill(0);
+
     /* load models */
     loadModels (clust, evoModels, settings);
 
@@ -325,15 +325,6 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 
     ctrl.iStart = 0;
 
-    /* Initialize filter prior mins and maxes */
-    int j;
-
-    for (j = 0; j < FILTS; j++)
-    {
-        filterPriorMin[j] = 1000;
-        filterPriorMax[j] = -1000;
-    }
-
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.mean.begin());
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.priorMean.begin());
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
@@ -359,6 +350,7 @@ void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoM
         star.massRatioStepSize = 0.001;
 
         // find photometry for initial values of currentClust and mc.stars
+        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.getFeH(), mc.clust.getY(), mc.clust.getAge());    // determine AGBt ZAMS mass, to find evol state
         evolve (mc.clust, evoModels, globalMags, filters, star, ltau);
 
         if (star.status[0] == WD)
@@ -493,36 +485,43 @@ void parallelFor(const unsigned int size, std::function<void(const unsigned int)
         t.join();
 }
 
-double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau, const vector<int> &filters)
+double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
-    array<double, FILTS> globalMags;
     atomic<double> postClusterStar(0.0);
 
     double logPostProp = logPriorClust (propClust, evoModels);
 
+    auto stars = mc.stars;
+
+    propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.getFeH(), propClust.getY(), propClust.getAge());    // determine AGBt ZAMS mass, to find evol state
+
     if (isfinite(logPostProp))
     {
         /* loop over assigned stars */
-        for (auto star : mc.stars)
+        parallelFor(mc.stars.size(), [=,&ltau,&logPostProp](int i)
         {
+            double postClusterStar = 0.0;
+
+            array<double, FILTS> globalMags;
+
             /* loop over all (mass1, mass ratio) pairs */
-            if (star.status[0] == WD)
+            if (stars.at(i).status[0] == WD)
             {
                 postClusterStar = 0.0;
 
                 for (int j = 0; j < N_WD_MASS1; j++)
                 {
                     double tmpLogPost;
-                    Star wd(star);
+                    Star wd(stars.at(i));
                     wd.isFieldStar = 0;
                     wd.U = wdMass1Grid[j];
                     wd.massRatio = 0.0;
-                           
+
                     evolve (propClust, evoModels, globalMags, filters, wd, ltau);
 
                     try
                     {
-                        tmpLogPost = logPost1Star (wd, propClust, evoModels);
+                        tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
                         tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                         postClusterStar = postClusterStar +  exp (tmpLogPost);
@@ -536,15 +535,15 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
             else
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, star, evoModels, filters, ltau, globalMags);
+                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
             }
 
-            postClusterStar = postClusterStar * star.clustStarPriorDens;
+            postClusterStar = postClusterStar * stars.at(i).clustStarPriorDens;
 
 
             /* marginalize over field star status */
-            logPostProp += log ((1.0 - star.clustStarPriorDens) * fsLike + postClusterStar);
-        }
+            logPostProp += log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
+        });
     }
 
     return logPostProp;

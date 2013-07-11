@@ -1,3 +1,5 @@
+#include <array>
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -6,6 +8,8 @@
 #include "evolve.hpp"
 #include "structures.hpp"
 #include "densities.hpp"
+
+using std::array;
 
 constexpr double sqr(double a)
 {
@@ -18,9 +22,7 @@ static_assert(M_PI < 3.15, "M_PI is defined and less than 3.15");
 static double logMassNorm = 0.0;
 static int calcMassNorm = 0;
 
-extern double filterPriorMin[FILTS], filterPriorMax[FILTS];
-
-double logPriorMass (Star &pStar, Cluster &pCluster)
+double logPriorMass (const Star &pStar, const Cluster &pCluster)
 // Compute log prior density
 {
     const double mf_sigma = 0.67729, mf_mu = -1.02;
@@ -71,7 +73,7 @@ double logPriorMass (Star &pStar, Cluster &pCluster)
 }
 
 // Compute log prior density for cluster properties
-double logPriorClust (Cluster &pCluster, const Model &evoModels)
+double logPriorClust (const Cluster &pCluster, const Model &evoModels)
 {
     if (pCluster.getAge() < evoModels.mainSequenceEvol->getMinAge())
         return -HUGE_VAL;               // these are possible, we just don't have models for them YET
@@ -123,7 +125,7 @@ double logPriorClust (Cluster &pCluster, const Model &evoModels)
     return prior;
 }
 
-double logLikelihood (int numFilts, Star &pStar)
+double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Computes log likelihood
 {
     int i;
@@ -150,7 +152,7 @@ double logLikelihood (int numFilts, Star &pStar)
     return likelihood;
 }
 
-double tLogLikelihood (int numFilts, Star &pStar)
+double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Computes log likelihood
 {
     int i;
@@ -187,7 +189,7 @@ double tLogLikelihood (int numFilts, Star &pStar)
     return likelihood;
 }
 
-double scaledLogLike (int numFilts, Star &pStar, double varScale)
+double scaledLogLike (int numFilts, const Star &pStar, double varScale, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Computes log likelihood
 {
     int i;
@@ -218,7 +220,7 @@ double scaledLogLike (int numFilts, Star &pStar, double varScale)
 }
 
 
-double logPost1Star (Star &pStar, Cluster &pCluster, const Model &evoModels)
+double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;
@@ -228,7 +230,7 @@ double logPost1Star (Star &pStar, Cluster &pCluster, const Model &evoModels)
     if (fabs (logPrior + HUGE_VAL) < EPSILON)
         return (logPrior);
 
-    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale);
+    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, filterPriorMin, filterPriorMax);
 
     if (fabs (likelihood + HUGE_VAL) < EPSILON)
         return (likelihood);

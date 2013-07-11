@@ -19,10 +19,10 @@ struct globalIso
     {
         assert(nEntries != 0 && nFilts != 0);
     
-        mass.resize(nEntries);
-        eep.resize(nEntries);
+        mass.resize(nEntries, 0.0);
+        eep.resize(nEntries, 0);
 
-        mag.assign(nEntries, std::vector<double>(nFilts));
+        mag.assign(nEntries, std::vector<double>(nFilts, 0.0));
     }
 
     std::vector< std::vector<double> > mag;
@@ -32,12 +32,12 @@ struct globalIso
 
     int nEntries;
 
-    double AgbTurnoffMass;
-    double FeH;
-    double logAge;
-    double age;
-    double Y;
-    double z;
+    double AgbTurnoffMass = 0.0;
+    double FeH = 0.0;
+    double logAge = 0.0;
+    double age = 0.0;
+    double Y = 0.0;
+    double z = 0.0;
 };
 
 enum class blockType
