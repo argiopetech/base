@@ -40,7 +40,7 @@ static void openOutputFiles (FILE ** filePtr, char *filename, int fileType);
 
 int main (int argc, char *argv[])
 {
-    int j, filt, iMag;
+    int filt, iMag;
     double minMag, maxMag;
     char line[240], filename[100];
 
@@ -156,7 +156,7 @@ int main (int argc, char *argv[])
 
     double dMass = (theCluster.M_wd_up - isochrone.mass[isochrone.nEntries]) / (double) nWD;
 
-    for (j = 0; j < stars.size(); j++)
+    for (decltype(stars.size()) j = 0; j < stars.size(); j++)
     {
         if (j < isochrone.nEntries)
         {
@@ -178,7 +178,7 @@ int main (int argc, char *argv[])
         fprintf (wDebugPtr, "          %s", evoModels.filterSet->getFilterName(f).c_str());
     fprintf (wDebugPtr, "\n");
 
-    for (j = 0; j < stars.size(); j++)
+    for (decltype(stars.size()) j = 0; j < stars.size(); j++)
     {
 
         if (stars.at(j).photometry[0] < 90)

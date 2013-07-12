@@ -30,7 +30,7 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int
     else
         mass = pStar.getMass2(pCluster);
 
-    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.getFeH(), pCluster.getY(), mass);
+    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.getFeH(), mass);
 
     thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 

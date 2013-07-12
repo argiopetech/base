@@ -257,9 +257,9 @@ double logTDens (double x, double mean, double var, double nu)
     double logp = 0;
     double s;
 
-    s = sqrt (DOF / (var * (DOF - 2)));
+    s = sqrt (nu / (var * (DOF - 2)));
 
-    logp = log (s) + GAMMA6 - 3.5 * log (1 + pow (s * (x - mean), 2) / DOF);
+    logp = log (s) + GAMMA6 - 3.5 * log (1 + pow (s * (x - mean), 2) / nu);
 
     return logp;
 }

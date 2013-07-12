@@ -42,15 +42,6 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
 {
     double mag[3][FILTS], mass[2], flux, clusterAv;
 
-    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
-
-    //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
-    //were last time through
-    // if (fabs (isochrone.FeH - pCluster.getFeH()) > EPS || fabs (isochrone.logAge - pCluster.getAge()) > EPS || fabs (isochrone.Y - pCluster.getY()) > EPS)
-    // {
-    //     pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, pCluster.getFeH(), pCluster.getY(), pCluster.getAge());    // determine AGBt ZAMS mass, to find evol state
-    // }
-
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster.AGBt_zmass < EPS)
     {

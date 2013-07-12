@@ -229,7 +229,7 @@ string DsedMsModel::getFileName (string path, int z, int f, MsFilter filterSet)
 // Interpolates between isochrones for two ages using linear interpolation
 // Must run loadDsed() first for this to work.
 // Currently ignores newY
-double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newLogAge)
+double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double, double newLogAge)
 {
 
     int newimax = 500, newimin = 0, ioff[2][2], neweep;
@@ -375,7 +375,7 @@ double DsedMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FI
 // Calculates the precursor age for a given wd precursor mass
 // Must run loadDsed() and deriveDsedAgbTip()
 // to load and interpolate an isochrone before this subroutine will work
-double DsedMsModel::wdPrecLogAge (double thisFeH, double thisY, double zamsMass)
+double DsedMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
 {
     int thisIndexAge[2], f;
     double logAge[2], AgbTurnoffMass[2], wdPrecLogAge[2], FeH[2], temp;

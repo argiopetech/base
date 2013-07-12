@@ -19,7 +19,7 @@ class DsedMsModel : public MsRgbModel
 
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
     virtual double msRgbEvol(const std::vector<int>&, std::array<double, FILTS>&, double);
-    virtual double wdPrecLogAge(double, double, double);
+    virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, MsFilter);
 
   private:

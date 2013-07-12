@@ -39,7 +39,7 @@ mass and age.
 Distributed most of the code to the respective subroutines, leaving only those to be
 modified for different model sets.
 ****************************************************************************************/
-    virtual double wdPrecLogAge(double, double, double) = 0;
+    virtual double wdPrecLogAge(double, double) = 0;
 
     virtual void loadModel(std::string, MsFilter) = 0;
 

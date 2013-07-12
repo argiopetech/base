@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
     /////// Declare Variables ///////
     /////////////////////////////////
 
-    int j, nr, p, m, row, isClusterMember[2][COL_MAX], cm[COL_MAX], stuckMass[2][COL_MAX], stuckParam[NPARAMS], tempCols1, tempCols2, useParam[NPARAMS], numStepSizeMass[2][COL_MAX], iMag;
+    int nr, row, isClusterMember[2][COL_MAX], cm[COL_MAX], stuckMass[2][COL_MAX], stuckParam[NPARAMS], tempCols1, tempCols2, useParam[NPARAMS], numStepSizeMass[2][COL_MAX], iMag;
     double mass[2][COL_MAX], prevMass[2][COL_MAX], mean = 0.0, minMag, maxMag, sumMass[2][COL_MAX], sumSquaresMass[2][COL_MAX], minMass[2][COL_MAX], maxMass[2][COL_MAX], thisStep, meanStepSizeMass[2][COL_MAX], meanMass[2][COL_MAX], variance = 0.0, sigma, N, csProb;
     double param[NPARAMS], meanParam[NPARAMS], varParam[NPARAMS], minParam[NPARAMS], maxParam[NPARAMS], prevParam[NPARAMS], sumStepSizeParam[NPARAMS];
     double sumPhot[COL_MAX][FILTS], sumSquaresPhot[COL_MAX][FILTS];
@@ -125,7 +125,7 @@ int main (int argc, char *argv[])
     ////////// and allocate memory ////////
     ///////////////////////////////////////
 
-    for (m = 0; m < 2; m++)
+    for (auto m = 0; m < 2; m++)
     {
         openOutputFiles (&rMassPtr[m], filename, MASS1_FILE + m);
         fscanf (rMassPtr[m], "%*s %*s %*s %*s %*s %*s %d", ((m) ? &(tempCols1) : &tempCols2));   // Read in the number of stars
@@ -167,7 +167,7 @@ int main (int argc, char *argv[])
 
     //Read in second line
     fscanf (rClusterPtr, "%*s ");
-    for (p = 0; p < NPARAMS; p++)
+    for (auto p = 0; p < NPARAMS; p++)
     {
         fscanf (rClusterPtr, "%d %lf ", &(useParam[p]), &(param[p]));
     }
@@ -182,7 +182,7 @@ int main (int argc, char *argv[])
 
     fgets (line, 300, rDataPtr);        // skip first header line
 
-    for (int filt = 0; filt < FILTS; filt++)
+    for (auto filt = 0; filt < FILTS; filt++)
     {
         int useFilt = false;
         fscanf (rDataPtr, "%d ", &useFilt);
@@ -214,7 +214,7 @@ int main (int argc, char *argv[])
     //////////////////////////////
 
     fprintf (wCmdPtr, "     Star    ");
-    for (m = 1; m <= 2; m++)
+    for (auto m = 1; m <= 2; m++)
     {
         fprintf (wCmdPtr, "meanmass%d  sigmass%d   minmass%d   maxmass%d stuck%d meanStep%d ", m, m, m, m, m, m);
         if (m == 1)
@@ -242,7 +242,7 @@ int main (int argc, char *argv[])
 //   m=0;
     nr = 0;
     row = 0;
-    for (p = 0; p < NPARAMS; p++)
+    for (auto p = 0; p < NPARAMS; p++)
     {
         minParam[p] = HUGE_VAL;
         maxParam[p] = -HUGE_VAL;
@@ -252,18 +252,18 @@ int main (int argc, char *argv[])
         sumStepSizeParam[p] = 0;
     }
 
-    for (j = 0; j < stars.size(); j++)
+    for (decltype(stars.size()) j = 0; j < stars.size(); j++)
     {
-        for (int filt = 0; filt < FILTS; filt++)
+        for (auto filt = 0; filt < FILTS; filt++)
         {
             sumPhot[j][filt] = 0.0;
             sumSquaresPhot[j][filt] = 0.0;
         }
     }
 
-    for (m = 0; m < 2; m++)
+    for (auto m = 0; m < 2; m++)
     {
-        for (j = 0; j < COL_MAX; j++)
+        for (auto j = 0; j < COL_MAX; j++)
         {                               // initialize variables
             sumMass[m][j] = 0.0;
             sumSquaresMass[m][j] = 0.0;
@@ -285,7 +285,7 @@ int main (int argc, char *argv[])
     while (1)
     {
         // Read a line in from both mass files and the cluster file
-        for (j = 0; j < stars.size(); j++)
+        for (decltype(stars.size()) j = 0; j < stars.size(); j++)
         {
             if ((nr = fscanf (rMassPtr[0], "%lf", &mass[0][j])) == EOF)
                 break;
@@ -297,9 +297,9 @@ int main (int argc, char *argv[])
                 fscanf (rDataPtr, "%s ", temp);
                 starNames[j] = temp;
 
-                for (p = 0; p < evoModels.numFilts; p++)
+                for (auto p = 0; p < evoModels.numFilts; p++)
                     fscanf (rDataPtr, "%lf ", &(stars.at(j).obsPhot[p]));
-                for (p = 0; p < evoModels.numFilts; p++)
+                for (auto p = 0; p < evoModels.numFilts; p++)
                     fscanf (rDataPtr, "%*f ");
                 fscanf (rDataPtr, "%*f %*f %d ", &stars.at(j).status[0]);
                 fgets (line, 240, rDataPtr);
@@ -310,7 +310,7 @@ int main (int argc, char *argv[])
 
         fscanf (rClusterPtr, "%*d ");
         // Store stats for each cluster parameter
-        for (p = 0; p < NPARAMS; p++)
+        for (auto p = 0; p < NPARAMS; p++)
         {
             if (useParam[p])
                 fscanf (rClusterPtr, "%lf ", &param[p]);
@@ -332,7 +332,7 @@ int main (int argc, char *argv[])
 
 
         // Store stats for each mass for each star
-        for (j = 0; j < stars.size(); j++)
+        for (decltype(stars.size()) j = 0; j < stars.size(); j++)
         {
             if (mass[0][j] > EPS)
                 cm[j] = 1;
@@ -340,7 +340,7 @@ int main (int argc, char *argv[])
                 cm[j] = 0;
             if (cm[j])
             {                           // if it is a cluster star
-                for (m = 0; m < 2; m++)
+                for (auto m = 0; m < 2; m++)
                 {                       // For each component
                     sumMass[m][j] += mass[m][j];        // for mean, sigma, N
                     sumSquaresMass[m][j] += mass[m][j] * mass[m][j];
@@ -371,11 +371,11 @@ int main (int argc, char *argv[])
         for (auto s : stars)
             evolve (theCluster, evoModels, globalMags, filters, s, ltau);
 
-        for (j = 0; j < stars.size(); j++)
+        for (decltype(stars.size()) j = 0; j < stars.size(); j++)
         {
             if (cm[j])
             {                           // if it is a cluster star
-                for (int filt = 0; filt < evoModels.numFilts; filt++)
+                for (auto filt = 0; filt < evoModels.numFilts; filt++)
                 {
                     sumPhot[j][filt] += stars.at(j).photometry[filt];
                     sumSquaresPhot[j][filt] += stars.at(j).photometry[filt] * stars.at(j).photometry[filt];
@@ -390,14 +390,14 @@ int main (int argc, char *argv[])
     /////////////////////////////////////////////
 
     // Calculate mass stats for each star, for each component
-    for (j = 0; j < stars.size(); j++)
+    for (decltype(stars.size()) j = 0; j < stars.size(); j++)
     {                           // calc mean, sigma values for each star
         char temp[100];
 
         fprintf (wCmdPtr, "%9s  ", temp);
         starNames[j] = temp;
 
-        for (m = 0; m < 2; m++)
+        for (auto m = 0; m < 2; m++)
         {
             N = (double) isClusterMember[m][j];
             if (N > 1.0)
@@ -434,7 +434,7 @@ int main (int argc, char *argv[])
             // Calculate photometry stats
             if (m == 1)
             {
-                for (int filt = 0; filt < evoModels.numFilts; filt++)
+                for (auto filt = 0; filt < evoModels.numFilts; filt++)
                 {
                     if (N > 1.0)
                     {
@@ -456,15 +456,15 @@ int main (int argc, char *argv[])
 
     // Output stats for cluster parameters
     fprintf (wClusterStatPtr, "Parameter     mean     sigma       min      max    stuck  meanStep\n");
-    for (p = 0; p < NPARAMS; p++)
+    for (auto p = 0; p < NPARAMS; p++)
         fprintf (wClusterStatPtr, "%s %8.5f %9.5f %10.5f %8.5f %6d  %8.5f\n", paramNames[p], meanParam[p], sqrt (varParam[p]), minParam[p], maxParam[p], stuckParam[p], sumStepSizeParam[p] / (row - 1));
 
     // Create a simulated cluster based on the cluster stats and output for comparison
     stars.resize((int) (theCluster.M_wd_up * 100) + 1);
-    for (p = 0; p < NPARAMS; p++)
+    for (auto p = 0; p < NPARAMS; p++)
         theCluster.parameter[p] = meanParam[p];
 
-    for (j = 0; j < stars.size(); j++)
+    for (decltype(stars.size()) j = 0; j < stars.size(); j++)
     {
         stars.at(j).U = j * .01;
         stars.at(j).massRatio = 0.0;
@@ -491,7 +491,7 @@ int main (int argc, char *argv[])
                 if (prevV > star.photometry[0])
                 {
                     fprintf (wDebugPtr, "%5.2f %6d ", star.U, star.status[0]);
-                    for (int filt = 0; filt < evoModels.numFilts; filt++)
+                    for (auto filt = 0; filt < evoModels.numFilts; filt++)
                         fprintf (wDebugPtr, "%10f ", star.photometry[filt]);
                     fprintf (wDebugPtr, "\n");
                     prevV = star.photometry[0];
@@ -505,7 +505,7 @@ int main (int argc, char *argv[])
             else
             {
                 fprintf (wDebugPtr, "%5.2f %3d ", star.U, star.status[0]);
-                for (int filt = 0; filt < evoModels.numFilts; filt++)
+                for (auto filt = 0; filt < evoModels.numFilts; filt++)
                     fprintf (wDebugPtr, "%10f ", star.photometry[filt]);
                 fprintf (wDebugPtr, "\n");
             }

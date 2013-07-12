@@ -1,6 +1,7 @@
 #include <array>
 #include <vector>
 
+#include <cassert>
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
@@ -31,13 +32,6 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
 
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
-    //Don't recalculate AGB mass (and isochrone) if these parameters are the same as they
-    //were last time through
-    // if (fabs (isochrone.FeH - pCluster.getFeH()) > EPS || fabs (isochrone.logAge - pCluster.getAge()) > EPS || fabs (isochrone.Y - pCluster.getY()) > EPS)
-    // {
-    //     pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, pCluster.getFeH(), pCluster.getY(), pCluster.getAge());        // determine AGBt ZAMS mass, to find evol state
-    // }
-
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster.AGBt_zmass < EPS)
     {
@@ -54,9 +48,11 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
 
     Star myStar(pStar);
 
-    for (int m = 0; m < isochrone.nEntries - 2; m++)
+    assert(isochrone.nEntries >= 2);
+
+    for (decltype(isochrone.nEntries) m = 0; m < isochrone.nEntries - 2; m++)
     {
-        for (int k = 0; k < isoIncrem; k += 1)
+        for (auto k = 0; k < isoIncrem; k += 1)
         {
 
             dIsoMass = isochrone.mass[m + 1] - isochrone.mass[m];
@@ -183,7 +179,6 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
     /**** now see if any binary companions are OK ****/
     double nSD = 4.0;           /* num of st dev from obs that will contribute to likelihood */
     int obsFilt = 0;
-    int i;
 
     bool isOverlap = true;          /* do the allowable masses in each filter overlap? */
     int okMass[MAX_ENTRIES] = { 1 };
@@ -206,7 +201,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
                 double magLower = -2.5 * log10 (diffLow);
                 double magUpper = -2.5 * log10 (diffUp);
 
-                for (i = 0; i < isochrone.nEntries - 1; i++)
+                for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; i++)
                 {
                     if (isochrone.mag[i][f] >= magLower && isochrone.mag[i][f] <= magUpper && isochrone.mass[i] <= mass[0])
                     {
@@ -222,7 +217,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
         }
     }
 
-    for (i = 0; i < isochrone.nEntries - 2; i++)
+    for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 2; i++)
     {
         if (okMass[i])
         {

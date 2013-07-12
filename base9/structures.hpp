@@ -30,7 +30,7 @@ struct globalIso
     std::vector<int> eep;
     std::vector<double> mass;
 
-    int nEntries;
+    uint nEntries;
 
     double AgbTurnoffMass = 0.0;
     double FeH = 0.0;

@@ -71,7 +71,7 @@ void propClustParam (Cluster *clust, int TYPE)
     }
     else
     {
-        (*clust).parameter[TYPE] = (*clust).parameter[TYPE] + sampleT ((*clust).stepSize[TYPE] * (*clust).stepSize[TYPE], DOF);
+        (*clust).parameter[TYPE] = (*clust).parameter[TYPE] + sampleT ((*clust).stepSize[TYPE] * (*clust).stepSize[TYPE]);
         return;
     }
 }

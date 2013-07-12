@@ -18,7 +18,7 @@ double linearIFMRshift (const Cluster &pCluster, double zamsMass);
 double linearIFMR0 (const Cluster &pCluster, double zamsMass);
 double linearIFMRage (const Cluster &pCluster, double zamsMass);
 double linearIFMRhighShift (const Cluster &pCluster, double zamsMass);
-double linearIFMRedit (const Cluster &pCluster, double zamsMass);
+double linearIFMRedit (double zamsMass);
 double quadraticIFMRshift (const Cluster &pCluster, double zamsMass);
 double quadraticIFMRrotate (const Cluster &pCluster, double zamsMass);
 double piecewiseLinearIFMR (const Cluster &pCluster, double zamsMass);
@@ -44,7 +44,7 @@ double intlFinalMassReln (const Cluster &pCluster, const Model &evoModels, doubl
     else if (evoModels.IFMR == 7)
         wdMass = linearIFMRhighShift (pCluster, zamsMass);
     else if (evoModels.IFMR == 8)
-        wdMass = linearIFMRedit (pCluster, zamsMass);
+        wdMass = linearIFMRedit (zamsMass);
     else if (evoModels.IFMR == 9)
         wdMass = quadraticIFMRshift (pCluster, zamsMass);
     else if (evoModels.IFMR == 10)
@@ -86,7 +86,7 @@ double linearIFMRhighShift (const Cluster &pCluster, double zamsMass)
     return wdMass;
 }
 
-double linearIFMRedit (const Cluster &pCluster, double zamsMass)
+double linearIFMRedit (double zamsMass)
 {
     constexpr double shiftMass = 2.0;
     double wdMass = 0.985 + 0.13 * (zamsMass - shiftMass);

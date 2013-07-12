@@ -83,13 +83,6 @@ typedef struct
     double clustStarPriorDens;  /* cluster membership prior probability */
 } obsStar;
 
-// static void initIfmrGridControl (Chain *mc, Model &, struct ifmrGridControl *ctrl);
-// static void readCmdData (Chain *mc, struct ifmrGridControl *ctrl);
-// static void readSampledParams (Chain *mc, struct ifmrGridControl *ctrl, clustPar **sampledPars);
-// static void initChain (Chain *mc, const struct ifmrGridControl *ctrl);
-
-// double margEvolveWithBinary (Cluster *pCluster, Star *pStar);
-
 /* declare global variables */
 array<double, FILTS> filterPriorMin;
 array<double, FILTS> filterPriorMax;
@@ -318,7 +311,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
 /*
  * Read sampled params
  */
-static void readSampledParams (Chain *mc, struct ifmrGridControl *ctrl, clustPar ** sampledPars, Model &evoModels)
+static void readSampledParams (struct ifmrGridControl *ctrl, clustPar ** sampledPars, Model &evoModels)
 {
     int nr, j = 0;
     int morePars = 1;           // true
@@ -540,7 +533,7 @@ int main (int argc, char *argv[])
         obs = new obsStar[mc.stars.size()]();
         starStatus = new int[mc.stars.size()]();
 
-        for (i = 0; i < mc.stars.size(); i++)
+        for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
         {
             for (filt = 0; filt < ctrl.numFilts; filt++)
             {
@@ -583,7 +576,7 @@ int main (int argc, char *argv[])
         /* initialize the stars array */
         mc.stars.resize(mc.stars.size());
 
-        for (i = 0; i < mc.stars.size(); i++)
+        for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
         {
             for (filt = 0; filt < ctrl.numFilts; filt++)
             {
@@ -601,7 +594,7 @@ int main (int argc, char *argv[])
 
     initChain (&mc, &ctrl);
 
-    for (i = 0; i < mc.stars.size(); i++)
+    for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
     {
         mc.stars.at(i).isFieldStar = 0;
     }
@@ -619,7 +612,7 @@ int main (int argc, char *argv[])
 
     if (taskid == MASTER)
     {
-        readSampledParams (&mc, &ctrl, &sampledPars, evoModels);
+        readSampledParams (&ctrl, &sampledPars, evoModels);
         cout << "sampledPars[0].age = " << sampledPars[0].age << endl;
         fflush (stdout);
 

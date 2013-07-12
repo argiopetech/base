@@ -224,7 +224,7 @@ int main (int argc, char *argv[])
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], 0.0, 0, theStar.wdLogTeff[0], ltau[0]);
 
         fprintf (w_ptr, "%7.3f ", 0.00);        // output secondary star data
-        for (auto f : filters)
+        for (auto f [[gnu::unused]] : filters)
         {
                 fprintf (w_ptr, "%6.3f ", 99.999);
         }
@@ -319,11 +319,11 @@ int main (int argc, char *argv[])
         } while (theStar.photometry[2] < minV || theStar.photometry[2] > maxV || theStar.photometry[1] - theStar.photometry[2] < -0.5 || theStar.photometry[1] - theStar.photometry[2] > 1.7);
 
         fprintf (w_ptr, "%4d %7.3f ", i + 20001, theStar.getMass1(theCluster));
-        for (auto f : filters)
+        for (auto f [[gnu::unused]] : filters)
             fprintf (w_ptr, "%6.3f ", 99.999);
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], (theStar.status[0] == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
         fprintf (w_ptr, "%7.3f ", theStar.getMass2(theCluster));
-        for (auto f : filters)
+        for (auto f [[gnu::unused]] : filters)
             fprintf (w_ptr, "%6.3f ", 99.999);
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[1], 0.0, 0, theStar.wdLogTeff[1], ltau[1]);
         for (auto f : filters)

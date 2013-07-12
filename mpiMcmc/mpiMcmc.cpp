@@ -65,7 +65,7 @@ int main (int argc, char *argv[])
 
     readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax);
 
-    initChain (mc, ctrl, evoModels, ltau, filters);
+    initChain (mc, evoModels, ltau, filters);
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
@@ -123,10 +123,10 @@ int main (int argc, char *argv[])
             propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
         }
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters, filterPriorMin, filterPriorMax);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
 
         /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp, ltau))
+        if (acceptClustMarg (logPostCurr, logPostProp))
         {
             mc.clust = propClust;
             logPostCurr = logPostProp;
@@ -184,10 +184,10 @@ int main (int argc, char *argv[])
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
 
-        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters, filterPriorMin, filterPriorMax);
+        logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
 
         /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp, ltau))
+        if (acceptClustMarg (logPostCurr, logPostProp))
         {
             mc.clust = propClust;
             logPostCurr = logPostProp;

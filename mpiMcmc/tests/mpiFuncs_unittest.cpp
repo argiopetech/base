@@ -84,7 +84,7 @@ double run1step()
 
     evoModels.numFilts = ctrl.numFilts;
 
-    initChain (mc, ctrl, evoModels, ltau, filters);
+    initChain (mc, evoModels, ltau, filters);
 
     initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
@@ -111,7 +111,7 @@ double run1step()
         propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
     }
 
-    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, ltau, filters, filterPriorMin, filterPriorMax);
+    logPostProp = logPostStep (mc, evoModels, wdMass1Grid, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
 
     return logPostProp;
 }

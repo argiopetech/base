@@ -24,7 +24,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-pair<double, double> CarbonlessWdModel::wdMassToTeffAndRadius (double logAge, double carbon, double wdPrecLogAge, double wdMass) const
+pair<double, double> CarbonlessWdModel::wdMassToTeffAndRadius (double logAge, double, double wdPrecLogAge, double wdMass) const
 {
     vector<double> ageTeff;
     vector<double> ageRadius;

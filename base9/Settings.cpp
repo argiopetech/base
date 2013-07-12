@@ -114,7 +114,7 @@ void Settings::fromYaml (const string yamlFile)
 
 void Settings::fromCLI (int argc, char **argv)
 {
-    char *t_argv[argc];
+    char **t_argv = new char*[argc];
 
     for (int i = 0; i<argc; i++)
     {
@@ -358,6 +358,12 @@ void Settings::fromCLI (int argc, char **argv)
         }
     }
 
+    for (int i = 0; i<argc; i++)
+    {
+        delete[] t_argv[i];
+    }
+    delete[] t_argv;
+
     // Print any remaining command line arguments (not options). This is mainly for debugging purposes.
     if (optind < argc)
     {
@@ -412,7 +418,6 @@ Node Settings::getNode (Node & n, string && f)
 
 void Settings::printUsage ()
 {
-    int taskId;
     cerr << "\nUsage:" << endl;
     cerr << "=======" << endl;
     cerr << "\t--config\t\tYAML configuration file" << endl << endl;

@@ -238,7 +238,7 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
 // Currently ignores newY
 **********************************************************************************/
 
-double YaleMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newLogAge)
+double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, double, double newLogAge)
 {
 
     double newAge = exp10 (newLogAge) / 1e9;
@@ -568,7 +568,7 @@ double YaleMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FI
 }
 
 
-double YaleMsModel::wdPrecLogAge (double thisFeH, double thisY, double zamsMass)
+double YaleMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
 /*************************************************************************************
 last update: 12nov07
 

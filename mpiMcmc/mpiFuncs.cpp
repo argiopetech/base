@@ -112,7 +112,7 @@ void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
     {
         if (ctrl.priorVar[p] > EPSILON)
         {
-            clust.parameter[p] += sampleT (scale * scale * clust.stepSize[p] * clust.stepSize[p], DOF);
+            clust.parameter[p] += sampleT (scale * scale * clust.stepSize[p] * clust.stepSize[p]);
         }
     }
 }
@@ -126,7 +126,7 @@ void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
     {
         if (ctrl.priorVar[p] > EPSILON)
         {
-            clust.parameter[p] += sampleT (clust.stepSize[p] * clust.stepSize[p], DOF);
+            clust.parameter[p] += sampleT (clust.stepSize[p] * clust.stepSize[p]);
         }
     }
 }
@@ -143,7 +143,7 @@ void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
     {
         if (ctrl.priorVar[p] > EPSILON)
         {
-            indepProps[p] = sampleT (1.0, DOF);
+            indepProps[p] = sampleT (1.0);
         }
     }
     for (p = 0; p < NPARAMS; p++)
@@ -334,7 +334,7 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 /*
  * Initialize chain
  */
-void initChain (Chain &mc, const struct ifmrMcmcControl &ctrl, const Model &evoModels, array<double, 2> &ltau, const vector<int> &filters)
+void initChain (Chain &mc, const Model &evoModels, array<double, 2> &ltau, const vector<int> &filters)
 {
     array<double, FILTS> globalMags;
 
@@ -486,11 +486,10 @@ void parallelFor(const unsigned int size, std::function<void(const unsigned int)
         t.join();
 }
 
-double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, array<double, 2> &ltau, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
+double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
-    atomic<double> postClusterStar(0.0);
-
-    double logPostProp = logPriorClust (propClust, evoModels);
+    array<double, 2> ltau;
+    atomic<double> logPostProp(logPriorClust (propClust, evoModels));
 
     auto stars = mc.stars;
 
@@ -543,7 +542,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
 
 
             /* marginalize over field star status */
-            logPostProp += log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
+            logPostProp = logPostProp + log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
         });
     }
 
@@ -551,7 +550,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
 }
 
 /* Decides whether to accept a proposed cluster property */
-int acceptClustMarg (double logPostCurr, double logPostProp, array<double, 2> &ltau)
+int acceptClustMarg (double logPostCurr, double logPostProp)
 {
     if (isinf (logPostProp))
     {

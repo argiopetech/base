@@ -319,7 +319,7 @@ double ChabMsModel::msRgbEvol (const std::vector<int> &filters, std::array<doubl
     return zamsMass;
 }
 
-double ChabMsModel::wdPrecLogAge (double FeH, double thisY, double zamsMass)
+double ChabMsModel::wdPrecLogAge (double, double)
 {
     return 0.0;
 }

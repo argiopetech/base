@@ -172,7 +172,7 @@ static void getFileName (string path, int z, MsFilter filterSet)
 }
 
 
-double GirardiMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newAge)
+double GirardiMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, double, double newAge)
 /****************************************************************************************
 last update: 12nov07
 
@@ -371,7 +371,7 @@ double GirardiMsModel::interpInMass (const vector<int> &filters, int whichAgeInd
 }
 
 
-double GirardiMsModel::wdPrecLogAge (double thisFeH, double thisY, double zamsMass)
+double GirardiMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
 /*************************************************************************************
 last update: 12nov07
 
