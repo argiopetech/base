@@ -10,7 +10,7 @@ double Cluster::getAge() const
 
 double Cluster::getY() const
 {
-    return parameter[YYY] + betaFY * (getFeH() - mean[FEH]);
+    return parameter[YYY];
 }
 
 double Cluster::getFeH() const
@@ -25,7 +25,7 @@ double Cluster::getMod() const
 
 double Cluster::getAbs() const
 {
-    return parameter[ABS] + betaFabs * (getFeH() - mean[FEH]) + betamabs * (getMod() - mean[MOD]);
+    return parameter[ABS];
 }
 
 void Cluster::setAge (const double newAge)
@@ -35,7 +35,7 @@ void Cluster::setAge (const double newAge)
 
 void Cluster::setY (const double newY)
 {
-    parameter[YYY] = newY - betaFY * (getFeH() - mean[FEH]);
+    parameter[YYY] = newY;
 }
 
 void Cluster::setFeH (const double newFeH)
@@ -50,5 +50,5 @@ void Cluster::setMod (const double newMod)
 
 void Cluster::setAbs (const double newAbs)
 {
-    parameter[ABS] = newAbs - betamabs * (getMod() - mean[MOD]) - betaFabs * (getFeH() - mean[FEH]);
+    parameter[ABS] = newAbs;
 }

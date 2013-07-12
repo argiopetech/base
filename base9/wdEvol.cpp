@@ -26,9 +26,9 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int
     double mass;
 
     if (cmpnt == 0)
-        mass = pStar.getMass1(pCluster);
+        mass = pStar.getMass1();
     else
-        mass = pStar.getMass2(pCluster);
+        mass = pStar.getMass2();
 
     thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.getFeH(), mass);
 

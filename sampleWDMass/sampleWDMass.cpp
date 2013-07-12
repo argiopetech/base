@@ -392,8 +392,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     mc->clust.mean[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
     mc->clust.mean[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
     mc->clust.mean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
-    mc->clust.betamabs = 0.0;
-    mc->clust.betaFabs = 0.0;
 
     int i;
 

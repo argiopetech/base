@@ -23,6 +23,7 @@
 #include "mpiMcmc.hpp"
 #include "mt19937ar.hpp"
 #include "samplers.hpp"
+#include "Utility.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;
@@ -35,6 +36,8 @@ using std::endl;
 using std::isfinite;
 using std::ofstream;
 using std::istringstream;
+
+using base::utility::parallelFor;
 
 /*
  * Read data
@@ -458,26 +461,6 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
             }
         }
     }
-}
-
-void parallelFor(const unsigned int size, std::function<void(const unsigned int)> func)
-{
-    const unsigned int cores     = std::thread::hardware_concurrency();
-    const unsigned int nbThreads = size < cores ? size : cores;
-
-    std::vector < std::thread > threads;
-
-    for (unsigned int idThread = 0; idThread < nbThreads; idThread++) {
-        auto threadFunc = [=, &threads]() {
-            for (unsigned int i=idThread; i<size; i+=nbThreads) {
-                func(i);
-            }
-        };
-
-        threads.push_back(std::thread(threadFunc));
-    }
-    for (auto &t : threads)
-        t.join();
 }
 
 double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)

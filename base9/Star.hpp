@@ -40,9 +40,9 @@ class Star
 
     void readCMD(const std::string&, int);
 
-    double getMass1 (const Cluster &) const;
-    double getMass2 (const Cluster &) const;
-    void setMass1 (const Cluster &, double);
+    double getMass1() const;
+    double getMass2() const;
+    void setMass1(double);
     // void setMass2 (const Cluster &, double);
 
 

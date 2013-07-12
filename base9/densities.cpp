@@ -50,7 +50,7 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
         calcMassNorm = 1;
     }
 
-    mass1 = pStar.getMass1(pCluster);
+    mass1 = pStar.getMass1();
 
     if (mass1 > 0.1 && mass1 <= pCluster.M_wd_up)
     {
@@ -257,9 +257,9 @@ double logTDens (double x, double mean, double var, double nu)
     double logp = 0;
     double s;
 
-    s = sqrt (nu / (var * (DOF - 2)));
+    s = sqrt (nu / (var * (nu - 2)));
 
-    logp = log (s) + GAMMA6 - 3.5 * log (1 + pow (s * (x - mean), 2) / nu);
+    logp = log (s) + gamma(nu) - 3.5 * log (1 + pow (s * (x - mean), 2) / nu);
 
     return logp;
 }

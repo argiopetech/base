@@ -148,7 +148,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
-    pStar.setMass1 (pCluster, mass[0]);
+    pStar.setMass1 (mass[0]);
 
     int cmpnt = 0;
 

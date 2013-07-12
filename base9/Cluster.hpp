@@ -45,9 +45,6 @@ class Cluster
 
     int photometrySet;
     double M_wd_up = 8.0;
-    double betamabs = 0.0;
-    double betaFabs = 0.0;
-    double betaFY = 0.0;
     double AGBt_zmass = 0.0;
     double varScale = 1.0;
     double carbonicity = 0.38; // Good default value, per Mike Montgomery

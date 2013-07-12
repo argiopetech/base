@@ -10,29 +10,19 @@ using std::ifstream;
 using std::string;
 using std::stringstream;
 
-double Star::getMass1 (const Cluster &pCluster) const
+double Star::getMass1() const
 {
-    return U + beta[AGE][0] * (pCluster.getAge() - pCluster.mean[AGE])
-             + beta[MOD][0] * (pCluster.getMod() - pCluster.mean[MOD])
-             + beta[FEH][0] * (pCluster.getFeH() - pCluster.mean[FEH])
-             + beta[YYY][0] * (pCluster.getY()   - pCluster.mean[YYY])
-             + betaMassRatio[0] * pow (massRatio, betaMassRatio[1]
-             );
+    return U;
 }
 
-double Star::getMass2 (const Cluster &pCluster) const
+double Star::getMass2() const
 {
-    return getMass1 (pCluster) * massRatio;
+    return getMass1() * massRatio;
 }
 
-void Star::setMass1 (const Cluster &pCluster, double newMass)
+void Star::setMass1(double newMass)
 {
-    U = newMass - ( beta[AGE][0] * (pCluster.getAge() - pCluster.mean[AGE]) 
-                  + beta[MOD][0] * (pCluster.getMod() - pCluster.mean[MOD]) 
-                  + beta[FEH][0] * (pCluster.getFeH() - pCluster.mean[FEH]) 
-                  + beta[YYY][0] * (pCluster.getY()   - pCluster.mean[YYY])
-                  + betaMassRatio[0] * pow (massRatio, betaMassRatio[1])
-                  );
+    U = newMass;
 }
 
 // *** Unused ***
