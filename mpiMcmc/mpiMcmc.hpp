@@ -15,13 +15,6 @@ const int CLUS_FILE = 10;
 const int ALLOC_CHUNK = 5;
 const int nSave = 10;             /*changed from 100 to 10 */
 
-struct obsStar
-{
-    double obsPhot[FILTS];
-    double variance[FILTS];
-    double clustStarPriorDens;  /* cluster membership prior probability */
-};
-
 struct ifmrMcmcControl
 {
     std::ifstream rData;

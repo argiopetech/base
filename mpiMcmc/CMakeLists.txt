@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-enable_testing()
-
 file(GLOB MPIMCMC_FILES *.cpp *.hpp)
 
 include_directories( ${YAML_CPP_INCLUDE_DIRS} )
