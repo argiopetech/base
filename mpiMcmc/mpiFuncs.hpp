@@ -20,6 +20,6 @@ void propClustIndep (Cluster &, const struct ifmrMcmcControl &);
 void propClustCorrelated (Cluster &, const struct ifmrMcmcControl &);
 
 void printHeader (std::ofstream &, const std::array<double, NPARAMS> &);
-void readCmdData (std::vector<Star> &, struct ifmrMcmcControl &ctrl, const Model &, std::vector<int>&, std::array<double, FILTS>&, std::array<double, FILTS>&);
+void readCmdData (std::vector<Star> &, struct ifmrMcmcControl &ctrl, const Model &, std::vector<int>&, std::array<double, FILTS>&, std::array<double, FILTS>&, const Settings&);
 
 #endif

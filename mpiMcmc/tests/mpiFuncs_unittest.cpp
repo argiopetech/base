@@ -80,7 +80,7 @@ double run1step()
 
     std::vector<int> filters;
 
-    readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax);
+    readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
 
     evoModels.numFilts = ctrl.numFilts;
 

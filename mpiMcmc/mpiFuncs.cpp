@@ -39,7 +39,7 @@ using std::istringstream;
 /*
  * Read data
  */
-void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
+void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax, const Settings &settings)
 {
     string line, pch;
 
@@ -95,7 +95,7 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
             }
         }
 
-        if (!(stars.back().status[0] == 3 || (stars.back().obsPhot[ctrl.iMag] >= ctrl.minMag && stars.back().obsPhot[ctrl.iMag] <= ctrl.maxMag)))
+        if (!(stars.back().status[0] == 3 || (stars.back().obsPhot[settings.cluster.index] >= settings.cluster.minMag && stars.back().obsPhot[settings.cluster.index] <= settings.cluster.maxMag)))
         {
             stars.pop_back();
         }
@@ -310,20 +310,14 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
         exit (1);
     }
 
-    ctrl.minMag = settings.cluster.minMag;
-    ctrl.maxMag = settings.cluster.maxMag;
-    ctrl.iMag = settings.cluster.index;
-
-    if (ctrl.iMag < 0 || ctrl.iMag > FILTS)
+    if (settings.cluster.index < 0 || settings.cluster.index > FILTS)
     {
-        cerr << "***Error: " << ctrl.iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+        cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
         cerr << "[Exiting...]" << endl;
         exit (1);
     }
 
     ctrl.clusterFilename = settings.files.output + ".res";
-
-    ctrl.iStart = 0;
 
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.mean.begin());
     std::copy(clust.parameter.begin(), clust.parameter.end(), clust.priorMean.begin());

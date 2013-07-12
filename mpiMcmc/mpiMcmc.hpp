@@ -22,17 +22,10 @@ struct ifmrMcmcControl
     std::ofstream burninFile;
     std::string clusterFilename;
 
-    int fsSamplingOn;
-    int sampleVarScale;
     int nIter;                  // number of post burn-in iterations
     int burnIter;               // total number of burn-in iterations
     int thin;
-    int modelSet;
-    std::array<double, NPARAMS> priorVar;
-    double minMag;
-    double maxMag;
-    int iMag;
-    int iStart;
+    std::array<double, NPARAMS> priorVar; // Rewrite the way this is handled... This is ugly.
     int numFilts;
     double propMatrix[NPARAMS][NPARAMS];
 };
