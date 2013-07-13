@@ -9,7 +9,7 @@ class McmcApplication
     // Decides whether to accept a proposed cluster property
     bool acceptClustMarg (const double logPostCurr, const double logPostProp);
 
-    double acceptanceRatio() const { return accepted / (accepted + rejected); }
+    double acceptanceRatio() const { return double(accepted) / (accepted + rejected); }
 
   private:
     int accepted = 0;
