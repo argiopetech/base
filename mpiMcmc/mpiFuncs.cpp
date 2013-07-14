@@ -465,7 +465,6 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
 
 double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
-    array<double, 2> ltau;
     atomic<double> logPostProp(logPriorClust (propClust, evoModels));
 
     auto stars = mc.stars;
@@ -475,11 +474,12 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
     if (isfinite(logPostProp))
     {
         /* loop over assigned stars */
-        parallelFor(mc.stars.size(), [=,&ltau,&logPostProp](int i)
+        parallelFor(mc.stars.size(), [=,&logPostProp](int i)
         {
             double postClusterStar = 0.0;
 
             array<double, FILTS> globalMags;
+            array<double, 2> ltau;
 
             /* loop over all (mass1, mass ratio) pairs */
             if (stars.at(i).status[0] == WD)

@@ -1,4 +1,6 @@
 #include <array>
+#include <atomic>
+#include <mutex>
 
 #include <cmath>
 #include <cstdio>
@@ -10,6 +12,9 @@
 #include "densities.hpp"
 
 using std::array;
+using std::atomic;
+using std::once_flag;
+using std::call_once;
 
 constexpr double sqr(double a)
 {
@@ -19,36 +24,61 @@ constexpr double sqr(double a)
 static_assert(M_PI > 3.141592, "M_PI is defined and and at least 3.141592");
 static_assert(M_PI < 3.15, "M_PI is defined and less than 3.15");
 
-static double logMassNorm = 0.0;
-static int calcMassNorm = 0;
+static atomic<double> logMassNorm(0.0);
+static atomic<int> calcMassNorm(0);
+
+    const double mf_sigma = 0.67729, mf_mu = -1.02;
+    const double loglog10 = log (log (10));
+
+namespace evil
+{
+    // Calculate the mass normalization factor once so that we don't have to
+    // calculate it every time we want the mass prior
+    class logMassNorm
+    {
+      private:
+        logMassNorm(double M_wd_up)
+        {
+            call_once(flag, [M_wd_up,this](){
+                    double p, q, c;
+                    double tup, tlow;
+
+                    p = mf_mu + mf_sigma * mf_sigma * log (10);
+                    tup = (log10 (M_wd_up) - p) / (mf_sigma);
+                    tlow = (-1 - p) / mf_sigma;
+                    q = exp (-(mf_mu * mf_mu - p * p) / (2 * mf_sigma * mf_sigma));
+                    c = 1 / (q * mf_sigma * sqrt (2 * M_PI) * (Phi (tup) - Phi (tlow)));
+
+                    this->var = log (c);
+                });
+        }
+        logMassNorm(const logMassNorm&) = delete;
+        logMassNorm(const logMassNorm&&) = delete;
+        logMassNorm& operator=(const logMassNorm&) = delete;
+
+        once_flag flag;
+
+        double var;
+
+      public:
+        static logMassNorm& getInstance(const Cluster &pCluster)
+        {
+            static logMassNorm instance(pCluster.M_wd_up);
+
+            return instance;
+        }
+
+        double getLogMassNorm() const { return var; }
+    };
+};
 
 double logPriorMass (const Star &pStar, const Cluster &pCluster)
 // Compute log prior density
 {
-    const double mf_sigma = 0.67729, mf_mu = -1.02;
-    const double loglog10 = log (log (10));
-
     double mass1, log_m1, logPrior = 0.0;
 
     if (pStar.status[0] == BD)
         return 0.0;
-
-    // Calculate the mass normalization factor once so that we don't have to
-    // calculate it every time we want the mass prior
-    if (!calcMassNorm)
-    {
-        double p, q, c;
-        double tup, tlow;
-
-        p = mf_mu + mf_sigma * mf_sigma * log (10);
-        tup = (log10 (pCluster.M_wd_up) - p) / (mf_sigma);
-        tlow = (-1 - p) / mf_sigma;
-        q = exp (-(mf_mu * mf_mu - p * p) / (2 * mf_sigma * mf_sigma));
-        c = 1 / (q * mf_sigma * sqrt (2 * M_PI) * (Phi (tup) - Phi (tlow)));
-
-        logMassNorm = log (c);
-        calcMassNorm = 1;
-    }
 
     mass1 = pStar.getMass1();
 
@@ -64,7 +94,7 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
         else
         {
             log_m1 = log10 (mass1);
-            logPrior = logMassNorm + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
+            logPrior = evil::logMassNorm::getInstance(pCluster).getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
             return logPrior;
         }
     }
