@@ -2,25 +2,22 @@
 #include <thread>
 #include <vector>
 
+#include "Utility.hpp"
+
 namespace base
 {
     namespace utility
     {
-        void parallelFor(const unsigned int size, std::function<void(const unsigned int)> func)
+        void ThreadPool::parallelFor(const unsigned int size, std::function<void(const unsigned int)> func)
         {
-            const unsigned int cores     = std::thread::hardware_concurrency();
-            const unsigned int nbThreads = size < cores ? size : cores;
-
-            std::vector < std::thread > threads;
-
-            for (unsigned int idThread = 0; idThread < nbThreads; idThread++) {
-                auto threadFunc = [=, &threads]() {
-                    for (unsigned int i=idThread; i<size; i+=nbThreads) {
+            for (unsigned int idThread = 0; idThread < nThreads; idThread++) {
+                auto threadFunc = [=]() {
+                    for (unsigned int i=idThread; i<size; i+=nThreads) {
                         func(i);
                     }
                 };
 
-                threads.push_back(std::thread(threadFunc));
+                threads.at(idThread).addJob(threadFunc);
             }
             for (auto &t : threads)
                 t.join();

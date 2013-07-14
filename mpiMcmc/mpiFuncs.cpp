@@ -37,7 +37,7 @@ using std::isfinite;
 using std::ofstream;
 using std::istringstream;
 
-using base::utility::parallelFor;
+using base::utility::ThreadPool;
 
 /*
  * Read data
@@ -463,6 +463,8 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
     }
 }
 
+static ThreadPool pool(2);
+
 double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     mutex logPostMutex;
@@ -476,7 +478,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
     if (isfinite(logPostProp))
     {
         /* loop over assigned stars */
-        parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)
+        pool.parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)
         {
             double postClusterStar = 0.0;
 
@@ -521,9 +523,8 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
 
 
             /* marginalize over field star status */
-            logPostMutex.lock();
+            std::lock_guard<mutex> lk(logPostMutex);
             logPostProp += log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
-            logPostMutex.unlock();
         });
     }
 
