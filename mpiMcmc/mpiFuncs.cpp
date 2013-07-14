@@ -1,7 +1,7 @@
 #include <array>
-#include <atomic>
 #include <iostream>
 #include <fstream>
+#include <mutex>
 #include <string>
 #include <sstream>
 #include <thread>
@@ -27,7 +27,7 @@
 #include "WhiteDwarf.hpp"
 
 using std::array;
-using std::atomic;
+using std::mutex;
 using std::string;
 using std::vector;
 using std::cout;
@@ -465,7 +465,9 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
 
 double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
-    atomic<double> logPostProp(logPriorClust (propClust, evoModels));
+    mutex logPostMutex;
+
+    double logPostProp = logPriorClust (propClust, evoModels);
 
     auto stars = mc.stars;
 
@@ -474,7 +476,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
     if (isfinite(logPostProp))
     {
         /* loop over assigned stars */
-        parallelFor(mc.stars.size(), [=,&logPostProp](int i)
+        parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)
         {
             double postClusterStar = 0.0;
 
@@ -519,7 +521,9 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
 
 
             /* marginalize over field star status */
-            logPostProp = logPostProp + log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
+            logPostMutex.lock();
+            logPostProp += log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
+            logPostMutex.unlock();
         });
     }
 
