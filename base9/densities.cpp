@@ -24,11 +24,8 @@ constexpr double sqr(double a)
 static_assert(M_PI > 3.141592, "M_PI is defined and and at least 3.141592");
 static_assert(M_PI < 3.15, "M_PI is defined and less than 3.15");
 
-static atomic<double> logMassNorm(0.0);
-static atomic<int> calcMassNorm(0);
-
-    const double mf_sigma = 0.67729, mf_mu = -1.02;
-    const double loglog10 = log (log (10));
+const double mf_sigma = 0.67729, mf_mu = -1.02;
+const double loglog10 = log (log (10));
 
 namespace evil
 {
@@ -39,24 +36,20 @@ namespace evil
       private:
         logMassNorm(double M_wd_up)
         {
-            call_once(flag, [M_wd_up,this](){
-                    double p, q, c;
-                    double tup, tlow;
+            double p, q, c;
+            double tup, tlow;
 
-                    p = mf_mu + mf_sigma * mf_sigma * log (10);
-                    tup = (log10 (M_wd_up) - p) / (mf_sigma);
-                    tlow = (-1 - p) / mf_sigma;
-                    q = exp (-(mf_mu * mf_mu - p * p) / (2 * mf_sigma * mf_sigma));
-                    c = 1 / (q * mf_sigma * sqrt (2 * M_PI) * (Phi (tup) - Phi (tlow)));
+            p = mf_mu + mf_sigma * mf_sigma * log (10);
+            tup = (log10 (M_wd_up) - p) / (mf_sigma);
+            tlow = (-1 - p) / mf_sigma;
+            q = exp (-(mf_mu * mf_mu - p * p) / (2 * mf_sigma * mf_sigma));
+            c = 1 / (q * mf_sigma * sqrt (2 * M_PI) * (Phi (tup) - Phi (tlow)));
 
-                    this->var = log (c);
-                });
+            this->var = log (c);
         }
         logMassNorm(const logMassNorm&) = delete;
         logMassNorm(const logMassNorm&&) = delete;
         logMassNorm& operator=(const logMassNorm&) = delete;
-
-        once_flag flag;
 
         double var;
 
