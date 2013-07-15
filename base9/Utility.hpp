@@ -105,10 +105,7 @@ namespace base
 
             ThreadPool(unsigned int nThreads)
                 : nThreads(nThreads), threads(nThreads)
-            {
-                assert(nThreads == threads.size());
-                cerr << "In Thread Pool Constructor" << endl;
-            }
+            {}
 
             ThreadPool(const ThreadPool&) = delete;
             ThreadPool(const ThreadPool&&) = delete;

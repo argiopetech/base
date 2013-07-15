@@ -87,18 +87,18 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
-            if (stars.back().obsPhot[i] < filterPriorMin[i])
+            if (stars.back().obsPhot.at(i) < filterPriorMin.at(i))
             {
-                filterPriorMin[i] = stars.back().obsPhot[i];
+                filterPriorMin.at(i) = stars.back().obsPhot.at(i);
             }
 
-            if (stars.back().obsPhot[i] > filterPriorMax[i])
+            if (stars.back().obsPhot.at(i) > filterPriorMax.at(i))
             {
-                filterPriorMax[i] = stars.back().obsPhot[i];
+                filterPriorMax.at(i) = stars.back().obsPhot.at(i);
             }
         }
 
-        if (!(stars.back().status[0] == 3 || (stars.back().obsPhot[settings.cluster.index] >= settings.cluster.minMag && stars.back().obsPhot[settings.cluster.index] <= settings.cluster.maxMag)))
+        if (!(stars.back().status.at(0) == 3 || (stars.back().obsPhot.at(settings.cluster.index) >= settings.cluster.minMag && stars.back().obsPhot.at(settings.cluster.index) <= settings.cluster.maxMag)))
         {
             stars.pop_back();
         }
@@ -113,9 +113,9 @@ void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar[p] > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.parameter[p] += sampleT (scale * scale * clust.stepSize[p] * clust.stepSize[p]);
+            clust.parameter.at(p) += sampleT (scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p));
         }
     }
 }
@@ -127,9 +127,9 @@ void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar[p] > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.parameter[p] += sampleT (clust.stepSize[p] * clust.stepSize[p]);
+            clust.parameter.at(p) += sampleT (clust.stepSize.at(p) * clust.stepSize.at(p));
         }
     }
 }
@@ -137,30 +137,33 @@ void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
-    double indepProps[NPARAMS] = { 0.0 };
-    double corrProps[NPARAMS] = { 0.0 };
+    array<double, NPARAMS> indepProps;
+    array<double, NPARAMS> corrProps;
+
+    indepProps.fill(0.0);
+    corrProps.fill(0.0);
 
     int p, k;
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar[p] > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON)
         {
-            indepProps[p] = sampleT (1.0);
+            indepProps.at(p) = sampleT (1.0);
         }
     }
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar[p] > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON)
         {
             for (k = 0; k <= p; k++)
             {                           /* propMatrix is lower diagonal */
-                if (ctrl.priorVar[k] > EPSILON)
+                if (ctrl.priorVar.at(k) > EPSILON)
                 {
-                    corrProps[p] += ctrl.propMatrix[p][k] * indepProps[k];
+                    corrProps.at(p) += ctrl.propMatrix.at(p).at(k) * indepProps.at(k);
                 }
             }
-            clust.parameter[p] += corrProps[p];
+            clust.parameter.at(p) += corrProps.at(p);
         }
     }
 }
@@ -168,21 +171,20 @@ void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 
 void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 {
-    const char *paramNames[] = { "    logAge",
-                                 "         Y",
-                                 "       FeH",
-                                 "   modulus",
-                                 "absorption",
-                                 " IFMRconst",
-                                 "   IFMRlin",
-                                 "  IFMRquad"
-    };
+    const array<string, NPARAMS> paramNames = { "    logAge",
+                                                "         Y",
+                                                "       FeH",
+                                                "   modulus",
+                                                "absorption",
+                                                " IFMRconst",
+                                                "   IFMRlin",
+                                                "  IFMRquad"};
 
     for (int p = 0; p < NPARAMS; p++)
     {
         if (priors.at(p) > EPSILON || p == MOD || p == FEH || p == ABS)
         {
-            file << paramNames[p] << ' ';
+            file << paramNames.at(p) << ' ';
         }
     }
     file << "logPost" << endl;
@@ -190,29 +192,22 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 
 void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc)
 {
-    double maxMass1 = mc.clust.M_wd_up;
-    double mass1, massRatio;
-    double dMsMass1 = (maxMass1 - MIN_MASS1) / (double) N_MS_MASS1;
+    double dMsMass1 = (mc.clust.M_wd_up - MIN_MASS1) / (double) N_MS_MASS1;
     double dMsMassRatio = 1.0 / (double) N_MS_MASS_RATIO;
-    double dWdMass1 = (maxMass1 - MIN_MASS1) / (double) N_WD_MASS1;
+    double dWdMass1 = (mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1;
 
-    int i = 0;
-
-    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dMsMass1)
+    for (int i = 0; i < N_MS_MASS1; ++i)
     {
-        for (massRatio = 0.0; massRatio < 1.0; massRatio += dMsMassRatio)
+        for (int j = 0; j < N_MS_MASS_RATIO; ++j)
         {
-            msMass1Grid[i] = mass1;
-            msMassRatioGrid[i] = massRatio;
-            i++;
+            msMass1Grid.at(i) = MIN_MASS1 + (dMsMass1 * i);
+            msMassRatioGrid.at(i) = dMsMassRatio * j;
         }
     }
 
-    i = 0;
-    for (mass1 = MIN_MASS1; mass1 < maxMass1; mass1 += dWdMass1)
+    for (int i = 0; i < N_WD_MASS1; ++i)
     {
-        wdMass1Grid[i] = mass1;
-        i++;
+        wdMass1Grid.at(i) = MIN_MASS1 + (dWdMass1 * i);
     }
 }
 
@@ -337,7 +332,7 @@ void initChain (Chain &mc, const Model &evoModels, array<double, 2> &ltau, const
 
     for (int p = 0; p < NPARAMS; p++)
     {
-        mc.acceptClust[p] = mc.rejectClust[p] = 0;
+        mc.acceptClust.at(p) = mc.rejectClust.at(p) = 0;
     }
 
     for (auto star : mc.stars)
@@ -369,7 +364,7 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
 
     for (int p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar[p] > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON)
         {
             nParamsUsed++;
         }
@@ -385,12 +380,12 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
 
     for (int i = 0; i < NPARAMS; i++)
     {
-        if (ctrl.priorVar[i] > EPSILON)
+        if (ctrl.priorVar.at(i) > EPSILON)
         {
             k = 0;
             for (int j = 0; j < NPARAMS; j++)
             {
-                if (ctrl.priorVar[j] > EPSILON)
+                if (ctrl.priorVar.at(j) > EPSILON)
                 {
                     cov = gsl_stats_covariance (params.at(i).data(), 1, params.at(j).data(), 1, nSave);
                     gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
@@ -429,26 +424,26 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
     h = 0;
     for (int i = 0; i < NPARAMS; i++)
     {
-        if (ctrl.priorVar[i] > EPSILON)
+        if (ctrl.priorVar.at(i) > EPSILON)
         {
             k = 0;
             for (int j = 0; j < NPARAMS; j++)
             {
-                if (ctrl.priorVar[j] > EPSILON)
+                if (ctrl.priorVar.at(j) > EPSILON)
                 {
                     if (j <= i)
                     {
-                        ctrl.propMatrix[i][j] = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
+                        ctrl.propMatrix.at(i).at(j) = GRGscale * gsl_matrix_get (covMat, h, k) / cholScale;
                     }
                     else
                     {
-                        ctrl.propMatrix[i][j] = 0.0;
+                        ctrl.propMatrix.at(i).at(j) = 0.0;
                     }
                     k++;
                 }
                 else
                 {
-                    ctrl.propMatrix[i][j] = 0.0;
+                    ctrl.propMatrix.at(i).at(j) = 0.0;
                 }
             }
             h++;
@@ -457,7 +452,7 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
         {
             for (int j = 0; j < NPARAMS; j++)
             {
-                ctrl.propMatrix[i][j] = 0.0;
+                ctrl.propMatrix.at(i).at(j) = 0.0;
             }
         }
     }
@@ -495,7 +490,7 @@ double logPostStep(Chain &mc, const Model &evoModels, array<double, N_WD_MASS1> 
                     double tmpLogPost;
                     Star wd(stars.at(i));
                     wd.isFieldStar = 0;
-                    wd.U = wdMass1Grid[j];
+                    wd.U = wdMass1Grid.at(j);
                     wd.massRatio = 0.0;
 
                     evolve (propClust, evoModels, globalMags, filters, wd, ltau);

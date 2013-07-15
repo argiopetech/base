@@ -202,7 +202,7 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
     /////////////////////////////////////////////////////////////////////
 
     // Open coeff file for reading
-    tempFile = path + "YYiso/yyAGBtcoeff.dat\0";
+    tempFile = path + "YYiso/yyAGBtcoeff.dat";
 
     fin.open(tempFile);
 

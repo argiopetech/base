@@ -160,14 +160,14 @@ static void getFileName (string path, int z, MsFilter filterSet)
 
     char fileNames[][5] = { "0", "0001", "0004", "001", "004", "008", "019", "030" };
 
-    strcpy (tempFile, "\0");
+    strcpy (tempFile, "");
     strcat (tempFile, path.c_str());
     if (filterSet == MsFilter::ACS)
-        strcat (tempFile, "gIsoACS/iso_acs_z\0");
+        strcat (tempFile, "gIsoACS/iso_acs_z");
     else
-        strcat (tempFile, "gIsoStan/iso_stan_z\0");
+        strcat (tempFile, "gIsoStan/iso_stan_z");
     strcat (tempFile, fileNames[z]);
-    strcat (tempFile, ".50.dat\0");
+    strcat (tempFile, ".50.dat");
 
 }
 

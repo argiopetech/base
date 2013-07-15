@@ -27,7 +27,7 @@ struct ifmrMcmcControl
     int thin;
     std::array<double, NPARAMS> priorVar; // Rewrite the way this is handled... This is ugly.
     int numFilts;
-    double propMatrix[NPARAMS][NPARAMS];
+    Matrix<double, NPARAMS, NPARAMS> propMatrix;
 };
 
 #endif

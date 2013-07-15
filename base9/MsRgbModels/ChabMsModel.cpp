@@ -147,13 +147,13 @@ static void getFileName (string path, int z, int y)
 {
     char zString[][2] = { "0", "2", "4", "5" };
     char yString[][3] = { "27", "30", "33", "36", "39" };
-    strcpy (tempFile, "\0");
+    strcpy (tempFile, "");
     strcat (tempFile, path.c_str());
     strcat (tempFile, "cIso/feh0");
     strcat (tempFile, zString[z]);
-    strcat (tempFile, "y\0");
+    strcat (tempFile, "y");
     strcat (tempFile, yString[y]);
-    strcat (tempFile, ".cmd\0");
+    strcat (tempFile, ".cmd");
 }
 
 
