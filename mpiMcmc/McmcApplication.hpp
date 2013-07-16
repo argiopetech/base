@@ -3,7 +3,7 @@ class McmcApplication
   public:
     virtual ~McmcApplication() {}
 
-    virtual int run(int argc, char *argv[]) = 0;
+    virtual int run() = 0;
 
   protected:
     // Decides whether to accept a proposed cluster property

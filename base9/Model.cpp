@@ -16,7 +16,7 @@ using std::cerr;
 using std::endl;
 using std::shared_ptr;
 
-const Model makeModel(Settings &s)
+const Model makeModel(const Settings &s)
 {
     shared_ptr<MsRgbModel> msModel;
     shared_ptr<WdCoolingModel> wdModel;

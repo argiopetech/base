@@ -15,7 +15,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-void loadModels (Cluster &theCluster, const Model &evoModels, Settings &settings)
+void loadModels (Cluster &theCluster, const Model &evoModels, const Settings &settings)
 {
     theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 

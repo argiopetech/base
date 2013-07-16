@@ -5,6 +5,6 @@
 #include "gBaraffeMag.hpp"
 #include "Settings.hpp"
 
-void loadModels (Cluster &theCluster, const Model &, Settings &);
+void loadModels (Cluster &theCluster, const Model &, const Settings &);
 
 #endif

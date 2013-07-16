@@ -12,7 +12,7 @@ double logPostStep(Chain &, const Model &, std::array<double, N_WD_MASS1> &, Clu
 int acceptClustMarg (double, double);
 
 void initChain (Chain &, const Model &, std::array<double, 2> &, const std::vector<int>&);
-void initIfmrMcmcControl (Cluster &, struct ifmrMcmcControl &, const Model &, Settings &);
+void initIfmrMcmcControl (Cluster &, struct ifmrMcmcControl &, const Model &, const Settings &);
 void initMassGrids (std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &, std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &, std::array<double, N_WD_MASS1> &, const Chain &);
 
 void propClustBigSteps (Cluster &, const struct ifmrMcmcControl &);

@@ -12,7 +12,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-int MpiMcmcApplication::run(int argc, char *argv[])
+int MpiMcmcApplication::run()
 {
     int increment;
 
@@ -33,25 +33,6 @@ int MpiMcmcApplication::run(int argc, char *argv[])
     array<double, FILTS> filterPriorMax;
 
     Matrix<double, NPARAMS, nSave> params;
-
-    Settings settings;
-
-    // Setup settings
-    {
-        settings.fromCLI (argc, argv);
-        if (!settings.files.config.empty())
-        {
-            settings.fromYaml (settings.files.config);
-        }
-        else
-        {
-            settings.fromYaml ("base9.yaml");
-        }
-
-        settings.fromCLI (argc, argv);
-    }
-
-    const Model evoModels = makeModel(settings);
 
     std::vector<int> filters;
 

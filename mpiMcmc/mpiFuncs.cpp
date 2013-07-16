@@ -184,7 +184,7 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
     file << "logPost" << endl;
 }
 
-void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, Chain const &mc)
+void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, const Chain &mc)
 {
     double dMsMass1 = (mc.clust.M_wd_up - MIN_MASS1) / (double) N_MS_MASS1;
     double dMsMassRatio = 1.0 / (double) N_MS_MASS_RATIO;
@@ -208,7 +208,7 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
 /*
  * read control parameters from input stream
  */
-void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings)
+void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, const Settings &settings)
 {
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings.seed);

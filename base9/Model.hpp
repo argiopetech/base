@@ -29,6 +29,6 @@ class Model
     int numFilts = 0;
 };
 
-const Model makeModel(Settings &);
+const Model makeModel(const Settings &);
 
 #endif
