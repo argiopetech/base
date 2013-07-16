@@ -71,18 +71,16 @@ double run1step()
     filterPriorMin.fill(1000);
     filterPriorMax.fill(-1000);
 
-
     for (int p = 0; p < NPARAMS; p++)
     {
         mc.clust.priorVar[p] = ctrl.priorVar[p];
-        // mc.clust.priorMean[p] = ctrl.priorMean[p];
     }
 
     std::vector<int> filters;
 
     readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
 
-    evoModels.numFilts = ctrl.numFilts;
+    evoModels.numFilts = filters.size();
 
     initChain (mc, evoModels, ltau, filters);
 
@@ -90,7 +88,7 @@ double run1step()
 
     double logFieldStarLikelihood = 0.0;
 
-    for (int filt = 0; filt < ctrl.numFilts; filt++)
+    for (decltype(filters.size()) filt = 0; filt < filters.size(); filt++)
     {
         logFieldStarLikelihood -= log (filterPriorMax[filt] - filterPriorMin[filt]);
     }

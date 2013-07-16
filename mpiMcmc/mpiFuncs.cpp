@@ -65,7 +65,6 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
             if (pch == evoModels.filterSet->getFilterName(filt))
             {
                 filters.push_back(filt);
-                ctrl.numFilts++;
                 const_cast<Model&>(evoModels).numFilts++;
                 break;
             }
@@ -76,16 +75,11 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
     // It also reads a best guess for the mass
     stars.clear();
 
-    while (!ctrl.rData.eof())
+    while (getline(ctrl.rData, line))
     {
-        getline(ctrl.rData, line);
+        stars.push_back(Star(line, filters.size()));
 
-        if (ctrl.rData.eof())
-            break;
-
-        stars.push_back(Star(line, ctrl.numFilts));
-
-        for (int i = 0; i < ctrl.numFilts; i++)
+        for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
         {
             if (stars.back().obsPhot.at(i) < filterPriorMin.at(i))
             {
@@ -216,8 +210,6 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
  */
 void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, Settings &settings)
 {
-    ctrl.numFilts = 0;
-
     /* Read number of steps, burn-in details, random seed */
     init_genrand (settings.seed);
 

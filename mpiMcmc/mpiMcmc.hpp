@@ -26,7 +26,6 @@ struct ifmrMcmcControl
     int burnIter;               // total number of burn-in iterations
     int thin;
     std::array<double, NPARAMS> priorVar; // Rewrite the way this is handled... This is ugly.
-    int numFilts;
     Matrix<double, NPARAMS, NPARAMS> propMatrix;
 };
 

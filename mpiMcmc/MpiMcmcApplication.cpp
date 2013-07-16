@@ -73,7 +73,7 @@ int MpiMcmcApplication::run(int argc, char *argv[])
     {
         double logFieldStarLikelihood = 0.0;
 
-        for (int filt = 0; filt < ctrl.numFilts; filt++)
+        for (decltype(filters.size()) filt = 0; filt < filters.size(); filt++)
         {
             logFieldStarLikelihood -= log (filterPriorMax[filt] - filterPriorMin[filt]);
         }
