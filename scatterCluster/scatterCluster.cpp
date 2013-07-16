@@ -114,9 +114,8 @@ int main (int argc, char *argv[])
         exit (1);
     }
 
-    // clusterMemberPrior = (double) nStars / (nStars + nFieldStars);
-    // if(clusterMemberPrior > 0.99) clusterMemberPrior = 0.99;
-    clusterMemberPrior = 1.0;   // NS TEMPORARY!!!
+    clusterMemberPrior = (double) nStars / (nStars + nFieldStars);
+    if(clusterMemberPrior > 0.99) clusterMemberPrior = 0.99;
 
     init_genrand (seed);
 
@@ -348,11 +347,9 @@ int scatterPhot (double limitSigToNoise)
         }
 
         sigma[filt] = 1. / (sigToNoise);
-        // if(sigma[filt] < 0.005) sigma[filt] = 0.005; // NS TEMPORARY!!
         if (sigma[filt] < 0.01)
             sigma[filt] = 0.01;
-        // phot[filt] += gen_norm(0., sigma[filt]);
-        phot[filt] += gen_norm (0., 3 * sigma[filt]);   // NS TEMPORARY!!!
+        phot[filt] += gen_norm(0., sigma[filt]);
     }
     return 1;
 }
@@ -386,18 +383,16 @@ int outputScatter (FILE * w_ptr, int isFS, double clusterMemberPrior)
         {
             if (stage1 == BD)
                 fprintf (w_ptr, "%8.5f ", -1.0);
-            // else fprintf(w_ptr,"%8.6f ",sigma[filt]);
             else
-                fprintf (w_ptr, "%8.6f ", sigma[filt] * sigma[filt]);   // TEMPORARY!!!
+                fprintf(w_ptr,"%8.6f ",sigma[filt]);
         }
     }
     for (filt = 8; filt < FILTS; filt++)
     {
         if (exptime[filt] > EPS)
         {
-            // if(stage1 == BD) fprintf(w_ptr,"%8.6f ",sigma[filt]);
-            if (stage1 == BD)
-                fprintf (w_ptr, "%8.6f ", sigma[filt] * sigma[filt]);   // TEMPORARY!!!
+            if(stage1 == BD)
+                fprintf(w_ptr,"%8.6f ",sigma[filt]);
             else
                 fprintf (w_ptr, "%8.5f ", -1.0);
         }
