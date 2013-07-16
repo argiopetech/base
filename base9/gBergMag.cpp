@@ -12,14 +12,12 @@ The appropriate magnitudes are put in globalMags[][].
 ********************************************************************************/
 
 #include <array>
+#include <fstream>
 #include <string>
 #include <iostream>
 #include <vector>
 
-#include <cstdio>
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
 
 #include "evolve.hpp"
 #include "linInterp.hpp"
@@ -27,6 +25,7 @@ The appropriate magnitudes are put in globalMags[][].
 #include "binSearch.hpp"
 
 using std::array;
+using std::ifstream;
 using std::string;
 using std::vector;
 using std::cerr;
@@ -41,11 +40,12 @@ static double bHeLogG[BERG_N_DB_LOG_G];
 static double bHeMag[BERG_N_DB_TEFF][BERG_N_DB_LOG_G][BERG_NFILTS];
 static double bHeLogTeff[BERG_N_DB_TEFF];
 
+const uint maxIgnore = std::numeric_limits<char>::max();
+
 void loadBergeron (string path, MsFilter filterSet)
 {
-    int l, t, f;
-    FILE *pBergeron;
-    char line[1000], tempFile[100] = "\0";
+    ifstream fin;
+    string line, tempFile;
     double tempTeff;
 
     if (filterSet != MsFilter::SDSS && filterSet != MsFilter::UBVRIJHK)
@@ -55,74 +55,102 @@ void loadBergeron (string path, MsFilter filterSet)
     }
 
     // Open the appropriate file for each mass
-    //fscanf(pModelList,"%s",tempFile);
-    strcat (tempFile, path.c_str());
-    strcat (tempFile, "bergeron/Table_DA.txt");
+    tempFile = path + "bergeron/Table_DA.txt";
 
-    if ((pBergeron = fopen (tempFile, "r")) == NULL)
+    fin.open(tempFile);
+
+    if (!fin)
     {
         cerr << "\nFile " << tempFile << " was not found - exiting" << endl;
         exit (1);
     }
 
     //Skip header lines
-    fgets (line, 1000, pBergeron);
-    fgets (line, 1000, pBergeron);
+    getline(fin, line);
+    getline(fin, line);
 
-    for (l = 0; l < BERG_N_DA_LOG_G; l++)
+    for (int l = 0; l < BERG_N_DA_LOG_G; ++l)
     {
-        for (t = 0; t < BERG_N_DA_TEFF; t++)
+        for (int t = 0; t < BERG_N_DA_TEFF; ++t)
         {
             // Teff logg M/Mo Mbol BC U B V R I J H K u g r i z y b-y u-b v-y V-I G-R U-V U-G B-V Age
-            fscanf (pBergeron, "%lf %lf %*f %*f %*f ", &tempTeff, &bLogG[l]);
-            for (f = 0; f < BERG_NFILTS; f++)
-                fscanf (pBergeron, "%lf ", &bMag[t][l][f]);
+            double ignore;
+
+            fin >> tempTeff
+                >> bLogG[l]
+                >> ignore >> ignore >> ignore;
+
+            for (int f = 0; f < BERG_NFILTS; ++f)
+            {
+                fin >> bMag[t][l][f];
+            }
+
             if (filterSet == MsFilter::SDSS)
-                for (f = 0; f < 5; f++)
-                    fscanf (pBergeron, "%lf ", &bMag[t][l][f]);
-            fgets (line, 1000, pBergeron);
+            {
+                for (int f = 0; f < 5; ++f)
+                {
+                    fin >> bMag[t][l][f];
+                }
+            }
+
+            fin.ignore(maxIgnore, '\n'); // Ignore the rest of the line
             bLogTeff[t] = log10 (tempTeff);
         }
     }
 
+    fin.close();
+
     //Still need to add He models
     // Open the appropriate file for each mass
-    strcpy (tempFile, "\0");
-    strcat (tempFile, path.c_str());
-    strcat (tempFile, "bergeron/Table_DB.txt");
+    tempFile = path + "bergeron/Table_DB.txt";
 
-    if ((pBergeron = fopen (tempFile, "r")) == NULL)
+    fin.open(tempFile);
+
+    if (!fin)
     {
         cerr << "\n file " << tempFile << " was not found - exiting" << endl;
         exit (1);
     }
 
     //Skip header lines
-    fgets (line, 1000, pBergeron);
-    fgets (line, 1000, pBergeron);
+    getline(fin, line);
+    getline(fin, line);
 
-    for (l = 0; l < BERG_N_DB_LOG_G; l++)
+    for (int l = 0; l < BERG_N_DB_LOG_G; ++l)
     {
-        for (t = 0; t < BERG_N_DB_TEFF; t++)
+        for (int t = 0; t < BERG_N_DB_TEFF; ++t)
         {
             // Teff  log g  M/Mo  Mbol     BC    U      B      V      R      I      J      H      K      u      g      r      i      z      y      b-y    u-b    v-y    V-I    G-R    U-V    U-G    B-V     Age
-            fscanf (pBergeron, "%lf %lf %*f %*f %*f ", &tempTeff, &bHeLogG[l]);
-            for (f = 0; f < BERG_NFILTS; f++)
-                fscanf (pBergeron, "%lf ", &bHeMag[t][l][f]);
+            double ignore;
+
+            fin >> tempTeff
+                >> bHeLogG[l]
+                >> ignore >> ignore >> ignore;
+
+            for (int f = 0; f < BERG_NFILTS; ++f)
+            {
+                fin >> bHeMag[t][l][f];
+            }
+
             if (filterSet == MsFilter::SDSS)
-                for (f = 0; f < 5; f++)
-                    fscanf (pBergeron, "%lf ", &bHeMag[t][l][f]);
+            {
+                for (int f = 0; f < 5; ++f)
+                {
+                    fin >> bHeMag[t][l][f];
+                }
+            }
+
             bHeLogTeff[t] = log10 (tempTeff);
-            fgets (line, 1000, pBergeron);
+            getline(fin, line);
         }
     }
-    fclose (pBergeron);
+    fin.close();
 }
 
 
 void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globalMags, double wdLogTeff, double wdLogG, int wdType)
 {
-    int l, t, i;
+    int l, t;
     double logGMag[2][BERG_NFILTS];
 
     if (wdType == DA)
@@ -137,7 +165,7 @@ void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globa
         t = binarySearch (bLogTeff, BERG_N_DA_TEFF, wdLogTeff);
 
         //Interpolate in logTeff
-        for (i = 0; i < 2; i++)
+        for (int i = 0; i < 2; i++)
         {
             for (auto f : filters)
             {
@@ -169,7 +197,7 @@ void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globa
         t = binarySearch (bLogTeff, BERG_N_DB_TEFF, wdLogTeff);
 
         //Interpolate in logTeff
-        for (i = 0; i < 2; i++)
+        for (int i = 0; i < 2; i++)
         {
            for (auto f : filters)
             {
