@@ -21,6 +21,7 @@ TEST(Model, FilterSet)
 TEST(Model, makeModel)
 {
     Settings s;
+    s.whiteDwarf.wdModel = WdModel::WOOD;
     s.mainSequence.filterSet = MsFilter::ACS;
 
     s.mainSequence.msRgbModel = MsModel::GIRARDI;

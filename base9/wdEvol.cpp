@@ -49,7 +49,7 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int
     else
     {
         //Calculate logg
-        thisWDLogG = LOG_G_PLUS_LOG_M_SUN + log (thisWDMass) - 2 * thisWDLogRadius;
+        thisWDLogG = LOG_G_PLUS_LOG_M_SUN + log10 (thisWDMass) - 2 * thisWDLogRadius;
         bergeronTeffToMags (filters, globalMags, thisLogTeff, thisWDLogG, pStar.wdType[cmpnt]);
     }
 

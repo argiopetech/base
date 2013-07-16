@@ -26,7 +26,7 @@ double run1step(void);
 
 TEST(mpiMcmc, oneStep)
 {
-    EXPECT_NEAR(-448.007816, run1step(), 0.0001);
+    EXPECT_NEAR(-452.624745, run1step(), 0.0001);
 }
 
 Model yamlChunk()
