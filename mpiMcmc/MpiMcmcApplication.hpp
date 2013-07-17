@@ -17,7 +17,6 @@ class MpiMcmcApplication : public McmcApplication
     void propClustIndep (Cluster &, const struct ifmrMcmcControl &) const;
     void propClustCorrelated (Cluster &, const struct ifmrMcmcControl &) const;
 
-
   private:
     const Settings settings;
     const Model evoModels;
