@@ -28,9 +28,6 @@ int MpiMcmcApplication::run()
     Cluster propClust;
 
     array<double, 2> ltau;
-    array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMass1Grid;
-    array<double, N_MS_MASS1 * N_MS_MASS_RATIO> msMassRatioGrid;
-    array<double, N_WD_MASS1> wdMass1Grid;
 
     array<double, FILTS> filterPriorMin;
     array<double, FILTS> filterPriorMax;
@@ -50,8 +47,6 @@ int MpiMcmcApplication::run()
     readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
 
     initChain (mc, evoModels, ltau, filters);
-
-    initMassGrids (msMass1Grid, msMassRatioGrid, wdMass1Grid, mc);
 
     if (mc.stars.size() > 1)
     {
@@ -107,7 +102,7 @@ int MpiMcmcApplication::run()
             propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
         }
 
-        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+        logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
@@ -164,7 +159,7 @@ int MpiMcmcApplication::run()
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
 
-        logPostProp = logPostStep (mc, wdMass1Grid, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+        logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
@@ -257,7 +252,7 @@ void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcCon
     }
 }
 
-double MpiMcmcApplication::logPostStep(Chain &mc, const array<double, N_WD_MASS1> &wdMass1Grid, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
+double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     mutex logPostMutex;
 
@@ -287,7 +282,7 @@ double MpiMcmcApplication::logPostStep(Chain &mc, const array<double, N_WD_MASS1
                     double tmpLogPost;
                     Star wd(stars.at(i));
                     wd.isFieldStar = 0;
-                    wd.U = wdMass1Grid.at(j);
+                    wd.U = wdGridMass(j);
                     wd.massRatio = 0.0;
 
                     evolve (propClust, evoModels, globalMags, filters, wd, ltau);
@@ -321,4 +316,13 @@ double MpiMcmcApplication::logPostStep(Chain &mc, const array<double, N_WD_MASS1
     }
 
     return logPostProp;
+}
+
+double MpiMcmcApplication::wdGridMass (int point) const
+{
+    // I think this only gets calculated once, but I can't quite be sure...
+    // It may not even matter, but every little bit helps, eh? And hey, preoptimization...
+    static const double dWdMass1 = (settings.whiteDwarf.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1;
+
+    return MIN_MASS1 + (dWdMass1 * point);
 }

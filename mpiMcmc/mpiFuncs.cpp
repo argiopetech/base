@@ -120,27 +120,6 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
     file << "logPost" << endl;
 }
 
-void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMassRatioGrid, array<double, N_WD_MASS1> &wdMass1Grid, const Chain &mc)
-{
-    double dMsMass1 = (mc.clust.M_wd_up - MIN_MASS1) / (double) N_MS_MASS1;
-    double dMsMassRatio = 1.0 / (double) N_MS_MASS_RATIO;
-    double dWdMass1 = (mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1;
-
-    for (int i = 0; i < N_MS_MASS1; ++i)
-    {
-        for (int j = 0; j < N_MS_MASS_RATIO; ++j)
-        {
-            msMass1Grid.at(i) = MIN_MASS1 + (dMsMass1 * i);
-            msMassRatioGrid.at(i) = dMsMassRatio * j;
-        }
-    }
-
-    for (int i = 0; i < N_WD_MASS1; ++i)
-    {
-        wdMass1Grid.at(i) = MIN_MASS1 + (dWdMass1 * i);
-    }
-}
-
 /*
  * read control parameters from input stream
  */
