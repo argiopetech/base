@@ -1,6 +1,12 @@
 #include <iostream>
 #include <memory>
 
+// #include "evolve.hpp"
+// #include "loadModels.hpp"
+#include "gBergMag.hpp"
+// #include "WdCoolingModel.hpp"
+#include "gBaraffeMag.hpp"
+
 #include "constants.hpp"
 #include "Model.hpp"
 #include "MsRgbModels/ChabMsModel.hpp"
@@ -12,18 +18,20 @@
 #include "WdCoolingModels/RenedoWdModel.hpp"
 #include "WdCoolingModels/WoodWdModel.hpp"
 
+using std::cout;
 using std::cerr;
 using std::endl;
 using std::shared_ptr;
 
 const Model makeModel(const Settings &s)
 {
+    cout << "\nReading models..." << endl;
+
     shared_ptr<MsRgbModel> msModel;
     shared_ptr<WdCoolingModel> wdModel;
     shared_ptr<MsFilterSet> msFilter;
 
-    // !!! FIX ME !!!
-    switch (s.mainSequence.msRgbModel) //    evoModels.mainSequenceEvol = settings.mainSequence.msRgbModel;
+    switch (s.mainSequence.msRgbModel)
     {
         case MsModel::GIRARDI:
             msModel = shared_ptr<GirardiMsModel>(new GirardiMsModel);
@@ -91,6 +99,16 @@ const Model makeModel(const Settings &s)
     model.WDatm = BERGERON;
 
 // END FIX ME
+
+    if (model.brownDwarfEvol == BARAFFE)
+        loadBaraffe (s.files.models);
+
+    model.mainSequenceEvol->loadModel(s.files.models, s.mainSequence.filterSet);
+    model.WDcooling->loadModel(s.files.models);
+
+    loadBergeron (s.files.models, s.mainSequence.filterSet);
+
+    cout << "Models read." << endl;
 
     return model;
 }
