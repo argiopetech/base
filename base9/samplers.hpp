@@ -1,6 +1,8 @@
 #ifndef SAMPLERS_H
 #define SAMPLERS_H
 
+#include <random>
+
 #include "densities.hpp"
 #include "structures.hpp"
 
@@ -12,7 +14,7 @@ const int AGE_WANDER         = 100;
 // void propMassRatio (Star *inputstar);
 // void propClustParam (Cluster *clust, int TYPE);
 // double gen_norm (double mean, double std_dev);
-double sampleT (double var, double nu = DOF);
+double sampleT (std::mt19937&, double var, double nu = DOF);
 // double gamdev (double a);
 
 #endif

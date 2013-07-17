@@ -1,9 +1,10 @@
 #include <iostream>
 
+#include <random>
+
 #include <cmath>
 
 #include "McmcApplication.hpp"
-#include "mt19937ar.hpp"
 
 using std::cerr;
 using std::endl;
@@ -26,7 +27,7 @@ bool McmcApplication::acceptClustMarg (const double logPostCurr, const double lo
         return true;
     }
 
-    double u = genrand_res53 ();
+    double u = std::generate_canonical<double, 53>(gen);
 
     if (u < 1.e-15)
         u = 1.e-15;

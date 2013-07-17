@@ -21,7 +21,6 @@
 #include "marg.hpp"
 #include "Model.hpp"
 #include "mpiMcmc.hpp"
-#include "mt19937ar.hpp"
 #include "samplers.hpp"
 #include "Utility.hpp"
 #include "WhiteDwarf.hpp"
@@ -147,9 +146,6 @@ void initMassGrids (array<double, N_MS_MASS1 * N_MS_MASS_RATIO> &msMass1Grid, ar
  */
 void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, const Settings &settings)
 {
-    /* Read number of steps, burn-in details, random seed */
-    init_genrand (settings.seed);
-
     ctrl.priorVar.fill(0);
     clust.parameter.fill(0);
 

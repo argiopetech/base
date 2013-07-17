@@ -192,7 +192,7 @@ int MpiMcmcApplication::run()
 }
 
 
-void MpiMcmcApplication::propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl) const
+void MpiMcmcApplication::propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     double scale = 5.0;
@@ -202,12 +202,12 @@ void MpiMcmcApplication::propClustBigSteps (Cluster &clust, struct ifmrMcmcContr
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.parameter.at(p) += sampleT (scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p));
+            clust.parameter.at(p) += sampleT (gen, scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p));
         }
     }
 }
 
-void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl) const
+void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     int p;
@@ -216,12 +216,12 @@ void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl 
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.parameter.at(p) += sampleT (clust.stepSize.at(p) * clust.stepSize.at(p));
+            clust.parameter.at(p) += sampleT (gen, clust.stepSize.at(p) * clust.stepSize.at(p));
         }
     }
 }
 
-void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl) const
+void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     array<double, NPARAMS> indepProps;
@@ -236,7 +236,7 @@ void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcCon
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            indepProps.at(p) = sampleT (1.0);
+            indepProps.at(p) = sampleT (gen, 1.0);
         }
     }
     for (p = 0; p < NPARAMS; p++)

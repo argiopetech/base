@@ -1,13 +1,10 @@
 /*** Proposes new star properties ***/
 /*** last update:          ***/
 
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
+#include <random>
 
 #include "samplers.hpp"
 #include "densities.hpp"
-#include "mt19937ar.hpp"
 #include "evolve.hpp"
 
 // void propFieldStar (Star *inputStar)
@@ -75,11 +72,8 @@
 //         return;
 //     }
 // }
-#include <random>
 
-std::mt19937 gen(704);
-
-double sampleT (double var, double nu)
+double sampleT (std::mt19937 &gen, double var, double nu)
 {
     double u = 0.0;
     double y = 0.0;
