@@ -13,6 +13,11 @@ class MpiMcmcApplication : public McmcApplication
 
     virtual int run();
 
+    void propClustBigSteps (Cluster &, const struct ifmrMcmcControl &) const;
+    void propClustIndep (Cluster &, const struct ifmrMcmcControl &) const;
+    void propClustCorrelated (Cluster &, const struct ifmrMcmcControl &) const;
+
+
   private:
     const Settings settings;
     const Model evoModels;

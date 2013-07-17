@@ -6,6 +6,7 @@
 #include "mpiFuncs.hpp"
 #include "MpiMcmcApplication.hpp"
 #include "Settings.hpp"
+#include "samplers.cpp"
 
 using std::array;
 using std::cout;
@@ -188,4 +189,68 @@ int MpiMcmcApplication::run()
     cout << "\nAcceptance ratio: " << acceptanceRatio() << endl;
 
     return 0;
+}
+
+
+void MpiMcmcApplication::propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl) const
+{
+    /* DOF defined in densities.h */
+    double scale = 5.0;
+    int p;
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar.at(p) > EPSILON)
+        {
+            clust.parameter.at(p) += sampleT (scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p));
+        }
+    }
+}
+
+void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl) const
+{
+    /* DOF defined in densities.h */
+    int p;
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar.at(p) > EPSILON)
+        {
+            clust.parameter.at(p) += sampleT (clust.stepSize.at(p) * clust.stepSize.at(p));
+        }
+    }
+}
+
+void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl) const
+{
+    /* DOF defined in densities.h */
+    array<double, NPARAMS> indepProps;
+    array<double, NPARAMS> corrProps;
+
+    indepProps.fill(0.0);
+    corrProps.fill(0.0);
+
+    int p, k;
+
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar.at(p) > EPSILON)
+        {
+            indepProps.at(p) = sampleT (1.0);
+        }
+    }
+    for (p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar.at(p) > EPSILON)
+        {
+            for (k = 0; k <= p; k++)
+            {                           /* propMatrix is lower diagonal */
+                if (ctrl.priorVar.at(k) > EPSILON)
+                {
+                    corrProps.at(p) += ctrl.propMatrix.at(p).at(k) * indepProps.at(k);
+                }
+            }
+            clust.parameter.at(p) += corrProps.at(p);
+        }
+    }
 }

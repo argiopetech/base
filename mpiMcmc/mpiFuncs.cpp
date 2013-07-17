@@ -99,69 +99,6 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
     }
 } /* readCmdData */
 
-void propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
-{
-    /* DOF defined in densities.h */
-    double scale = 5.0;
-    int p;
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        if (ctrl.priorVar.at(p) > EPSILON)
-        {
-            clust.parameter.at(p) += sampleT (scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p));
-        }
-    }
-}
-
-void propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
-{
-    /* DOF defined in densities.h */
-    int p;
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        if (ctrl.priorVar.at(p) > EPSILON)
-        {
-            clust.parameter.at(p) += sampleT (clust.stepSize.at(p) * clust.stepSize.at(p));
-        }
-    }
-}
-
-void propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
-{
-    /* DOF defined in densities.h */
-    array<double, NPARAMS> indepProps;
-    array<double, NPARAMS> corrProps;
-
-    indepProps.fill(0.0);
-    corrProps.fill(0.0);
-
-    int p, k;
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        if (ctrl.priorVar.at(p) > EPSILON)
-        {
-            indepProps.at(p) = sampleT (1.0);
-        }
-    }
-    for (p = 0; p < NPARAMS; p++)
-    {
-        if (ctrl.priorVar.at(p) > EPSILON)
-        {
-            for (k = 0; k <= p; k++)
-            {                           /* propMatrix is lower diagonal */
-                if (ctrl.priorVar.at(k) > EPSILON)
-                {
-                    corrProps.at(p) += ctrl.propMatrix.at(p).at(k) * indepProps.at(k);
-                }
-            }
-            clust.parameter.at(p) += corrProps.at(p);
-        }
-    }
-}
-
 
 void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 {
