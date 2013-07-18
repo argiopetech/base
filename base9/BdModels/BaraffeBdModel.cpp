@@ -26,7 +26,7 @@ static double barAge[N_BAR_AGES];
 static double barMass[N_BAR_MASSES];
 static double barMag[N_BAR_AGES][N_BAR_MASSES][N_BAR_FILTS];
 
-void loadBaraffe (string path)
+void BaraffeBdModel::loadModel (string path)
 {
     int m, a, mStart, filt;
     ifstream pBaraffe;
@@ -87,7 +87,7 @@ void loadBaraffe (string path)
 
 
 
-void getBaraffeMags (const vector<int> &filters, array<double, FILTS> &globalMags, double logAge, double mass)
+array<double, FILTS> BaraffeBdModel::getMags (const vector<int> &filters, double logAge, double mass)
 {
     int a, m, i;
     double massMag[2][N_BAR_FILTS];
