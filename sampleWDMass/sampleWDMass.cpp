@@ -13,7 +13,6 @@
 #include <unistd.h>
 
 #include "evolve.hpp"
-#include "loadModels.hpp"
 #include "gBergMag.hpp"
 #include "WdCoolingModel.hpp"
 #include "densities.hpp"
@@ -108,7 +107,7 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     init_genrand (settings.seed);
 
-    loadModels (mc->clust, evoModels, settings);
+    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 
     ctrl->priorMean[FEH] = settings.cluster.Fe_H;
     ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;

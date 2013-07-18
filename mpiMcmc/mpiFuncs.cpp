@@ -17,7 +17,6 @@
 
 #include "densities.hpp"
 #include "MsFilterSet.hpp"
-#include "loadModels.hpp"
 #include "marg.hpp"
 #include "Model.hpp"
 #include "mpiMcmc.hpp"
@@ -128,8 +127,7 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     ctrl.priorVar.fill(0);
     clust.parameter.fill(0);
 
-    /* load models */
-    loadModels (clust, evoModels, settings);
+    clust.carbonicity = settings.whiteDwarf.carbonicity;
 
     clust.parameter[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;

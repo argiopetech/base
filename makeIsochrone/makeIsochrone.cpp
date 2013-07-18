@@ -9,7 +9,6 @@
 #include <unistd.h>
 
 #include "evolve.hpp"
-#include "loadModels.hpp"
 #include "Settings.hpp"
 #include "MsFilterSet.hpp"
 
@@ -120,9 +119,7 @@ int main (int argc, char *argv[])
     ///////// and load models /////////
     ///////////////////////////////////
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
-
-    loadModels (theCluster, evoModels, settings);      /* read in stellar evol & WD models */
-
+    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 
     /* read cluster parameters */
     theCluster.parameter[AGE] = settings.cluster.logClusAge;

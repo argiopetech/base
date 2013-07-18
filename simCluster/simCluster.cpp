@@ -12,7 +12,6 @@
 #include "evolve.hpp"
 #include "gennorm.hpp"
 #include "structures.hpp"
-#include "loadModels.hpp"
 #include "Settings.hpp"
 #include "MsFilterSet.hpp"
 
@@ -93,8 +92,8 @@ int main (int argc, char *argv[])
 
     // !!! FIX ME !!!
     cerr << "This is broken. If we need field stars and are using the YALE models, we also have to load the DSED models.";
-//    loadModels (nFieldStars, &theCluster, evoModels, settings);
-    loadModels (theCluster, evoModels, settings);
+    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
+//    loadModels (theCluster, evoModels, settings);
 
     if (settings.mainSequence.msRgbModel == MsModel::YALE)
         minMass = 0.4;

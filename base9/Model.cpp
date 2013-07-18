@@ -1,10 +1,7 @@
 #include <iostream>
 #include <memory>
 
-// #include "evolve.hpp"
-// #include "loadModels.hpp"
 #include "gBergMag.hpp"
-// #include "WdCoolingModel.hpp"
 #include "gBaraffeMag.hpp"
 
 #include "constants.hpp"

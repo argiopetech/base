@@ -9,7 +9,6 @@
 #include "evolve.hpp"
 #include "mt19937ar.hpp"
 #include "Settings.hpp"
-#include "loadModels.hpp"
 #include "MsFilterSet.hpp"
 
 #include "../mpiFuncs.hpp"

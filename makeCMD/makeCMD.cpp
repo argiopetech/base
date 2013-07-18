@@ -12,7 +12,6 @@
 
 #include "evolve.hpp"
 #include "structures.hpp"
-#include "loadModels.hpp"
 #include "Settings.hpp"
 #include "ifmr.hpp"
 #include "MsFilterSet.hpp"
@@ -206,8 +205,7 @@ int main (int argc, char *argv[])
     // if (verbose < 0 || verbose > 2)
     //     verbose = 1;            // give standard feedback if incorrectly specified
 
-    loadModels (theCluster, evoModels, settings);      // read in stellar evol & WD models
-
+    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 
     //////////////////////////////
     /////// Output headers ///////
