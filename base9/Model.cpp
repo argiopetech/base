@@ -23,72 +23,71 @@ using std::cerr;
 using std::endl;
 using std::shared_ptr;
 
+namespace internal
+{
+    shared_ptr<MsRgbModel> createMsRgbModel(MsModel model)
+    {
+        switch (model)
+        {
+            case MsModel::GIRARDI:
+                return shared_ptr<GirardiMsModel>(new GirardiMsModel);
+            case MsModel::CHABHELIUM:
+                return shared_ptr<ChabMsModel>(new ChabMsModel);
+            case MsModel::YALE:
+                return shared_ptr<YaleMsModel>(new YaleMsModel);
+            case MsModel::DSED:
+                return shared_ptr<DsedMsModel>(new DsedMsModel);
+            default:
+                std::cerr << "***Error: No models found for main sequence evolution model " << static_cast<int>(model) << ".***" << std::endl;
+                std::cerr << "[Exiting...]\n" << std::endl;
+                exit(1);
+        }
+    }
+
+    shared_ptr<MsFilterSet> createMsFilterSet(MsFilter filter)
+    {
+        switch (filter)
+        {
+            case MsFilter::UBVRIJHK:
+                return shared_ptr<UBVRIJHK>(new UBVRIJHK);
+            case MsFilter::ACS:
+                return shared_ptr<ACS>(new ACS);
+            case MsFilter::SDSS:
+                return shared_ptr<SDSS>(new SDSS);
+            default:
+                cerr << "***Error: No models found for filter set " << static_cast<int>(filter) << ".***" << endl;
+                cerr << "[Exiting...]" << endl;
+                exit (1);
+        }
+    }
+
+    shared_ptr<WdCoolingModel> createWdCoolingModel(WdModel model)
+    {
+        switch (model)
+        {
+            case WdModel::WOOD:
+                return shared_ptr<WoodWdModel>(new WoodWdModel);
+            case WdModel::MONTGOMERY:
+                return shared_ptr<MontgomeryWdModel>(new MontgomeryWdModel);
+            case WdModel::ALTHAUS:
+                return shared_ptr<AlthausWdModel>(new AlthausWdModel);
+            case WdModel::RENEDO:
+                return shared_ptr<RenedoWdModel>(new RenedoWdModel);
+            default:
+                cerr << "***Error: No model found for white dwarf filter set " << static_cast<int>(model) << ".***" << endl;
+                cerr << "[Exiting...]" << endl;
+                exit (1);
+        }
+    }
+}
+
 const Model makeModel(const Settings &s)
 {
     cout << "\nReading models..." << endl;
 
-    shared_ptr<MsRgbModel> msModel;
-    shared_ptr<WdCoolingModel> wdModel;
-    shared_ptr<MsFilterSet> msFilter;
-
-    switch (s.mainSequence.msRgbModel)
-    {
-        case MsModel::GIRARDI:
-            msModel = shared_ptr<GirardiMsModel>(new GirardiMsModel);
-            break;
-        case MsModel::CHABHELIUM:
-            msModel = shared_ptr<ChabMsModel>(new ChabMsModel);
-            break;
-        case MsModel::YALE:
-            msModel = shared_ptr<YaleMsModel>(new YaleMsModel);
-            break;
-        case MsModel::DSED:
-            msModel = shared_ptr<DsedMsModel>(new DsedMsModel);
-            break;
-        default:
-            cerr << "***Error: No models found for main sequence evolution model " << static_cast<int>(s.mainSequence.msRgbModel) << ".***" << endl;
-            cerr << "[Exiting...]\n" << endl;
-            exit(1);
-    }
-
-    switch (s.mainSequence.filterSet)
-    {
-        case MsFilter::UBVRIJHK:
-            msFilter = shared_ptr<UBVRIJHK>(new UBVRIJHK);
-            break;
-        case MsFilter::ACS:
-            msFilter = shared_ptr<ACS>(new ACS);
-            break;
-        case MsFilter::SDSS:
-            msFilter = shared_ptr<SDSS>(new SDSS);
-            break;
-        default:
-            cerr << "***Error: No models found for filter set " << static_cast<int>(s.mainSequence.filterSet) << ".***" << endl;
-            cerr << "[Exiting...]" << endl;
-            exit (1);
-    }
-
-    switch (s.whiteDwarf.wdModel)
-    {
-        case WdModel::WOOD:
-            wdModel = shared_ptr<WoodWdModel>(new WoodWdModel);
-            break;
-        case WdModel::MONTGOMERY:
-            wdModel = shared_ptr<MontgomeryWdModel>(new MontgomeryWdModel);
-            break;
-        case WdModel::ALTHAUS:
-            wdModel = shared_ptr<AlthausWdModel>(new AlthausWdModel);
-            break;
-        case WdModel::RENEDO:
-            wdModel = shared_ptr<RenedoWdModel>(new RenedoWdModel);
-            break;
-        default:
-            cerr << "***Error: No model found for white dwarf filter set " << static_cast<int>(s.whiteDwarf.wdModel) << ".***" << endl;
-            cerr << "[Exiting...]" << endl;
-            exit (1);
-    }
-
-    Model model(msModel, msFilter, wdModel);
+    Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
+               , internal::createMsFilterSet(s.mainSequence.filterSet)
+               , internal::createWdCoolingModel(s.whiteDwarf.wdModel));
 
 // !!! FIX ME !!!
 
