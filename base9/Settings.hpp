@@ -30,11 +30,6 @@ class Settings
         double M_wd_up;
     };
 
-    struct BrownDwarfSettings
-    {
-        int bdModel;
-    };
-
     struct MpiMcmcSettings
     {
         int burnIter;
@@ -46,7 +41,6 @@ class Settings
     {
         int nStars;
         int nFieldStars;
-        int nBrownDwarfs;
         int percentBinary;      // Fraction * 100
         int percentDB;          // Fraction * 100
     };
@@ -96,7 +90,6 @@ class Settings
     struct Files files;
     struct MainSequenceSettings mainSequence;
     struct WhiteDwarfSettings whiteDwarf;
-    struct BrownDwarfSettings brownDwarf;
     struct MpiMcmcSettings mpiMcmc;
     struct ClusterSettings cluster;
     struct SimClusterSettings simCluster;

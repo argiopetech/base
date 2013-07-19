@@ -23,7 +23,6 @@ class Model
     shared_ptr<WdCoolingModel> WDcooling;
 
     int evoModel = 0;
-    int brownDwarfEvol = 0;
     int IFMR = 0;
     int WDatm = 0;
     int numFilts = 0;

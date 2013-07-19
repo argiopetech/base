@@ -7,7 +7,6 @@
 #include <cstdlib>
 
 #include "evolve.hpp"
-#include "gBaraffeMag.hpp"
 #include "densities.hpp"
 #include "Model.hpp"
 #include "wdEvol.hpp"

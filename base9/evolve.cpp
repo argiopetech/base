@@ -7,7 +7,6 @@
 
 #include "evolve.hpp"
 #include "marg.hpp"
-#include "gBaraffeMag.hpp"
 #include "wdEvol.hpp"
 #include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
@@ -43,29 +42,10 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
     mass[0] = star.getMass1();
     mass[1] = star.getMass2();
 
-    if (star.status[0] == BD)
+    for (int cmpnt = 0; cmpnt < 2; cmpnt++)
     {
-        getBaraffeMags (filters, globalMags, pCluster.getAge(), mass[0]);
-
-        for (auto f : filters)
-        {
-            if ( f < 8 ) // Pre-IFMR
-            {
-                mag[2][f] = 99.999;
-            }
-            else
-            {
-                mag[2][f] = globalMags[f];
-            }
-        }
+        setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau, globalMags);
     }
-    else
-    {
-        for (int cmpnt = 0; cmpnt < 2; cmpnt++)
-        {
-            setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau, globalMags);
-        }
 
-        deriveCombinedMags(mag, clusterAv, &flux, pCluster, star, evoModels, filters);
-    }
+    deriveCombinedMags(mag, clusterAv, &flux, pCluster, star, evoModels, filters);
 }

@@ -2,7 +2,6 @@
 #include <memory>
 
 #include "gBergMag.hpp"
-#include "gBaraffeMag.hpp"
 
 #include "constants.hpp"
 #include "Model.hpp"
@@ -90,14 +89,9 @@ const Model makeModel(const Settings &s)
 
     model.IFMR = s.whiteDwarf.ifmr;
 
-    model.brownDwarfEvol = s.brownDwarf.bdModel;
-
     model.WDatm = BERGERON;
 
 // END FIX ME
-
-    if (model.brownDwarfEvol == BARAFFE)
-        loadBaraffe (s.files.models);
 
     model.mainSequenceEvol->loadModel(s.files.models, s.mainSequence.filterSet);
     model.WDcooling->loadModel(s.files.models);

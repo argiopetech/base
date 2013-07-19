@@ -42,7 +42,6 @@ void Settings::fromYaml (const string yamlFile)
     Node filesNode = getNode (generalNode, "files");
     Node mainSequenceNode = getNode (generalNode, "main_sequence");
     Node whiteDwarfNode = getNode (generalNode, "white_dwarfs");
-    Node brownDwarfNode = getNode (generalNode, "brown_dwarfs");
     Node clusterNode = getNode (generalNode, "cluster");
     Node priorsNode = getNode (clusterNode, "priors");
     Node sigmasNode = getNode (clusterNode, "sigmas");
@@ -59,8 +58,6 @@ void Settings::fromYaml (const string yamlFile)
     whiteDwarf.wdModel = static_cast<WdModel>(getOrDie<int>(whiteDwarfNode, "wdModel"));
     whiteDwarf.carbonicity = getOrDie<double>(whiteDwarfNode, "carbonicity");
     whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfNode, "M_wd_up");
-
-    brownDwarf.bdModel = getOrDie<int>(brownDwarfNode, "bdModel");
 
     cluster.Fe_H = getOrDie<double>(priorsNode, "Fe_H");
     cluster.sigma.Fe_H = getOrDie<double>(sigmasNode, "Fe_H");
@@ -88,7 +85,6 @@ void Settings::fromYaml (const string yamlFile)
     simCluster.percentBinary = getOrDie<int>(simConfNode, "percentBinary");
     simCluster.percentDB = getOrDie<int>(simConfNode, "percentDB");
     simCluster.nFieldStars = getOrDie<int>(simConfNode, "nFieldStars");
-    simCluster.nBrownDwarfs = getOrDie<int>(simConfNode, "nBrownDwarfs");
 
     scatterCluster.brightLimit = getOrDie<double>(scatterConfNode, "brightLimit");
     scatterCluster.faintLimit = getOrDie<double>(scatterConfNode, "faintLimit");
@@ -154,7 +150,6 @@ void Settings::fromCLI (int argc, char **argv)
         {"percentBinary", required_argument, 0, 0xE8},
         {"percentDB", required_argument, 0, 0xE7},
         {"nFieldStars", required_argument, 0, 0xE6},
-        {"nBrownDwarfs", required_argument, 0, 0xE5},
         {"brightLimit", required_argument, 0, 0xE4},
         {"faintLimit", required_argument, 0, 0xE3},
         {"relevantFilt", required_argument, 0, 0xE2},
@@ -217,10 +212,6 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0xFA:
                 istringstream (string (optarg)) >> whiteDwarf.M_wd_up;
-                break;
-
-            case 0xF9:
-                istringstream (string (optarg)) >> brownDwarf.bdModel;
                 break;
 
             case 0xF8:
@@ -297,10 +288,6 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0xE6:
                 istringstream (string (optarg)) >> simCluster.nFieldStars;
-                break;
-
-            case 0xE5:
-                istringstream (string (optarg)) >> simCluster.nBrownDwarfs;
                 break;
 
             case 0xE4:
@@ -447,7 +434,6 @@ void Settings::printUsage ()
     cerr << "\t--percentBinary\t\tpercent binaries (drawn randomly)" << endl;
     cerr << "\t--percentDB\t\tpercent of WDs that have He atmospheres (drawn randomly)" << endl;
     cerr << "\t--nFieldStars" << endl;
-    cerr << "\t--nBrownDwarfs" << endl;
     cerr << "\t--brightLimit\t\tapparant mags, can remove bright stars, e.g. RGB" << endl;
     cerr << "\t--faintLimit\t\tapparant mags, can remove faint stars, e.g. faint MS and WDs" << endl;
     cerr << "\t--relevantFilt\t\t0=bluest band available" << endl;

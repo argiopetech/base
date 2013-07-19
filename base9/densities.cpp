@@ -70,9 +70,6 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
 {
     double mass1, log_m1, logPrior = 0.0;
 
-    if (pStar.status[0] == BD)
-        return 0.0;
-
     mass1 = pStar.getMass1();
 
     if (mass1 > 0.1 && mass1 <= pCluster.M_wd_up)
