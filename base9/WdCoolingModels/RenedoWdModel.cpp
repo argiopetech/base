@@ -30,22 +30,22 @@ struct renedoModel
 void RenedoWdModel::loadModel (string path)
 {
     static struct renedoModel renedo[] = {
-        {"wd0524_z001.trk", 0.524},
-        {"wd0570_z001.trk", 0.570},
-        {"wd0593_z001.trk", 0.593},
-        {"wd0609_z001.trk", 0.609},
-        {"wd0632_z001.trk", 0.632},
-        {"wd0659_z001.trk", 0.659},
-        {"wd0705_z001.trk", 0.705},
-        {"wd0767_z001.trk", 0.767},
-        {"wd0837_z001.trk", 0.837},
-        {"wd0877_z001.trk", 0.877},
-        {"wd0934_z001.trk", 0.934},
+        {"wd0524_z001.trk", 0.52490},
+        {"wd0570_z001.trk", 0.57015},
+        {"wd0593_z001.trk", 0.59316},
+        {"wd0609_z001.trk", 0.60959},
+        {"wd0632_z001.trk", 0.63229},
+        {"wd0659_z001.trk", 0.65988},
+        {"wd0705_z001.trk", 0.70511},
+        {"wd0767_z001.trk", 0.76703},
+        {"wd0837_z001.trk", 0.83731},
+        {"wd0877_z001.trk", 0.87790},
+        {"wd0934_z001.trk", 0.93477},
     };
 
     string tempFile, line;
     double newAge, newTeff, newRadius;
-    double newCarbon = 0.6 ;// 0.38; // Good default value, per Mike Montgomery
+    double newCarbon = 0.38; // Good default value, per Mike Montgomery
     double ignore;
 
     for (auto massModel : renedo)
@@ -62,7 +62,6 @@ void RenedoWdModel::loadModel (string path)
         }        
 
         getline(pCoolingModels, line); // get header line
-        getline(pCoolingModels, line); // and another...
 
         wdCurves.emplace_back(massModel.mass);
         wdCurves.back().carbonCurves.emplace_back(newCarbon);
