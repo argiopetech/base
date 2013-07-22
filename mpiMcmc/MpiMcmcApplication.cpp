@@ -93,16 +93,6 @@ int MpiMcmcApplication::run()
             propClustIndep (propClust, ctrl);
         }
 
-        if (ctrl.priorVar[ABS] > EPSILON)
-        {
-            propClust.setAbs(fabs (propClust.getAbs()));
-        }
-
-        if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
-        {
-            propClust.setIfmrSlope(fabs (propClust.getIfmrSlope()));
-        }
-
         try
         {
             logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
@@ -206,20 +196,10 @@ int MpiMcmcApplication::run()
 
 void MpiMcmcApplication::propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
-    /* DOF defined in densities.h */
-    double scale = 5.0;
-    int p;
-
-    for (p = 0; p < NPARAMS; p++)
-    {
-        if (ctrl.priorVar.at(p) > EPSILON)
-        {
-            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p)));
-        }
-    }
+    propClustIndep(clust, ctrl, 25.0);
 }
 
-void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl)
+void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl, double scale)
 {
     /* DOF defined in densities.h */
     int p;
@@ -228,7 +208,7 @@ void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl 
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.setParam(p, clust.getParam(p) + sampleT (gen, clust.stepSize.at(p) * clust.stepSize.at(p)));
+            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * clust.stepSize.at(p) * clust.stepSize.at(p)));
         }
     }
 }
@@ -276,7 +256,7 @@ double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsL
 
     auto stars = mc.stars;
 
-    propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.getFeH(), propClust.getY(), propClust.getAge());    // determine AGBt ZAMS mass, to find evol state
+    propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
 
     /* loop over assigned stars */
     pool.parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)

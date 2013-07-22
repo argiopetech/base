@@ -30,18 +30,18 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int
     else
         mass = pStar.getMass2();
 
-    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.getFeH(), mass);
+    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
 
     thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.getAge(), pCluster.carbonicity, thisPrecLogAge, thisWDMass);
+    teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.age, pCluster.carbonicity, thisPrecLogAge, thisWDMass);
 
     thisLogTeff = teffRadiusPair.first;
     thisWDLogRadius = teffRadiusPair.second;
 
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
-    if (thisPrecLogAge >= pCluster.getAge())
+    if (thisPrecLogAge >= pCluster.age)
     {                           // mcmc.c can cause this by adjusting masses and ages
         for (auto f : filters)
             globalMags[f] = -4.; // place at tip of RGB

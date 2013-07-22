@@ -134,26 +134,26 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 
     clust.carbonicity = settings.whiteDwarf.carbonicity;
 
-    clust.setFeH(settings.cluster.Fe_H);
+    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    clust.setMod(settings.cluster.distMod);
+    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    clust.setAbs(settings.cluster.Av);
+    clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    clust.setAge(settings.cluster.logClusAge);
+    clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
     if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
-        clust.setY(settings.cluster.Y);
+        clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
         ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
     }
     else
     {
-        clust.setY(0.0);
+        clust.yyy = clust.priorMean[YYY] = 0.0;
         ctrl.priorVar[YYY] = 0.0;
     }
 
@@ -178,13 +178,13 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     }
 
     /* set starting values for IFMR parameters */
-    clust.setIfmrSlope(0.08);
-    clust.setIfmrIntercept(0.65);
+    clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
+    clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
 
     if (evoModels.IFMR <= 10)
-        clust.setIfmrQuadCoef(0.0001);
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
-        clust.setIfmrQuadCoef(0.08);
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
 
     for (auto &var : ctrl.priorVar)
     {
@@ -224,15 +224,6 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 
     ctrl.clusterFilename = settings.files.output + ".res";
 
-    clust.priorMean[AGE] = clust.getAge();
-    clust.priorMean[YYY] = clust.getY();
-    clust.priorMean[FEH] = clust.getFeH();
-    clust.priorMean[MOD] = clust.getMod();
-    clust.priorMean[ABS] = clust.getAbs();
-    clust.priorMean[IFMR_INTERCEPT] = clust.getIfmrIntercept();
-    clust.priorMean[IFMR_SLOPE] = clust.getIfmrSlope();
-    clust.priorMean[IFMR_QUADCOEF] = clust.getIfmrQuadCoef();
-
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
 } /* initIfmrMcmcControl */
 
@@ -256,7 +247,7 @@ void initChain (Chain &mc, const Model &evoModels, array<double, 2> &ltau, const
         star.massRatioStepSize = 0.001;
 
         // find photometry for initial values of currentClust and mc.stars
-        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.getFeH(), mc.clust.getY(), mc.clust.getAge());    // determine AGBt ZAMS mass, to find evol state
+        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);    // determine AGBt ZAMS mass, to find evol state
         evolve (mc.clust, evoModels, globalMags, filters, star, ltau);
 
         if (star.status[0] == WD)

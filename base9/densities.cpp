@@ -92,11 +92,11 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
 // Compute log prior density for cluster properties
 double logPriorClust (const Cluster &pCluster, const Model &evoModels)
 {
-    if ((pCluster.getAge() < evoModels.mainSequenceEvol->getMinAge())
-        || (pCluster.getAge() > evoModels.mainSequenceEvol->getMaxAge())
-        || (pCluster.getIfmrSlope() < 0.0)
-        || (pCluster.getAbs() < 0.0)
-        || ((evoModels.IFMR == 11) && (pCluster.getIfmrQuadCoef() < 0.0)))
+    if ((pCluster.age < evoModels.mainSequenceEvol->getMinAge())
+        || (pCluster.age > evoModels.mainSequenceEvol->getMaxAge())
+        || (pCluster.ifmrSlope < 0.0)
+        || (pCluster.abs < 0.0)
+        || ((evoModels.IFMR == 11) && (pCluster.ifmrQuadCoef < 0.0)))
     {
         throw InvalidCluster("Invalid cluster parameter");
     }
@@ -107,12 +107,12 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
         double massLower = 0.15;
         double massUpper = pCluster.M_wd_up;
         double massShift = 3.0;
-        double angle = atan (pCluster.getIfmrSlope());
-        double aa = cos (angle) * (1 + pCluster.getIfmrSlope() * pCluster.getIfmrSlope());
+        double angle = atan (pCluster.ifmrSlope);
+        double aa = cos (angle) * (1 + pCluster.ifmrSlope * pCluster.ifmrSlope);
         double xLower = aa * (massLower - massShift);
         double xUpper = aa * (massUpper - massShift);
 
-        double dydx_xLower = pCluster.getIfmrQuadCoef() * (xLower - xUpper);
+        double dydx_xLower = pCluster.ifmrQuadCoef * (xLower - xUpper);
         double dydx_xUpper = -dydx_xLower;
 
         double slopeLower = tan (angle + atan (dydx_xLower));
@@ -126,13 +126,13 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     double prior = 0.0;
 
     if (pCluster.priorVar[FEH] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.getFeH() - pCluster.priorMean[FEH]) / pCluster.priorVar[FEH];
+        prior += (-0.5) * sqr (pCluster.feh - pCluster.priorMean[FEH]) / pCluster.priorVar[FEH];
     if (pCluster.priorVar[MOD] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.getMod() - pCluster.priorMean[MOD]) / pCluster.priorVar[MOD];
+        prior += (-0.5) * sqr (pCluster.mod - pCluster.priorMean[MOD]) / pCluster.priorVar[MOD];
     if (pCluster.priorVar[ABS] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.getAbs() - pCluster.priorMean[ABS]) / pCluster.priorVar[ABS];
+        prior += (-0.5) * sqr (pCluster.abs - pCluster.priorMean[ABS]) / pCluster.priorVar[ABS];
     if (pCluster.priorVar[YYY] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.getY() - pCluster.priorMean[YYY]) / pCluster.priorVar[YYY];
+        prior += (-0.5) * sqr (pCluster.yyy - pCluster.priorMean[YYY]) / pCluster.priorVar[YYY];
 
     return prior;
 }

@@ -37,7 +37,7 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
         throw WDBoundsError("Bounds error in evolve.cpp");
     }
 
-    clusterAv = pCluster.getAbs();
+    clusterAv = pCluster.abs;
 
     mass[0] = star.getMass1();
     mass[1] = star.getMass2();

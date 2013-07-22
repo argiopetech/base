@@ -37,7 +37,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
         throw WDBoundsError("Bounds error in marg.cpp");
     }
 
-    clusterAv = pCluster.getAbs();
+    clusterAv = pCluster.abs;
 
     double dMass;
 
@@ -108,7 +108,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, const Cluster &pClus
     {
         //     log <<  (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
         for (auto f : filters)
-                mag[cmpnt][f] = 99.999;
+            mag[cmpnt][f] = 99.999;
         pStar.status[cmpnt] = DNE;
     }
 }
@@ -124,10 +124,10 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, co
     {                           // if there is a secondary star
         for (auto f : filters)
         {
-                flux = exp10((mag[0][f] / -2.5));    // add up the fluxes of the primary
-                flux += exp10((mag[1][f] / -2.5));   // and the secondary
-                mag[2][f] = -2.5 * log10 (flux);    // (these 3 lines take 5% of run time for N large)
-                // if primary mag = 99.999, then this works
+            flux = exp10((mag[0][f] / -2.5));    // add up the fluxes of the primary
+            flux += exp10((mag[1][f] / -2.5));   // and the secondary
+            mag[2][f] = -2.5 * log10 (flux);    // (these 3 lines take 5% of run time for N large)
+            // if primary mag = 99.999, then this works
         }
     }                           // to make the combined mag = secondary mag
     else
@@ -138,9 +138,9 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, co
 
     for (auto f : filters)
     {
-            mag[2][f] += pCluster.getMod();
-            mag[2][f] += (clusterAbs[f] - 1.0) * clusterAv;       // add A_[u-k] (standard defn of modulus already includes Av)
-            pStar.photometry[f] = mag[2][f];
+        mag[2][f] += pCluster.mod;
+        mag[2][f] += (clusterAbs[f] - 1.0) * clusterAv;       // add A_[u-k] (standard defn of modulus already includes Av)
+        pStar.photometry[f] = mag[2][f];
     }
 }
 
@@ -162,7 +162,7 @@ void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv
     pStar.massRatio = 0.0;
 
     for (auto f : filters)
-            globalMags[f] = 99.999;
+        globalMags[f] = 99.999;
 
     pStar.massNow[cmpnt] = 0.0;
     ltau[cmpnt] = 0.0;          // may not be a WD, so no precursor age,

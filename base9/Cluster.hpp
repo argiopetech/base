@@ -23,24 +23,7 @@ class Cluster
     }
     ~Cluster() {;}
 
-    double getAge() const;
-    double getY() const;
-    double getFeH() const;
-    double getMod() const;
-    double getAbs() const;
-    double getIfmrIntercept() const;
-    double getIfmrSlope() const;
-    double getIfmrQuadCoef() const;
     double getParam(int) const;
-
-    void setAge(const double);
-    void setY(const double);
-    void setFeH(const double);
-    void setMod(const double);
-    void setAbs(const double);
-    void setIfmrIntercept(const double);
-    void setIfmrSlope(const double);
-    void setIfmrQuadCoef(const double);
     void setParam(int, double);
 
     std::array<double, 3> betaAgeMod;
@@ -54,7 +37,6 @@ class Cluster
     double varScale = 1.0;
     double carbonicity = 0.38; // Good default value, per Mike Montgomery
 
-  private:
     double age = 0.0;
     double yyy = 0.0;
     double feh = 0.0;

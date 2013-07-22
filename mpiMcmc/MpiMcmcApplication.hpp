@@ -18,7 +18,7 @@ class MpiMcmcApplication : public McmcApplication
     virtual int run();
 
     void propClustBigSteps (Cluster &, const struct ifmrMcmcControl &);
-    void propClustIndep (Cluster &, const struct ifmrMcmcControl &);
+    void propClustIndep (Cluster &, const struct ifmrMcmcControl &, double scale = 1.0);
     void propClustCorrelated (Cluster &, const struct ifmrMcmcControl &);
 
     double logPostStep(Chain &, Cluster &, double, const std::vector<int>&, std::array<double, FILTS>&, std::array<double, FILTS>&);
