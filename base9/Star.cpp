@@ -17,7 +17,7 @@ double Star::getMass1() const
 
 double Star::getMass2() const
 {
-    return getMass1() * massRatio;
+    return U * massRatio;
 }
 
 void Star::setMass1(double newMass)

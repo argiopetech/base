@@ -2,8 +2,6 @@
 #include <utility>
 #include <vector>
 
-#include <cstdio>
-#include <cstdlib>
 #include <cmath>
 
 #include "evolve.hpp"
@@ -58,5 +56,4 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int
     pStar.status[cmpnt] = WD;
 
     return thisPrecLogAge;
-
 }

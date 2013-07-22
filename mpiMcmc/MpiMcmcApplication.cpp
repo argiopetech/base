@@ -82,15 +82,13 @@ int MpiMcmcApplication::run()
 
     for (int iteration = 0; iteration < ctrl.burnIter; iteration++)
     {
-        propClust = mc.clust;
-
         if (iteration < ctrl.burnIter / 2)
         {
-            propClustBigSteps (propClust, ctrl);
+            propClust = propClustBigSteps (mc.clust, ctrl);
         }
         else
         {
-            propClustIndep (propClust, ctrl);
+            propClust = propClustIndep (mc.clust, ctrl);
         }
 
         try
@@ -154,8 +152,7 @@ int MpiMcmcApplication::run()
 
     for (int iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
     {
-        propClust = mc.clust;
-        propClustCorrelated (propClust, ctrl);
+        propClust = propClustCorrelated (mc.clust, ctrl);
 
         try
         {
@@ -194,12 +191,12 @@ int MpiMcmcApplication::run()
 }
 
 
-void MpiMcmcApplication::propClustBigSteps (Cluster &clust, struct ifmrMcmcControl const &ctrl)
+Cluster MpiMcmcApplication::propClustBigSteps (Cluster clust, struct ifmrMcmcControl const &ctrl)
 {
-    propClustIndep(clust, ctrl, 25.0);
+    return propClustIndep(clust, ctrl, 25.0);
 }
 
-void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl const &ctrl, double scale)
+Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcControl const &ctrl, double scale)
 {
     /* DOF defined in densities.h */
     int p;
@@ -211,9 +208,11 @@ void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl 
             clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * clust.stepSize.at(p) * clust.stepSize.at(p)));
         }
     }
+
+    return clust;
 }
 
-void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcControl const &ctrl)
+Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
     array<double, NPARAMS> indepProps;
@@ -245,6 +244,8 @@ void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcCon
             clust.setParam(p, clust.getParam(p) + corrProps.at(p));
         }
     }
+
+    return clust;
 }
 
 double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
