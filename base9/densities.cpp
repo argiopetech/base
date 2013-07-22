@@ -92,13 +92,13 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
 // Compute log prior density for cluster properties
 double logPriorClust (const Cluster &pCluster, const Model &evoModels)
 {
-    assert (!(pCluster.getAge() < evoModels.mainSequenceEvol->getMinAge()));
-    assert (!(pCluster.getAge() > evoModels.mainSequenceEvol->getMaxAge()));
-    assert (!(pCluster.getIfmrSlope() < 0.0));
-
-    if (evoModels.IFMR == 11)
+    if ((pCluster.getAge() < evoModels.mainSequenceEvol->getMinAge())
+        || (pCluster.getAge() > evoModels.mainSequenceEvol->getMaxAge())
+        || (pCluster.getIfmrSlope() < 0.0)
+        || (pCluster.getAbs() < 0.0)
+        || ((evoModels.IFMR == 11) && (pCluster.getIfmrQuadCoef() < 0.0)))
     {
-        assert (pCluster.getIfmrQuadCoef() < 0.0);
+        throw InvalidCluster("Invalid cluster parameter");
     }
 
     // enforce monotonicity in IFMR
@@ -124,8 +124,6 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     }
 
     double prior = 0.0;
-
-    assert (!(pCluster.getAbs() < 0.0));
 
     if (pCluster.priorVar[FEH] > EPSILON)
         prior += (-0.5) * sqr (pCluster.getFeH() - pCluster.priorMean[FEH]) / pCluster.priorVar[FEH];

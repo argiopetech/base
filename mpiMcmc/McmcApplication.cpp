@@ -14,7 +14,7 @@ bool McmcApplication::acceptClustMarg (const double logPostCurr, const double lo
 {
     if (isinf (logPostProp))
     {
-        cerr << "-Inf posterior proposed and rejected" << endl;
+//        cerr << "-Inf posterior proposed and rejected" << endl;
         rejected += 1;
         return false;
     }

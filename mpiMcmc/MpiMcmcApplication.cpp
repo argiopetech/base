@@ -97,12 +97,20 @@ int MpiMcmcApplication::run()
         {
             propClust.setAbs(fabs (propClust.getAbs()));
         }
+
         if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
         {
             propClust.setIfmrSlope(fabs (propClust.getIfmrSlope()));
         }
 
-        logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+        try
+        {
+            logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+        }
+        catch(InvalidCluster &e)
+        {
+            logPostProp = -HUGE_VAL;
+        }
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
@@ -159,7 +167,14 @@ int MpiMcmcApplication::run()
         propClust = mc.clust;
         propClustCorrelated (propClust, ctrl);
 
-        logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+        try
+        {
+            logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+        }
+        catch(InvalidCluster &e)
+        {
+            logPostProp = -HUGE_VAL;
+        }
 
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
@@ -255,65 +270,63 @@ void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcCon
 double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     mutex logPostMutex;
+    double logPostProp;
 
-    double logPostProp = logPriorClust (propClust, evoModels);
+    logPostProp = logPriorClust (propClust, evoModels);
 
     auto stars = mc.stars;
 
     propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.getFeH(), propClust.getY(), propClust.getAge());    // determine AGBt ZAMS mass, to find evol state
 
-    if (isfinite(logPostProp))
+    /* loop over assigned stars */
+    pool.parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)
     {
-        /* loop over assigned stars */
-        pool.parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)
+        double postClusterStar = 0.0;
+
+        array<double, FILTS> globalMags;
+        array<double, 2> ltau;
+
+        /* loop over all (mass1, mass ratio) pairs */
+        if (stars.at(i).status[0] == WD)
         {
-            double postClusterStar = 0.0;
+            postClusterStar = 0.0;
 
-            array<double, FILTS> globalMags;
-            array<double, 2> ltau;
-
-            /* loop over all (mass1, mass ratio) pairs */
-            if (stars.at(i).status[0] == WD)
+            for (int j = 0; j < N_WD_MASS1; j++)
             {
-                postClusterStar = 0.0;
+                double tmpLogPost;
+                Star wd(stars.at(i));
+                wd.isFieldStar = 0;
+                wd.U = wdGridMass(j);
+                wd.massRatio = 0.0;
 
-                for (int j = 0; j < N_WD_MASS1; j++)
+                evolve (propClust, evoModels, globalMags, filters, wd, ltau);
+
+                try
                 {
-                    double tmpLogPost;
-                    Star wd(stars.at(i));
-                    wd.isFieldStar = 0;
-                    wd.U = wdGridMass(j);
-                    wd.massRatio = 0.0;
+                    tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
+                    tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
-                    evolve (propClust, evoModels, globalMags, filters, wd, ltau);
-
-                    try
-                    {
-                        tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
-                        tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
-
-                        postClusterStar = postClusterStar +  exp (tmpLogPost);
-                    }
-                    catch ( WDBoundsError &e )
-                    {
-                        cerr << e.what() << endl;
-                    }
+                    postClusterStar = postClusterStar +  exp (tmpLogPost);
+                }
+                catch ( WDBoundsError &e )
+                {
+                    cerr << e.what() << endl;
                 }
             }
-            else
-            {
-                /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
-            }
+        }
+        else
+        {
+            /* marginalize over isochrone */
+            postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+        }
+            
+        postClusterStar = postClusterStar * stars.at(i).clustStarPriorDens;
 
-            postClusterStar = postClusterStar * stars.at(i).clustStarPriorDens;
 
-
-            /* marginalize over field star status */
-            std::lock_guard<mutex> lk(logPostMutex);
-            logPostProp += log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
-        });
-    }
+        /* marginalize over field star status */
+        std::lock_guard<mutex> lk(logPostMutex);
+        logPostProp += log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
+    });
 
     return logPostProp;
 }

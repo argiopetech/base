@@ -66,4 +66,13 @@ class Cluster
 
 };
 
+class InvalidCluster : public std::range_error
+{
+  public:
+    explicit InvalidCluster (const std::string& what_arg)
+        : std::range_error(what_arg) {}
+
+    explicit InvalidCluster (const char* what_arg)
+        : std::range_error(what_arg) {}
+};
 #endif
