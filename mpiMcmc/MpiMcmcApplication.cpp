@@ -95,11 +95,11 @@ int MpiMcmcApplication::run()
 
         if (ctrl.priorVar[ABS] > EPSILON)
         {
-            propClust.parameter[ABS] = fabs (propClust.parameter[ABS]);
+            propClust.setAbs(fabs (propClust.getAbs()));
         }
         if (ctrl.priorVar[IFMR_SLOPE] > EPSILON)
         {
-            propClust.parameter[IFMR_SLOPE] = fabs (propClust.parameter[IFMR_SLOPE]);
+            propClust.setIfmrSlope(fabs (propClust.getIfmrSlope()));
         }
 
         logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
@@ -121,7 +121,7 @@ int MpiMcmcApplication::run()
                 {
                     if (ctrl.priorVar[p] > EPSILON)
                     {
-                        params.at(p).at((iteration - ctrl.burnIter / 2) / increment) = mc.clust.parameter[p];
+                        params.at(p).at((iteration - ctrl.burnIter / 2) / increment) = mc.clust.getParam(p);
                     }
                 }
             }
@@ -132,7 +132,7 @@ int MpiMcmcApplication::run()
         {
             if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
             {
-                ctrl.burninFile << boost::format("%10.6f ") % mc.clust.parameter[p];
+                ctrl.burninFile << boost::format("%10.6f ") % mc.clust.getParam(p);
             }
         }
 
@@ -174,7 +174,7 @@ int MpiMcmcApplication::run()
             {
                 if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                 {
-                    ctrl.resFile << boost::format("%10.6f ") % mc.clust.parameter[p];
+                    ctrl.resFile << boost::format("%10.6f ") % mc.clust.getParam(p);
                 }
             }
             ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
@@ -199,7 +199,7 @@ void MpiMcmcApplication::propClustBigSteps (Cluster &clust, struct ifmrMcmcContr
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.parameter.at(p) += sampleT (gen, scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p));
+            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * scale * clust.stepSize.at(p) * clust.stepSize.at(p)));
         }
     }
 }
@@ -213,7 +213,7 @@ void MpiMcmcApplication::propClustIndep (Cluster &clust, struct ifmrMcmcControl 
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.parameter.at(p) += sampleT (gen, clust.stepSize.at(p) * clust.stepSize.at(p));
+            clust.setParam(p, clust.getParam(p) + sampleT (gen, clust.stepSize.at(p) * clust.stepSize.at(p)));
         }
     }
 }
@@ -247,7 +247,7 @@ void MpiMcmcApplication::propClustCorrelated (Cluster &clust, struct ifmrMcmcCon
                     corrProps.at(p) += ctrl.propMatrix.at(p).at(k) * indepProps.at(k);
                 }
             }
-            clust.parameter.at(p) += corrProps.at(p);
+            clust.setParam(p, clust.getParam(p) + corrProps.at(p));
         }
     }
 }

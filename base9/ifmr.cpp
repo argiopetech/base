@@ -59,21 +59,21 @@ double intlFinalMassReln (const Cluster &pCluster, const Model &evoModels, doubl
 double linearIFMRshift (const Cluster &pCluster, double zamsMass)
 {
     constexpr double shiftMass = 3.0;
-    double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - shiftMass);
+    double wdMass = pCluster.getIfmrIntercept() + pCluster.getIfmrSlope() * (zamsMass - shiftMass);
 
     return wdMass;
 }
 
 double linearIFMRage (const Cluster &pCluster, double zamsMass)
 {
-    double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - 27.0 + 2.6 * pCluster.parameter[AGE]);
+    double wdMass = pCluster.getIfmrIntercept() + pCluster.getIfmrSlope() * (zamsMass - 27.0 + 2.6 * pCluster.getAge());
 
     return wdMass;
 }
 
 double linearIFMR0 (const Cluster &pCluster, double zamsMass)
 {
-    double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * zamsMass;
+    double wdMass = pCluster.getIfmrIntercept() + pCluster.getIfmrSlope() * zamsMass;
 
     return wdMass;
 }
@@ -81,7 +81,7 @@ double linearIFMR0 (const Cluster &pCluster, double zamsMass)
 double linearIFMRhighShift (const Cluster &pCluster, double zamsMass)
 {
     constexpr double shiftMass = 5.0;
-    double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - shiftMass);
+    double wdMass = pCluster.getIfmrIntercept() + pCluster.getIfmrSlope() * (zamsMass - shiftMass);
 
     return wdMass;
 }
@@ -148,7 +148,7 @@ double salarisPiecewiseIFMR (double zamsMass)
 double quadraticIFMRshift (const Cluster &pCluster, double zamsMass)
 {
     constexpr double shiftMass = 3.0;
-    double wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - shiftMass) + pCluster.parameter[IFMR_QUADCOEF] * (zamsMass - shiftMass) * (zamsMass - shiftMass);
+    double wdMass = pCluster.getIfmrIntercept() + pCluster.getIfmrSlope() * (zamsMass - shiftMass) + pCluster.getIfmrQuadCoef() * (zamsMass - shiftMass) * (zamsMass - shiftMass);
 
     return wdMass;
 }
@@ -159,17 +159,17 @@ double quadraticIFMRrotate (const Cluster &pCluster, double zamsMass)
     constexpr double massLower = 0.15;
     double massUpper = pCluster.M_wd_up;
 
-    double angle = atan (pCluster.parameter[IFMR_SLOPE]);
+    double angle = atan (pCluster.getIfmrSlope());
 
-    double xLo = (cos (angle) + pCluster.parameter[IFMR_SLOPE] * sin (angle)) * (massLower - shiftMass);
-    double xUp = (cos (angle) + pCluster.parameter[IFMR_SLOPE] * sin (angle)) * (massUpper - shiftMass);
+    double xLo = (cos (angle) + pCluster.getIfmrSlope() * sin (angle)) * (massLower - shiftMass);
+    double xUp = (cos (angle) + pCluster.getIfmrSlope() * sin (angle)) * (massUpper - shiftMass);
 
     /* constants to simplify expressions */
     double cLo = 1.0 / tan (angle) * (zamsMass - shiftMass) - 1.0 / sin (angle) * xLo;
     double cUp = 1.0 / tan (angle) * (zamsMass - shiftMass) - 1.0 / sin (angle) * xUp;
-    double A = cLo + cUp - cos (angle) / (sin (angle) * sin (angle) * pCluster.parameter[IFMR_QUADCOEF]);
+    double A = cLo + cUp - cos (angle) / (sin (angle) * sin (angle) * pCluster.getIfmrQuadCoef());
 
-    double wdMass = pCluster.parameter[IFMR_INTERCEPT] - 0.5 * A + sqrt (0.25 * A * A - cLo * cUp - 1.0 / (sin (angle) * pCluster.parameter[IFMR_QUADCOEF]) * (zamsMass - shiftMass));
+    double wdMass = pCluster.getIfmrIntercept() - 0.5 * A + sqrt (0.25 * A * A - cLo * cUp - 1.0 / (sin (angle) * pCluster.getIfmrQuadCoef()) * (zamsMass - shiftMass));
 
     return wdMass;
 }
@@ -182,11 +182,11 @@ double piecewiseLinearIFMR (const Cluster &pCluster, double zamsMass)
 
     if (zamsMass < breakpointMass)
     {
-        wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (zamsMass - shiftMass);
+        wdMass = pCluster.getIfmrIntercept() + pCluster.getIfmrSlope() * (zamsMass - shiftMass);
     }
     else
     {
-        wdMass = pCluster.parameter[IFMR_INTERCEPT] + pCluster.parameter[IFMR_SLOPE] * (breakpointMass - shiftMass) + pCluster.parameter[IFMR_QUADCOEF] * (zamsMass - breakpointMass);
+        wdMass = pCluster.getIfmrIntercept() + pCluster.getIfmrSlope() * (breakpointMass - shiftMass) + pCluster.getIfmrQuadCoef() * (zamsMass - breakpointMass);
     }
 
     return wdMass;

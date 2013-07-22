@@ -125,30 +125,29 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, const Settings &settings)
 {
     ctrl.priorVar.fill(0);
-    clust.parameter.fill(0);
 
     clust.carbonicity = settings.whiteDwarf.carbonicity;
 
-    clust.parameter[FEH] = settings.cluster.Fe_H;
+    clust.setFeH(settings.cluster.Fe_H);
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    clust.parameter[MOD] = settings.cluster.distMod;
+    clust.setMod(settings.cluster.distMod);
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    clust.parameter[ABS] = settings.cluster.Av;
+    clust.setAbs(settings.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    clust.parameter[AGE] = settings.cluster.logClusAge;
+    clust.setAge(settings.cluster.logClusAge);
     ctrl.priorVar[AGE] = 1.0;
 
     if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
-        clust.parameter[YYY] = settings.cluster.Y;
+        clust.setY(settings.cluster.Y);
         ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
     }
     else
     {
-        clust.parameter[YYY] = 0.0;
+        clust.setY(0.0);
         ctrl.priorVar[YYY] = 0.0;
     }
 
@@ -173,13 +172,13 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
     }
 
     /* set starting values for IFMR parameters */
-    clust.parameter[IFMR_SLOPE] = 0.08;
-    clust.parameter[IFMR_INTERCEPT] = 0.65;
+    clust.setIfmrSlope(0.08);
+    clust.setIfmrIntercept(0.65);
 
     if (evoModels.IFMR <= 10)
-        clust.parameter[IFMR_QUADCOEF] = 0.0001;
+        clust.setIfmrQuadCoef(0.0001);
     else
-        clust.parameter[IFMR_QUADCOEF] = 0.08;
+        clust.setIfmrQuadCoef(0.08);
 
     for (auto &var : ctrl.priorVar)
     {
@@ -219,8 +218,15 @@ void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Mo
 
     ctrl.clusterFilename = settings.files.output + ".res";
 
-    std::copy(clust.parameter.begin(), clust.parameter.end(), clust.mean.begin());
-    std::copy(clust.parameter.begin(), clust.parameter.end(), clust.priorMean.begin());
+    clust.priorMean[AGE] = clust.getAge();
+    clust.priorMean[YYY] = clust.getY();
+    clust.priorMean[FEH] = clust.getFeH();
+    clust.priorMean[MOD] = clust.getMod();
+    clust.priorMean[ABS] = clust.getAbs();
+    clust.priorMean[IFMR_INTERCEPT] = clust.getIfmrIntercept();
+    clust.priorMean[IFMR_SLOPE] = clust.getIfmrSlope();
+    clust.priorMean[IFMR_QUADCOEF] = clust.getIfmrQuadCoef();
+
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
 } /* initIfmrMcmcControl */
 

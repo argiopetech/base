@@ -10,8 +10,7 @@ class Cluster
   public:
     Cluster()
     {
-        mean.fill(0.0);
-        parameter.fill(0.0);
+//        mean.fill(0.0);
 
         stepSize[AGE] = 0.005;
         stepSize[FEH] = 0.005;
@@ -29,17 +28,23 @@ class Cluster
     double getFeH() const;
     double getMod() const;
     double getAbs() const;
+    double getIfmrIntercept() const;
+    double getIfmrSlope() const;
+    double getIfmrQuadCoef() const;
+    double getParam(int) const;
 
-    void setAge(const double newAge);
-    void setY(const double newY);
-    void setFeH(const double newFeH);
-    void setMod(const double newMod);
-    void setAbs(const double newAbs);
+    void setAge(const double);
+    void setY(const double);
+    void setFeH(const double);
+    void setMod(const double);
+    void setAbs(const double);
+    void setIfmrIntercept(const double);
+    void setIfmrSlope(const double);
+    void setIfmrQuadCoef(const double);
+    void setParam(int, double);
 
     std::array<double, 3> betaAgeMod;
-    std::array<double, NPARAMS> parameter;
     std::array<double, NPARAMS> stepSize;
-    std::array<double, NPARAMS> mean;
     std::array<double, NPARAMS> priorVar;
     std::array<double, NPARAMS> priorMean;
 
@@ -48,6 +53,17 @@ class Cluster
     double AGBt_zmass = 0.0;
     double varScale = 1.0;
     double carbonicity = 0.38; // Good default value, per Mike Montgomery
+
+  private:
+    double age = 0.0;
+    double yyy = 0.0;
+    double feh = 0.0;
+    double mod = 0.0;
+    double abs = 0.0;
+    double ifmrIntercept = 0.0;
+    double ifmrSlope = 0.0;
+    double ifmrQuadCoef = 0.0;
+
 };
 
 #endif

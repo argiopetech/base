@@ -5,50 +5,150 @@
 
 double Cluster::getAge() const
 {
-    return parameter[AGE];
+    return age;
 }
 
 double Cluster::getY() const
 {
-    return parameter[YYY];
+    return yyy;
 }
 
 double Cluster::getFeH() const
 {
-    return parameter[FEH];
+    return feh;
 }
 
 double Cluster::getMod() const
 {
-    return parameter[MOD];
+    return mod;
 }
 
 double Cluster::getAbs() const
 {
-    return parameter[ABS];
+    return abs;
+}
+
+double Cluster::getIfmrIntercept() const
+{
+    return ifmrIntercept;
+}
+
+double Cluster::getIfmrSlope() const
+{
+    return ifmrSlope;
+}
+
+double Cluster::getIfmrQuadCoef() const
+{
+    return ifmrQuadCoef;
 }
 
 void Cluster::setAge (const double newAge)
 {
-    parameter[AGE] = newAge;
+    age = newAge;
 }
 
 void Cluster::setY (const double newY)
 {
-    parameter[YYY] = newY;
+    yyy = newY;
 }
 
 void Cluster::setFeH (const double newFeH)
 {
-    parameter[FEH] = newFeH;
+    feh = newFeH;
 }
 
 void Cluster::setMod (const double newMod)
 {
-    parameter[MOD] = newMod;
+    mod = newMod;
 }
 
 void Cluster::setAbs (const double newAbs)
 {
-    parameter[ABS] = newAbs;
+    abs = newAbs;
+}
+
+void Cluster::setIfmrIntercept (const double newIfmrIntercept)
+{
+    ifmrIntercept = newIfmrIntercept;
+}
+
+void Cluster::setIfmrSlope (const double newIfmrSlope)
+{
+    ifmrSlope = newIfmrSlope;
+}
+
+void Cluster::setIfmrQuadCoef (const double newIfmrQuadCoef)
+{
+    ifmrQuadCoef = newIfmrQuadCoef;
+}
+
+double Cluster::getParam(int p) const
+{
+    double temp;
+
+    switch(p)
+    {
+        case AGE:
+            temp = getAge();
+            break;
+        case YYY:
+            temp = getY();
+            break;
+        case FEH:
+            temp = getFeH();
+            break;
+        case MOD:
+            temp = getMod();
+            break;
+        case ABS:
+            temp = getAbs();
+            break;
+        case IFMR_INTERCEPT:
+            temp = getIfmrIntercept();
+            break;
+        case IFMR_SLOPE:
+            temp = getIfmrSlope();
+            break;
+        case IFMR_QUADCOEF:
+            temp = getIfmrQuadCoef();
+            break;
+        default:
+            throw std::out_of_range("Saving param matrix");
+    }
+
+    return temp;
+}
+
+void Cluster::setParam(int p, double v)
+{
+    switch(p)
+    {
+        case AGE:
+            setAge(v);
+            break;
+        case YYY:
+            setY(v);
+            break;
+        case FEH:
+            setFeH(v);
+            break;
+        case MOD:
+            setMod(v);
+            break;
+        case ABS:
+            setAbs(v);
+            break;
+        case IFMR_INTERCEPT:
+            setIfmrIntercept(v);
+            break;
+        case IFMR_SLOPE:
+            setIfmrSlope(v);
+            break;
+        case IFMR_QUADCOEF:
+            setIfmrQuadCoef(v);
+            break;
+        default:
+            throw std::out_of_range("Saving param matrix");
+    }
 }

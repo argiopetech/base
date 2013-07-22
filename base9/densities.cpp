@@ -72,39 +72,33 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
 
     mass1 = pStar.getMass1();
 
-    if (mass1 > 0.1 && mass1 <= pCluster.M_wd_up)
+    assert (mass1 > 0.1 && mass1 <= pCluster.M_wd_up);
+
+    if (pStar.isFieldStar)
     {
-        if (pStar.isFieldStar)
-        {
-            logPrior = logTDens (pStar.U, pStar.meanU, pStar.varU, DOF);
-            if (pStar.status[0] != WD)
-                logPrior += logTDens (pStar.massRatio, pStar.meanMassRatio, pStar.varMassRatio, DOF);
-            return logPrior;
-        }
-        else
-        {
-            log_m1 = log10 (mass1);
-            logPrior = evil::logMassNorm::getInstance(pCluster).getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
-            return logPrior;
-        }
+        logPrior = logTDens (pStar.U, pStar.meanU, pStar.varU, DOF);
+        if (pStar.status[0] != WD)
+            logPrior += logTDens (pStar.massRatio, pStar.meanMassRatio, pStar.varMassRatio, DOF);
+        return logPrior;
     }
     else
-        return -HUGE_VAL;
+    {
+        log_m1 = log10 (mass1);
+        logPrior = evil::logMassNorm::getInstance(pCluster).getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
+        return logPrior;
+    }
 }
 
 // Compute log prior density for cluster properties
 double logPriorClust (const Cluster &pCluster, const Model &evoModels)
 {
-    if (pCluster.getAge() < evoModels.mainSequenceEvol->getMinAge())
-        return -HUGE_VAL;               // these are possible, we just don't have models for them YET
-    else if (pCluster.getAge() > evoModels.mainSequenceEvol->getMaxAge())
-        return -HUGE_VAL;               // appropriate for the MS/RGB models but not the WDs
-    else if (pCluster.parameter[IFMR_SLOPE] < 0.0)
-        return -HUGE_VAL;
+    assert (!(pCluster.getAge() < evoModels.mainSequenceEvol->getMinAge()));
+    assert (!(pCluster.getAge() > evoModels.mainSequenceEvol->getMaxAge()));
+    assert (!(pCluster.getIfmrSlope() < 0.0));
+
     if (evoModels.IFMR == 11)
     {
-        if (pCluster.parameter[IFMR_QUADCOEF] < 0.0)
-            return -HUGE_VAL;
+        assert (pCluster.getIfmrQuadCoef() < 0.0);
     }
 
     // enforce monotonicity in IFMR
@@ -113,12 +107,12 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
         double massLower = 0.15;
         double massUpper = pCluster.M_wd_up;
         double massShift = 3.0;
-        double angle = atan (pCluster.parameter[IFMR_SLOPE]);
-        double aa = cos (angle) * (1 + pCluster.parameter[IFMR_SLOPE] * pCluster.parameter[IFMR_SLOPE]);
+        double angle = atan (pCluster.getIfmrSlope());
+        double aa = cos (angle) * (1 + pCluster.getIfmrSlope() * pCluster.getIfmrSlope());
         double xLower = aa * (massLower - massShift);
         double xUpper = aa * (massUpper - massShift);
 
-        double dydx_xLower = pCluster.parameter[IFMR_QUADCOEF] * (xLower - xUpper);
+        double dydx_xLower = pCluster.getIfmrQuadCoef() * (xLower - xUpper);
         double dydx_xUpper = -dydx_xLower;
 
         double slopeLower = tan (angle + atan (dydx_xLower));
@@ -126,13 +120,13 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
 
         // if IFMR is decreasing at either endpoint, reject
         if (slopeLower < 0.0 || slopeUpper < 0.0)
-            return -HUGE_VAL;
+            throw std::range_error("IFMR decreasing at endpoint");
     }
 
     double prior = 0.0;
 
-    if (pCluster.getAbs() < 0.0)
-        return -HUGE_VAL;
+    assert (!(pCluster.getAbs() < 0.0));
+
     if (pCluster.priorVar[FEH] > EPSILON)
         prior += (-0.5) * sqr (pCluster.getFeH() - pCluster.priorMean[FEH]) / pCluster.priorVar[FEH];
     if (pCluster.priorVar[MOD] > EPSILON)
@@ -155,13 +149,9 @@ double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS
     {
         if (pStar.isFieldStar)
         {
-            if (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i])
-                likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
-            else
-            {
-                likelihood = -HUGE_VAL;
-                return likelihood;
-            }
+            assert (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i]);
+
+            likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
         }
         else
         {
@@ -184,13 +174,9 @@ double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILT
     {
         for (i = 0; i < numFilts; i++)
         {
-            if (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i])
-                likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
-            else
-            {
-                likelihood = -HUGE_VAL;
-                return likelihood;
-            }
+            assert (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i]);
+
+            likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
         }
     }
     else
@@ -219,13 +205,9 @@ double scaledLogLike (int numFilts, const Star &pStar, double varScale, const ar
     {
         if (pStar.isFieldStar)
         {
-            if (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i])
-                likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
-            else
-            {
-                likelihood = -HUGE_VAL;
-                return likelihood;
-            }
+            assert (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i]);
+
+            likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
         }
         else
         {
@@ -247,13 +229,7 @@ double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &ev
 
     logPrior = logPriorMass (pStar, pCluster);
 
-    if (isinf(logPrior))
-        return (logPrior);
-
     likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, filterPriorMin, filterPriorMax);
-
-    if (isinf(likelihood))
-        return (likelihood);
 
     return (logPrior + likelihood);
 }
