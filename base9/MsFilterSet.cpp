@@ -24,7 +24,7 @@ array<double, FILTS> UBVRIJHK::calcAbsCoeffs() const
 
 
 SDSS::SDSS()
-    : MsFilterSet({"F435W","F475W","F550M","F555W","F606W","F625W","F775W","F814W"})
+    : MsFilterSet({"u", "g", "r", "i", "z", "J", "H", "K"})
 {}
 
 array<double, FILTS> SDSS::calcAbsCoeffs() const
@@ -42,7 +42,7 @@ array<double, FILTS> SDSS::calcAbsCoeffs() const
 
 
 ACS::ACS()
-    : MsFilterSet({"u", "g", "r", "i", "z", "J", "H", "K"})
+    : MsFilterSet({"F435W","F475W","F550M","F555W","F606W","F625W","F775W","F814W"})
 {}
 
 array<double, FILTS> ACS::calcAbsCoeffs() const
