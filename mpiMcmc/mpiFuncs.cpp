@@ -69,6 +69,12 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
         }
     }
 
+    if (filters.empty())
+    {
+        cerr << "Exiting due to empty filter set. Did you specify the correct filterSet?" << endl;
+        exit(1);
+    }
+
     // This loop reads in photometry data
     // It also reads a best guess for the mass
     stars.clear();
