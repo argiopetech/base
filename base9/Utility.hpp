@@ -47,7 +47,7 @@ namespace base
                                                   this->cv.wait(lk); // Wait for a signal
                                               }
 
-                                              if (!terminate) // If we're still running...
+                                              if (!terminate && !this->workQueue.empty()) // If we're still running...
                                               {
                                                   auto func = this->workQueue.front();
                                                   lk.unlock(); // Don't need lock while we run the function
