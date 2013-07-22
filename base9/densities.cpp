@@ -247,12 +247,12 @@ double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &ev
 
     logPrior = logPriorMass (pStar, pCluster);
 
-    if (fabs (logPrior + HUGE_VAL) < EPSILON)
+    if (isinf(logPrior))
         return (logPrior);
 
     likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, filterPriorMin, filterPriorMax);
 
-    if (fabs (likelihood + HUGE_VAL) < EPSILON)
+    if (isinf(likelihood))
         return (likelihood);
 
     return (logPrior + likelihood);

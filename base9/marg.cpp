@@ -18,7 +18,7 @@ using std::vector;
 
 const int MAX_ENTRIES = 370;
 
-void calcPost (double*, double, double[][FILTS], double, double*, double*, const Cluster&, Star&, const Model&, const vector<int>&, array<double, 2>&, array<double, FILTS>&, const array<double, FILTS>&, const array<double, FILTS>&);
+void calcPost (double*, double, double[][FILTS], double, double&, double*, const Cluster&, Star&, const Model&, const vector<int>&, array<double, 2>&, array<double, FILTS>&, const array<double, FILTS>&, const array<double, FILTS>&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
 double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
@@ -43,7 +43,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
 
     double dIsoMass = 0.0;
 
-    double isoIncrem = 80.0;    /* ok for YY models? */
+    int isoIncrem = 80;    /* ok for YY models? */
 
     Star myStar(pStar);
 
@@ -62,7 +62,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
                 dMass = dIsoMass / isoIncrem;
                 mass[0] = isochrone.mass[m] + k * dMass;
 
-                calcPost (&post, dMass, mag, clusterAv, &flux, mass, pCluster, myStar, evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+                calcPost (&post, dMass, mag, clusterAv, flux, mass, pCluster, myStar, evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
             }
         }
     }
@@ -113,7 +113,7 @@ void setMags (double mag[][FILTS], int cmpnt, double *mass, const Cluster &pClus
     }
 }
 
-void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters)
+void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters)
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
@@ -122,9 +122,9 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, co
     {                           // if there is a secondary star
         for (auto f : filters)
         {
-                (*flux) = exp10((mag[0][f] / -2.5));    // add up the fluxes of the primary
-                (*flux) += exp10((mag[1][f] / -2.5));   // and the secondary
-                mag[2][f] = -2.5 * log10 (*flux);    // (these 3 lines take 5% of run time for N large)
+                flux = exp10((mag[0][f] / -2.5));    // add up the fluxes of the primary
+                flux += exp10((mag[1][f] / -2.5));   // and the secondary
+                mag[2][f] = -2.5 * log10 (flux);    // (these 3 lines take 5% of run time for N large)
                 // if primary mag = 99.999, then this works
         }
     }                           // to make the combined mag = secondary mag
@@ -143,7 +143,7 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double *flux, co
 }
 
 
-void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double *flux, double *mass, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+void calcPost (double *post, double dMass, double mag[][FILTS], double clusterAv, double &flux, double *mass, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
