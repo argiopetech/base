@@ -117,6 +117,8 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, co
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
+    assert(!filters.empty());
+
     // can now derive combined mags
     if (mag[1][filters.front()] < 99.)
     {                           // if there is a secondary star
