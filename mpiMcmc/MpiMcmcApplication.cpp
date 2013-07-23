@@ -191,7 +191,7 @@ int MpiMcmcApplication::run()
 }
 
 
-Cluster MpiMcmcApplication::propClustBigSteps (Cluster clust, struct ifmrMcmcControl const &ctrl)
+Cluster MpiMcmcApplication::propClustBigSteps (const Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     return propClustIndep(clust, ctrl, 25.0);
 }
@@ -287,7 +287,7 @@ double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsL
                     tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
                     tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
-                    postClusterStar = postClusterStar +  exp (tmpLogPost);
+                    postClusterStar +=  exp (tmpLogPost);
                 }
                 catch ( WDBoundsError &e )
                 {
@@ -300,9 +300,8 @@ double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsL
             /* marginalize over isochrone */
             postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
         }
-            
-        postClusterStar = postClusterStar * stars.at(i).clustStarPriorDens;
 
+        postClusterStar *= stars.at(i).clustStarPriorDens;
 
         /* marginalize over field star status */
         std::lock_guard<mutex> lk(logPostMutex);

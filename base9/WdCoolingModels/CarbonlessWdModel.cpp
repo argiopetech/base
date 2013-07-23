@@ -41,6 +41,7 @@ pair<double, double> CarbonlessWdModel::wdMassToTeffAndRadius (double logAge, do
     }
 
     auto massIter = lower_bound(wdCurves.begin(), wdCurves.end(), wdCoolingCurve(wdMass));
+//    cerr << wdMass << " " << massIter - wdCurves.begin() << endl;
     assert(massIter - wdCurves.begin() > 0);
 
     if (massIter == wdCurves.end())

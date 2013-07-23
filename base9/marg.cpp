@@ -136,11 +136,13 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, co
             mag[2][f] = mag[0][f];
     }
 
-    for (auto f : filters)
+    for (int i = 0; i < filters.size(); ++i)
     {
+        int f = filters.at(i);
+
         mag[2][f] += pCluster.mod;
         mag[2][f] += (clusterAbs[f] - 1.0) * clusterAv;       // add A_[u-k] (standard defn of modulus already includes Av)
-        pStar.photometry[f] = mag[2][f];
+        pStar.photometry[i] = mag[2][f];
     }
 }
 

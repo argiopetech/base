@@ -17,7 +17,7 @@ class MpiMcmcApplication : public McmcApplication
 
     virtual int run();
 
-    Cluster propClustBigSteps (Cluster, const struct ifmrMcmcControl &);
+    Cluster propClustBigSteps (const Cluster&, const struct ifmrMcmcControl &);
     Cluster propClustIndep (Cluster, const struct ifmrMcmcControl &, double scale = 1.0);
     Cluster propClustCorrelated (Cluster, const struct ifmrMcmcControl &);
 
