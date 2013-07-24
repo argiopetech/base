@@ -91,10 +91,14 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
     }
 
     auto massIter = lower_bound(wdCurves.begin(), wdCurves.end(), wdCoolingCurve(wdMass));
-    assert(massIter - wdCurves.begin() > 0);
 
-    if (massIter == wdCurves.end())
+    if (massIter - wdCurves.begin() > 0)
     {
+        // log << "Mass underflow in WD Model" << endl;
+    }
+    else if (massIter == wdCurves.end())
+    {
+        // log << "Mass overflow in WD Model" << endl;
         massIter -= 2;
     }
     else
@@ -109,11 +113,14 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
         vector<double> ageRadius;
 
         auto carbonIter = lower_bound(m->carbonCurves.begin(), m->carbonCurves.end(), wdCarbonCurve(x_carbon));
-        assert(carbonIter - m->carbonCurves.begin() > 0);
 
-        if (carbonIter == m->carbonCurves.end())
+        if (carbonIter - m->carbonCurves.begin() > 0)
         {
-            cerr << "Extrapolating carbon" << endl;
+            // log << "Carbon underflow in WD Model" << endl;
+        }
+        else if (carbonIter == m->carbonCurves.end())
+        {
+            // log << "Carbon overflow in WD Model << endl;
             carbonIter -= 2;
         }
         else
@@ -126,11 +133,14 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
         {
             record r(0, wdCoolLogAge, 0);
             auto ageIter = lower_bound(c->records.begin(), c->records.end(), r, record::compareAge);
-            assert(ageIter - c->records.begin() > 0);
 
-            if (ageIter == m->carbonCurves[0].records.end())
+            if (ageIter - c->records.begin() > 0)
             {
-                cerr << "Extrapolating age" << endl;
+                // log << "Age underflow in WD Model" << endl;
+            }
+            else if (ageIter == m->carbonCurves[0].records.end())
+            {
+                // log << "Age overflow in WD Model" << endl;
                 ageIter -= 2;
             }
             else
