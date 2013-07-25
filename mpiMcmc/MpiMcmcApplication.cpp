@@ -82,7 +82,7 @@ int MpiMcmcApplication::run()
 
     for (int iteration = 0; iteration < ctrl.burnIter; iteration++)
     {
-        if (iteration < ctrl.burnIter / 2)
+        if (settings.mpiMcmc.bigStepBurnin || (iteration < ctrl.burnIter / 2))
         {
             propClust = propClustBigSteps (mc.clust, ctrl);
         }

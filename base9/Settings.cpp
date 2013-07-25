@@ -153,7 +153,6 @@ void Settings::fromCLI (int argc, char **argv)
         {"percentDB", required_argument, 0, 0xE7},
         {"nFieldStars", required_argument, 0, 0xE6},
         {"modelDirectory", required_argument, 0, 0xE5},
-        // 0xE5
         {"brightLimit", required_argument, 0, 0xE4},
         {"faintLimit", required_argument, 0, 0xE3},
         {"relevantFilt", required_argument, 0, 0xE2},
@@ -165,6 +164,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"config", required_argument, 0, 0xDC},
         {"help", no_argument, 0, 0xDB},
         {"version", no_argument, 0, 0xDA},
+        {"bigStepBurnin", no_argument, 0, 0xCF},
         {0, 0, 0, 0}
     };
 
@@ -341,6 +341,10 @@ void Settings::fromCLI (int argc, char **argv)
             case 0xDA:
                 printVersion ();
                 exit (EXIT_SUCCESS);
+
+            case 0xCf:
+                mpiMcmc.bigStepBurnin = true;
+                break;
 
             case '?':
                 // getopt_long already printed an error message.

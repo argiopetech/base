@@ -35,6 +35,8 @@ class Settings
         int burnIter;
         int maxIter;
         int thin;
+
+        bool bigStepBurnin = false;
     };
 
     struct SimClusterSettings
