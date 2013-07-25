@@ -92,7 +92,7 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
 
     auto massIter = lower_bound(wdCurves.begin(), wdCurves.end(), wdCoolingCurve(wdMass));
 
-    if (massIter - wdCurves.begin() > 0)
+    if (massIter == wdCurves.begin())
     {
         // log << "Mass underflow in WD Model" << endl;
     }
@@ -114,7 +114,7 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
 
         auto carbonIter = lower_bound(m->carbonCurves.begin(), m->carbonCurves.end(), wdCarbonCurve(x_carbon));
 
-        if (carbonIter - m->carbonCurves.begin() > 0)
+        if (carbonIter == m->carbonCurves.begin())
         {
             // log << "Carbon underflow in WD Model" << endl;
         }
@@ -134,7 +134,7 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
             record r(0, wdCoolLogAge, 0);
             auto ageIter = lower_bound(c->records.begin(), c->records.end(), r, record::compareAge);
 
-            if (ageIter - c->records.begin() > 0)
+            if (ageIter == c->records.begin())
             {
                 // log << "Age underflow in WD Model" << endl;
             }

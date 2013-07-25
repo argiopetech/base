@@ -42,7 +42,7 @@ pair<double, double> CarbonlessWdModel::wdMassToTeffAndRadius (double logAge, do
 
     auto massIter = lower_bound(wdCurves.begin(), wdCurves.end(), wdCoolingCurve(wdMass));
     
-    if (massIter - wdCurves.begin() > 0)
+    if (massIter == wdCurves.begin())
     {
         // log << "Mass underflow in WD Model" << endl;
     }
@@ -63,7 +63,7 @@ pair<double, double> CarbonlessWdModel::wdMassToTeffAndRadius (double logAge, do
         auto ageIter = lower_bound(m->carbonCurves[0].records.begin(), m->carbonCurves[0].records.end(), r, record::compareAge);
 
 
-        if (ageIter - m->carbonCurves[0].records.begin() == 0)
+        if (ageIter == m->carbonCurves[0].records.begin())
         {
             // log << "Age underflow in WD Model" << endl;
         }
