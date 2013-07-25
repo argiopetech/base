@@ -99,7 +99,6 @@ class Settings
     template <typename T> T getDefault (YAML::Node &, std::string &&, T);
     template <typename T> T getOrDie (YAML::Node &, std::string &&);
     YAML::Node getNode (YAML::Node &, std::string &&);
-    void printUsage();
     [[noreturn]] void exitWith (std::string &&);
 };
 

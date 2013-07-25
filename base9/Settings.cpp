@@ -8,6 +8,7 @@
 #include <getopt.h>
 #include <iostream>
 
+#include "Base9Config.h"
 #include "yaml-cpp/yaml.h"
 #include "Settings.hpp"
 
@@ -22,7 +23,8 @@ using YAML::Node;
 using YAML::LoadFile;
 
 // Forward declaration
-void printUsage ();
+static void printUsage ();
+static void printVersion ();
 
 void Settings::fromYaml (const string yamlFile)
 {
@@ -150,6 +152,8 @@ void Settings::fromCLI (int argc, char **argv)
         {"percentBinary", required_argument, 0, 0xE8},
         {"percentDB", required_argument, 0, 0xE7},
         {"nFieldStars", required_argument, 0, 0xE6},
+        {"modelDirectory", required_argument, 0, 0xE5},
+        // 0xE5
         {"brightLimit", required_argument, 0, 0xE4},
         {"faintLimit", required_argument, 0, 0xE3},
         {"relevantFilt", required_argument, 0, 0xE2},
@@ -160,7 +164,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"outputFileBase", required_argument, 0, 0xDD},
         {"config", required_argument, 0, 0xDC},
         {"help", no_argument, 0, 0xDB},
-        {"modelDirectory", required_argument, 0, 0xDA},
+        {"version", no_argument, 0, 0xDA},
         {0, 0, 0, 0}
     };
 
@@ -290,6 +294,10 @@ void Settings::fromCLI (int argc, char **argv)
                 istringstream (string (optarg)) >> simCluster.nFieldStars;
                 break;
 
+            case 0xE5:
+                files.models = optarg;
+                break;
+
             case 0xE4:
                 istringstream (string (optarg)) >> scatterCluster.brightLimit;
                 break;
@@ -331,14 +339,13 @@ void Settings::fromCLI (int argc, char **argv)
                 exit (EXIT_SUCCESS);
 
             case 0xDA:
-                files.models = optarg;
-                break;
+                printVersion ();
+                exit (EXIT_SUCCESS);
 
             case '?':
                 // getopt_long already printed an error message.
                 printUsage ();
                 exit (EXIT_FAILURE);
-                break;
 
             default:
                 abort ();
@@ -403,10 +410,12 @@ Node Settings::getNode (Node & n, string && f)
     abort ();
 }
 
-void Settings::printUsage ()
+static void printUsage ()
 {
     cerr << "\nUsage:" << endl;
     cerr << "=======" << endl;
+    cerr << "\t--help\t\t\tPrints help" << endl;
+    cerr << "\t--version\t\tPrints version string" << endl << endl;
     cerr << "\t--config\t\tYAML configuration file" << endl << endl;
     cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
     cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
@@ -444,4 +453,9 @@ void Settings::printUsage ()
     cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
     cerr << "\t--modelDirectory\tThe directory in which models are located" << endl;
     cerr << endl;
+}
+
+static void printVersion()
+{
+    cerr << "Base-" << Base9_VERSION_MAJOR << "." << Base9_VERSION_MINOR << "." << Base9_VERSION_PATCH << endl;
 }

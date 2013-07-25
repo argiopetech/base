@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 2.8)
 
 project(Base9 CXX)
 
+set (Base9_VERSION_MAJOR 9)
+set (Base9_VERSION_MINOR 3)
+set (Base9_VERSION_PATCH 0)
+
+configure_file (
+  "${PROJECT_SOURCE_DIR}/Base9Config.h.in"
+  "${PROJECT_BINARY_DIR}/Base9Config.h"
+  )
+
+include_directories("${PROJECT_BINARY_DIR}")
+
 enable_testing()
 
 list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
