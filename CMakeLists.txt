@@ -1,21 +1,42 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.10)
 
-project(Base9 CXX)
+project(Base9 CXX C)
 
+list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
+
+include(CheckIncludeFiles)
+
+set(CMAKE_REQUIRED_LIBRARIES "m")
+check_include_files (math.h HAS_MATH)
+
+include(CheckFunctionExists)
+check_function_exists (exp HAS_EXP)
+check_function_exists (exp10 HAS_EXP10)
+check_function_exists (log HAS_LOG)
+check_function_exists (log10 HAS_LOG10)
+check_function_exists (pow HAS_POW)
+
+######################
+# Set project verion #
+######################
 set (Base9_VERSION_MAJOR 9)
 set (Base9_VERSION_MINOR 3)
 set (Base9_VERSION_PATCH 0)
 
+option (USE_TESTS "Enable testing" OFF) 
+
+if (USE_TESTS)
+  enable_testing()
+endif()
+
+##########################
+# Set up the config file #
+##########################
 configure_file (
   "${PROJECT_SOURCE_DIR}/Base9Config.h.in"
   "${PROJECT_BINARY_DIR}/Base9Config.h"
   )
-
 include_directories("${PROJECT_BINARY_DIR}")
-
-enable_testing()
-
-list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 
 include(GetProject)
 
@@ -34,7 +55,6 @@ if (NOT (MPI_CXX_FOUND))
 endif()
 
 include_directories( ${MPI_CXX_INCLUDE_PATH} )
-
 
 set(CMAKE_CXX_FLAGS                "-march=native -fstrict-aliasing -std=c++11 -W -Wall -Wno-missing-braces -pedantic ${MPI_CXX_COMPILE_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g" CACHE STRING "" FORCE)
@@ -72,7 +92,6 @@ MARK_AS_ADVANCED(
 #####################################
 # Project specific code starts here #
 #####################################
-
 find_library(GSL_LOC
   gsl)
 

@@ -10,7 +10,7 @@ namespace base
     {
         void ThreadPool::parallelFor(const unsigned int size, std::function<void(const unsigned int)> func)
         {
-            int loopThreads = (size < nThreads) ? size : nThreads;
+            unsigned int loopThreads = (size < nThreads) ? size : nThreads;
 
             for (unsigned int idThread = 0; idThread < loopThreads; idThread++) {
                 auto threadFunc = [=]() {

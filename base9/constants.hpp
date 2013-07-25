@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include "Base9Config.h"
+
 const double EPSILON = 1.e-15;
 const double EPS     = 0.000001;
 const int FILTS      = 14;   // UBVRIJHK, respectively

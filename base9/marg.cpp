@@ -136,7 +136,7 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, co
             mag[2][f] = mag[0][f];
     }
 
-    for (int i = 0; i < filters.size(); ++i)
+    for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
     {
         int f = filters.at(i);
 

@@ -63,7 +63,7 @@ namespace evil
 
         double getLogMassNorm() const { return var; }
     };
-};
+}
 
 double logPriorMass (const Star &pStar, const Cluster &pCluster)
 // Compute log prior density
