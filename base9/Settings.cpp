@@ -165,6 +165,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"help", no_argument, 0, 0xDB},
         {"version", no_argument, 0, 0xDA},
         {"bigStepBurnin", no_argument, 0, 0xCF},
+        {"threads", required_argument, 0, 0xCE},
         {0, 0, 0, 0}
     };
 
@@ -342,8 +343,17 @@ void Settings::fromCLI (int argc, char **argv)
                 printVersion ();
                 exit (EXIT_SUCCESS);
 
-            case 0xCf:
+            case 0xCF:
                 mpiMcmc.bigStepBurnin = true;
+                break;
+
+            case 0xCE:
+                istringstream (string (optarg)) >> threads;
+                if (threads <= 0)
+                {
+                    cerr << "You must have at least one thread" << endl;
+                    exit(EXIT_FAILURE);
+                }
                 break;
 
             case '?':

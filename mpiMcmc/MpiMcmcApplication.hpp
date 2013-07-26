@@ -13,7 +13,7 @@ class MpiMcmcApplication : public McmcApplication
 {
   public:
     MpiMcmcApplication(Settings &s)
-        : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(2)
+        : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads)
     {}
 
     virtual ~MpiMcmcApplication() {}

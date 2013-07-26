@@ -14,6 +14,8 @@ class Settings
     void fromCLI (int, char **);
 
     uint32_t seed;
+    unsigned int threads = std::numeric_limits<int>::max();
+
     int verbose;
 
     struct MainSequenceSettings

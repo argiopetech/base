@@ -18,6 +18,11 @@ namespace base
         class ThreadPool
         {
           private:
+            unsigned int numThreads(unsigned int threads)
+            {
+                return (threads > std::thread::hardware_concurrency()) ? std::thread::hardware_concurrency() : threads;
+            }
+
             class WorkerThread
             {
               private:
@@ -104,7 +109,7 @@ namespace base
             {}
 
             ThreadPool(unsigned int nThreads)
-                : nThreads(nThreads), threads(nThreads)
+                : nThreads(numThreads(nThreads)), threads(numThreads(nThreads))
             {}
 
             ThreadPool(const ThreadPool&) = delete;
