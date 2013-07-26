@@ -1,3 +1,4 @@
+#include <functional>
 #include <random>
 
 #include "mpiMcmc.hpp"
@@ -5,6 +6,8 @@
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Utility.hpp"
+
+using std::hash;
 
 class MpiMcmcApplication : public McmcApplication
 {

@@ -79,7 +79,7 @@ namespace internal
 
 const Model makeModel(const Settings &s)
 {
-    cout << "\nReading models..." << endl;
+    cout << "\nReading models..." << std::flush;
 
     Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
                , internal::createMsFilterSet(s.mainSequence.filterSet)
@@ -98,7 +98,7 @@ const Model makeModel(const Settings &s)
 
     loadBergeron (s.files.models, s.mainSequence.filterSet);
 
-    cout << "Models read." << endl;
+    cout << " Done." << endl;
 
     return model;
 }

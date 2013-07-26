@@ -13,7 +13,7 @@ class Settings
     void fromYaml (const std::string);
     void fromCLI (int, char **);
 
-    int seed;
+    uint32_t seed;
     int verbose;
 
     struct MainSequenceSettings
