@@ -12,9 +12,7 @@ using std::hash;
 class MpiMcmcApplication : public McmcApplication
 {
   public:
-    MpiMcmcApplication(Settings &s)
-        : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads)
-    {}
+    MpiMcmcApplication(Settings &s);
 
     virtual ~MpiMcmcApplication() {}
 
@@ -36,4 +34,9 @@ class MpiMcmcApplication : public McmcApplication
     const Settings settings;
 
     base::utility::ThreadPool pool;
+
+    Chain mc;
+    struct ifmrMcmcControl ctrl;
+
+    int nSave = 100;
 };

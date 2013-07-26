@@ -15,16 +15,139 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+
+MpiMcmcApplication::MpiMcmcApplication(Settings &s)
+        : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads)
+{
+    ctrl.priorVar.fill(0);
+
+    mc.clust.carbonicity = settings.whiteDwarf.carbonicity;
+
+    mc.clust.feh = mc.clust.priorMean[FEH] = settings.cluster.Fe_H;
+    ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
+
+    mc.clust.mod = mc.clust.priorMean[MOD] = settings.cluster.distMod;
+    ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
+
+    mc.clust.abs = mc.clust.priorMean[ABS] = fabs(s.cluster.Av);
+    ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
+
+    mc.clust.age = mc.clust.priorMean[AGE] = settings.cluster.logClusAge;
+    ctrl.priorVar[AGE] = 1.0;
+
+    if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
+    {
+        mc.clust.yyy = mc.clust.priorMean[YYY] = settings.cluster.Y;
+        ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
+    }
+    else
+    {
+        mc.clust.yyy = mc.clust.priorMean[YYY] = 0.0;
+        ctrl.priorVar[YYY] = 0.0;
+    }
+
+
+    if (evoModels.IFMR <= 3)
+    {
+        ctrl.priorVar[IFMR_SLOPE] = 0.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
+    }
+    else if (evoModels.IFMR <= 8)
+    {
+        ctrl.priorVar[IFMR_SLOPE] = 1.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
+    }
+    else
+    {
+        ctrl.priorVar[IFMR_SLOPE] = 1.0;
+        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
+        ctrl.priorVar[IFMR_QUADCOEF] = 1.0;
+    }
+
+    /* set starting values for IFMR parameters */
+    mc.clust.ifmrSlope = mc.clust.priorMean[IFMR_SLOPE] = 0.08;
+    mc.clust.ifmrIntercept = mc.clust.priorMean[IFMR_INTERCEPT] = 0.65;
+
+    if (evoModels.IFMR <= 10)
+        mc.clust.ifmrQuadCoef = mc.clust.priorMean[IFMR_QUADCOEF] = 0.0001;
+    else
+        mc.clust.ifmrQuadCoef = mc.clust.priorMean[IFMR_QUADCOEF] = 0.08;
+
+    for (auto &var : ctrl.priorVar)
+    {
+        if (var < 0.0)
+        {
+            var = 0.0;
+        }
+        else
+        {
+            var = var * var;
+        }
+    }
+
+    /* read burnIter and nIter */
+    {
+        ctrl.burnIter = settings.mpiMcmc.burnIter;
+        int nParamsUsed = 0;
+
+        for (int p = 0; p < NPARAMS; p++)
+        {
+            if (ctrl.priorVar.at(p) > EPSILON)
+            {
+                nParamsUsed++;
+            }
+        }
+
+        if (ctrl.burnIter < 2 * (nParamsUsed + 1))
+        {
+            ctrl.burnIter = 2 * (nParamsUsed + 1);
+            cerr << "burnIter below minimum allowable size. Increasing to " << ctrl.burnIter << endl;
+        }
+
+        if ((ctrl.burnIter / 2) < 100)
+        {
+            nSave = ctrl.burnIter / 2;
+        }
+    }
+
+    ctrl.nIter = settings.mpiMcmc.maxIter;
+    ctrl.thin = settings.mpiMcmc.thin;
+
+    /* open files for reading (data) and writing */
+    string filename;
+
+    filename = settings.files.phot;
+    ctrl.rData.open(filename);
+    if (!ctrl.rData)
+    {
+        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    if (s.cluster.index < 0 || settings.cluster.index > FILTS)
+    {
+        cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    ctrl.clusterFilename = settings.files.output + ".res";
+
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mc.clust.priorVar.begin());
+}
+
+
 int MpiMcmcApplication::run()
 {
-    int increment;
+   int increment;
 
     double logPostCurr;
     double logPostProp;
     double fsLike;
 
-    Chain mc;
-    struct ifmrMcmcControl ctrl;
     Cluster propClust;
 
     array<double, 2> ltau;
@@ -32,13 +155,13 @@ int MpiMcmcApplication::run()
     array<double, FILTS> filterPriorMin;
     array<double, FILTS> filterPriorMax;
 
-    Matrix<double, NPARAMS, nSave> params;
+    MVatrix<double, NPARAMS> params; // Must be initialized after nSave has been set.
 
     std::vector<int> filters;
 
-    increment = settings.mpiMcmc.burnIter / (2 * nSave);
+    params.fill(vector<double>(nSave, 0.0));
 
-    initIfmrMcmcControl (mc.clust, ctrl, evoModels, settings);
+    increment = settings.mpiMcmc.burnIter / (2 * nSave);
 
     /* Initialize filter prior mins and maxes */
     filterPriorMin.fill(1000);
@@ -65,9 +188,9 @@ int MpiMcmcApplication::run()
 
     cout << "Bayesian analysis of stellar evolution" << endl;
 
-    /* set current log posterior to -HUGE_VAL */
+    /* set current log posterior to minimum double value */
     /* will cause random starting value */
-    logPostCurr = -HUGE_VAL;
+    logPostCurr = -HUGE_VAL; //std::numeric_limits<double>::min();
 
     // Run Burnin
     ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
@@ -108,7 +231,7 @@ int MpiMcmcApplication::run()
         }
 
         /* save draws to estimate covariance matrix for more efficient Metropolis */
-        if (iteration >= ctrl.burnIter / 2 && iteration < ctrl.burnIter)
+        if ((iteration >= (ctrl.burnIter - (nSave * increment))) && (iteration < ctrl.burnIter))
         {
             if (iteration % increment == 0)
             {
@@ -117,7 +240,7 @@ int MpiMcmcApplication::run()
                 {
                     if (ctrl.priorVar[p] > EPSILON)
                     {
-                        params.at(p).at((iteration - ctrl.burnIter / 2) / increment) = mc.clust.getParam(p);
+                        params.at(p).at((iteration - (ctrl.burnIter - (nSave * increment))) / increment) = mc.clust.getParam(p);
                     }
                 }
             }

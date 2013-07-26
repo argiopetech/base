@@ -125,108 +125,6 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
     file << "logPost" << endl;
 }
 
-/*
- * read control parameters from input stream
- */
-void initIfmrMcmcControl (Cluster &clust, struct ifmrMcmcControl &ctrl, const Model &evoModels, const Settings &settings)
-{
-    ctrl.priorVar.fill(0);
-
-    clust.carbonicity = settings.whiteDwarf.carbonicity;
-
-    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
-    ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
-
-    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
-    ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
-
-    clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
-    ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
-
-    clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
-    ctrl.priorVar[AGE] = 1.0;
-
-    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
-    {
-        clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
-        ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
-    }
-    else
-    {
-        clust.yyy = clust.priorMean[YYY] = 0.0;
-        ctrl.priorVar[YYY] = 0.0;
-    }
-
-
-    if (evoModels.IFMR <= 3)
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 0.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
-    }
-    else if (evoModels.IFMR <= 8)
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 1.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
-    }
-    else
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 1.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 1.0;
-    }
-
-    /* set starting values for IFMR parameters */
-    clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
-    clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
-
-    if (evoModels.IFMR <= 10)
-        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
-    else
-        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
-
-    for (auto &var : ctrl.priorVar)
-    {
-        if (var < 0.0)
-        {
-            var = 0.0;
-        }
-        else
-        {
-            var = var * var;
-        }
-    }
-
-    /* read burnIter and nIter */
-    ctrl.burnIter = settings.mpiMcmc.burnIter;
-    ctrl.nIter = settings.mpiMcmc.maxIter;
-    ctrl.thin = settings.mpiMcmc.thin;
-
-    /* open files for reading (data) and writing */
-    string filename;
-
-    filename = settings.files.phot;
-    ctrl.rData.open(filename);
-    if (!ctrl.rData)
-    {
-        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    if (settings.cluster.index < 0 || settings.cluster.index > FILTS)
-    {
-        cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    ctrl.clusterFilename = settings.files.output + ".res";
-
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
-} /* initIfmrMcmcControl */
-
 
 /*
  * Initialize chain
@@ -260,12 +158,10 @@ void initChain (Chain &mc, const Model &evoModels, array<double, 2> &ltau, const
 
 
 // Create Cholesky Decomp
-void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, nSave> &params)
+void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, MVatrix<double, NPARAMS> &params)
 {
     double cov;
     int nParamsUsed = 0;
-
-    int nSave = 10;             /*changed from 100 to 10 */
 
     for (int p = 0; p < NPARAMS; p++)
     {
@@ -292,7 +188,7 @@ void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, Matrix<double, NPARAMS, 
             {
                 if (ctrl.priorVar.at(j) > EPSILON)
                 {
-                    cov = gsl_stats_covariance (params.at(i).data(), 1, params.at(j).data(), 1, nSave);
+                    cov = gsl_stats_covariance (params.at(i).data(), 1, params.at(j).data(), 1, params.at(i).size());
                     gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
 
                     if (h != k)

@@ -13,7 +13,6 @@ const int N_MS_MASS_RATIO = 20;
 const int N_WD_MASS1      = 8000;  /* evaluate white dwarfs on a finer grid? */
 const int CLUS_FILE = 10;
 const int ALLOC_CHUNK = 5;
-const int nSave = 10;             /*changed from 100 to 10 */
 
 struct ifmrMcmcControl
 {
