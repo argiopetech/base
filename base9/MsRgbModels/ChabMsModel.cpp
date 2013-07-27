@@ -10,7 +10,7 @@
 #include "evolve.hpp"
 #include "ChabMsModel.hpp"
 #include "binSearch.hpp"
-#include "linInterp.hpp"
+#include "LinearTransform.hpp"
 
 using std::string;
 using std::vector;
@@ -309,7 +309,7 @@ double ChabMsModel::msRgbEvol (const std::vector<int> &filters, std::array<doubl
     {
         if (f < N_CHAB_FILTS) // Do we not like the IFMR models here?
         {
-            globalMags[f] = linInterpExtrap (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass);
+            globalMags[f] = linearTransform<>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
 
             if (fabs (globalMags[f]) < EPS)
                 globalMags[f] = 999.99;

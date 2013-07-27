@@ -12,7 +12,7 @@
 #include <cassert>
 
 #include "evolve.hpp"
-#include "linInterp.hpp"
+#include "LinearTransform.hpp"
 #include "MontgomeryWdModel.hpp"
 
 using std::lower_bound;
@@ -148,19 +148,19 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
                 ageIter -= 1;
             }
 
-            ageTeff.push_back(linInterpExtrap (ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logTeff, ageIter[1].logTeff, wdCoolLogAge));
+            ageTeff.push_back(linearTransform<>(ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logTeff, ageIter[1].logTeff, wdCoolLogAge).val);
 
-            ageRadius.push_back(linInterpExtrap (ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logRadius, ageIter[1].logRadius, wdCoolLogAge));
+            ageRadius.push_back(linearTransform<>(ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logRadius, ageIter[1].logRadius, wdCoolLogAge).val);
         }
 
         // Now interpolate in mass
-        carbonTeff.push_back(linInterpExtrap (carbonIter[0].carbon, carbonIter[1].carbon, ageTeff[0], ageTeff[1], x_carbon));
+        carbonTeff.push_back(linearTransform<>(carbonIter[0].carbon, carbonIter[1].carbon, ageTeff[0], ageTeff[1], x_carbon).val);
 
-        carbonRadius.push_back(linInterpExtrap (carbonIter[0].carbon, carbonIter[1].carbon, ageRadius[0], ageRadius[1], x_carbon));
+        carbonRadius.push_back(linearTransform<>(carbonIter[0].carbon, carbonIter[1].carbon, ageRadius[0], ageRadius[1], x_carbon).val);
     }
 
-    thisRadius = linInterpExtrap (massIter[0].mass, massIter[1].mass, carbonRadius[0], carbonRadius[1], wdMass);
-    thisTeff = linInterpExtrap (massIter[0].mass, massIter[1].mass, carbonTeff[0], carbonTeff[1], wdMass);
+    thisRadius = linearTransform<>(massIter[0].mass, massIter[1].mass, carbonRadius[0], carbonRadius[1], wdMass).val;
+    thisTeff = linearTransform<>(massIter[0].mass, massIter[1].mass, carbonTeff[0], carbonTeff[1], wdMass).val;
 
     return pair<double, double> (thisTeff, thisRadius);
 }

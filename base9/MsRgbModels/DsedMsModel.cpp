@@ -13,7 +13,7 @@
 #include "evolve.hpp"
 #include "DsedMsModel.hpp"
 #include "binSearch.hpp"
-#include "linInterp.hpp"
+#include "LinearTransform.hpp"
 #include "Matrix.hpp"
 
 using std::array;
@@ -362,7 +362,7 @@ double DsedMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FI
     {
         if (f < N_DSED_FILTS)
         {
-            globalMags[f] = linInterpExtrap (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass);
+            globalMags[f] = linearTransform<>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
             if (fabs (globalMags[f]) < EPS)
                 globalMags[f] = 999.99;
         }
@@ -414,12 +414,12 @@ double DsedMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
             AgbTurnoffMass[1] = dAGBt[iFeH + f][thisIndexAge[1]];
 
             // Linearly interpolate in mass
-            wdPrecLogAge[f] = linInterp (AgbTurnoffMass[0], AgbTurnoffMass[1], logAge[0], logAge[1], zamsMass);
+            wdPrecLogAge[f] = linearTransform<TransformMethod::Interp>(AgbTurnoffMass[0], AgbTurnoffMass[1], logAge[0], logAge[1], zamsMass).val;
         }
     }
 
     // Linearly interpolate in FeH
-    temp = linInterp (FeH[0], FeH[1], wdPrecLogAge[0], wdPrecLogAge[1], thisFeH);
+    temp = linearTransform<TransformMethod::Interp>(FeH[0], FeH[1], wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
 
     return temp;
 }

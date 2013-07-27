@@ -20,7 +20,7 @@ The appropriate magnitudes are put in globalMags[][].
 #include <cmath>
 
 #include "evolve.hpp"
-#include "linInterp.hpp"
+#include "LinearTransform.hpp"
 #include "gBergMag.hpp"
 #include "binSearch.hpp"
 
@@ -171,7 +171,7 @@ void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globa
             {
                 if (f < BERG_NFILTS)
                 {
-                    logGMag[i][f] = linInterpExtrap (bLogTeff[t], bLogTeff[t + 1], bMag[t][l + i][f], bMag[t + 1][l + i][f], wdLogTeff);
+                    logGMag[i][f] = linearTransform<>(bLogTeff[t], bLogTeff[t + 1], bMag[t][l + i][f], bMag[t + 1][l + i][f], wdLogTeff).val;
                 }
             }
         }
@@ -181,7 +181,7 @@ void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globa
         {
             if (f < BERG_NFILTS)
             {
-                globalMags[f] = linInterpExtrap (bLogG[l], bLogG[l + 1], logGMag[0][f], logGMag[1][f], wdLogG);
+                globalMags[f] = linearTransform<>(bLogG[l], bLogG[l + 1], logGMag[0][f], logGMag[1][f], wdLogG).val;
             }
         }
     }
@@ -203,7 +203,7 @@ void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globa
             {
                 if (f < BERG_NFILTS)
                 {
-                    logGMag[i][f] = linInterpExtrap (bHeLogTeff[t], bHeLogTeff[t + 1], bHeMag[t][l + i][f], bHeMag[t + 1][l + i][f], wdLogTeff);
+                    logGMag[i][f] = linearTransform<>(bHeLogTeff[t], bHeLogTeff[t + 1], bHeMag[t][l + i][f], bHeMag[t + 1][l + i][f], wdLogTeff).val;
                 }
             }
         }
@@ -213,7 +213,7 @@ void bergeronTeffToMags (const vector<int> &filters, array<double, FILTS> &globa
         {
             if (f < BERG_NFILTS)
             {
-                globalMags[f] = linInterpExtrap (bHeLogG[l], bHeLogG[l + 1], logGMag[0][f], logGMag[1][f], wdLogG);
+                globalMags[f] = linearTransform<>(bHeLogG[l], bHeLogG[l + 1], logGMag[0][f], logGMag[1][f], wdLogG).val;
             }
         }
     }

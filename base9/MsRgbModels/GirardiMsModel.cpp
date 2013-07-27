@@ -8,7 +8,7 @@
 #include <cstring>
 
 #include "evolve.hpp"
-#include "linInterp.hpp"
+#include "LinearTransform.hpp"
 #include "binSearch.hpp"
 #include "GirardiMsModel.hpp"
 
@@ -218,10 +218,10 @@ cluster age, interpolating in isochrones as necessary.
     interpFeH[LOW] = gFeH[iFeH];
     interpFeH[HIGH] = gFeH[iFeH + 1];
 
-    AGBt_zmass_lo = linInterp (interpAge[LOW], interpAge[HIGH], gAGBt[iFeH][iAge], gAGBt[iFeH][iAge + 1], newAge);
-    AGBt_zmass_hi = linInterp (interpAge[LOW], interpAge[HIGH], gAGBt[iFeH + 1][iAge], gAGBt[iFeH + 1][iAge + 1], newAge);
+    AGBt_zmass_lo = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH][iAge], gAGBt[iFeH][iAge + 1], newAge).val;
+    AGBt_zmass_hi = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH + 1][iAge], gAGBt[iFeH + 1][iAge + 1], newAge).val;
 
-    AGBt_zmass = linInterp (interpFeH[LOW], interpFeH[HIGH], AGBt_zmass_lo, AGBt_zmass_hi, newFeH);
+    AGBt_zmass = linearTransform<TransformMethod::Interp>(interpFeH[LOW], interpFeH[HIGH], AGBt_zmass_lo, AGBt_zmass_hi, newFeH).val;
 
     currentAge = newAge;
     currentFeH = newFeH;
@@ -267,20 +267,20 @@ Uses static variables iAge and iFeH.
         for (auto filt : filters)
         {
             if (f < N_GIR_FILTS)
-                fehMag[f][filt] = linInterp (modelAge[LOW], modelAge[HIGH], ageMag[f][LOW][filt], ageMag[f][HIGH][filt], currentAge);
+                fehMag[f][filt] = linearTransform<TransformMethod::Interp>(modelAge[LOW], modelAge[HIGH], ageMag[f][LOW][filt], ageMag[f][HIGH][filt], currentAge).val;
         }
 
-        fehMassNow[f] = linInterp (modelAge[LOW], modelAge[HIGH], ageMassNow[f][LOW], ageMassNow[f][HIGH], currentAge);
+        fehMassNow[f] = linearTransform<TransformMethod::Interp>(modelAge[LOW], modelAge[HIGH], ageMassNow[f][LOW], ageMassNow[f][HIGH], currentAge).val;
     }
 
     // Interpolate in FeH
     for (auto filt : filters)
     {
         if (f < N_GIR_FILTS)
-            globalMags[filt] = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMag[LOW][filt], fehMag[HIGH][filt], currentFeH);
+            globalMags[filt] = linearTransform<TransformMethod::Interp>(modelFeH[LOW], modelFeH[HIGH], fehMag[LOW][filt], fehMag[HIGH][filt], currentFeH).val;
     }
 
-    massNow = linInterp (modelFeH[LOW], modelFeH[HIGH], fehMassNow[LOW], fehMassNow[HIGH], currentFeH);
+    massNow = linearTransform<TransformMethod::Interp>(modelFeH[LOW], modelFeH[HIGH], fehMassNow[LOW], fehMassNow[HIGH], currentFeH).val;
 
     return massNow;
 
@@ -359,12 +359,12 @@ double GirardiMsModel::interpInMass (const vector<int> &filters, int whichAgeInd
     {
         if (f < N_GIR_FILTS)
         {
-            ageMag[f] = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMag[LOW][f], modelMag[HIGH][f], zamsMass);
+            ageMag[f] = linearTransform<>(modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMag[LOW][f], modelMag[HIGH][f], zamsMass).val;
         }
     }
 
 
-    tempMass = linInterpExtrap (modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMass[LOW][NOW], modelMass[HIGH][NOW], zamsMass);
+    tempMass = linearTransform<>(modelMass[LOW][ZAMS], modelMass[HIGH][ZAMS], modelMass[LOW][NOW], modelMass[HIGH][NOW], zamsMass).val;
 
     return tempMass;
 
@@ -419,12 +419,12 @@ higher mass and younger AGBt star that was the WD precursor.
             AGBt_zmass[HIGH] = gAGBt[iFeH + f][thisIndexAge[HIGH]];
 
             // Linearly interpolate in mass
-            wdPrecLogAge[f] = linInterp (AGBt_zmass[LOW], AGBt_zmass[HIGH], logAge[LOW], logAge[HIGH], zamsMass);
+            wdPrecLogAge[f] = linearTransform<TransformMethod::Interp>(AGBt_zmass[LOW], AGBt_zmass[HIGH], logAge[LOW], logAge[HIGH], zamsMass).val;
         }
     }
 
     // Linearly interpolate in FeH
-    temp = linInterp (FeHLo, FeHHi, wdPrecLogAge[LOW], wdPrecLogAge[HIGH], thisFeH);
+    temp = linearTransform<TransformMethod::Interp>(FeHLo, FeHHi, wdPrecLogAge[LOW], wdPrecLogAge[HIGH], thisFeH).val;
 
     return temp;
 
