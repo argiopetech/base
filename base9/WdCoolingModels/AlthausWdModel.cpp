@@ -11,7 +11,6 @@
 #include <cassert>
 
 #include "evolve.hpp"
-#include "linInterp.hpp"
 #include "AlthausWdModel.hpp"
 
 using std::lower_bound;

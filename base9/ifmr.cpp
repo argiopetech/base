@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 #include "evolve.hpp"
-#include "linInterp.hpp"
+#include "LinearTransform.hpp"
 
 using std::cerr;
 using std::endl;
@@ -214,8 +214,6 @@ large as 9.0.
     constexpr std::array<double, 10> initMassW = {{1.0, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0}};
     constexpr std::array<double, 10> finalMassW = {{0.55, 0.60, 0.63, 0.68, 0.80, 0.88, 0.95, 1.02, 1.2, 1.4}};
 
-    double wdMass = 0.0;
-
     if (zamsMass <= initMassW[0])
         return finalMassW[0];   // if out of init-final calib range, use
     else if (zamsMass >= initMassW[9])
@@ -233,8 +231,8 @@ large as 9.0.
 
             if (initMassW[mid - 1] <= zamsMass && zamsMass <= initMassW[mid])
             {
-                wdMass = linInterp (initMassW[mid - 1], initMassW[mid], finalMassW[mid - 1], finalMassW[mid], zamsMass);
-                return wdMass;
+                auto wdMass = linearTransform<TransformMethod::Interp>(initMassW[mid - 1], initMassW[mid], finalMassW[mid - 1], finalMassW[mid], zamsMass);
+                return wdMass.val;
             }
 
             if (lo >= hi)

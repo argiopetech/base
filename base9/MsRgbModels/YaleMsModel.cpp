@@ -8,7 +8,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "evolve.hpp"
-#include "linInterp.hpp"
+#include "LinearTransform.hpp"
 #include "binSearch.hpp"
 #include "YaleMsModel.hpp"
 #include "binSearch.hpp"
@@ -560,7 +560,7 @@ double YaleMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FI
     {
         if (f < N_YY_FILTS)
         {
-            globalMags[f] = linInterp (isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass);
+            globalMags[f] = linearTransform<TransformMethod::Interp>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
         }
     }
 
