@@ -108,9 +108,11 @@ struct Result<TransformMethod::ExtrapHigh>
 };
 
 // Template metaprogramming. The TransformMethod, being known at runtime, 
-template <TransformMethod M>
+template <TransformMethod M = TransformMethod::Extrap>
 auto linearTransform(double xL, double xH, double yL, double yH, double xActual) -> const Result<M>
 {
+    // Defer calculation till we know we need it
+    // Shares function parameters without being visible externally.
     auto linInterpExtrap = [=]()
     {
         double position = (xActual - xL) / (xH - xL);
@@ -165,6 +167,10 @@ auto linearTransform(double xL, double xH, double yL, double yH, double xActual)
             return {yL, true};
         else
             return linInterpExtrap();
+    }
+    else
+    {
+        throw std::logic_error("Invalid TransformMethod in linearTransform.");
     }
 }
 
