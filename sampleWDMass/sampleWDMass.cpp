@@ -4,12 +4,12 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <random>
 #include <vector>
 
-#include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <cmath>
-#include <mpi.h>
 #include <unistd.h>
 
 #include "evolve.hpp"
@@ -17,7 +17,6 @@
 #include "WdCoolingModel.hpp"
 #include "densities.hpp"
 #include "samplers.hpp"
-#include "mt19937ar.hpp"
 #include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
@@ -28,6 +27,7 @@ using std::vector;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::flush;
 
 const int N_AGE = 30;
 const int N_FEH = 1;
@@ -105,9 +105,7 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 {
     ctrl->numFilts = 0;
 
-    init_genrand (settings.seed);
-
-    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
+    mc->clust.carbonicity = settings.whiteDwarf.carbonicity;
 
     ctrl->priorMean[FEH] = settings.cluster.Fe_H;
     ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;
@@ -375,14 +373,14 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     }
 
     // If there is no beta in file, initialize everything to prior means
-    mc->clust.parameter[FEH] = ctrl->priorMean[FEH];
-    mc->clust.parameter[MOD] = ctrl->priorMean[MOD];
-    mc->clust.parameter[ABS] = ctrl->priorMean[ABS];
-    mc->clust.parameter[YYY] = ctrl->priorMean[YYY];
-    mc->clust.parameter[AGE] = ctrl->initialAge;
-    mc->clust.parameter[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.parameter[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.parameter[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+    mc->clust.feh = ctrl->priorMean[FEH];
+    mc->clust.mod = ctrl->priorMean[MOD];
+    mc->clust.abs = ctrl->priorMean[ABS];
+    mc->clust.yyy = ctrl->priorMean[YYY];
+    mc->clust.age = ctrl->initialAge;
+    mc->clust.ifmrIntercept = ctrl->priorMean[IFMR_INTERCEPT];
+    mc->clust.ifmrSlope = ctrl->priorMean[IFMR_SLOPE];
+    mc->clust.ifmrQuadCoef = ctrl->priorMean[IFMR_QUADCOEF];
     mc->clust.mean[AGE] = ctrl->initialAge;
     mc->clust.mean[YYY] = ctrl->priorMean[YYY];
     mc->clust.mean[MOD] = ctrl->priorMean[MOD];
@@ -431,13 +429,7 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
 int main (int argc, char *argv[])
 {
-    int i, j, filt, numtasks,   /* total number of MPI process in partitiion */
-        taskid,                 /* task identifier */
-        dest,                   /* destination task id to send message */
-        index,                  /* index into the array */
-        source,                 /* origin task id of message */
-        chunksize,                      /* for partitioning the array */
-        extra, minchunk, nWDs = 0, nWDLogPosts;
+    int filt, nWDs = 0, nWDLogPosts;
 
     Chain mc;
     struct ifmrGridControl ctrl;
@@ -449,18 +441,9 @@ int main (int argc, char *argv[])
     int *starStatus;
 
     clustPar *sampledPars;
-    double *unifs;              /* draw uniform random numbers ahead of time */
+    vector<double> unifs;              /* draw uniform random numbers ahead of time */
 
     array<double, 2> ltau;
-
-    MPI_Datatype clustParType;
-    MPI_Datatype obsStarType;
-    MPI_Status status;
-
-
-    MPI_Init (&argc, &argv);
-    MPI_Comm_rank (MPI_COMM_WORLD, &taskid);
-    MPI_Comm_size (MPI_COMM_WORLD, &numtasks);
 
     settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
@@ -474,120 +457,49 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
+    std::mt19937 gen(settings.seed * uint32_t(2654435761)); // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
+    {
+        const int warmupIter = 10000;
+
+        cout << "Warming up generator..." << flush;
+
+        for (auto i = 0; i < warmupIter; ++i)
+        {
+            std::generate_canonical<double, 10>(gen);
+        }
+
+        cout << " Done." << endl;
+        cout << "Generated " << warmupIter << " values." << endl;
+    }
+
     Model evoModels = makeModel(settings);
 
-    MPI_Type_contiguous (7, MPI_DOUBLE, &clustParType);
-    MPI_Type_commit (&clustParType);
-    MPI_Type_contiguous (2 * FILTS + 1, MPI_DOUBLE, &obsStarType);
-    MPI_Type_commit (&obsStarType);
-
-    if (taskid == MASTER)
-    {
-        initIfmrGridControl (&mc, evoModels, &ctrl, settings);
-    }
-    else
-    {
-        ctrl.iStart = 0;
-    }
-
-    /*** broadcast control parameters to other processes ***/
-    // MPI_Bcast (&seed, 1, MPI_UNSIGNED_LONG, MASTER, MPI_COMM_WORLD);
-    // if (taskid != MASTER)
-    //     init_genrand (seed);
-    MPI_Bcast (&evoModels.WDcooling, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&evoModels.mainSequenceEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&evoModels.filterSet, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&evoModels.brownDwarfEvol, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&evoModels.IFMR, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (&mc.clust.carbonicity, 1, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+    initIfmrGridControl (&mc, evoModels, &ctrl, settings);
 
     evoModels.WDatm = BERGERON;
 
-    if (taskid != MASTER) /* already loaded in the MASTER task */
+    readCmdData (mc, ctrl, evoModels);
+
+    obs = new obsStar[mc.stars.size()]();
+    starStatus = new int[mc.stars.size()]();
+
+    for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
     {
-        if (evoModels.brownDwarfEvol == BARAFFE)
-            loadBaraffe (settings.files.models);
-
-        evoModels.mainSequenceEvol->loadModel(settings.files.models, MsFilter::UBVRIJHK);
-//        loadWDCool (settings.files.models, evoModels.WDcooling);
-        loadBergeron (settings.files.models, settings.mainSequence.filterSet);
-    }
-
-
-    MPI_Bcast (ctrl.priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (ctrl.priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (priorVar, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (priorMean, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-
-    MPI_Bcast (ctrl.start, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (ctrl.end, NPARAMS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-
-
-    if (taskid == MASTER)
-    {
-        readCmdData (mc, ctrl, evoModels);
-
-        obs = new obsStar[mc.stars.size()]();
-        starStatus = new int[mc.stars.size()]();
-
-        for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
+        for (filt = 0; filt < ctrl.numFilts; filt++)
         {
-            for (filt = 0; filt < ctrl.numFilts; filt++)
-            {
-                obs[i].obsPhot[filt] = mc.stars.at(i).obsPhot[filt];
-                obs[i].variance[filt] = mc.stars.at(i).variance[filt];
-            }
-            obs[i].clustStarPriorDens = mc.stars.at(i).clustStarPriorDens;
-            starStatus[i] = mc.stars.at(i).status[0];
+            obs[i].obsPhot[filt] = mc.stars.at(i).obsPhot[filt];
+            obs[i].variance[filt] = mc.stars.at(i).variance[filt];
+        }
+        obs[i].clustStarPriorDens = mc.stars.at(i).clustStarPriorDens;
+        starStatus[i] = mc.stars.at(i).status[0];
 
-            if (starStatus[i] == WD)
-            {
-                nWDs++;
-            }
+        if (starStatus[i] == WD)
+        {
+            nWDs++;
         }
     }
-
-    MPI_Bcast (&ctrl.numFilts, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-//    MPI_Bcast (ctrl.useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
-//    MPI_Bcast (useFilt, FILTS, MPI_INT, MASTER, MPI_COMM_WORLD);
 
     evoModels.numFilts = ctrl.numFilts;
-
-    MPI_Bcast (ctrl.filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (ctrl.filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-//    MPI_Bcast (filterPriorMin, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-//    MPI_Bcast (filterPriorMax, FILTS, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
-//    MPI_Bcast (&mc.clust.nStars, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-
-    MPI_Barrier (MPI_COMM_WORLD);
-    if (taskid != MASTER)
-    {
-        obs = new obsStar[mc.stars.size()]();
-        starStatus = new int[mc.stars.size()]();
-    }
-
-    MPI_Bcast (starStatus, mc.stars.size(), MPI_INT, MASTER, MPI_COMM_WORLD);
-    MPI_Bcast (obs, mc.stars.size(), obsStarType, MASTER, MPI_COMM_WORLD);
-    if (taskid != MASTER)
-    {
-        /* initialize the stars array */
-        mc.stars.resize(mc.stars.size());
-
-        for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
-        {
-            for (filt = 0; filt < ctrl.numFilts; filt++)
-            {
-                mc.stars.at(i).obsPhot[filt] = obs[i].obsPhot[filt];
-                mc.stars.at(i).variance[filt] = obs[i].variance[filt];
-            }
-            mc.stars.at(i).clustStarPriorDens = obs[i].clustStarPriorDens;
-            mc.stars.at(i).status[0] = starStatus[i];
-            if (starStatus[i] == WD)
-            {
-                nWDs++;
-            }
-        }
-    }
 
     initChain (&mc, &ctrl);
 
@@ -604,64 +516,12 @@ int main (int argc, char *argv[])
     }
     fsLike = exp (logFieldStarLikelihood);
 
+    readSampledParams (&ctrl, &sampledPars, evoModels);
+    cout << "sampledPars[0].age = " << sampledPars[0].age << endl;
 
-    int m;
-
-    if (taskid == MASTER)
+    for (int j = 0; j < ctrl.nSamples * nWDs; j++)
     {
-        readSampledParams (&ctrl, &sampledPars, evoModels);
-        cout << "sampledPars[0].age = " << sampledPars[0].age << endl;
-        fflush (stdout);
-
-        if ((unifs = (double *) calloc (ctrl.nSamples * nWDs, sizeof (double))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
-        for (j = 0; j < ctrl.nSamples * nWDs; j++)
-        {
-            unifs[j] = genrand_res53 ();
-        }
-    }
-
-    MPI_Bcast (&ctrl.nSamples, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-
-    if (taskid != MASTER)
-    {
-        if ((sampledPars = (clustPar *) calloc (ctrl.nSamples, sizeof (clustPar))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
-        if ((unifs = (double *) calloc (ctrl.nSamples * nWDs, sizeof (double))) == NULL)
-            perror ("MEMORY ALLOCATION ERROR \n");
-    }
-
-    if (taskid == MASTER)
-    {
-        minchunk = ctrl.nSamples / numtasks;
-        extra = ctrl.nSamples % numtasks;
-
-        /*** divide workload ***/
-        index = (extra > 0) ? (minchunk + 1) : minchunk;
-
-        for (dest = 1; dest < numtasks; dest++)
-        {
-            chunksize = (dest < extra) ? (minchunk + 1) : minchunk;
-
-            MPI_Send (&index, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send (&chunksize, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send (&sampledPars[index], chunksize, clustParType, dest, 0, MPI_COMM_WORLD);
-            MPI_Send (&unifs[index * nWDs], chunksize * nWDs, MPI_DOUBLE, dest, 0, MPI_COMM_WORLD);
-            index += chunksize;
-        }
-
-        /* master task takes beginning of array */
-        index = 0;
-        chunksize = (extra > 0) ? (minchunk + 1) : minchunk;
-    }
-    else
-    {
-        /* Receive portion of array from the master task */
-        source = MASTER;
-        MPI_Recv (&index, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv (&chunksize, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv (&sampledPars[index], chunksize, clustParType, source, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv (&unifs[index * nWDs], chunksize * nWDs, MPI_DOUBLE, source, 0, MPI_COMM_WORLD, &status);
+        unifs.push_back(std::generate_canonical<double, 53>(gen));
     }
 
     /* initialize WD logpost array and WD indices */
@@ -681,22 +541,22 @@ int main (int argc, char *argv[])
 
     double u, cumSum;
 
-    for (m = index; m < index + chunksize; m++)
+    for (int m = 0; m < ctrl.nSamples; m++)
     {
-        mc.clust.parameter[AGE] = sampledPars[m].age;
-        mc.clust.parameter[FEH] = sampledPars[m].FeH;
-        mc.clust.parameter[MOD] = sampledPars[m].modulus;
-        mc.clust.parameter[ABS] = sampledPars[m].absorption;
+        mc.clust.age = sampledPars[m].age;
+        mc.clust.feh = sampledPars[m].FeH;
+        mc.clust.mod = sampledPars[m].modulus;
+        mc.clust.abs = sampledPars[m].absorption;
 
         if (evoModels.IFMR >= 4)
         {
-            mc.clust.parameter[IFMR_INTERCEPT] = sampledPars[m].ifmrIntercept;
-            mc.clust.parameter[IFMR_SLOPE] = sampledPars[m].ifmrSlope;
+            mc.clust.ifmrIntercept = sampledPars[m].ifmrIntercept;
+            mc.clust.ifmrSlope = sampledPars[m].ifmrSlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            mc.clust.parameter[IFMR_QUADCOEF] = sampledPars[m].ifmrQuadCoef;
+            mc.clust.ifmrQuadCoef = sampledPars[m].ifmrQuadCoef;
         }
 
         /************ sample WD masses for different parameters ************/
@@ -705,14 +565,16 @@ int main (int argc, char *argv[])
         double wdPostSum, maxWDLogPost, mass1;
         double postClusterStar;
 
+        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
+
         for (auto star : mc.stars)
         {
             if (star.status[0] == WD)
             {
-
                 postClusterStar = 0.0;
 
                 im = 0;
+
                 for (mass1 = 0.15; mass1 < mc.clust.M_wd_up; mass1 += dMass1)
                 {
                     /* condition on WD being cluster star */
@@ -782,59 +644,36 @@ int main (int argc, char *argv[])
 
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
-    if (taskid == MASTER)
+
+    /* Write output */
+    for (int i = 0; i < ctrl.nSamples; i++)
     {
-        /* Now wait to receive back the results from each worker task */
-        for (i = 1; i < numtasks; i++)
+        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].age);
+        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].FeH);
+        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].modulus);
+        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].absorption);
+        if (evoModels.IFMR >= 4)
         {
-            source = i;
-            MPI_Recv (&index, 1, MPI_INT, source, 1, MPI_COMM_WORLD, &status);
-            MPI_Recv (&chunksize, 1, MPI_INT, source, 1, MPI_COMM_WORLD, &status);
-            MPI_Recv (&sampledPars[index], chunksize, clustParType, source, 1, MPI_COMM_WORLD, &status);
-            MPI_Recv (&wdMass[index * nWDs], chunksize * nWDs, MPI_DOUBLE, source, 1, MPI_COMM_WORLD, &status);
-            MPI_Recv (&clusMemPost[index * nWDs], chunksize * nWDs, MPI_DOUBLE, source, 1, MPI_COMM_WORLD, &status);
+            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrIntercept);
+            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrSlope);
         }
-
-        /* Write output */
-        for (i = 0; i < ctrl.nSamples; i++)
+        if (evoModels.IFMR >= 9)
+            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrQuadCoef);
+        for (int j = 0; j < nWDs; j++)
         {
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].age);
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].FeH);
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].modulus);
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].absorption);
-            if (evoModels.IFMR >= 4)
-            {
-                fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrIntercept);
-                fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrSlope);
-            }
-            if (evoModels.IFMR >= 9)
-                fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrQuadCoef);
-            for (j = 0; j < nWDs; j++)
-            {
-                fprintf (ctrl.wMassSampleFile, "%10.6f ", wdMass[i * nWDs + j]);
-            }
-            for (j = 0; j < nWDs; j++)
-            {
-                fprintf (ctrl.wMembershipFile, "%10.6f ", clusMemPost[i * nWDs + j]);
-            }
-            fprintf (ctrl.wMassSampleFile, "\n");
-            fprintf (ctrl.wMembershipFile, "\n");
+            fprintf (ctrl.wMassSampleFile, "%10.6f ", wdMass[i * nWDs + j]);
         }
-        fclose (ctrl.wMassSampleFile);
-        fclose (ctrl.wMembershipFile);
-
-        cout << "Part 2 completed successfully" << endl;
+        for (int j = 0; j < nWDs; j++)
+        {
+            fprintf (ctrl.wMembershipFile, "%10.6f ", clusMemPost[i * nWDs + j]);
+        }
+        fprintf (ctrl.wMassSampleFile, "\n");
+        fprintf (ctrl.wMembershipFile, "\n");
     }
-    else
-    {
-        /* Send results back to the master task */
-        MPI_Send (&index, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD);
-        MPI_Send (&chunksize, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD);
-        MPI_Send (&sampledPars[index], chunksize, clustParType, MASTER, 1, MPI_COMM_WORLD);
-        MPI_Send (&wdMass[index * nWDs], chunksize * nWDs, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD);
-        MPI_Send (&clusMemPost[index * nWDs], chunksize * nWDs, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD);
-    }
+    fclose (ctrl.wMassSampleFile);
+    fclose (ctrl.wMembershipFile);
 
+    cout << "Part 2 completed successfully" << endl;
 
     /* clean up */
     free (wdLogPost);
@@ -843,13 +682,9 @@ int main (int argc, char *argv[])
     free (clusMemPost);         /* 1D array */
 
     free (sampledPars);
-    free (unifs);
 
     delete[] (obs);
     delete[] (starStatus);
 
-    MPI_Type_free (&clustParType);
-    MPI_Type_free (&obsStarType);
-    MPI_Finalize ();
     return 0;
 }

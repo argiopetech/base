@@ -30,6 +30,7 @@ class Cluster
     std::array<double, NPARAMS> stepSize;
     std::array<double, NPARAMS> priorVar;
     std::array<double, NPARAMS> priorMean;
+    std::array<double, NPARAMS> mean;
 
     int photometrySet;
     double M_wd_up = 8.0;
