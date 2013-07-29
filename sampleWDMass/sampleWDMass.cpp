@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <random>
 #include <vector>
 
 #include <cstdio>
@@ -17,7 +18,6 @@
 #include "WdCoolingModel.hpp"
 #include "densities.hpp"
 #include "samplers.hpp"
-#include "mt19937ar.hpp"
 #include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
@@ -28,6 +28,7 @@ using std::vector;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::flush;
 
 const int N_AGE = 30;
 const int N_FEH = 1;
@@ -105,9 +106,7 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 {
     ctrl->numFilts = 0;
 
-    init_genrand (settings.seed);
-
-    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
+    mc->clust.carbonicity = settings.whiteDwarf.carbonicity;
 
     ctrl->priorMean[FEH] = settings.cluster.Fe_H;
     ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;
@@ -375,14 +374,14 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     }
 
     // If there is no beta in file, initialize everything to prior means
-    mc->clust.parameter[FEH] = ctrl->priorMean[FEH];
-    mc->clust.parameter[MOD] = ctrl->priorMean[MOD];
-    mc->clust.parameter[ABS] = ctrl->priorMean[ABS];
-    mc->clust.parameter[YYY] = ctrl->priorMean[YYY];
-    mc->clust.parameter[AGE] = ctrl->initialAge;
-    mc->clust.parameter[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.parameter[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.parameter[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+    mc->clust.feh = ctrl->priorMean[FEH];
+    mc->clust.mod = ctrl->priorMean[MOD];
+    mc->clust.abs = ctrl->priorMean[ABS];
+    mc->clust.yyy = ctrl->priorMean[YYY];
+    mc->clust.age = ctrl->initialAge;
+    mc->clust.ifmrIntercept = ctrl->priorMean[IFMR_INTERCEPT];
+    mc->clust.ifmrSlope = ctrl->priorMean[IFMR_SLOPE];
+    mc->clust.ifmrQuadCoef = ctrl->priorMean[IFMR_QUADCOEF];
     mc->clust.mean[AGE] = ctrl->initialAge;
     mc->clust.mean[YYY] = ctrl->priorMean[YYY];
     mc->clust.mean[MOD] = ctrl->priorMean[MOD];
@@ -473,6 +472,21 @@ int main (int argc, char *argv[])
     }
 
     settings.fromCLI (argc, argv);
+
+    std::mt19937 gen(settings.seed * uint32_t(2654435761)); // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
+    {
+        const int warmupIter = 10000;
+
+        cout << "Warming up generator..." << flush;
+
+        for (auto i = 0; i < warmupIter; ++i)
+        {
+            std::generate_canonical<double, 10>(gen);
+        }
+
+        cout << " Done." << endl;
+        cout << "Generated " << warmupIter << " values." << endl;
+    }
 
     Model evoModels = makeModel(settings);
 
