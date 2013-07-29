@@ -466,6 +466,10 @@ static void printUsage ()
     cerr << "\t--scatterFile" << endl;
     cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
     cerr << "\t--modelDirectory\tThe directory in which models are located" << endl;
+    cerr << "\n9.3.0 flags" << endl;
+    cerr <<   "===========" << endl;
+    cerr << "\t--threads\t\tSpecify the number of local threads to run with" << endl;
+    cerr << "\t--bigStepBurnin\t\tRun the burnin only using the \"propClustBigSteps\" algorithm" << endl;
     cerr << endl;
 }
 
