@@ -25,7 +25,7 @@ As of version 9.3.0, BASE-9 is dependent upon a C++11 compliant compiler for pro
 * Thread-safe static initialization (per [N2660](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2660.htm))
 * Template aliases
 * std::array
-* C++11 <random> (Mersenne Twister and distributions)
+* C++11 \<random\> (Mersenne Twister and distributions)
 
 References
 ----------
