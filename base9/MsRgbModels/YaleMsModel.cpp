@@ -20,7 +20,7 @@ using std::cerr;
 using std::endl;
 using std::vector;
 
-const uint maxIgnore = std::numeric_limits<char>::max();
+const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
 //global variables
 static int iZ, iAge;

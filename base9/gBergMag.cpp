@@ -40,7 +40,7 @@ static double bHeLogG[BERG_N_DB_LOG_G];
 static double bHeMag[BERG_N_DB_TEFF][BERG_N_DB_LOG_G][BERG_NFILTS];
 static double bHeLogTeff[BERG_N_DB_TEFF];
 
-const uint maxIgnore = std::numeric_limits<char>::max();
+const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
 void loadBergeron (string path, MsFilter filterSet)
 {
