@@ -15,7 +15,17 @@ BASE-9 may be the code for you if
 Installation
 ------------
 
-We designed BASE-9 to run under a variety of UNIX and Linux operating systems, though we have not tested it under a wide variety of systems. Currently we have BASE-9 running under Mac OS 10.6 and 10.8 and Linux Ubuntu 10.04. The code is written in the c programming language, though we expect to shortly add some c++ code because the latter handles memory more easily than does c. BASE-9 also takes advantage of parallel computing for the numerical integrations. You will need gcc (the c language compiler), gsl (the gnu science library), cmake (a cross-platform build system), and Open MPI (a high performance message passing library) to compile the code. To install these software packages, you may need help from your system administrator, though we provide some guidance in [the manual] (http://webfac.db.erau.edu/~vonhippt/base9/Manual_files/BASE-9_Manual.pdf).
+We designed BASE-9 to run under a variety of UNIX and Linux operating systems, though we have not tested it under a wide variety of systems. Currently we have BASE-9 running under Mac OS 10.6 and 10.8 and Linux Ubuntu 10.04. The code is written primarily in the C++ programming language. BASE-9 also takes advantage of parallel computing for the numerical integrations using a hybrid scheme utilizing MPI and C++11 threads. You will need g++ (a C++ compiler associated with GCC) version 4.8 or newer or clang++ version 3.2 or newer (available with XCode 4.6), GSL (the Gnu Science Library), cmake (a cross-platform build system) version 2.8.10 or newer, Boost (a peer-reviewed C++ library) 1.54 or newer, and Open MPI (a high performance message passing library) to compile the code. To install these software packages, you may need help from your system administrator, though we provide some guidance in [the manual] (http://webfac.db.erau.edu/~vonhippt/base9/Manual_files/BASE-9_Manual.pdf).
+
+C++11
+-----
+As of version 9.3.0, BASE-9 is dependent upon a C++11 compliant compiler for proper operation. Compilation is currently supported with gcc/g++ 4.8, Clang 3.3 (preferred) and 3.2 (for XCode 4.6 compatibility). An incomplete list of utilized C++11 features includes:
+
+* C++11 threads
+* Thread-safe static initialization (per [N2660](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2660.htm))
+* Template aliases
+* std::array
+* C++11 \<random\> (Mersenne Twister and distributions)
 
 References
 ----------

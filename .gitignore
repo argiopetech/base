@@ -17,6 +17,8 @@
 *.app
 
 \#*
+*~
+*_flymake.cpp
 
 BUILD/*
 contrib/BUILD/*

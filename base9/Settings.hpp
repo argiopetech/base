@@ -1,29 +1,35 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#ifdef __cplusplus
+#include <array>
 #include <string>
 
-extern "C"
+#include "constants.hpp"
+#include "yaml-cpp/yaml.h"
+
+class Settings
 {
-#endif
+  public:
+    void fromYaml (const std::string);
+    void fromCLI (int, char **);
+
+    uint32_t seed;
+    unsigned int threads = std::numeric_limits<int>::max();
+
+    int verbose;
+
     struct MainSequenceSettings
     {
-        int filterSet;
-        int msRgbModel;
+        MsFilter filterSet;
+        MsModel msRgbModel;
     };
 
     struct WhiteDwarfSettings
     {
         int ifmr;
-        int wdModel;
+        WdModel wdModel;
         double carbonicity;
         double M_wd_up;
-    };
-
-    struct BrownDwarfSettings
-    {
-        int bdModel;
     };
 
     struct MpiMcmcSettings
@@ -31,21 +37,22 @@ extern "C"
         int burnIter;
         int maxIter;
         int thin;
+
+        bool bigStepBurnin = false;
     };
 
     struct SimClusterSettings
     {
         int nStars;
         int nFieldStars;
-        int nBrownDwarfs;
-        int percentBinary; // Fraction * 100
-        int percentDB; // Fraction * 100
+        int percentBinary;      // Fraction * 100
+        int percentDB;          // Fraction * 100
     };
 
     struct ScatterClusterSettings
     {
         int relevantFilt;
-        double exposures[14];
+        std::array<double, 14> exposures;
         double brightLimit;
         double faintLimit;
         double limitS2N;
@@ -77,38 +84,26 @@ extern "C"
 
     struct Files
     {
-        char *phot;
-        char *output;
-        char *scatter;
-        char *config;
-        char *models;
+        std::string phot;
+        std::string output;
+        std::string scatter;
+        std::string config;
+        std::string models;
     };
 
-    struct Settings
-    {
-        int seed;
-        int verbose;
+    struct Files files;
+    struct MainSequenceSettings mainSequence;
+    struct WhiteDwarfSettings whiteDwarf;
+    struct MpiMcmcSettings mpiMcmc;
+    struct ClusterSettings cluster;
+    struct SimClusterSettings simCluster;
+    struct ScatterClusterSettings scatterCluster;
 
-        struct Files files;
-        struct MainSequenceSettings mainSequence;
-        struct WhiteDwarfSettings whiteDwarf;
-        struct BrownDwarfSettings brownDwarf;
-        struct MpiMcmcSettings mpiMcmc;
-        struct ClusterSettings cluster;
-        struct SimClusterSettings simCluster;
-        struct ScatterClusterSettings scatterCluster;
-    };
+  private:
+    template <typename T> T getDefault (YAML::Node &, std::string &&, T);
+    template <typename T> T getOrDie (YAML::Node &, std::string &&);
+    YAML::Node getNode (YAML::Node &, std::string &&);
+    [[noreturn]] void exitWith (std::string &&);
+};
 
-    void makeSettings(char*, struct Settings*);
-    void zeroSettingPointers(struct Settings*);
-    void settingsFromCLI(int argc, char **argv, struct Settings *settings);
-
-#ifdef __cplusplus
-}
-
-template <typename T> T getDefault(YAML::Node&, std::string&&, T);
-template <typename T> T getOrDie(YAML::Node&, std::string&&);
-YAML::Node getNode(YAML::Node &n, std::string &&f);
-[[noreturn]] void exitWith (std::string&&);
-#endif
 #endif

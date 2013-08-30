@@ -1,0 +1,21 @@
+#ifndef BASE9_CONFIG_H
+#define BASE9_CONFIG_H
+
+// the configured options and settings for Tutorial
+#define Base9_VERSION_MAJOR @Base9_VERSION_MAJOR@
+#define Base9_VERSION_MINOR @Base9_VERSION_MINOR@
+#define Base9_VERSION_PATCH @Base9_VERSION_PATCH@
+
+#cmakedefine HAS_EXP10
+#ifndef HAS_EXP10
+  #include <cmath>
+
+  inline double exp10(double v) noexcept
+  {
+      return pow(10.0, v);
+  }
+#else
+  #define exp10 exp10
+#endif
+
+#endif
