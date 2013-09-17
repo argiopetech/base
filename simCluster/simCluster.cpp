@@ -1,6 +1,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <random>
 
 #include <cstdio>
 #include <cmath>
@@ -8,12 +9,12 @@
 #include <cstring>
 #include <boost/format.hpp>
 
-#include "mt19937ar.hpp"
 #include "evolve.hpp"
-#include "gennorm.hpp"
 #include "structures.hpp"
 #include "Settings.hpp"
 #include "MsFilterSet.hpp"
+
+#include "WhiteDwarf.hpp"
 
 using std::array;
 using std::vector;
@@ -36,15 +37,14 @@ unsigned long seed = 0;
 
 int main (int argc, char *argv[])
 {
-    int i, nStars, cmpnt, nBrownDwarfs;
+    int i, nStars, cmpnt;//, nBrownDwarfs;
     double fractionBinary, tempU, massTotal, fractionDB, tempMod, minV, maxV, minMass = 0.15;
     char w_file[100];
     FILE *w_ptr;
     Cluster theCluster;
     Star theStar;
 
-    double drawFromIMF (void);
-    double genrand_res53 (void);
+    double drawFromIMF (std::mt19937&);
     void updateCount (Star *pStar, int cmpnt);
 
     array<double, 2> ltau;
@@ -73,13 +73,13 @@ int main (int argc, char *argv[])
     theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
     fractionBinary = settings.simCluster.percentBinary;
     fractionDB = settings.simCluster.percentDB;
-    theCluster.parameter[MOD] = settings.cluster.distMod;
-    theCluster.parameter[ABS] = settings.cluster.Av;
-    theCluster.parameter[AGE] = settings.cluster.logClusAge;
-    theCluster.parameter[FEH] = settings.cluster.Fe_H;
-    theCluster.parameter[YYY] = settings.cluster.Y;
+    theCluster.mod = settings.cluster.distMod;
+    theCluster.abs = settings.cluster.Av;
+    theCluster.age = settings.cluster.logClusAge;
+    theCluster.feh = settings.cluster.Fe_H;
+    theCluster.yyy = settings.cluster.Y;
 //    nFieldStars = settings.simCluster.nFieldStars;
-    nBrownDwarfs = settings.simCluster.nBrownDwarfs;
+//    nBrownDwarfs = settings.simCluster.nBrownDwarfs;
 
     fractionBinary /= 100.;     // input as percentages, use as fractions
     fractionDB /= 100.;
@@ -91,7 +91,7 @@ int main (int argc, char *argv[])
     //     verbose = 1;            // give standard feedback if incorrectly specified
 
     // !!! FIX ME !!!
-    cerr << "This is broken. If we need field stars and are using the YALE models, we also have to load the DSED models.";
+    cerr << "This may be broken. If we need field stars and are using the YALE models, we also have to load the DSED models.";
     theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 //    loadModels (theCluster, evoModels, settings);
 
@@ -111,7 +111,7 @@ int main (int argc, char *argv[])
     nStars = 0;
     massTotal = 0.0;
 
-    init_genrand (seed);
+    std::mt19937 gen(seed * uint32_t(2654435761));  // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
 
     //Output headers
     fprintf (w_ptr, "id  mass1 ");
@@ -132,17 +132,27 @@ int main (int argc, char *argv[])
     ///// Create cluster stars /////
     ////////////////////////////////
     // derive masses, mags, and summary stats
+
+    std::normal_distribution<double> normDist(1, 0.5);
+
     for (i = 0; i < settings.simCluster.nStars; i++)
     {                           // for all systems in the cluster
         do
         {
-            theStar.U = drawFromIMF (); // create single stars in arbitrary mass order
+            theStar.U = drawFromIMF (gen); // create single stars in arbitrary mass order
         } while (theStar.U < minMass);
         nStars++;                       // keep track of the number of stars created
         massTotal += theStar.U;
         theStar.massRatio = 0.0;
 
-        evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // given inputs, derive mags for first component
+        try
+        {
+            evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // given inputs, derive mags for first component
+        }
+        catch(WDBoundsError &e)
+        {
+            cout << e.what() << endl;
+        }
 
         fprintf (w_ptr, "%4d %7.3f ", i + 1, theStar.getMass1()); // output primary star data
         for (auto f : filters)
@@ -154,11 +164,11 @@ int main (int argc, char *argv[])
         tempU = theStar.U;              // save so we can output the total photometry below
         if (theStar.status[0] != NSBH && theStar.status[0] != WD)
         {
-            if (genrand_res53 () < fractionBinary)
+            if (std::generate_canonical<double, 53>(gen) < fractionBinary)
             {                           // create binaries among appropriate fraction
                 do
                 {
-                    theStar.massRatio = gen_norm (1, 0.5);
+                    theStar.massRatio = normDist(gen);
                 } while (theStar.massRatio < 0 || theStar.massRatio > 1);
                 theStar.U = tempU * theStar.massRatio;
                 nStars++;
@@ -171,7 +181,15 @@ int main (int argc, char *argv[])
         else
             theStar.U = 0.0;
 
-        evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // Evolve secondary star by itself
+        try
+        {
+            evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // Evolve secondary star by itself
+        }
+        catch(WDBoundsError &e)
+        {
+            cout << e.what() << endl;
+        }
+
 
         fprintf (w_ptr, "%7.3f ", theStar.getMass1());    // output secondary star data
         for (auto f : filters)
@@ -183,7 +201,15 @@ int main (int argc, char *argv[])
         theStar.massRatio = theStar.U / tempU;
         theStar.U = tempU;
 
-        evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // Find the photometry for the whole system
+        try
+        {
+            evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // Find the photometry for the whole system        
+        }
+        catch(WDBoundsError &e)
+        {
+            cout << e.what() << endl;
+        }
+
         for (cmpnt = 0; cmpnt < 2; cmpnt++)
             updateCount (&theStar, cmpnt);
 
@@ -204,10 +230,10 @@ int main (int argc, char *argv[])
     ///////////////////////////////
     ///// Create brown dwarfs /////
     ///////////////////////////////
-
+/*
     for (i = 0; i < nBrownDwarfs; i++)
     {                           // for all systems in the cluster
-        theStar.U = 0.0995 * genrand_res53 () + 0.0005; // create single stars in arbitrary mass order
+        theStar.U = 0.0995 * std::generate_canonical<double, 53>(gen) + 0.0005; // create single stars in arbitrary mass order
         nStars++;                       // keep track of the number of stars created
         massTotal += theStar.U;
         theStar.massRatio = 0.0;
@@ -236,13 +262,13 @@ int main (int argc, char *argv[])
             fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);  // output photometry for whole system
         fprintf (w_ptr, "\n");
     }
-
+*/
     cout << "\n Properties for cluster:" << endl;
-    cout << boost::format(" logClusAge     = %6.3f") % theCluster.parameter[AGE] << endl;
-    cout << boost::format(" [Fe/H]         = %5.2f") % theCluster.parameter[FEH] << endl;
-    cout << boost::format(" Y              = %5.2f") % theCluster.parameter[YYY] << endl;
-    cout << boost::format(" modulus        = %5.2f") % theCluster.parameter[MOD] << endl;
-    cout << boost::format(" Av             = %5.2f") % theCluster.parameter[ABS] << endl;
+    cout << boost::format(" logClusAge     = %6.3f") % theCluster.age << endl;
+    cout << boost::format(" [Fe/H]         = %5.2f") % theCluster.feh << endl;
+    cout << boost::format(" Y              = %5.2f") % theCluster.yyy << endl;
+    cout << boost::format(" modulus        = %5.2f") % theCluster.mod << endl;
+    cout << boost::format(" Av             = %5.2f") % theCluster.abs << endl;
     cout << boost::format(" WDMassUp       = %4.1f") % theCluster.M_wd_up << endl;
     cout << boost::format(" fractionBinary = %5.2f") % fractionBinary << endl;
     
@@ -268,7 +294,7 @@ int main (int argc, char *argv[])
     double minFeH, maxFeH, minAge, maxAge;
 
 //    theCluster.nStars = nFieldStars;
-    tempMod = theCluster.parameter[MOD];
+    tempMod = theCluster.mod;
 
     {
         // !!! FIX ME !!!
@@ -301,19 +327,27 @@ int main (int argc, char *argv[])
         {
             do
             {
-                theStar.U = drawFromIMF ();
+                theStar.U = drawFromIMF (gen);
             } while (theStar.U < minMass);
-            theStar.massRatio = genrand_res53 ();
+            theStar.massRatio = std::generate_canonical<double, 53>(gen);
 
             // Draw a new age and metallicity
-            theCluster.parameter[AGE] = minAge + (maxAge - minAge) * genrand_res53 ();
-            theCluster.parameter[FEH] = minFeH + (maxFeH - minFeH) * genrand_res53 ();
+            theCluster.age = minAge + (maxAge - minAge) * std::generate_canonical<double, 53>(gen);
+            theCluster.feh = minFeH + (maxFeH - minFeH) * std::generate_canonical<double, 53>(gen);
 
             // Determine a new distance, weighted so
             // there are more stars behind than in front
-            theCluster.parameter[MOD] = tempMod - 12.0 + log10 (exp10 ((pow (pow (26.0, 3.0) * genrand_res53 (), 1.0 / 3.0))));
+            theCluster.mod = tempMod - 12.0 + log10 (exp10 ((pow (pow (26.0, 3.0) * std::generate_canonical<double, 53>(gen), 1.0 / 3.0))));
 
-            evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);
+            try
+            {
+                evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);
+            }
+            catch(WDBoundsError &e)
+            {
+                cout << e.what() << endl;
+            }
+
 
         } while (theStar.photometry[2] < minV || theStar.photometry[2] > maxV || theStar.photometry[1] - theStar.photometry[2] < -0.5 || theStar.photometry[1] - theStar.photometry[2] > 1.7);
 

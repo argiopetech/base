@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cmath>
 
-#include "mt19937ar.hpp"
+#include <random>
 
 /*****************************************************************************************
 last update: 28sep05
@@ -12,17 +12,17 @@ Mo.  (Resetting and recalculating the constants each time this subroutine is cal
 inefficient, but more calcuation time will be spent drawing the Gaussian random deviate
 (typically done 2+ times per function call) and calculating the final inverse log.)
 *****************************************************************************************/
-double drawFromIMF ()
+double drawFromIMF (std::mt19937 &gen)
 {
 
     double logMass, zamsMass;
     const double mf_sigma = 0.67729, mf_mu = -1.02;     /* sigma = sqrt(1 / 2*c1), mu = c2 */
 
-    double gen_norm (double mean, double std_dev);
+    std::normal_distribution<double> dist(mf_mu, mf_sigma);
 
     do
     {
-        logMass = gen_norm (mf_mu, mf_sigma);
+        logMass = dist(gen);
     } while (logMass < -4 /*-0.8238*/  || logMass > 2.0);       /* keep within mass (0.15 + EPS to 100 Mo) limits */
 
     zamsMass = exp10(logMass);     /* costs about 17% of run time */

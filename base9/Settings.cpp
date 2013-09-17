@@ -87,6 +87,7 @@ void Settings::fromYaml (const string yamlFile)
     simCluster.percentBinary = getOrDie<int>(simConfNode, "percentBinary");
     simCluster.percentDB = getOrDie<int>(simConfNode, "percentDB");
     simCluster.nFieldStars = getOrDie<int>(simConfNode, "nFieldStars");
+//    simCluster.nBrownDwarfs = getOrDie<int>(simConfNode, "nBrownDwarfs");
 
     scatterCluster.brightLimit = getOrDie<double>(scatterConfNode, "brightLimit");
     scatterCluster.faintLimit = getOrDie<double>(scatterConfNode, "faintLimit");

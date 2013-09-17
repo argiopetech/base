@@ -45,6 +45,7 @@ class Settings
     {
         int nStars;
         int nFieldStars;
+//        int nBrownDwarfs;
         int percentBinary;      // Fraction * 100
         int percentDB;          // Fraction * 100
     };
