@@ -226,7 +226,7 @@ cluster age, interpolating in isochrones as necessary.
     currentFeH = newFeH;
 
     // Discover the range of the lower age isochrone
-    int newimax = 0;
+    int newimax = MAX_GIR_ENTRIES;
     for (int a = iAge; a < iAge + 2; a++)
     {
         for (int z = iFeH; z < iFeH + 2; z++)
