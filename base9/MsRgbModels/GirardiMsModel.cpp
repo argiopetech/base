@@ -19,6 +19,7 @@ using std::endl;
 
 static int gNumEntries[N_GIR_Z], gBoundary[2][N_GIR_Z][N_GIR_AGES];
 static double gIsoMass[2][N_GIR_Z][MAX_GIR_ENTRIES], gIsoMag[N_GIR_Z][N_GIR_FILTS][MAX_GIR_ENTRIES], gLogAge[N_GIR_Z][N_GIR_AGES], gFeH[N_GIR_Z], gAGBt[N_GIR_Z][N_GIR_AGES];
+static void calcCoeff (double a[], double b[], double x);
 
 // Set by derive_AGBt_zmass and used by getGirardiMags
 static int iAge, iFeH;
@@ -208,26 +209,81 @@ cluster age, interpolating in isochrones as necessary.
     interpAge[HIGH] = ceil (20. * newAge) / 20.;        // round up to nearest 0.05
     interpAge[LOW] = interpAge[HIGH] - 0.05;
 
-    iAge = (int) (rint ((interpAge[LOW] - 7.8) * 20));
-
-    //     log << setLevel(2) << ("\n For AGBt: Using log(age)=%.2f bounded by interpAge[HIGH] = %.3f interpAge[LOW] = %.3f\n", newAge, interpAge[HIGH], interpAge[LOW]);
-
-    //Find metallicity boundaries
+    iAge = (int) (rint ((interpAge[LOW] - 7.8) * 20));  // In this line, PFM. Takes the interpAge which we previously rounded to the next lowest 0.05, subtracts the minimum age of the Girardi isochrones, multiplies by the integral of the Girardi logAge step size, and rounds to an integer (which conveniently ends up being the age index).
     iFeH = binarySearch (gFeH, N_GIR_Z, newFeH);        // function returns lower bound
 
     interpFeH[LOW] = gFeH[iFeH];
     interpFeH[HIGH] = gFeH[iFeH + 1];
 
+    double b[2], d[2];
+    calcCoeff (&gFeH[iFeH], d, newFeH);
+    calcCoeff (&gAge[iFeH][iAge], b, newAge);
+/*
     AGBt_zmass_lo = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH][iAge], gAGBt[iFeH][iAge + 1], newAge).val;
     AGBt_zmass_hi = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH + 1][iAge], gAGBt[iFeH + 1][iAge + 1], newAge).val;
 
     AGBt_zmass = linearTransform<TransformMethod::Interp>(interpFeH[LOW], interpFeH[HIGH], AGBt_zmass_lo, AGBt_zmass_hi, newFeH).val;
-
+*/
     currentAge = newAge;
     currentFeH = newFeH;
 
-    return AGBt_zmass;
+    // Discover the range of the lower age isochrone
+    int newimax = 0;
+    for (a = iAge; a < iAge + 2; a++)
+    {
+        for (z = iFeH; z < iFeH + 2; z++)
+        {
+	    int nMassPoints = gBoundary[HIGH][z][a] - gBoundary[LOW][z][a] + 1;
 
+            if (nMassPoints < newimax)
+                newimax = nMassPoints;
+        }
+    }
+
+    for (m = 0; m < newimax; m++)
+    {
+        isochrone.mass[m] = 0.0;
+        for (auto f : filters)
+            if (f < N_GIR_FILTS)
+                isochrone.mag[m][f] = 0.0;
+
+        for (a = 0; a < 2; a++)
+        {
+            for (z = 0; z < 2; z++)
+            {
+		const int entry = gBoundary[LOW][iFeH + z][iAge + a] + m;
+                isochrone.mass[m] += b[a] * d[z] * gIsoMass[ZAMS][iFeH + z][entry];
+                for (auto f : filters)
+                {
+                    if (f < N_GIR_FILTS)
+                    {
+                     	isochrone.mag[m][f] += b[a] * d[z] * gIsoMag[iFeH + z][f][entry];
+                    }
+                }
+            }
+        }
+
+        // Sometimes the interpolation process can leave the                                           
+        // mass entries out of order.  This swaps them so that                                         
+        // the later mass interpolation can function properly                                          
+        if (m > 0)
+        {
+            n = m;
+            while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
+            {
+                swapGlobalEntries (isochrone, filters, n);
+		n--;
+            }
+        }
+    }
+
+    isochrone.nEntries = newimax;
+    isochrone.logAge = newAge;
+    isochrone.FeH = newFeH;
+    isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
+
+//    return AGBt_zmass;
+    return isochrone.AgbTurnoffMass;
 }
 
 
@@ -428,4 +484,15 @@ higher mass and younger AGBt star that was the WD precursor.
 
     return temp;
 
+}
+
+// a and b are 1-d arrays with two elements                                                           
+// a contains the two bounding values to be interpolated                                              
+// x is the value to be interpolated at                                                               
+// b returns the coefficients                                                                         
+static void calcCoeff (double a[], double b[], double x)
+{
+    b[0] = (a[1] - x) / (a[1] - a[0]);
+    b[1] = (x - a[0]) / (a[1] - a[0]);
+    return;
 }
