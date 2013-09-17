@@ -296,7 +296,7 @@ in increasing mass order and all have the same low mass value.
 Uses static variables iAge and iFeH.
 ****************************************************************************************/
 {
-    int a, f;
+/*    int a, f;
     double massNow = 0.0;
     double modelAge[2], ageMassNow[2][2], ageMag[2][2][N_GIR_FILTS];
     double modelFeH[2], fehMassNow[2], fehMag[2][N_GIR_FILTS];
@@ -337,7 +337,23 @@ Uses static variables iAge and iFeH.
     massNow = linearTransform<TransformMethod::Interp>(modelFeH[LOW], modelFeH[HIGH], fehMassNow[LOW], fehMassNow[HIGH], currentFeH).val;
 
     return massNow;
+*/
 
+    int m;
+
+    m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
+
+    for (auto f : filters)
+    {
+        if (f < N_GIR_FILTS)
+        {
+            globalMags[f] = linearTransform<>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
+            if (fabs (globalMags[f]) < EPS)
+                globalMags[f] = 999.99;
+        }
+    }
+
+    return zamsMass;
 }
 
 // Helper function for getGirardiMags
