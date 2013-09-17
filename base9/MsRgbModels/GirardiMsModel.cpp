@@ -173,7 +173,7 @@ static void getFileName (string path, int z, MsFilter filterSet)
 }
 
 
-double GirardiMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, double, double newAge)
+double GirardiMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double, double newAge)
 /****************************************************************************************
 last update: 12nov07
 
@@ -181,8 +181,6 @@ Derive AGBt mass (actually the ZAMS mass for the appropriate AGBt star) for a gi
 cluster age, interpolating in isochrones as necessary.
 ****************************************************************************************/
 {
-
-    double AGBt_zmass, AGBt_zmass_lo, AGBt_zmass_hi;
     double interpAge[2], interpFeH[2];
 
     if (newAge < 7.80)
@@ -217,7 +215,7 @@ cluster age, interpolating in isochrones as necessary.
 
     double b[2], d[2];
     calcCoeff (&gFeH[iFeH], d, newFeH);
-    calcCoeff (&gAge[iFeH][iAge], b, newAge);
+    calcCoeff (&gLogAge[iFeH][iAge], b, newAge);
 /*
     AGBt_zmass_lo = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH][iAge], gAGBt[iFeH][iAge + 1], newAge).val;
     AGBt_zmass_hi = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH + 1][iAge], gAGBt[iFeH + 1][iAge + 1], newAge).val;
@@ -229,9 +227,9 @@ cluster age, interpolating in isochrones as necessary.
 
     // Discover the range of the lower age isochrone
     int newimax = 0;
-    for (a = iAge; a < iAge + 2; a++)
+    for (int a = iAge; a < iAge + 2; a++)
     {
-        for (z = iFeH; z < iFeH + 2; z++)
+        for (int z = iFeH; z < iFeH + 2; z++)
         {
 	    int nMassPoints = gBoundary[HIGH][z][a] - gBoundary[LOW][z][a] + 1;
 
@@ -240,16 +238,16 @@ cluster age, interpolating in isochrones as necessary.
         }
     }
 
-    for (m = 0; m < newimax; m++)
+    for (int m = 0; m < newimax; m++)
     {
         isochrone.mass[m] = 0.0;
         for (auto f : filters)
             if (f < N_GIR_FILTS)
                 isochrone.mag[m][f] = 0.0;
 
-        for (a = 0; a < 2; a++)
+        for (int a = 0; a < 2; a++)
         {
-            for (z = 0; z < 2; z++)
+            for (int z = 0; z < 2; z++)
             {
 		const int entry = gBoundary[LOW][iFeH + z][iAge + a] + m;
                 isochrone.mass[m] += b[a] * d[z] * gIsoMass[ZAMS][iFeH + z][entry];
@@ -265,10 +263,10 @@ cluster age, interpolating in isochrones as necessary.
 
         // Sometimes the interpolation process can leave the                                           
         // mass entries out of order.  This swaps them so that                                         
-        // the later mass interpolation can function properly                                          
+        // the later mass interpolation can function properly         
         if (m > 0)
         {
-            n = m;
+            int n = m;
             while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
             {
                 swapGlobalEntries (isochrone, filters, n);
