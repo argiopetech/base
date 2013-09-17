@@ -91,7 +91,7 @@ int main (int argc, char *argv[])
     //     verbose = 1;            // give standard feedback if incorrectly specified
 
     // !!! FIX ME !!!
-    cerr << "This may be broken. If we need field stars and are using the YALE models, we also have to load the DSED models.";
+    cerr << "This may be broken. If we need field stars and are using the YALE models, we also have to load the DSED models." << endl;
     theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 //    loadModels (theCluster, evoModels, settings);
 
@@ -116,6 +116,7 @@ int main (int argc, char *argv[])
     //Output headers
     fprintf (w_ptr, "id  mass1 ");
     for (auto f : filters)
+
         fprintf (w_ptr, "%s1 ", evoModels.filterSet->getFilterName(f).c_str());
     fprintf (w_ptr, "stage1 wdM1 wdType1 wdLogTeff1 ltau1 mass2 ");
     for (auto f : filters)
@@ -132,6 +133,8 @@ int main (int argc, char *argv[])
     ///// Create cluster stars /////
     ////////////////////////////////
     // derive masses, mags, and summary stats
+
+    theCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, theCluster.feh, theCluster.yyy, theCluster.age);    // determine AGBt ZAMS mass, to find evol state
 
     std::normal_distribution<double> normDist(1, 0.5);
 
@@ -338,6 +341,9 @@ int main (int argc, char *argv[])
             // Determine a new distance, weighted so
             // there are more stars behind than in front
             theCluster.mod = tempMod - 12.0 + log10 (exp10 ((pow (pow (26.0, 3.0) * std::generate_canonical<double, 53>(gen), 1.0 / 3.0))));
+
+            theCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, theCluster.feh, theCluster.yyy, theCluster.age);    // determine AGBt ZAMS mass, to find evol state
+
 
             try
             {
