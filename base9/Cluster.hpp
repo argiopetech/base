@@ -17,6 +17,7 @@ class Cluster
         stepSize[MOD] = 0.005;
         stepSize[ABS] = 0.002;
         stepSize[YYY] = 0.002;
+        stepSize[CARBONICITY] = 0.001;
         stepSize[IFMR_INTERCEPT] = 0.01;
         stepSize[IFMR_SLOPE] = 0.008;
         stepSize[IFMR_QUADCOEF] = 0.008;
@@ -36,13 +37,13 @@ class Cluster
     double M_wd_up = 8.0;
     double AGBt_zmass = 0.0;
     double varScale = 1.0;
-    double carbonicity = 0.38; // Good default value, per Mike Montgomery
 
     double age = 0.0;
     double yyy = 0.0;
     double feh = 0.0;
     double mod = 0.0;
     double abs = 0.0;
+    double carbonicity = 0.0;
     double ifmrIntercept = 0.0;
     double ifmrSlope = 0.0;
     double ifmrQuadCoef = 0.0;

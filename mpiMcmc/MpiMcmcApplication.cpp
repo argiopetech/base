@@ -21,8 +21,6 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 {
     ctrl.priorVar.fill(0);
 
-    mc.clust.carbonicity = settings.whiteDwarf.carbonicity;
-
     mc.clust.feh = mc.clust.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
@@ -34,6 +32,17 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     mc.clust.age = mc.clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
+
+    if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
+    {
+        mc.clust.carbonicity = mc.clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+        ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
+    }
+    else
+    {
+        mc.clust.carbonicity = mc.clust.priorMean[CARBONICITY] = 0.0;
+        ctrl.priorVar[CARBONICITY] = 0.0;
+    }
 
     if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {

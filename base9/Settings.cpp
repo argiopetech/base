@@ -58,7 +58,6 @@ void Settings::fromYaml (const string yamlFile)
 
     whiteDwarf.ifmr = getOrDie<int>(whiteDwarfNode, "ifmr");
     whiteDwarf.wdModel = static_cast<WdModel>(getOrDie<int>(whiteDwarfNode, "wdModel"));
-    whiteDwarf.carbonicity = getOrDie<double>(whiteDwarfNode, "carbonicity");
     whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfNode, "M_wd_up");
 
     cluster.Fe_H = getOrDie<double>(priorsNode, "Fe_H");
@@ -72,6 +71,9 @@ void Settings::fromYaml (const string yamlFile)
 
     cluster.Y = getOrDie<double>(priorsNode, "Y");
     cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
+
+    cluster.Fe_H = getOrDie<double>(priorsNode, "carbonicity");
+    cluster.sigma.Fe_H = getOrDie<double>(sigmasNode, "carbonicity");
 
     cluster.logClusAge = getOrDie<double>(clusterNode, "logClusAge");
 
@@ -131,7 +133,6 @@ void Settings::fromCLI (int argc, char **argv)
         {"msRgbModel", required_argument, 0, 0xFE},
         {"ifmr", required_argument, 0, 0xFD},
         {"wdModel", required_argument, 0, 0xFC},
-        {"carbonicity", required_argument, 0, 0xFB},
         {"M_wd_up", required_argument, 0, 0xFA},
         {"bdModel", required_argument, 0, 0xF9},
         {"priorFe_H", required_argument, 0, 0xF8},
@@ -142,6 +143,8 @@ void Settings::fromCLI (int argc, char **argv)
         {"sigmaAv", required_argument, 0, 0xF3},
         {"priorY", required_argument, 0, 0xF2},
         {"sigmaY", required_argument, 0, 0xF1},
+        {"priorCarbonicity", required_argument, 0, 0xCD},
+        {"sigmaCarbonicity", required_argument, 0, 0xCC},
         {"logClusAge", required_argument, 0, 0xF0},
         {"minMag", required_argument, 0, 0xEF},
         {"maxMag", required_argument, 0, 0xEE},
@@ -212,10 +215,6 @@ void Settings::fromCLI (int argc, char **argv)
                 whiteDwarf.wdModel = static_cast<WdModel>(i);
                 break;
 
-            case 0xFB:
-                istringstream (string (optarg)) >> whiteDwarf.carbonicity;
-                break;
-
             case 0xFA:
                 istringstream (string (optarg)) >> whiteDwarf.M_wd_up;
                 break;
@@ -250,6 +249,14 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0xF1:
                 istringstream (string (optarg)) >> cluster.sigma.Y;
+                break;
+
+            case 0xCD:
+                istringstream (string (optarg)) >> cluster.carbonicity;
+                break;
+
+            case 0xCC:
+                istringstream (string (optarg)) >> cluster.sigma.carbonicity;
                 break;
 
             case 0xF0:
@@ -434,19 +441,20 @@ static void printUsage ()
     cerr << "\t--config\t\tYAML configuration file" << endl << endl;
     cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
     cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = DSED" << endl << endl;
-    cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;;
+    cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;
     cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery" << endl << endl;
-    cerr << "\t--carbonicity\t\t" << endl;
     cerr << "\t--M_wd_up\t\tThe maximum mass for a WD-producing star" << endl << endl;
     cerr << "\t--bdModel\t\t0 = None\n\t\t\t\t1 = Baraffe" << endl << endl;
     cerr << "\t--priorFe_H" << endl;
-    cerr << "\t--sigmaFe_H" << endl << endl;;
+    cerr << "\t--sigmaFe_H" << endl << endl;
     cerr << "\t--priordistMod" << endl;
-    cerr << "\t--sigmadistMod" << endl << endl;;
+    cerr << "\t--sigmadistMod" << endl << endl;
     cerr << "\t--priorAv" << endl;
-    cerr << "\t--sigmaAv" << endl << endl;;
+    cerr << "\t--sigmaAv" << endl << endl;
     cerr << "\t--priorY" << endl;
-    cerr << "\t--sigmaY" << endl << endl;;
+    cerr << "\t--sigmaY" << endl << endl;
+    cerr << "\t--priorCarbonicity" << endl;
+    cerr << "\t--sigmaCarbonicity" << endl << endl;
     cerr << "\t--logClusAge" << endl;
     cerr << "\t--minMag" << endl;
     cerr << "\t--maxMag" << endl;

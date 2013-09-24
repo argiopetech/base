@@ -105,7 +105,17 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 {
     ctrl->numFilts = 0;
 
-    mc->clust.carbonicity = settings.whiteDwarf.carbonicity;
+    if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
+    {
+        ctrl->priorMean[CARBONICITY] = mc->clust.carbonicity = mc->clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+        ctrl->priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
+    }
+    else
+    {
+        ctrl->priorMean[CARBONICITY] = mc->clust.carbonicity = mc->clust.priorMean[CARBONICITY] = 0.0;
+        ctrl->priorVar[CARBONICITY] = 0.0;
+    }
+
 
     ctrl->priorMean[FEH] = settings.cluster.Fe_H;
     ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;

@@ -78,6 +78,7 @@ int main (int argc, char *argv[])
     theCluster.age = settings.cluster.logClusAge;
     theCluster.feh = settings.cluster.Fe_H;
     theCluster.yyy = settings.cluster.Y;
+    theCluster.carbonicity = settings.cluster.carbonicity;
 //    nFieldStars = settings.simCluster.nFieldStars;
 //    nBrownDwarfs = settings.simCluster.nBrownDwarfs;
 
@@ -92,7 +93,6 @@ int main (int argc, char *argv[])
 
     // !!! FIX ME !!!
     cerr << "This may be broken. If we need field stars and are using the YALE models, we also have to load the DSED models." << endl;
-    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 //    loadModels (theCluster, evoModels, settings);
 
     if (settings.mainSequence.msRgbModel == MsModel::YALE)
@@ -305,7 +305,9 @@ int main (int argc, char *argv[])
         exit(1);
 
         if (settings.mainSequence.msRgbModel == MsModel::YALE)
+        {
             ; //            evoModels.mainSequenceEvol = DSED;
+        }
     }
 
     if ((settings.mainSequence.msRgbModel == MsModel::DSED) || (settings.mainSequence.msRgbModel == MsModel::YALE))

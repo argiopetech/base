@@ -28,7 +28,6 @@ class Settings
     {
         int ifmr;
         WdModel wdModel;
-        double carbonicity;
         double M_wd_up;
     };
 
@@ -65,6 +64,7 @@ class Settings
         double distMod;
         double Av;
         double Y;
+        double carbonicity;
     };
 
     struct ClusterSettings
@@ -73,6 +73,7 @@ class Settings
         double distMod;
         double Av;
         double Y;
+        double carbonicity;
 
         struct ClusterSigmas sigma;
 

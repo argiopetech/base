@@ -106,14 +106,15 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
 
 void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 {
-    const array<string, NPARAMS> paramNames = { "    logAge",
-                                                "         Y",
-                                                "       FeH",
-                                                "   modulus",
-                                                "absorption",
-                                                " IFMRconst",
-                                                "   IFMRlin",
-                                                "  IFMRquad"};
+    const array<string, NPARAMS> paramNames = { "     logAge",
+                                                "          Y",
+                                                "        FeH",
+                                                "    modulus",
+                                                " absorption",
+                                                "carbonicity",
+                                                "  IFMRconst",
+                                                "    IFMRlin",
+                                                "   IFMRquad"};
 
     for (int p = 0; p < NPARAMS; p++)
     {
