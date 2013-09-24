@@ -16,23 +16,24 @@ general:
         wdModel:        1     # 0 = Wood, 1 = Montgomery, 2 = Althaus, 3 = Renedo
         M_wd_up:        8.0   # The maximum mass for a WD-producing star
         ifmr:           1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
-        carbonicity:    0.7
 
     brown_dwarfs:
         bdModel:        1     # 0 = None, 1 = Baraffe
 
     cluster:
         priors:
-            Fe_H:       0.07
-            distMod:    0.0
-            Av:         0.009
-            Y:          0.29
+            Fe_H:        0.07
+            distMod:     0.0
+            Av:          0.009
+            Y:           0.29
+            carbonicity: 0.5
 
         sigmas:
-            Fe_H:       0.05
-            distMod:    0.05
-            Av:         0.006
-            Y:          0.0
+            Fe_H:        0.05
+            distMod:     0.05
+            Av:          0.006
+            Y:           0.0
+            carbonicity: 0.0833
 
         logClusAge:     8.796 # not a prior, just a starting value
 
