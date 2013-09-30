@@ -16,7 +16,7 @@ const int DNE        = 9;    // Does not exist (zams mass > 100 Msun or < 0.0001
 
 const double R_sun   = 6.96342e10;
 
-const int NPARAMS            = 10;
+const int NPARAMS            = 9;
 
 // Filter sets
 enum class MsFilter {UBVRIJHK, ACS, SDSS};

@@ -72,8 +72,8 @@ void Settings::fromYaml (const string yamlFile)
     cluster.Y = getOrDie<double>(priorsNode, "Y");
     cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
 
-    cluster.Fe_H = getOrDie<double>(priorsNode, "carbonicity");
-    cluster.sigma.Fe_H = getOrDie<double>(sigmasNode, "carbonicity");
+    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
+    cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
 
     cluster.logClusAge = getOrDie<double>(clusterNode, "logClusAge");
 
