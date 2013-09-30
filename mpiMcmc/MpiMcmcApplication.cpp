@@ -225,7 +225,7 @@ int MpiMcmcApplication::run()
 
         try
         {
-            logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+            logPostProp = logPostStep (mc.stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
         }
         catch(InvalidCluster &e)
         {
@@ -288,7 +288,7 @@ int MpiMcmcApplication::run()
 
         try
         {
-            logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+            logPostProp = logPostStep (mc.stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
         }
         catch(InvalidCluster &e)
         {
@@ -380,19 +380,17 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
     return clust;
 }
 
-double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
+double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     mutex logPostMutex;
     double logPostProp;
 
     logPostProp = logPriorClust (propClust, evoModels);
 
-    auto stars = mc.stars;
-
     propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
 
     /* loop over assigned stars */
-    pool.parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)
+    pool.parallelFor(stars.size(), [=,&logPostMutex,&logPostProp](int i)
     {
         double postClusterStar = 0.0;
 
@@ -417,7 +415,7 @@ double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsL
                 try
                 {
                     tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
-                    tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
+                    tmpLogPost += log ((propClust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                     postClusterStar +=  exp (tmpLogPost);
                 }
