@@ -42,10 +42,10 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
     mass[0] = star.getMass1();
     mass[1] = star.getMass2();
 
-    for (int cmpnt = 0; cmpnt < 2; cmpnt++)
-    {
-        setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau, globalMags);
-    }
+    // for (int cmpnt = 0; cmpnt < 2; cmpnt++)
+    // {
+    //     setMags(mag, cmpnt, mass, pCluster, star, evoModels, filters, ltau, globalMags);
+    // }
 
     deriveCombinedMags(mag, clusterAv, flux, pCluster, star, evoModels, filters);
 }
