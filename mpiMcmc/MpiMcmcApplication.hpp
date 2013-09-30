@@ -33,9 +33,11 @@ class MpiMcmcApplication : public McmcApplication
     const Model evoModels;
     const Settings settings;
 
+    Cluster clust;
+    vector<Star> stars;
+
     base::utility::ThreadPool pool;
 
-    Chain mc;
     struct ifmrMcmcControl ctrl;
 
     int nSave = 100;

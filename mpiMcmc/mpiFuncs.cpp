@@ -40,9 +40,11 @@ using base::utility::ThreadPool;
 /*
  * Read data
  */
-void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax, const Settings &settings)
+vector<Star> readCmdData (struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax, const Settings &settings)
 {
     string line, pch;
+
+    vector<Star> stars;
 
     //Parse the header of the file to determine which filters are being used
     getline(ctrl.rData, line);  // Read in the header line
@@ -101,6 +103,8 @@ void readCmdData (vector<Star> &stars, struct ifmrMcmcControl &ctrl, const Model
             stars.pop_back();
         }
     }
+
+    return stars;
 } /* readCmdData */
 
 
@@ -125,38 +129,6 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
     }
     file << "logPost" << endl;
 }
-
-
-/*
- * Initialize chain
- */
-void initChain (Chain &mc, const Model &evoModels, array<double, 2> &ltau, const vector<int> &filters)
-{
-    array<double, FILTS> globalMags;
-
-    for (int p = 0; p < NPARAMS; p++)
-    {
-        mc.acceptClust.at(p) = mc.rejectClust.at(p) = 0;
-    }
-
-    for (auto star : mc.stars)
-    {
-        star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
-        star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-        star.massRatioStepSize = 0.001;
-
-        // find photometry for initial values of currentClust and mc.stars
-        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);    // determine AGBt ZAMS mass, to find evol state
-        evolve (mc.clust, evoModels, globalMags, filters, star, ltau);
-
-        if (star.status[0] == WD)
-        {
-            star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
-            star.massRatio = 0.0;
-        }
-    }
-} /* initChain */
-
 
 // Create Cholesky Decomp
 void make_cholesky_decomp(struct ifmrMcmcControl &ctrl, MVatrix<double, NPARAMS> &params)

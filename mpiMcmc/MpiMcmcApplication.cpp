@@ -21,37 +21,37 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 {
     ctrl.priorVar.fill(0);
 
-    mc.clust.feh = mc.clust.priorMean[FEH] = settings.cluster.Fe_H;
+    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    mc.clust.mod = mc.clust.priorMean[MOD] = settings.cluster.distMod;
+    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    mc.clust.abs = mc.clust.priorMean[ABS] = fabs(s.cluster.Av);
+    clust.abs = clust.priorMean[ABS] = fabs(s.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    mc.clust.age = mc.clust.priorMean[AGE] = settings.cluster.logClusAge;
+    clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
     if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
     {
-        mc.clust.carbonicity = mc.clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+        clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
         ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
     }
     else
     {
-        mc.clust.carbonicity = mc.clust.priorMean[CARBONICITY] = 0.0;
+        clust.carbonicity = clust.priorMean[CARBONICITY] = 0.0;
         ctrl.priorVar[CARBONICITY] = 0.0;
     }
 
     if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
-        mc.clust.yyy = mc.clust.priorMean[YYY] = settings.cluster.Y;
+        clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
         ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
     }
     else
     {
-        mc.clust.yyy = mc.clust.priorMean[YYY] = 0.0;
+        clust.yyy = clust.priorMean[YYY] = 0.0;
         ctrl.priorVar[YYY] = 0.0;
     }
 
@@ -76,13 +76,13 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     }
 
     /* set starting values for IFMR parameters */
-    mc.clust.ifmrSlope = mc.clust.priorMean[IFMR_SLOPE] = 0.08;
-    mc.clust.ifmrIntercept = mc.clust.priorMean[IFMR_INTERCEPT] = 0.65;
+    clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
+    clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
 
     if (evoModels.IFMR <= 10)
-        mc.clust.ifmrQuadCoef = mc.clust.priorMean[IFMR_QUADCOEF] = 0.0001;
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
-        mc.clust.ifmrQuadCoef = mc.clust.priorMean[IFMR_QUADCOEF] = 0.08;
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
 
     for (auto &var : ctrl.priorVar)
     {
@@ -145,7 +145,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     ctrl.clusterFilename = settings.files.output + ".res";
 
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mc.clust.priorVar.begin());
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
 }
 
 
@@ -176,11 +176,32 @@ int MpiMcmcApplication::run()
     filterPriorMin.fill(1000);
     filterPriorMax.fill(-1000);
 
-    readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
+    stars = readCmdData (ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
 
-    initChain (mc, evoModels, ltau, filters);
+    // Begin initChain
+    {
+        array<double, FILTS> globalMags;
 
-    if (mc.stars.size() > 1)
+        for (auto star : stars)
+        {
+            star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
+            star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
+            star.massRatioStepSize = 0.001;
+
+            // find photometry for initial values of currentClust and mc.stars
+            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+            evolve (clust, evoModels, globalMags, filters, star, ltau);
+
+            if (star.status[0] == WD)
+            {
+                star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
+                star.massRatio = 0.0;
+            }
+        }
+    }
+    // end initChain
+
+    if (stars.size() > 1)
     {
         double logFieldStarLikelihood = 0.0;
 
@@ -216,16 +237,16 @@ int MpiMcmcApplication::run()
     {
         if (settings.mpiMcmc.bigStepBurnin || (iteration < ctrl.burnIter / 2))
         {
-            propClust = propClustBigSteps (mc.clust, ctrl);
+            propClust = propClustBigSteps (clust, ctrl);
         }
         else
         {
-            propClust = propClustIndep (mc.clust, ctrl);
+            propClust = propClustIndep (clust, ctrl);
         }
 
         try
         {
-            logPostProp = logPostStep (mc.stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+            logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
         }
         catch(InvalidCluster &e)
         {
@@ -235,7 +256,7 @@ int MpiMcmcApplication::run()
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
         {
-            mc.clust = propClust;
+            clust = propClust;
             logPostCurr = logPostProp;
         }
 
@@ -249,7 +270,7 @@ int MpiMcmcApplication::run()
                 {
                     if (ctrl.priorVar[p] > EPSILON)
                     {
-                        params.at(p).at((iteration - (ctrl.burnIter - (nSave * increment))) / increment) = mc.clust.getParam(p);
+                        params.at(p).at((iteration - (ctrl.burnIter - (nSave * increment))) / increment) = clust.getParam(p);
                     }
                 }
             }
@@ -260,7 +281,7 @@ int MpiMcmcApplication::run()
         {
             if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
             {
-                ctrl.burninFile << boost::format("%10.6f ") % mc.clust.getParam(p);
+                ctrl.burninFile << boost::format("%10.6f ") % clust.getParam(p);
             }
         }
 
@@ -284,11 +305,11 @@ int MpiMcmcApplication::run()
 
     for (int iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
     {
-        propClust = propClustCorrelated (mc.clust, ctrl);
+        propClust = propClustCorrelated (clust, ctrl);
 
         try
         {
-            logPostProp = logPostStep (mc.stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+            logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
         }
         catch(InvalidCluster &e)
         {
@@ -298,7 +319,7 @@ int MpiMcmcApplication::run()
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
         {
-            mc.clust = propClust;
+            clust = propClust;
             logPostCurr = logPostProp;
         }
 
@@ -308,7 +329,7 @@ int MpiMcmcApplication::run()
             {
                 if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                 {
-                    ctrl.resFile << boost::format("%10.6f ") % mc.clust.getParam(p);
+                    ctrl.resFile << boost::format("%10.6f ") % clust.getParam(p);
                 }
             }
             ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
