@@ -2,11 +2,13 @@
 
 #include <boost/format.hpp>
 
+#include "Cluster.hpp"
 #include "marg.hpp"
 #include "mpiMcmc.hpp"
 #include "mpiFuncs.hpp"
 #include "MpiMcmcApplication.hpp"
 #include "Settings.hpp"
+#include "Star.hpp"
 #include "samplers.cpp"
 #include "WhiteDwarf.hpp"
 
@@ -14,7 +16,6 @@ using std::array;
 using std::cout;
 using std::cerr;
 using std::endl;
-
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s)
         : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads)

@@ -6,7 +6,6 @@
 #include <cassert>
 
 #include "constants.hpp"
-#include "Chain.hpp"
 
 struct globalIso
 {

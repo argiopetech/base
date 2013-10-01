@@ -4,6 +4,9 @@
 #include <array>
 #include <vector>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "Model.hpp"
 #include "structures.hpp"
 

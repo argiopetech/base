@@ -12,6 +12,8 @@
 #include <cmath>
 #include <unistd.h>
 
+#include "Chain.hpp"
+
 #include "evolve.hpp"
 #include "gBergMag.hpp"
 #include "WdCoolingModel.hpp"

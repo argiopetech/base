@@ -1,5 +1,8 @@
 #include <array>
 
+#include "Star.hpp"
+#include "Cluster.hpp"
+
 #include "Model.hpp"
 
 void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, const Cluster &pCluster, Star &pStar, const Model &evoModels, const std::vector<int>&);

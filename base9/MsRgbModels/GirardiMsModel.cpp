@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "evolve.hpp"
 #include "LinearTransform.hpp"
 #include "binSearch.hpp"

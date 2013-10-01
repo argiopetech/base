@@ -6,6 +6,9 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "constants.hpp"
 #include "evolve.hpp"
 #include "structures.hpp"

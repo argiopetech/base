@@ -19,6 +19,9 @@ The appropriate magnitudes are put in globalMags[][].
 
 #include <cmath>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "evolve.hpp"
 #include "LinearTransform.hpp"
 #include "gBergMag.hpp"

@@ -15,6 +15,7 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_linalg.h>
 
+#include "Star.hpp"
 #include "densities.hpp"
 #include "MsFilterSet.hpp"
 #include "marg.hpp"

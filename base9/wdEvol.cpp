@@ -4,6 +4,9 @@
 
 #include <cmath>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "evolve.hpp"
 #include "gBergMag.hpp"
 #include "WdCoolingModel.hpp"

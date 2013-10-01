@@ -6,9 +6,11 @@
 #include <cstring>
 #include <cstdlib>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "evolve.hpp"
 #include "structures.hpp"
-#include "Cluster.hpp"
 
 using std::vector;
 using std::cerr;

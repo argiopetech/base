@@ -25,8 +25,8 @@ class MpiMcmcApplication : public McmcApplication
     double logPostStep(const std::vector<Star> &, Cluster &, double, const std::vector<int>&, std::array<double, FILTS>&, std::array<double, FILTS>&);
 
   private:
-    std::pair<std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO>, array<double, N_MS_MASS1 * N_MS_MASS_RATIO>> initMsMassRatioGrid (const Chain&);
-    std::array<double, N_WD_MASS1> initWdMass1Grid (const Chain&);
+//    std::pair<std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO>, array<double, N_MS_MASS1 * N_MS_MASS_RATIO>> initMsMassRatioGrid (const Chain&);
+//    std::array<double, N_WD_MASS1> initWdMass1Grid (const Chain&);
 
     double wdGridMass (int) const;
 

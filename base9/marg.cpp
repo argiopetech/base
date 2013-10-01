@@ -6,7 +6,9 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "evolve.hpp"
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "densities.hpp"
 #include "Model.hpp"
 #include "wdEvol.hpp"

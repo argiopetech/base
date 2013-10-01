@@ -10,6 +10,9 @@
 #include <cstring>
 #include <cassert>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "evolve.hpp"
 #include "AlthausWdModel.hpp"
 
