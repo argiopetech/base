@@ -4,7 +4,7 @@ compiler:
   - clang
 
 before_script:
-  - cd build
+  - cd BUILD
   - cmake ..
 
-script: make
+script: make -j2
