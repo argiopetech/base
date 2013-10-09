@@ -220,6 +220,8 @@ int MpiMcmcApplication::run()
     cout << "Bayesian analysis of stellar evolution" << endl;
 
     {
+        bool acceptedOne = false;
+
         cout << "\nRunning verbose burnin..." << endl;
 
         /* set current log posterior to minimum double value */
@@ -303,19 +305,33 @@ int MpiMcmcApplication::run()
             {
                 if (acceptanceRatio() <= 0.4 && acceptanceRatio() >= 0.2)
                 {
-                    cout << "Leaving burnin early with an acceptance ratio of " << acceptanceRatio() << " (iteration " << adaptiveBurnIter << ")" << endl;
-                    break;
+                    if (acceptedOne)
+                    {
+                        cout << "Leaving burnin early with an acceptance ratio of " << acceptanceRatio() << " (iteration " << adaptiveBurnIter << ")" << endl;
+                        break;
+                    }
+                    else
+                    {
+                        cout << "acceptanceRatio: " << acceptanceRatio() << ". Trying for trend..." << endl;
+                        acceptedOne = true;
+                    }
                 }
                 else
                 {
+                    acceptedOne = false;
                     cout << "Acceptance ratio: " << acceptanceRatio() << "... Retrying." << endl;
                     scaleStepSizes(clust); // Adjust step sizes
+                    params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
+                    resetRatio(); // Reset acceptance ratio
                 }
             }
-
-            params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
-            resetRatio(); // Reset acceptance ratio
-
+            else // Reset everything after the first run
+            {
+                cout << "Completed initial burnin." << endl;
+                acceptedOne = false;
+                params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
+                resetRatio(); // Reset acceptance ratio
+            }
         } while (adaptiveBurnIter < ctrl.burnIter);
 
         ctrl.burninFile.close();
