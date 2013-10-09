@@ -312,7 +312,7 @@ int MpiMcmcApplication::run()
                     }
                     else
                     {
-                        cout << "acceptanceRatio: " << acceptanceRatio() << ". Trying for trend..." << endl;
+                        cout << "Acceptance ratio: " << acceptanceRatio() << ". Trying for trend..." << endl;
                         acceptedOne = true;
                     }
                 }
