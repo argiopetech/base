@@ -366,6 +366,42 @@ Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcContro
     return clust;
 }
 
+double scaleFactor (double acceptanceRatio)
+{
+    double factor = 1.0;
+
+    if (acceptanceRatio > 0.9)
+    {
+        factor = 2.0;
+    }
+    else if (acceptanceRatio > 0.7)
+    {
+        factor = 1.8;
+    }
+    else if (acceptanceRatio > 0.5)
+    {
+        factor = 1.5;
+    }
+    else if (acceptanceRatio > 0.4)
+    {
+        factor = 1.2;
+    }
+    else if (acceptanceRatio < 0.2)
+    {
+        factor = 1 / 1.5;
+    }
+    else if (acceptanceRatio < 0.15)
+    {
+        factor = 1 / 1.8;
+    }
+    else if (acceptanceRatio < 0.05)
+    {
+        factor = 0.5;
+    }
+
+    return factor;
+}
+
 Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcControl const &ctrl)
 {
     /* DOF defined in densities.h */
