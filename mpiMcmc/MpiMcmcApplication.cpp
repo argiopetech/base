@@ -116,9 +116,9 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
             cerr << "burnIter below minimum allowable size. Increasing to " << ctrl.burnIter << endl;
         }
 
-        if ((ctrl.burnIter / 2) < 100)
+        if ((trialIter / 2) < 100)
         {
-            nSave = ctrl.burnIter / 2;
+            nSave = trialIter / 2;
         }
     }
 
@@ -171,7 +171,7 @@ int MpiMcmcApplication::run()
 
     params.fill(vector<double>(nSave, 0.0));
 
-    increment = settings.mpiMcmc.burnIter / (2 * nSave);
+    increment = trialIter / (2 * nSave);
 
     /* Initialize filter prior mins and maxes */
     filterPriorMin.fill(1000);
@@ -219,79 +219,111 @@ int MpiMcmcApplication::run()
 
     cout << "Bayesian analysis of stellar evolution" << endl;
 
-    /* set current log posterior to minimum double value */
-    /* will cause random starting value */
-    logPostCurr = -HUGE_VAL; //std::numeric_limits<double>::min();
-
-    // Run Burnin
-    ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
-    if (!ctrl.burninFile)
     {
-        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
+        cout << "\nRunning verbose burnin..." << endl;
 
-    printHeader (ctrl.burninFile, ctrl.priorVar);
+        /* set current log posterior to minimum double value */
+        /* will cause random starting value */
+        logPostCurr = -HUGE_VAL; //std::numeric_limits<double>::min();
 
-    for (int iteration = 0; iteration < ctrl.burnIter; iteration++)
-    {
-        if (settings.mpiMcmc.bigStepBurnin || (iteration < ctrl.burnIter / 2))
+        // Run Burnin
+        ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
+        if (!ctrl.burninFile)
         {
-            propClust = propClustBigSteps (clust, ctrl);
-        }
-        else
-        {
-            propClust = propClustIndep (clust, ctrl);
+            cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+            cerr << "[Exiting...]" << endl;
+            exit (1);
         }
 
-        try
-        {
-            logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
-        }
-        catch(InvalidCluster &e)
-        {
-            logPostProp = -HUGE_VAL;
-        }
+        printHeader (ctrl.burninFile, ctrl.priorVar);
 
-        /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp))
-        {
-            clust = propClust;
-            logPostCurr = logPostProp;
-        }
+        int adaptiveBurnIter = 0;
 
-        /* save draws to estimate covariance matrix for more efficient Metropolis */
-        if ((iteration >= (ctrl.burnIter - (nSave * increment))) && (iteration < ctrl.burnIter))
+        // Run adaptive burnin
+        do
         {
-            if (iteration % increment == 0)
+            for (int iteration = 0; iteration < trialIter; iteration++)
             {
-                /* save draws */
-                for (int p = 0; p < NPARAMS; p++)
+                adaptiveBurnIter++; // Increase global iteration count
+
+                if (settings.mpiMcmc.bigStepBurnin || ((iteration < trialIter / 2) && (adaptiveBurnIter > trialIter)))
                 {
-                    if (ctrl.priorVar[p] > EPSILON)
+                    propClust = propClustBigSteps (clust, ctrl);
+                }
+                else
+                {
+                    propClust = propClustIndep (clust, ctrl);
+                }
+
+                try
+                {
+                    logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+                }
+                catch(InvalidCluster &e)
+                {
+                    logPostProp = -HUGE_VAL;
+                }
+
+                /* accept/reject */
+                if (acceptClustMarg (logPostCurr, logPostProp))
+                {
+                    clust = propClust;
+                    logPostCurr = logPostProp;
+                }
+
+                /* save draws to estimate covariance matrix for more efficient Metropolis */
+                if ((iteration >= (trialIter - (nSave * increment))) && (iteration < trialIter))
+                {
+                    if (iteration % increment == 0)
                     {
-                        params.at(p).at((iteration - (ctrl.burnIter - (nSave * increment))) / increment) = clust.getParam(p);
+                        /* save draws */
+                        for (int p = 0; p < NPARAMS; p++)
+                        {
+                            if (ctrl.priorVar[p] > EPSILON)
+                            {
+                                params.at(p).at((iteration - (trialIter - (nSave * increment))) / increment) = clust.getParam(p);
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        /* Write output */
-        for (int p = 0; p < NPARAMS; p++)
-        {
-            if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+                /* Write output */
+                for (int p = 0; p < NPARAMS; p++)
+                {
+                    if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+                    {
+                        ctrl.burninFile << boost::format("%10.6f ") % clust.getParam(p);
+                    }
+                }
+
+                ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
+            }
+
+            if (adaptiveBurnIter > trialIter) // Don't modify anything on the first run
             {
-                ctrl.burninFile << boost::format("%10.6f ") % clust.getParam(p);
+                if (acceptanceRatio() <= 0.4 && acceptanceRatio() >= 0.2)
+                {
+                    cout << "Leaving burnin early with an acceptance ratio of " << acceptanceRatio() << " (iteration " << adaptiveBurnIter << ")" << endl;
+                    break;
+                }
+                else
+                {
+                    cout << "Acceptance ratio: " << acceptanceRatio() << "... Retrying." << endl;
+                    scaleStepSizes(clust); // Adjust step sizes
+                }
             }
-        }
 
-        ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
+            params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
+            resetRatio(); // Reset acceptance ratio
+
+        } while (adaptiveBurnIter < ctrl.burnIter);
+
+        ctrl.burninFile.close();
     }
 
-    ctrl.burninFile.close();
-
     make_cholesky_decomp(ctrl, params);
+
+    resetRatio(); // Reset the ratio for the main run
 
     // Main run
     ctrl.resFile.open(ctrl.clusterFilename);
@@ -345,6 +377,52 @@ int MpiMcmcApplication::run()
 }
 
 
+void MpiMcmcApplication::scaleStepSizes (Cluster &clust)
+{
+    function<double(double)> scaleFactor = [](double acceptanceRatio) {
+        double factor = 1.0;
+
+        if (acceptanceRatio > 0.9)
+        {
+            factor = 2.0;
+        }
+        else if (acceptanceRatio > 0.7)
+        {
+            factor = 1.8;
+        }
+        else if (acceptanceRatio > 0.5)
+        {
+            factor = 1.5;
+        }
+        else if (acceptanceRatio > 0.4)
+        {
+            factor = 1.2;
+        }
+        else if (acceptanceRatio < 0.2)
+        {
+            factor = 1 / 1.5;
+        }
+        else if (acceptanceRatio < 0.15)
+        {
+            factor = 1 / 1.8;
+        }
+        else if (acceptanceRatio < 0.05)
+        {
+            factor = 0.5;
+        }
+
+        return factor;
+    };
+
+    for (int p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar.at(p) > EPSILON)
+        {
+            clust.stepSize.at(p) *= scaleFactor(acceptanceRatio());
+        }
+    }
+}
+
 Cluster MpiMcmcApplication::propClustBigSteps (const Cluster &clust, struct ifmrMcmcControl const &ctrl)
 {
     return propClustIndep(clust, ctrl, 25.0);
@@ -364,42 +442,6 @@ Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcContro
     }
 
     return clust;
-}
-
-double scaleFactor (double acceptanceRatio)
-{
-    double factor = 1.0;
-
-    if (acceptanceRatio > 0.9)
-    {
-        factor = 2.0;
-    }
-    else if (acceptanceRatio > 0.7)
-    {
-        factor = 1.8;
-    }
-    else if (acceptanceRatio > 0.5)
-    {
-        factor = 1.5;
-    }
-    else if (acceptanceRatio > 0.4)
-    {
-        factor = 1.2;
-    }
-    else if (acceptanceRatio < 0.2)
-    {
-        factor = 1 / 1.5;
-    }
-    else if (acceptanceRatio < 0.15)
-    {
-        factor = 1 / 1.8;
-    }
-    else if (acceptanceRatio < 0.05)
-    {
-        factor = 0.5;
-    }
-
-    return factor;
 }
 
 Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcControl const &ctrl)
