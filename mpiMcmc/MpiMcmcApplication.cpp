@@ -526,10 +526,10 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
                 wd.U = wdGridMass(j);
                 wd.massRatio = 0.0;
 
-                evolve (propClust, evoModels, globalMags, filters, wd, ltau);
-
                 try
                 {
+                    evolve (propClust, evoModels, globalMags, filters, wd, ltau);
+
                     tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
                     tmpLogPost += log ((propClust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
@@ -543,8 +543,15 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
         }
         else
         {
-            /* marginalize over isochrone */
-            postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+            try
+            {
+                /* marginalize over isochrone */
+                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+            }
+            catch ( WDBoundsError &e )
+            {
+                cerr << e.what() << endl;
+            }
         }
 
         postClusterStar *= stars.at(i).clustStarPriorDens;
