@@ -59,6 +59,17 @@ mpiMcmc:
     runIter:            10000
     thin:               1
 
+    stepSizes:
+        age:            0.005
+        Fe_H:           0.005
+        distMod:        0.005
+        Av:             0.002
+        Y:              0.002
+        carbonicity:    0.001
+        ifmrIntercept:  0.01
+        ifmrSlope:      0.008
+        ifmrQuadCoef:   0.008
+
 sampleWDMass:
     # No sampleWDMass-specific settings yet
 
