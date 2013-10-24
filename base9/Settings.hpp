@@ -37,6 +37,9 @@ class Settings
         int maxIter;
         int thin;
 
+        int adaptiveBigSteps;
+        int trialIter;
+
         bool bigStepBurnin = false;
 
         std::array<double, NPARAMS> stepSize;

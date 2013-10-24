@@ -43,5 +43,5 @@ class MpiMcmcApplication : public McmcApplication
 
     int nSave = 100;
 
-    const int trialIter = 100;
+    const int trialIter;
 };

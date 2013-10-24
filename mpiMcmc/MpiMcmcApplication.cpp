@@ -18,7 +18,7 @@ using std::cerr;
 using std::endl;
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s)
-        : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads)
+    : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads), trialIter(s.mpiMcmc.trialIter)
 {
     ctrl.priorVar.fill(0);
 
@@ -247,11 +247,14 @@ int MpiMcmcApplication::run()
         // Run adaptive burnin
         do
         {
-            for (int iteration = 0; iteration < trialIter; iteration++)
+            params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
+            resetRatio(); // Reset acceptance ratio
+
+            for (int iteration = 0; iteration < trialIter; ++iteration)
             {
                 adaptiveBurnIter++; // Increase global iteration count
 
-                if (settings.mpiMcmc.bigStepBurnin || ((iteration < trialIter / 2) && (adaptiveBurnIter > trialIter)))
+                if (settings.mpiMcmc.bigStepBurnin || ((iteration < trialIter / 2) && (adaptiveBurnIter > settings.mpiMcmc.adaptiveBigSteps)))
                 {
                     propClust = propClustBigSteps (clust, ctrl, stepSize);
                 }
@@ -324,16 +327,12 @@ int MpiMcmcApplication::run()
                     acceptedOne = false;
                     cout << "Acceptance ratio: " << acceptanceRatio() << "... Retrying." << endl;
                     scaleStepSizes(stepSize); // Adjust step sizes
-                    params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
-                    resetRatio(); // Reset acceptance ratio
                 }
             }
             else // Reset everything after the first run
             {
                 cout << "Completed initial burnin." << endl;
                 acceptedOne = false;
-                params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
-                resetRatio(); // Reset acceptance ratio
             }
         } while (adaptiveBurnIter < ctrl.burnIter);
 

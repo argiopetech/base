@@ -48,6 +48,7 @@ void Settings::fromYaml (const string yamlFile)
     Node priorsNode = getNode (clusterNode, "priors");
     Node sigmasNode = getNode (clusterNode, "sigmas");
     Node mpiConfNode = getNode (configNode, "mpiMcmc");
+    Node mpiAdaptiveNode = getNode(mpiConfNode, "adaptive");
     Node mpiStepNode = getNode (mpiConfNode, "stepSizes");
     Node cmdConfNode = getNode (configNode, "makeCMD");
     Node simConfNode = getNode (configNode, "simCluster");
@@ -85,6 +86,18 @@ void Settings::fromYaml (const string yamlFile)
     mpiMcmc.burnIter = getOrDie<int>(mpiConfNode, "burnIter");
     mpiMcmc.maxIter = getOrDie<int>(mpiConfNode, "runIter");
     mpiMcmc.thin = getOrDie<int>(mpiConfNode, "thin");
+
+    mpiMcmc.adaptiveBigSteps = getOrDie<int>(mpiAdaptiveNode, "bigStepIter");
+    mpiMcmc.trialIter = getOrDie<int>(mpiAdaptiveNode, "trialIter");
+
+    if (mpiMcmc.trialIter <= 0)
+        exitWith("mpiMcmc:adaptive:trialIter must be greater than 0");
+
+    if (mpiMcmc.trialIter > mpiMcmc.adaptiveBigSteps)
+        cerr << "(bigStepIter > trialIter): Are you sure this is what you want?" << endl;
+
+    if (mpiMcmc.trialIter > mpiMcmc.burnIter)
+        exitWith("trialIter must be greater than burnIter (may cause invalide covariance matrix)");
 
     mpiMcmc.stepSize[AGE] = getOrDie<double>(mpiStepNode, "age");
     mpiMcmc.stepSize[FEH] = getOrDie<double>(mpiStepNode, "Fe_H");
