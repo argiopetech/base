@@ -254,7 +254,7 @@ int MpiMcmcApplication::run()
             {
                 adaptiveBurnIter++; // Increase global iteration count
 
-                if (settings.mpiMcmc.bigStepBurnin || ((iteration < trialIter / 2) && (adaptiveBurnIter > settings.mpiMcmc.adaptiveBigSteps)))
+                if (settings.mpiMcmc.bigStepBurnin || (iteration < (trialIter / 2)) || (adaptiveBurnIter <= settings.mpiMcmc.adaptiveBigSteps))
                 {
                     propClust = propClustBigSteps (clust, ctrl, stepSize);
                 }

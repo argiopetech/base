@@ -93,7 +93,7 @@ void Settings::fromYaml (const string yamlFile)
     if (mpiMcmc.trialIter <= 0)
         exitWith("mpiMcmc:adaptive:trialIter must be greater than 0");
 
-    if (mpiMcmc.trialIter > mpiMcmc.adaptiveBigSteps)
+    if (mpiMcmc.adaptiveBigSteps > mpiMcmc.trialIter)
         cerr << "(bigStepIter > trialIter): Are you sure this is what you want?" << endl;
 
     if (mpiMcmc.trialIter > mpiMcmc.burnIter)
