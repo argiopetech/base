@@ -169,6 +169,9 @@ int MpiMcmcApplication::run()
 
     std::vector<int> filters;
 
+    array<double, NPARAMS> stepSize;
+    std::copy(settings.mpiMcmc.stepSize.begin(), settings.mpiMcmc.stepSize.end(), stepSize.begin());
+
     params.fill(vector<double>(nSave, 0.0));
 
     increment = trialIter / (2 * nSave);
@@ -250,11 +253,11 @@ int MpiMcmcApplication::run()
 
                 if (settings.mpiMcmc.bigStepBurnin || ((iteration < trialIter / 2) && (adaptiveBurnIter > trialIter)))
                 {
-                    propClust = propClustBigSteps (clust, ctrl);
+                    propClust = propClustBigSteps (clust, ctrl, stepSize);
                 }
                 else
                 {
-                    propClust = propClustIndep (clust, ctrl);
+                    propClust = propClustIndep (clust, ctrl, stepSize);
                 }
 
                 try
@@ -320,7 +323,7 @@ int MpiMcmcApplication::run()
                 {
                     acceptedOne = false;
                     cout << "Acceptance ratio: " << acceptanceRatio() << "... Retrying." << endl;
-                    scaleStepSizes(clust); // Adjust step sizes
+                    scaleStepSizes(stepSize); // Adjust step sizes
                     params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
                     resetRatio(); // Reset acceptance ratio
                 }
@@ -393,7 +396,7 @@ int MpiMcmcApplication::run()
 }
 
 
-void MpiMcmcApplication::scaleStepSizes (Cluster &clust)
+void MpiMcmcApplication::scaleStepSizes (array<double, NPARAMS> &stepSize)
 {
     function<double(double)> scaleFactor = [](double acceptanceRatio) {
         double factor = 1.0;
@@ -434,17 +437,17 @@ void MpiMcmcApplication::scaleStepSizes (Cluster &clust)
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.stepSize.at(p) *= scaleFactor(acceptanceRatio());
+            stepSize.at(p) *= scaleFactor(acceptanceRatio());
         }
     }
 }
 
-Cluster MpiMcmcApplication::propClustBigSteps (const Cluster &clust, struct ifmrMcmcControl const &ctrl)
+Cluster MpiMcmcApplication::propClustBigSteps (const Cluster &clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize)
 {
-    return propClustIndep(clust, ctrl, 25.0);
+    return propClustIndep(clust, ctrl, stepSize, 25.0);
 }
 
-Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcControl const &ctrl, double scale)
+Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize, double scale)
 {
     /* DOF defined in densities.h */
     int p;
@@ -453,7 +456,7 @@ Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcContro
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * clust.stepSize.at(p) * clust.stepSize.at(p)));
+            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * stepSize.at(p) * stepSize.at(p)));
         }
     }
 

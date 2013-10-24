@@ -38,6 +38,8 @@ class Settings
         int thin;
 
         bool bigStepBurnin = false;
+
+        std::array<double, NPARAMS> stepSize;
     };
 
     struct SimClusterSettings

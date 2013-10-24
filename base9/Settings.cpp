@@ -48,6 +48,7 @@ void Settings::fromYaml (const string yamlFile)
     Node priorsNode = getNode (clusterNode, "priors");
     Node sigmasNode = getNode (clusterNode, "sigmas");
     Node mpiConfNode = getNode (configNode, "mpiMcmc");
+    Node mpiStepNode = getNode (mpiConfNode, "stepSizes");
     Node cmdConfNode = getNode (configNode, "makeCMD");
     Node simConfNode = getNode (configNode, "simCluster");
     Node isoConfNode = getNode (configNode, "makeIsochrone");
@@ -84,6 +85,16 @@ void Settings::fromYaml (const string yamlFile)
     mpiMcmc.burnIter = getOrDie<int>(mpiConfNode, "burnIter");
     mpiMcmc.maxIter = getOrDie<int>(mpiConfNode, "runIter");
     mpiMcmc.thin = getOrDie<int>(mpiConfNode, "thin");
+
+    mpiMcmc.stepSize[AGE] = getOrDie<double>(mpiStepNode, "age");
+    mpiMcmc.stepSize[FEH] = getOrDie<double>(mpiStepNode, "Fe_H");
+    mpiMcmc.stepSize[MOD] = getOrDie<double>(mpiStepNode, "distMod");
+    mpiMcmc.stepSize[ABS] = getOrDie<double>(mpiStepNode, "Av");
+    mpiMcmc.stepSize[YYY] = getOrDie<double>(mpiStepNode, "Y");
+    mpiMcmc.stepSize[CARBONICITY] = getOrDie<double>(mpiStepNode, "carbonicity");
+    mpiMcmc.stepSize[IFMR_INTERCEPT] = getOrDie<double>(mpiStepNode, "ifmrIntercept");
+    mpiMcmc.stepSize[IFMR_SLOPE] = getOrDie<double>(mpiStepNode, "ifmrSlope");
+    mpiMcmc.stepSize[IFMR_QUADCOEF] = getOrDie<double>(mpiStepNode, "ifmrQuadCoef");
 
     simCluster.nStars = getOrDie<int>(simConfNode, "nStars");
     simCluster.percentBinary = getOrDie<int>(simConfNode, "percentBinary");

@@ -8,27 +8,10 @@
 class Cluster
 {
   public:
-    Cluster()
-    {
-//        mean.fill(0.0);
-
-        stepSize[AGE] = 0.005;
-        stepSize[FEH] = 0.005;
-        stepSize[MOD] = 0.005;
-        stepSize[ABS] = 0.002;
-        stepSize[YYY] = 0.002;
-        stepSize[CARBONICITY] = 0.001;
-        stepSize[IFMR_INTERCEPT] = 0.01;
-        stepSize[IFMR_SLOPE] = 0.008;
-        stepSize[IFMR_QUADCOEF] = 0.008;
-    }
-    ~Cluster() {;}
-
     double getParam(int) const;
     void setParam(int, double);
 
     std::array<double, 3> betaAgeMod;
-    std::array<double, NPARAMS> stepSize;
     std::array<double, NPARAMS> priorVar;
     std::array<double, NPARAMS> priorMean;
     std::array<double, NPARAMS> mean;
