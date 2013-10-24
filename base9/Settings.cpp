@@ -48,6 +48,8 @@ void Settings::fromYaml (const string yamlFile)
     Node priorsNode = getNode (clusterNode, "priors");
     Node sigmasNode = getNode (clusterNode, "sigmas");
     Node mpiConfNode = getNode (configNode, "mpiMcmc");
+    Node mpiAdaptiveNode = getNode(mpiConfNode, "adaptive");
+    Node mpiStepNode = getNode (mpiConfNode, "stepSizes");
     Node cmdConfNode = getNode (configNode, "makeCMD");
     Node simConfNode = getNode (configNode, "simCluster");
     Node isoConfNode = getNode (configNode, "makeIsochrone");
@@ -84,6 +86,28 @@ void Settings::fromYaml (const string yamlFile)
     mpiMcmc.burnIter = getOrDie<int>(mpiConfNode, "burnIter");
     mpiMcmc.maxIter = getOrDie<int>(mpiConfNode, "runIter");
     mpiMcmc.thin = getOrDie<int>(mpiConfNode, "thin");
+
+    mpiMcmc.adaptiveBigSteps = getOrDie<int>(mpiAdaptiveNode, "bigStepIter");
+    mpiMcmc.trialIter = getOrDie<int>(mpiAdaptiveNode, "trialIter");
+
+    if (mpiMcmc.trialIter <= 0)
+        exitWith("mpiMcmc:adaptive:trialIter must be greater than 0");
+
+    if (mpiMcmc.adaptiveBigSteps > mpiMcmc.trialIter)
+        cerr << "(bigStepIter > trialIter): Are you sure this is what you want?" << endl;
+
+    if (mpiMcmc.trialIter > mpiMcmc.burnIter)
+        exitWith("trialIter must be greater than burnIter (may cause invalide covariance matrix)");
+
+    mpiMcmc.stepSize[AGE] = getOrDie<double>(mpiStepNode, "age");
+    mpiMcmc.stepSize[FEH] = getOrDie<double>(mpiStepNode, "Fe_H");
+    mpiMcmc.stepSize[MOD] = getOrDie<double>(mpiStepNode, "distMod");
+    mpiMcmc.stepSize[ABS] = getOrDie<double>(mpiStepNode, "Av");
+    mpiMcmc.stepSize[YYY] = getOrDie<double>(mpiStepNode, "Y");
+    mpiMcmc.stepSize[CARBONICITY] = getOrDie<double>(mpiStepNode, "carbonicity");
+    mpiMcmc.stepSize[IFMR_INTERCEPT] = getOrDie<double>(mpiStepNode, "ifmrIntercept");
+    mpiMcmc.stepSize[IFMR_SLOPE] = getOrDie<double>(mpiStepNode, "ifmrSlope");
+    mpiMcmc.stepSize[IFMR_QUADCOEF] = getOrDie<double>(mpiStepNode, "ifmrQuadCoef");
 
     simCluster.nStars = getOrDie<int>(simConfNode, "nStars");
     simCluster.percentBinary = getOrDie<int>(simConfNode, "percentBinary");

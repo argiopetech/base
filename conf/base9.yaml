@@ -59,6 +59,31 @@ mpiMcmc:
     runIter:            10000
     thin:               1
 
+    # Adaptive burnin parameters
+    # To duplicate the pre-adaptive behaviour, set
+    # adaptive:
+    #     bigStepIter:    0
+    #     trialIter:      2000  # Same as burnIter
+    #
+    # To duplicate big-step only burnin, set
+    # adaptive:
+    #     bigStepIter:    2000
+    #     trialIter:      2000
+    adaptive:
+        bigStepIter:    100
+        trialIter:      100
+
+    stepSizes:
+        age:            0.005
+        Fe_H:           0.005
+        distMod:        0.005
+        Av:             0.002
+        Y:              0.002
+        carbonicity:    0.001
+        ifmrIntercept:  0.01
+        ifmrSlope:      0.008
+        ifmrQuadCoef:   0.008
+
 sampleWDMass:
     # No sampleWDMass-specific settings yet
 
