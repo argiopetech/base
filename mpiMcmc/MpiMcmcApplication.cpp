@@ -539,7 +539,8 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
                 }
                 catch ( WDBoundsError &e )
                 {
-                    cerr << e.what() << endl;
+                    if (settings.verbose)
+                        cerr << e.what() << endl;
                 }
             }
         }
@@ -552,7 +553,8 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
             }
             catch ( WDBoundsError &e )
             {
-                cerr << e.what() << endl;
+                if (settings.verbose)
+                    cerr << e.what() << endl;
             }
         }
 
