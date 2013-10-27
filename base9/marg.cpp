@@ -6,7 +6,9 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "evolve.hpp"
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "densities.hpp"
 #include "Model.hpp"
 #include "wdEvol.hpp"
@@ -18,7 +20,7 @@ using std::vector;
 
 const int MAX_ENTRIES = 370;
 
-double calcPost (double, double[][FILTS], double, double&, double*, const Cluster&, Star&, const Model&, const vector<int>&, array<double, 2>&, array<double, FILTS>&, const array<double, FILTS>&, const array<double, FILTS>&);
+double calcPost (double, double[][FILTS], double, double&, double*, const Cluster&, Star, const Model&, const vector<int>&, array<double, 2>&, array<double, FILTS>&, const array<double, FILTS>&, const array<double, FILTS>&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
 double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
@@ -45,8 +47,6 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
 
     int isoIncrem = 80;    /* ok for YY models? */
 
-    Star myStar(pStar);
-
     assert(isochrone.nEntries >= 2);
 
     for (decltype(isochrone.nEntries) m = 0; m < isochrone.nEntries - 2; m++)
@@ -62,7 +62,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
                 dMass = dIsoMass / isoIncrem;
                 mass[0] = isochrone.mass[m] + k * dMass;
 
-                post += calcPost (dMass, mag, clusterAv, flux, mass, pCluster, myStar, evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+                post += calcPost (dMass, mag, clusterAv, flux, mass, pCluster, pStar, evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
             }
         }
     }
@@ -147,7 +147,7 @@ void deriveCombinedMags (double mag[][FILTS], double clusterAv, double &flux, co
 }
 
 
-double calcPost (double dMass, double mag[][FILTS], double clusterAv, double &flux, double *mass, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double calcPost (double dMass, double mag[][FILTS], double clusterAv, double &flux, double *mass, const Cluster &pCluster, Star pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;

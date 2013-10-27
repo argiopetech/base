@@ -61,9 +61,10 @@ const int YYY               =  1;  // helium sampling
 const int FEH               =  2;  // metallicity sampling
 const int MOD               =  3;  // modulus sampling
 const int ABS               =  4;  // absorption sampling;
-const int IFMR_INTERCEPT    =  5;
-const int IFMR_SLOPE        =  6;
-const int IFMR_QUADCOEF     =  7;
+const int CARBONICITY       =  5;
+const int IFMR_INTERCEPT    =  6;
+const int IFMR_SLOPE        =  7;
+const int IFMR_QUADCOEF     =  8;
 
 const int BERG_N_DA_LOG_G = 6;
 const int BERG_N_DA_TEFF  = 57;

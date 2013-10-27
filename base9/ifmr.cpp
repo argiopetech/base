@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
 #include "evolve.hpp"
 #include "LinearTransform.hpp"
 

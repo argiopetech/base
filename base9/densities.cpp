@@ -6,6 +6,9 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "constants.hpp"
 #include "evolve.hpp"
 #include "structures.hpp"
@@ -124,6 +127,7 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     }
 
     double prior = 0.0;
+    //DS: with a uniform prior on carbonicity, the above won't change since log(1) = 0.
 
     if (pCluster.priorVar[FEH] > EPSILON)
         prior += (-0.5) * sqr (pCluster.feh - pCluster.priorMean[FEH]) / pCluster.priorVar[FEH];

@@ -28,7 +28,6 @@ class Settings
     {
         int ifmr;
         WdModel wdModel;
-        double carbonicity;
         double M_wd_up;
     };
 
@@ -38,13 +37,19 @@ class Settings
         int maxIter;
         int thin;
 
+        int adaptiveBigSteps;
+        int trialIter;
+
         bool bigStepBurnin = false;
+
+        std::array<double, NPARAMS> stepSize;
     };
 
     struct SimClusterSettings
     {
         int nStars;
         int nFieldStars;
+//        int nBrownDwarfs;
         int percentBinary;      // Fraction * 100
         int percentDB;          // Fraction * 100
     };
@@ -64,6 +69,7 @@ class Settings
         double distMod;
         double Av;
         double Y;
+        double carbonicity;
     };
 
     struct ClusterSettings
@@ -72,6 +78,7 @@ class Settings
         double distMod;
         double Av;
         double Y;
+        double carbonicity;
 
         struct ClusterSigmas sigma;
 

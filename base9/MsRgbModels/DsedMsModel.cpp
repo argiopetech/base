@@ -10,6 +10,9 @@
 #include <gsl/gsl_errno.h>      // need these two lines for gnu interpolation -- TvH
 #include <gsl/gsl_spline.h>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "evolve.hpp"
 #include "DsedMsModel.hpp"
 #include "binSearch.hpp"

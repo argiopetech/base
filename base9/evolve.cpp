@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
+
 #include "evolve.hpp"
 #include "marg.hpp"
 #include "wdEvol.hpp"

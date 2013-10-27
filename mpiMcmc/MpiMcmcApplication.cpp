@@ -2,11 +2,13 @@
 
 #include <boost/format.hpp>
 
+#include "Cluster.hpp"
 #include "marg.hpp"
 #include "mpiMcmc.hpp"
 #include "mpiFuncs.hpp"
 #include "MpiMcmcApplication.hpp"
 #include "Settings.hpp"
+#include "Star.hpp"
 #include "samplers.cpp"
 #include "WhiteDwarf.hpp"
 
@@ -15,34 +17,42 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-
 MpiMcmcApplication::MpiMcmcApplication(Settings &s)
-        : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads)
+    : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads), trialIter(s.mpiMcmc.trialIter)
 {
     ctrl.priorVar.fill(0);
 
-    mc.clust.carbonicity = settings.whiteDwarf.carbonicity;
-
-    mc.clust.feh = mc.clust.priorMean[FEH] = settings.cluster.Fe_H;
+    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    mc.clust.mod = mc.clust.priorMean[MOD] = settings.cluster.distMod;
+    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    mc.clust.abs = mc.clust.priorMean[ABS] = fabs(s.cluster.Av);
+    clust.abs = clust.priorMean[ABS] = fabs(s.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    mc.clust.age = mc.clust.priorMean[AGE] = settings.cluster.logClusAge;
+    clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
+
+    if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
+    {
+        clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+        ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
+    }
+    else
+    {
+        clust.carbonicity = clust.priorMean[CARBONICITY] = 0.0;
+        ctrl.priorVar[CARBONICITY] = 0.0;
+    }
 
     if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
-        mc.clust.yyy = mc.clust.priorMean[YYY] = settings.cluster.Y;
+        clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
         ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
     }
     else
     {
-        mc.clust.yyy = mc.clust.priorMean[YYY] = 0.0;
+        clust.yyy = clust.priorMean[YYY] = 0.0;
         ctrl.priorVar[YYY] = 0.0;
     }
 
@@ -67,13 +77,13 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     }
 
     /* set starting values for IFMR parameters */
-    mc.clust.ifmrSlope = mc.clust.priorMean[IFMR_SLOPE] = 0.08;
-    mc.clust.ifmrIntercept = mc.clust.priorMean[IFMR_INTERCEPT] = 0.65;
+    clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
+    clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
 
     if (evoModels.IFMR <= 10)
-        mc.clust.ifmrQuadCoef = mc.clust.priorMean[IFMR_QUADCOEF] = 0.0001;
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
-        mc.clust.ifmrQuadCoef = mc.clust.priorMean[IFMR_QUADCOEF] = 0.08;
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
 
     for (auto &var : ctrl.priorVar)
     {
@@ -106,9 +116,9 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
             cerr << "burnIter below minimum allowable size. Increasing to " << ctrl.burnIter << endl;
         }
 
-        if ((ctrl.burnIter / 2) < 100)
+        if ((trialIter / 2) < 100)
         {
-            nSave = ctrl.burnIter / 2;
+            nSave = trialIter / 2;
         }
     }
 
@@ -136,7 +146,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     ctrl.clusterFilename = settings.files.output + ".res";
 
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mc.clust.priorVar.begin());
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
 }
 
 
@@ -159,19 +169,43 @@ int MpiMcmcApplication::run()
 
     std::vector<int> filters;
 
+    array<double, NPARAMS> stepSize;
+    std::copy(settings.mpiMcmc.stepSize.begin(), settings.mpiMcmc.stepSize.end(), stepSize.begin());
+
     params.fill(vector<double>(nSave, 0.0));
 
-    increment = settings.mpiMcmc.burnIter / (2 * nSave);
+    increment = trialIter / (2 * nSave);
 
     /* Initialize filter prior mins and maxes */
     filterPriorMin.fill(1000);
     filterPriorMax.fill(-1000);
 
-    readCmdData (mc.stars, ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
+    stars = readCmdData (ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
 
-    initChain (mc, evoModels, ltau, filters);
+    // Begin initChain
+    {
+        array<double, FILTS> globalMags;
 
-    if (mc.stars.size() > 1)
+        for (auto star : stars)
+        {
+            star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
+            star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
+            star.massRatioStepSize = 0.001;
+
+            // find photometry for initial values of currentClust and mc.stars
+            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+            evolve (clust, evoModels, globalMags, filters, star, ltau);
+
+            if (star.status[0] == WD)
+            {
+                star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
+                star.massRatio = 0.0;
+            }
+        }
+    }
+    // end initChain
+
+    if (stars.size() > 1)
     {
         double logFieldStarLikelihood = 0.0;
 
@@ -188,79 +222,126 @@ int MpiMcmcApplication::run()
 
     cout << "Bayesian analysis of stellar evolution" << endl;
 
-    /* set current log posterior to minimum double value */
-    /* will cause random starting value */
-    logPostCurr = -HUGE_VAL; //std::numeric_limits<double>::min();
-
-    // Run Burnin
-    ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
-    if (!ctrl.burninFile)
     {
-        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
+        bool acceptedOne = false;
 
-    printHeader (ctrl.burninFile, ctrl.priorVar);
+        cout << "\nRunning verbose burnin..." << endl;
 
-    for (int iteration = 0; iteration < ctrl.burnIter; iteration++)
-    {
-        if (settings.mpiMcmc.bigStepBurnin || (iteration < ctrl.burnIter / 2))
-        {
-            propClust = propClustBigSteps (mc.clust, ctrl);
-        }
-        else
-        {
-            propClust = propClustIndep (mc.clust, ctrl);
-        }
+        /* set current log posterior to minimum double value */
+        /* will cause random starting value */
+        logPostCurr = -HUGE_VAL; //std::numeric_limits<double>::min();
 
-        try
+        // Run Burnin
+        ctrl.burninFile.open(ctrl.clusterFilename + ".burnin");
+        if (!ctrl.burninFile)
         {
-            logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
-        }
-        catch(InvalidCluster &e)
-        {
-            logPostProp = -HUGE_VAL;
+            cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
+            cerr << "[Exiting...]" << endl;
+            exit (1);
         }
 
-        /* accept/reject */
-        if (acceptClustMarg (logPostCurr, logPostProp))
-        {
-            mc.clust = propClust;
-            logPostCurr = logPostProp;
-        }
+        printHeader (ctrl.burninFile, ctrl.priorVar);
 
-        /* save draws to estimate covariance matrix for more efficient Metropolis */
-        if ((iteration >= (ctrl.burnIter - (nSave * increment))) && (iteration < ctrl.burnIter))
+        int adaptiveBurnIter = 0;
+
+        // Run adaptive burnin
+        do
         {
-            if (iteration % increment == 0)
+            params.fill(vector<double>(nSave, 0.0)); // Reset params matrix
+            resetRatio(); // Reset acceptance ratio
+
+            for (int iteration = 0; iteration < trialIter; ++iteration)
             {
-                /* save draws */
-                for (int p = 0; p < NPARAMS; p++)
+                adaptiveBurnIter++; // Increase global iteration count
+
+                if (settings.mpiMcmc.bigStepBurnin || (iteration < (trialIter / 2)) || (adaptiveBurnIter <= settings.mpiMcmc.adaptiveBigSteps))
                 {
-                    if (ctrl.priorVar[p] > EPSILON)
+                    propClust = propClustBigSteps (clust, ctrl, stepSize);
+                }
+                else
+                {
+                    propClust = propClustIndep (clust, ctrl, stepSize);
+                }
+
+                try
+                {
+                    logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+                }
+                catch(InvalidCluster &e)
+                {
+                    logPostProp = -HUGE_VAL;
+                }
+
+                /* accept/reject */
+                if (acceptClustMarg (logPostCurr, logPostProp))
+                {
+                    clust = propClust;
+                    logPostCurr = logPostProp;
+                }
+
+                /* save draws to estimate covariance matrix for more efficient Metropolis */
+                if ((iteration >= (trialIter - (nSave * increment))) && (iteration < trialIter))
+                {
+                    if (iteration % increment == 0)
                     {
-                        params.at(p).at((iteration - (ctrl.burnIter - (nSave * increment))) / increment) = mc.clust.getParam(p);
+                        /* save draws */
+                        for (int p = 0; p < NPARAMS; p++)
+                        {
+                            if (ctrl.priorVar[p] > EPSILON)
+                            {
+                                params.at(p).at((iteration - (trialIter - (nSave * increment))) / increment) = clust.getParam(p);
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        /* Write output */
-        for (int p = 0; p < NPARAMS; p++)
-        {
-            if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+                /* Write output */
+                for (int p = 0; p < NPARAMS; p++)
+                {
+                    if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
+                    {
+                        ctrl.burninFile << boost::format("%10.6f ") % clust.getParam(p);
+                    }
+                }
+
+                ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
+            }
+
+            if (adaptiveBurnIter > trialIter) // Don't modify anything on the first run
             {
-                ctrl.burninFile << boost::format("%10.6f ") % mc.clust.getParam(p);
+                if (acceptanceRatio() <= 0.4 && acceptanceRatio() >= 0.2)
+                {
+                    if (acceptedOne)
+                    {
+                        cout << "Leaving burnin early with an acceptance ratio of " << acceptanceRatio() << " (iteration " << adaptiveBurnIter << ")" << endl;
+                        break;
+                    }
+                    else
+                    {
+                        cout << "Acceptance ratio: " << acceptanceRatio() << ". Trying for trend..." << endl;
+                        acceptedOne = true;
+                    }
+                }
+                else
+                {
+                    acceptedOne = false;
+                    cout << "Acceptance ratio: " << acceptanceRatio() << "... Retrying." << endl;
+                    scaleStepSizes(stepSize); // Adjust step sizes
+                }
             }
-        }
+            else // Reset everything after the first run
+            {
+                cout << "Completed initial burnin." << endl;
+                acceptedOne = false;
+            }
+        } while (adaptiveBurnIter < ctrl.burnIter);
 
-        ctrl.burninFile << boost::format("%10.6f") % logPostCurr << endl;
+        ctrl.burninFile.close();
     }
 
-    ctrl.burninFile.close();
-
     make_cholesky_decomp(ctrl, params);
+
+    resetRatio(); // Reset the ratio for the main run
 
     // Main run
     ctrl.resFile.open(ctrl.clusterFilename);
@@ -275,11 +356,11 @@ int MpiMcmcApplication::run()
 
     for (int iteration = 0; iteration < ctrl.nIter * ctrl.thin; iteration++)
     {
-        propClust = propClustCorrelated (mc.clust, ctrl);
+        propClust = propClustCorrelated (clust, ctrl);
 
         try
         {
-            logPostProp = logPostStep (mc, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+            logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
         }
         catch(InvalidCluster &e)
         {
@@ -289,7 +370,7 @@ int MpiMcmcApplication::run()
         /* accept/reject */
         if (acceptClustMarg (logPostCurr, logPostProp))
         {
-            mc.clust = propClust;
+            clust = propClust;
             logPostCurr = logPostProp;
         }
 
@@ -299,7 +380,7 @@ int MpiMcmcApplication::run()
             {
                 if (ctrl.priorVar[p] > EPS || p == FEH || p == MOD || p == ABS)
                 {
-                    ctrl.resFile << boost::format("%10.6f ") % mc.clust.getParam(p);
+                    ctrl.resFile << boost::format("%10.6f ") % clust.getParam(p);
                 }
             }
             ctrl.resFile << boost::format("%10.6f") % logPostCurr << endl;
@@ -314,12 +395,58 @@ int MpiMcmcApplication::run()
 }
 
 
-Cluster MpiMcmcApplication::propClustBigSteps (const Cluster &clust, struct ifmrMcmcControl const &ctrl)
+void MpiMcmcApplication::scaleStepSizes (array<double, NPARAMS> &stepSize)
 {
-    return propClustIndep(clust, ctrl, 25.0);
+    function<double(double)> scaleFactor = [](double acceptanceRatio) {
+        double factor = 1.0;
+
+        if (acceptanceRatio > 0.9)
+        {
+            factor = 2.0;
+        }
+        else if (acceptanceRatio > 0.7)
+        {
+            factor = 1.8;
+        }
+        else if (acceptanceRatio > 0.5)
+        {
+            factor = 1.5;
+        }
+        else if (acceptanceRatio > 0.4)
+        {
+            factor = 1.2;
+        }
+        else if (acceptanceRatio < 0.2)
+        {
+            factor = 1 / 1.5;
+        }
+        else if (acceptanceRatio < 0.15)
+        {
+            factor = 1 / 1.8;
+        }
+        else if (acceptanceRatio < 0.05)
+        {
+            factor = 0.5;
+        }
+
+        return factor;
+    };
+
+    for (int p = 0; p < NPARAMS; p++)
+    {
+        if (ctrl.priorVar.at(p) > EPSILON)
+        {
+            stepSize.at(p) *= scaleFactor(acceptanceRatio());
+        }
+    }
 }
 
-Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcControl const &ctrl, double scale)
+Cluster MpiMcmcApplication::propClustBigSteps (const Cluster &clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize)
+{
+    return propClustIndep(clust, ctrl, stepSize, 25.0);
+}
+
+Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize, double scale)
 {
     /* DOF defined in densities.h */
     int p;
@@ -328,7 +455,7 @@ Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcContro
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * clust.stepSize.at(p) * clust.stepSize.at(p)));
+            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * stepSize.at(p) * stepSize.at(p)));
         }
     }
 
@@ -371,19 +498,17 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
     return clust;
 }
 
-double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
+double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
 {
     mutex logPostMutex;
     double logPostProp;
 
     logPostProp = logPriorClust (propClust, evoModels);
 
-    auto stars = mc.stars;
-
     propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
 
     /* loop over assigned stars */
-    pool.parallelFor(mc.stars.size(), [=,&logPostMutex,&logPostProp](int i)
+    pool.parallelFor(stars.size(), [=,&logPostMutex,&logPostProp](int i)
     {
         double postClusterStar = 0.0;
 
@@ -403,25 +528,34 @@ double MpiMcmcApplication::logPostStep(Chain &mc, Cluster &propClust, double fsL
                 wd.U = wdGridMass(j);
                 wd.massRatio = 0.0;
 
-                evolve (propClust, evoModels, globalMags, filters, wd, ltau);
-
                 try
                 {
+                    evolve (propClust, evoModels, globalMags, filters, wd, ltau);
+
                     tmpLogPost = logPost1Star (wd, propClust, evoModels, filterPriorMin, filterPriorMax);
-                    tmpLogPost += log ((mc.clust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
+                    tmpLogPost += log ((propClust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                     postClusterStar +=  exp (tmpLogPost);
                 }
                 catch ( WDBoundsError &e )
                 {
-                    cerr << e.what() << endl;
+                    if (settings.verbose)
+                        cerr << e.what() << endl;
                 }
             }
         }
         else
         {
-            /* marginalize over isochrone */
-            postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+            try
+            {
+                /* marginalize over isochrone */
+                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+            }
+            catch ( WDBoundsError &e )
+            {
+                if (settings.verbose)
+                    cerr << e.what() << endl;
+            }
         }
 
         postClusterStar *= stars.at(i).clustStarPriorDens;

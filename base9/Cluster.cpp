@@ -24,6 +24,9 @@ double Cluster::getParam(int p) const
         case ABS:
             temp = abs;
             break;
+        case CARBONICITY:
+            temp = carbonicity;
+            break;
         case IFMR_INTERCEPT:
             temp = ifmrIntercept;
             break;
@@ -58,6 +61,9 @@ void Cluster::setParam(int p, double v)
             break;
         case ABS:
             abs = v;
+            break;
+        case CARBONICITY:
+            carbonicity = v;
             break;
         case IFMR_INTERCEPT:
             ifmrIntercept = v;

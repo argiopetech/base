@@ -10,6 +10,8 @@
 #include <cstring>
 #include <cassert>
 
+#include "Cluster.hpp"
+#include "Star.hpp"
 #include "evolve.hpp"
 #include "WoodWdModel.hpp"
 
@@ -55,14 +57,14 @@ void WoodWdModel::loadModel(string path)
             if (wdCurves.empty() || newMass != wdCurves.back().mass)
             {
                 wdCurves.emplace_back(newMass);
-       
-                if (wdCurves.back().carbonCurves.empty() || newCarbon != wdCurves.back().carbonCurves.back().carbon)
-                {
-                    wdCurves.back().carbonCurves.emplace_back(newCarbon);
-                }
-
-                wdCurves.back().carbonCurves.back().records.emplace_back(newRadius, log10(newAge), newTeff);
             }
+       
+            if (wdCurves.back().carbonCurves.empty() || newCarbon != wdCurves.back().carbonCurves.back().carbon)
+            {
+                wdCurves.back().carbonCurves.emplace_back(newCarbon);
+            }
+
+            wdCurves.back().carbonCurves.back().records.emplace_back(newRadius, log10(newAge), newTeff);
         }
     }
 }

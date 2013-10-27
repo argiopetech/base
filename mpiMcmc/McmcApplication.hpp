@@ -30,6 +30,12 @@ class McmcApplication
 
     double acceptanceRatio() const { return double(accepted) / (accepted + rejected); }
 
+    void resetRatio()
+    {
+        accepted = 0;
+        rejected = 0;
+    }
+
     std::mt19937 gen;
 
   private:
