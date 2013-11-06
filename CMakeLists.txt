@@ -38,7 +38,7 @@ configure_file (
   )
 include_directories("${PROJECT_BINARY_DIR}")
 
-include(GetProject)
+#include(GetProject)
 
 if(CMAKE_CONFIGURATION_TYPES)
   list(APPEND CMAKE_CONFIGURATION_TYPES PROFILE)
@@ -104,14 +104,16 @@ MARK_AS_ADVANCED(
 
 # Additional include and link directories
 include_directories(base9)
+include_directories(yaml-cpp/include)
 
 # External projects
-get_project( "YamlCpp" )
+#get_project( "YamlCpp" )
 
 # Libraries
 add_subdirectory(base9)
 
 # Applications
+add_subdirectory(yaml-cpp)
 add_subdirectory(mpiMcmc)
 #add_subdirectory(makeCMD)
 #add_subdirectory(makeIsochrone)
