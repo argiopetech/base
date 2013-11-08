@@ -18,6 +18,7 @@ pushd $BASE
 if [[ -e ".git" ]]; then
     # Setup submodules
     git submodule init
+    git submodule update
 else
     if [[ ! -e "yaml-cpp/CMakeLists.txt" ]]; then
         # Manually clone yaml-cpp, removing the directory first
