@@ -13,8 +13,17 @@ BASE=`dirname ${0}`
 
 pushd $BASE
 
-# Setup submodules
-git submodule init
+if [[ -e ".git" ]]; then
+    # Setup submodules
+    git submodule init
+else
+    if [[ ! -e "yaml-cpp/CMakeLists.txt" ]]; then
+        # Manually clone yaml-cpp, removing the directory first
+        rm -r yaml-cpp
+        git clone git@github.com:argiopetech/yaml-cpp.git --depth 1
+    fi
+fi
+
 cp cmake/yaml-cpp-CMakeLists.txt yaml-cpp/CMakeLists.txt
 
 pushd ./BUILD
