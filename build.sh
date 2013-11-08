@@ -7,6 +7,8 @@ if [[ "$unamestr" == 'Linux' ]]; then
   MULTICPUS="-j`grep -c ^processor /proc/cpuinfo`"
 elif [[ "$unamestr" == 'Darwin' ]]; then
   MULTICPUS="-j`sysctl -n hw.ncpu`"
+  export CC=`which clang`
+  export CXX=`which clang++`
 fi
 
 BASE=`dirname ${0}`
