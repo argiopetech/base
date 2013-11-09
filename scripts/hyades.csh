@@ -3,9 +3,9 @@
 set nProc = 2
 
 echo -n " time stamp: "; date; echo ""
-mpirun -np $nProc bin/mpiMcmc
+./bin/mpiMcmc
 
 echo -n " time stamp: "; date; echo ""
-mpirun -np $nProc bin/sampleWDMass
+./bin/sampleWDMass
 
 echo -n " time stamp: "; date

@@ -6,7 +6,7 @@ include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 
 add_executable(sampleWDMass ${SAMPLEWDMASS_FILES})
 
-target_link_libraries(sampleWDMass base9 m ${MPI_LIBRARIES})
+target_link_libraries(sampleWDMass base9 m)
 
 install(TARGETS sampleWDMass
         DESTINATION bin)

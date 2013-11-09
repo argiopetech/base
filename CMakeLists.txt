@@ -6,11 +6,14 @@ list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 
 include(CheckIncludeFiles)
 
-set(CMAKE_REQUIRED_LIBRARIES "m")
 check_include_files (math.h HAS_MATH)
+check_include_files ("gsl/gsl_blas.h;gsl/gsl_math.h;gsl/gsl_eigen.h;gsl/gsl_statistics.h;gsl/gsl_linalg.h;gsl/gsl_spline.h;gsl/gsl_errno.h" HAS_GSL_BLAS)
+check_include_files (getopt.h HAS_GETOPT)
+check_include_files (unistd.h HAS_UNISTD)
 
 include(CheckFunctionExists)
-check_function_exists (exp HAS_EXP)
+set(CMAKE_REQUIRED_LIBRARIES "m")
+check_function_exists (m exp HAS_EXP)
 check_function_exists (exp10 HAS_EXP10)
 check_function_exists (log HAS_LOG)
 check_function_exists (log10 HAS_LOG10)
@@ -45,23 +48,14 @@ if(CMAKE_CONFIGURATION_TYPES)
     FORCE)
 endif()
 
-find_package(MPI)
-
-if (NOT (MPI_CXX_FOUND))
-  message( STATUS ${MPI_CXX_COMPILER})
-  message( FATAL_ERROR "It looks like MPI isn't installed..." )
-endif()
-
-include_directories( ${MPI_CXX_INCLUDE_PATH} )
-
-set(CMAKE_CXX_FLAGS                "-march=native -fstrict-aliasing -std=c++11 -W -Wall -Wno-missing-braces -pedantic ${MPI_CXX_COMPILE_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS                "-march=native -fstrict-aliasing -std=c++11 -W -Wall -Wno-missing-braces -pedantic" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_PROFILE        "-O3 -g -DNDEBUG" CACHE STRING "" FORCE)
 
-set(CMAKE_EXE_LINKER_FLAGS "${MPI_LINK_FLAGS}" CACHE STRING "" FORCE)
+# set(CMAKE_EXE_LINKER_FLAGS "" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE    "-L/usr/local/lib -lprofiler")
 set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "-L/usr/local/lib -lprofiler")
 
