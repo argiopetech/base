@@ -48,14 +48,14 @@ if(CMAKE_CONFIGURATION_TYPES)
     FORCE)
 endif()
 
-set(CMAKE_CXX_FLAGS                "-march=native -fstrict-aliasing -std=c++11 -W -Wall -Wno-missing-braces -pedantic" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS                "-march=native -fstrict-aliasing -std=c++11 -W -Wall -Wno-missing-braces -pedantic -pthread" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_PROFILE        "-O3 -g -DNDEBUG" CACHE STRING "" FORCE)
 
-# set(CMAKE_EXE_LINKER_FLAGS "" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-pthread" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE    "-L/usr/local/lib -lprofiler")
 set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "-L/usr/local/lib -lprofiler")
 
