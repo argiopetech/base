@@ -23,7 +23,7 @@ else
     if [[ ! -e "yaml-cpp/CMakeLists.txt" ]]; then
         # Manually clone yaml-cpp, removing the directory first
         rm -r yaml-cpp
-        git clone git@github.com:argiopetech/yaml-cpp.git --depth 1
+        git clone https://github.com/argiopetech/yaml-cpp.git --depth 1
     fi
 fi
 
