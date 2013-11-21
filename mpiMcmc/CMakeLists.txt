@@ -6,7 +6,7 @@ include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 
 add_executable(mpiMcmc ${MPIMCMC_FILES})
 
-target_link_libraries(mpiMcmc base9 m)
+target_link_libraries(mpiMcmc base9_static m ${GSL_LOC} ${GSLCBLAS_LOC} yaml-cpp)
 
 install(TARGETS mpiMcmc
         DESTINATION bin)
@@ -17,7 +17,7 @@ if (USE_TESTS)
     mpiFuncs.cpp
   )
 
-  target_link_libraries(mpiMcmc_tests gtest gtest_main base9)
+  target_link_libraries(mpiMcmc_tests gtest gtest_main base9_static)
 
   add_test(
     NAME mpiMcmc_tests

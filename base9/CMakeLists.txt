@@ -4,9 +4,11 @@ file(GLOB BASE9_FILES *.cpp *.hpp MsRgbModels/*.cpp MsRgbModels/*.hpp WdCoolingM
 
 include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 
-add_library(base9 STATIC ${BASE9_FILES})
+add_library(base9_static STATIC ${BASE9_FILES})
+add_library(base9 SHARED ${BASE9_FILES})
 
-target_link_libraries(base9 ${GSL_LOC} ${GSLCBLAS_LOC} yaml-cpp)
+install(TARGETS base9
+        DESTINATION lib)
 
 if (USE_TESTS)
   add_executable(base9_tests
