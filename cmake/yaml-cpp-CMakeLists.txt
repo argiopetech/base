@@ -35,4 +35,8 @@ set_target_properties(yaml-cpp PROPERTIES
 	VERSION "${YAML_CPP_VERSION}"
 	SOVERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}"
 	PROJECT_LABEL "yaml-cpp ${LABEL_SUFFIX}"
+        POSITION_INDEPENDENT_CODE true
 )
+
+install(TARGETS yaml-cpp
+        DESTINATION lib)
