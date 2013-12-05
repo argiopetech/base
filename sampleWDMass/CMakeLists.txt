@@ -6,7 +6,7 @@ include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 
 add_executable(sampleWDMass ${SAMPLEWDMASS_FILES})
 
-target_link_libraries(sampleWDMass base9_static m ${GSL_LOC} ${GSLCBLAS_LOC} yaml-cpp)
+target_link_libraries(sampleWDMass base9 m ${GSL_LOC} ${GSLCBLAS_LOC} yaml-cpp)
 
 install(TARGETS sampleWDMass
         DESTINATION bin)
