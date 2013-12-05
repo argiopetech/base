@@ -13,7 +13,7 @@ check_include_files (unistd.h HAS_UNISTD)
 
 include(CheckFunctionExists)
 set(CMAKE_REQUIRED_LIBRARIES "m")
-check_function_exists (m exp HAS_EXP)
+check_function_exists (exp exp HAS_EXP)
 check_function_exists (exp10 HAS_EXP10)
 check_function_exists (log HAS_LOG)
 check_function_exists (log10 HAS_LOG10)
