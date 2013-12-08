@@ -563,7 +563,7 @@ double YaleMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FI
     {
         if (f < N_YY_FILTS)
         {
-            globalMags[f] = linearTransform<TransformMethod::Interp>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
+            globalMags[f] = linearTransform<>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
         }
     }
 
