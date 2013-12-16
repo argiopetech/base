@@ -124,8 +124,6 @@ std::tuple<double, double, double> sampleMass(std::mt19937 &gen, const Cluster &
         {
             const double massRatio = (deltaMassRatio * j);
 
-//            cout << massRatio <<endl;
-
             star.U = primaryMass;
             star.massRatio = massRatio;
 
@@ -574,33 +572,36 @@ int main (int argc, char *argv[])
         exit (1);
     }
 
-    // {
-    //     mc.clust.age = sampledPars.at(m).age;
-    //     mc.clust.feh = sampledPars.at(m).FeH;
-    //     mc.clust.mod = sampledPars.at(m).modulus;
-    //     mc.clust.abs = sampledPars.at(m).absorption;
+    {
+        mc.clust.age = sampledPars.at(m).age;
+        mc.clust.feh = sampledPars.at(m).FeH;
+        mc.clust.mod = sampledPars.at(m).modulus;
+        mc.clust.abs = sampledPars.at(m).absorption;
 
-    //     if (evoModels.IFMR >= 4)
-    //     {
-    //         mc.clust.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
-    //         mc.clust.ifmrSlope = sampledPars.at(m).ifmrSlope;
-    //     }
+        if (evoModels.IFMR >= 4)
+        {
+            mc.clust.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
+            mc.clust.ifmrSlope = sampledPars.at(m).ifmrSlope;
+        }
 
-    //     if (evoModels.IFMR >= 9)
-    //     {
-    //         mc.clust.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
-    //     }
+        if (evoModels.IFMR >= 9)
+        {
+            mc.clust.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
+        }
 
-    //     mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
+        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
-    //     double ops = ctrl.nSamples * mc.stars.size() * ((mc.clust.M_wd_up - 0.15) / dMass1) * (1.0 / dMassRatio);
-    //     double propOps = ((mc.clust.M_wd_up - 0.15) / 0.001) * (1.0 / 0.1);
+        double ops = ctrl.nSamples * mc.stars.size() * ((mc.clust.M_wd_up - 0.15) / dMass1) * (1.0 / dMassRatio);
+        double propOps = ((mc.clust.M_wd_up - 0.15) / 0.001) * (1.0 / 0.1);
 
-        
-    //     sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, 0.001, 0.1, mc.stars.front());
+        auto then = std::chrono::high_resolution_clock::now();
+        sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, 0.001, 0.1, mc.stars.front());
+        auto now = std::chrono::high_resolution_clock::now();
 
-    //     cout << ops << " estimated operations" << endl;
-    // }
+        long nanos = duration_cast<std::chrono::nanoseconds>(then - now).count();
+
+        cout << ops << " estimated operations" << endl;
+    }
 
     for (int m = 0; m < ctrl.nSamples; m++)
     {
