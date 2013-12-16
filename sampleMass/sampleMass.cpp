@@ -1,25 +1,18 @@
-/*** Last update: 19jun06 ***/
 #include <array>
 #include <fstream>
-#include <string>
-#include <sstream>
 #include <iostream>
 #include <random>
 #include <vector>
 
-#include <cstring>
-#include <cstdlib>
-#include <cmath>
-#include <unistd.h>
+#include <boost/format.hpp>
 
 #include "Chain.hpp"
 
-#include "evolve.hpp"
-#include "gBergMag.hpp"
-#include "WdCoolingModel.hpp"
+#include "constants.hpp"
 #include "densities.hpp"
-#include "samplers.hpp"
-#include "MsFilterSet.hpp"
+#include "evolve.hpp"
+#include "Model.hpp"
+#include "Settings.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;
@@ -45,10 +38,7 @@ const int ALLOC_CHUNK = 1;
 
 struct ifmrGridControl
 {
-    std::ifstream rData;
     FILE *rSampledParamFile;
-    FILE *wMassSampleFile;
-    FILE *wMembershipFile;
     double initialAge;
     double priorMean[NPARAMS];
     double priorVar[NPARAMS];
@@ -66,8 +56,12 @@ struct ifmrGridControl
 };
 
 /* For posterior evaluation on a grid */
-typedef struct
+struct clustPar
 {
+    clustPar(double age, double feh, double modulus, double absorption, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef)
+        : age(age), FeH(feh), modulus(modulus), absorption(absorption), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef)
+    {}
+
     double age;
     double FeH;
     double modulus;
@@ -75,7 +69,7 @@ typedef struct
     double ifmrIntercept;
     double ifmrSlope;
     double ifmrQuadCoef;
-} clustPar;
+};
 
 typedef struct
 {
@@ -192,49 +186,12 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     /* open files for reading (data) and writing */
 
-    char filename[100];
-
-    strcpy (filename, settings.files.phot.c_str());
-
-    ctrl->rData.open(filename);
-    if (!ctrl->rData)
-    {
-        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    strcpy (filename, settings.files.output.c_str());
-    strcat (filename, ".res");
-    if ((ctrl->rSampledParamFile = fopen (filename, "r")) == NULL)
-    {
-        cerr << "***Error: file " << filename << " was not found.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
     ctrl->minMag = settings.cluster.minMag;
     ctrl->maxMag = settings.cluster.maxMag;
     ctrl->iMag = settings.cluster.index;
     if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
     {
         cerr << "***Error: " << ctrl->iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    strcpy (filename, settings.files.output.c_str());
-    strcat (filename, ".massSamples");
-    if ((ctrl->wMassSampleFile = fopen (filename, "w")) == NULL)
-    {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-    strcat (filename, ".membership");
-    if ((ctrl->wMembershipFile = fopen (filename, "w")) == NULL)
-    {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
         cerr << "[Exiting...]" << endl;
         exit (1);
     }
@@ -255,8 +212,17 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
 {
     string line, pch;
 
+    std::ifstream rData;
+    rData.open(settings.files.phot);
+    if (!rData)
+    {
+        cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
     //Parse the header of the file to determine which filters are being used
-    getline(ctrl.rData, line);  // Read in the header line
+    getline(rData, line);  // Read in the header line
 
     istringstream header(line); // Ignore the first token (which is "id")
 
@@ -285,11 +251,11 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
     // It also reads a best guess for the mass
     mc.stars.clear();
 
-    while (!ctrl.rData.eof())
+    while (!rData.eof())
     {
-        getline(ctrl.rData, line);
+        getline(rData, line);
 
-        if (ctrl.rData.eof())
+        if (rData.eof())
             break;
 
         mc.stars.push_back(Star(line, ctrl.numFilts));
@@ -315,60 +281,51 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
             mc.stars.pop_back();
         }
     }
+
+    rData.close();
 } /* readCmdData */
 
 /*
  * Read sampled params
  */
-static void readSampledParams (struct ifmrGridControl *ctrl, clustPar ** sampledPars, Model &evoModels)
+static void readSampledParams (struct ifmrGridControl *ctrl, vector<clustPar> &sampledPars, Model &evoModels)
 {
-    int nr, j = 0;
-    int morePars = 1;           // true
-    void *tempAlloc;            // temporary for allocation
-    double logPost;
+    string line;
+    std::ifstream parsFile;
+    parsFile.open(settings.files.output + ".res");
 
-    char line[300];
-
-    *sampledPars = nullptr;
-
-    fgets (line, 300, ctrl->rSampledParamFile); // skip first header line
-
-    while (morePars)
+    while (!parsFile.eof())
     {
-        if ((j % ALLOC_CHUNK) == 0)
+        double newAge, newFeh, newMod, newAbs, newIInter, newISlope, newIQuad, ignore;
+        newAge = newFeh = newMod = newAbs = newIInter = newISlope = newIQuad = 0.0;
+
+        parsFile >> newAge
+                 >> newFeh
+                 >> newMod
+                 >> newAbs;
+
+        if (evoModels.IFMR >= 4)
         {
-            if ((tempAlloc = (void *) realloc (*sampledPars, (j + ALLOC_CHUNK) * sizeof (clustPar))) == NULL)
-                perror ("MEMORY ALLOCATION ERROR \n");
-            else
-                *sampledPars = (clustPar *) tempAlloc;
-        }
-
-        nr = fscanf (ctrl->rSampledParamFile, "%lf", &(*sampledPars)[j].age);
-
-        if (nr == EOF)
-            break;
-
-        fscanf (ctrl->rSampledParamFile, "%lf", &(*sampledPars)[j].FeH);
-        fscanf (ctrl->rSampledParamFile, "%lf", &(*sampledPars)[j].modulus);
-        fscanf (ctrl->rSampledParamFile, "%lf", &(*sampledPars)[j].absorption);
-
-        if (evoModels.IFMR >= 9)
-        {
-            fscanf (ctrl->rSampledParamFile, "%lf", &(*sampledPars)[j].ifmrIntercept);
-            fscanf (ctrl->rSampledParamFile, "%lf", &(*sampledPars)[j].ifmrSlope);
+            parsFile >> newIInter
+                     >> newISlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            fscanf (ctrl->rSampledParamFile, "%lf", &(*sampledPars)[j].ifmrQuadCoef);
+            parsFile >> newIQuad;
         }
 
-        fscanf (ctrl->rSampledParamFile, "%lf", &logPost);
+        parsFile >> ignore; // logPost
 
-        j++;
+        if (!parsFile.eof())
+        {
+            sampledPars.emplace_back(newAge, newFeh, newMod, newAbs, newIInter, newISlope, newIQuad);
+        }
     }
-    ctrl->nSamples = j;
-    fclose (ctrl->rSampledParamFile);
+
+    parsFile.close();
+
+    ctrl->nSamples = sampledPars.size();
 }
 
 
@@ -452,8 +409,7 @@ int main (int argc, char *argv[])
     obsStar *obs;
     int *starStatus;
 
-    clustPar *sampledPars;
-    vector<double> unifs;              /* draw uniform random numbers ahead of time */
+    vector<clustPar> sampledPars;
 
     array<double, 2> ltau;
 
@@ -528,13 +484,9 @@ int main (int argc, char *argv[])
     }
     fsLike = exp (logFieldStarLikelihood);
 
-    readSampledParams (&ctrl, &sampledPars, evoModels);
-    cout << "sampledPars[0].age = " << sampledPars[0].age << endl;
-
-    for (int j = 0; j < ctrl.nSamples * nWDs; j++)
-    {
-        unifs.push_back(std::generate_canonical<double, 53>(gen));
-    }
+    readSampledParams (&ctrl, sampledPars, evoModels);
+    cout << "sampledPars[0].age    = " << sampledPars.at(0).age << endl;
+    cout << "sampledPars[last].age = " << sampledPars.back().age << endl;
 
     /* initialize WD logpost array and WD indices */
     nWDLogPosts = (int) ceil ((mc.clust.M_wd_up - 0.15) / dMass1);
@@ -555,20 +507,20 @@ int main (int argc, char *argv[])
 
     for (int m = 0; m < ctrl.nSamples; m++)
     {
-        mc.clust.age = sampledPars[m].age;
-        mc.clust.feh = sampledPars[m].FeH;
-        mc.clust.mod = sampledPars[m].modulus;
-        mc.clust.abs = sampledPars[m].absorption;
+        mc.clust.age = sampledPars.at(m).age;
+        mc.clust.feh = sampledPars.at(m).FeH;
+        mc.clust.mod = sampledPars.at(m).modulus;
+        mc.clust.abs = sampledPars.at(m).absorption;
 
         if (evoModels.IFMR >= 4)
         {
-            mc.clust.ifmrIntercept = sampledPars[m].ifmrIntercept;
-            mc.clust.ifmrSlope = sampledPars[m].ifmrSlope;
+            mc.clust.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
+            mc.clust.ifmrSlope = sampledPars.at(m).ifmrSlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            mc.clust.ifmrQuadCoef = sampledPars[m].ifmrQuadCoef;
+            mc.clust.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
         }
 
         /************ sample WD masses for different parameters ************/
@@ -631,7 +583,7 @@ int main (int argc, char *argv[])
                 }
 
                 /* now sample a particular mass */
-                u = unifs[m * nWDs + iWD];
+                u = std::generate_canonical<double, 53>(gen);
                 cumSum = 0.0;
                 mass1 = 0.15;
                 im = 0;
@@ -657,33 +609,61 @@ int main (int argc, char *argv[])
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
 
+    // Open the file
+    string filename = settings.files.output + ".massSamples";
+
+    std::ofstream massSampleFile;
+    massSampleFile.open(filename);
+    if (!massSampleFile)
+    {
+        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    filename += ".membership";
+
+    std::ofstream membershipFile;
+    membershipFile.open(filename);
+    if (!membershipFile)
+    {
+        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+
     /* Write output */
     for (int i = 0; i < ctrl.nSamples; i++)
     {
-        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].age);
-        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].FeH);
-        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].modulus);
-        fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].absorption);
+        massSampleFile << boost::format("%10.6f") % sampledPars.at(i).age
+                       << boost::format("%10.6f") % sampledPars.at(i).FeH
+                       << boost::format("%10.6f") % sampledPars.at(i).modulus
+                       << boost::format("%10.6f") % sampledPars.at(i).absorption;
+
         if (evoModels.IFMR >= 4)
         {
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrIntercept);
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrSlope);
+            massSampleFile << boost::format("%10.6f") % sampledPars.at(i).ifmrIntercept
+                           << boost::format("%10.6f") % sampledPars.at(i).ifmrSlope;
         }
+
         if (evoModels.IFMR >= 9)
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", sampledPars[i].ifmrQuadCoef);
+        {
+            massSampleFile << boost::format("%10.6f") % sampledPars.at(i).ifmrQuadCoef;
+        }
+
         for (int j = 0; j < nWDs; j++)
         {
-            fprintf (ctrl.wMassSampleFile, "%10.6f ", wdMass[i * nWDs + j]);
+            massSampleFile << boost::format("%10.6f") % wdMass[i * nWDs + j];
+            membershipFile << boost::format("%10.6f") % clusMemPost[i * nWDs + j];
         }
-        for (int j = 0; j < nWDs; j++)
-        {
-            fprintf (ctrl.wMembershipFile, "%10.6f ", clusMemPost[i * nWDs + j]);
-        }
-        fprintf (ctrl.wMassSampleFile, "\n");
-        fprintf (ctrl.wMembershipFile, "\n");
+
+        massSampleFile << "\n";
+        membershipFile << "\n";
     }
-    fclose (ctrl.wMassSampleFile);
-    fclose (ctrl.wMembershipFile);
+
+    massSampleFile.close();
+    membershipFile.close();
 
     cout << "Part 2 completed successfully" << endl;
 
@@ -692,8 +672,6 @@ int main (int argc, char *argv[])
 
     free (wdMass);              /* 1D array */
     free (clusMemPost);         /* 1D array */
-
-    free (sampledPars);
 
     delete[] (obs);
     delete[] (starStatus);
