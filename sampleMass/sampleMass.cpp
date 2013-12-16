@@ -38,7 +38,6 @@ const int ALLOC_CHUNK = 1;
 
 struct ifmrGridControl
 {
-    FILE *rSampledParamFile;
     double initialAge;
     double priorMean[NPARAMS];
     double priorVar[NPARAMS];
@@ -294,6 +293,8 @@ static void readSampledParams (struct ifmrGridControl *ctrl, vector<clustPar> &s
     std::ifstream parsFile;
     parsFile.open(settings.files.output + ".res");
 
+    getline(parsFile, line); // Eat the header
+
     while (!parsFile.eof())
     {
         double newAge, newFeh, newMod, newAbs, newIInter, newISlope, newIQuad, ignore;
@@ -505,6 +506,32 @@ int main (int argc, char *argv[])
 
     double u, cumSum;
 
+    /********** compile results *********/
+    /*** now report sampled masses and parameters ***/
+
+    // Open the file
+    string filename = settings.files.output + ".massSamples";
+
+    std::ofstream massSampleFile;
+    massSampleFile.open(filename);
+    if (!massSampleFile)
+    {
+        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    filename += ".membership";
+
+    std::ofstream membershipFile;
+    membershipFile.open(filename);
+    if (!membershipFile)
+    {
+        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
     for (int m = 0; m < ctrl.nSamples; m++)
     {
         mc.clust.age = sampledPars.at(m).age;
@@ -596,70 +623,38 @@ int main (int argc, char *argv[])
                 mass1 -= dMass1;        /* maybe not necessary */
 
                 wdMass[m * nWDs + iWD] = mass1;
-                iWD++;
 
                 postClusterStar *= (mc.clust.M_wd_up - 0.15);
 
                 clusMemPost[m * nWDs + iWD] = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
+                iWD++;
             }
         }
-    }
 
-
-    /********** compile results *********/
-    /*** now report sampled masses and parameters ***/
-
-    // Open the file
-    string filename = settings.files.output + ".massSamples";
-
-    std::ofstream massSampleFile;
-    massSampleFile.open(filename);
-    if (!massSampleFile)
-    {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    filename += ".membership";
-
-    std::ofstream membershipFile;
-    membershipFile.open(filename);
-    if (!membershipFile)
-    {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-
-    /* Write output */
-    for (int i = 0; i < ctrl.nSamples; i++)
-    {
-        massSampleFile << boost::format("%10.6f") % sampledPars.at(i).age
-                       << boost::format("%10.6f") % sampledPars.at(i).FeH
-                       << boost::format("%10.6f") % sampledPars.at(i).modulus
-                       << boost::format("%10.6f") % sampledPars.at(i).absorption;
+        massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
+                       << boost::format("%10.6f") % sampledPars.at(m).FeH
+                       << boost::format("%10.6f") % sampledPars.at(m).modulus
+                       << boost::format("%10.6f") % sampledPars.at(m).absorption;
 
         if (evoModels.IFMR >= 4)
         {
-            massSampleFile << boost::format("%10.6f") % sampledPars.at(i).ifmrIntercept
-                           << boost::format("%10.6f") % sampledPars.at(i).ifmrSlope;
+            massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrIntercept
+                           << boost::format("%10.6f") % sampledPars.at(m).ifmrSlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            massSampleFile << boost::format("%10.6f") % sampledPars.at(i).ifmrQuadCoef;
+            massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrQuadCoef;
         }
 
         for (int j = 0; j < nWDs; j++)
         {
-            massSampleFile << boost::format("%10.6f") % wdMass[i * nWDs + j];
-            membershipFile << boost::format("%10.6f") % clusMemPost[i * nWDs + j];
+            massSampleFile << boost::format("%10.6f") % wdMass[m  * nWDs + j];
+            membershipFile << boost::format("%10.6f") % clusMemPost[m * nWDs + j];
         }
 
-        massSampleFile << "\n";
-        membershipFile << "\n";
+        massSampleFile << endl;
+        membershipFile << endl;
     }
 
     massSampleFile.close();
