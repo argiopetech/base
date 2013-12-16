@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -19,6 +20,7 @@
 #include "Settings.hpp"
 #include "Star.hpp"
 #include "WhiteDwarf.hpp"
+#include "Utility.hpp"
 
 using std::array;
 using std::string;
@@ -40,6 +42,8 @@ const int N_GRID = (N_AGE * N_FEH * N_MOD * N_ABS * N_Y * N_IFMR_INT * N_IFMR_SL
 const int MASTER = 0;       /* taskid of first process */
 
 const int ALLOC_CHUNK = 1;
+
+//base::utility::ThreadPool pool;
 
 struct ifmrGridControl
 {
@@ -93,8 +97,8 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 vector<int> filters;
 
 /* TEMPORARY - global variable */
-const double dMass1 = 0.0005;
-const double dMassRatio = 0.5;
+const double dMass1 = 0.005; //0.0005;
+const double dMassRatio = 0.01;
 
 Settings settings;
 
@@ -544,7 +548,7 @@ int main (int argc, char *argv[])
     fsLike = exp (logFieldStarLikelihood);
 
     readSampledParams (&ctrl, sampledPars, evoModels);
-    cout << "sampledPars[0].age    = " << sampledPars.at(0).age << endl;
+    cout << "sampledPars[0].age = " << sampledPars.at(0).age << endl;
 
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
@@ -573,34 +577,46 @@ int main (int argc, char *argv[])
     }
 
     {
-        mc.clust.age = sampledPars.at(m).age;
-        mc.clust.feh = sampledPars.at(m).FeH;
-        mc.clust.mod = sampledPars.at(m).modulus;
-        mc.clust.abs = sampledPars.at(m).absorption;
+        mc.clust.age = sampledPars.at(0).age;
+        mc.clust.feh = sampledPars.at(0).FeH;
+        mc.clust.mod = sampledPars.at(0).modulus;
+        mc.clust.abs = sampledPars.at(0).absorption;
 
         if (evoModels.IFMR >= 4)
         {
-            mc.clust.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
-            mc.clust.ifmrSlope = sampledPars.at(m).ifmrSlope;
+            mc.clust.ifmrIntercept = sampledPars.at(0).ifmrIntercept;
+            mc.clust.ifmrSlope = sampledPars.at(0).ifmrSlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            mc.clust.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
+            mc.clust.ifmrQuadCoef = sampledPars.at(0).ifmrQuadCoef;
         }
+
+        const double dm = 0.005, dr = 0.1;
+
+        double ops = ctrl.nSamples * mc.stars.size() * ((mc.clust.M_wd_up - 0.15) / dMass1) * (1.0 / dMassRatio);
+        double propOps = 1.9 * ((mc.clust.M_wd_up - 0.15) / dm) * (1.0 / dr);
+
+        masses.clear();
+        memberships.clear();
+
+        auto then = std::chrono::high_resolution_clock::now();
 
         mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
-        double ops = ctrl.nSamples * mc.stars.size() * ((mc.clust.M_wd_up - 0.15) / dMass1) * (1.0 / dMassRatio);
-        double propOps = ((mc.clust.M_wd_up - 0.15) / 0.001) * (1.0 / 0.1);
+        sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.front());
+        sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.back());
 
-        auto then = std::chrono::high_resolution_clock::now();
-        sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, 0.001, 0.1, mc.stars.front());
         auto now = std::chrono::high_resolution_clock::now();
 
-        long nanos = duration_cast<std::chrono::nanoseconds>(then - now).count();
+        double micros = std::chrono::duration_cast<std::chrono::microseconds>(now - then).count();
 
-        cout << ops << " estimated operations" << endl;
+        double conversion = micros / 1000000;
+
+        double seconds = conversion * (ops / propOps);
+
+        cout << "\n" << (boost::format("%.1g") % ops) << " estimated operations. Approximate run time: " << boost::format("%.2f") % (seconds / 60) << " minutes.\n" << endl;
     }
 
     for (int m = 0; m < ctrl.nSamples; m++)
@@ -629,15 +645,12 @@ int main (int argc, char *argv[])
 
         for (auto star : mc.stars)
         {
-            if (star.status[0] == WD)
-            {
             auto sampleTuple = sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dMass1, dMassRatio, star);
             masses.emplace_back(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (mc.clust.M_wd_up - 0.15);
             memberships.push_back(star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike));
-        }
         }
 
         massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
@@ -674,7 +687,7 @@ int main (int argc, char *argv[])
     massSampleFile.close();
     membershipFile.close();
 
-    cout << "Part 2 completed successfully" << endl;
+    cout << "Completed successfully" << endl;
 
     return 0;
 }
