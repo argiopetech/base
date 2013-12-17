@@ -87,6 +87,10 @@ mpiMcmc:
 sampleWDMass:
     # No sampleWDMass-specific settings yet
 
+sampleMass:
+    deltaMass:          0.0005
+    deltaMassRatio:     0.001
+
 simCluster:
     nStars:             100
     percentBinary:      0     # percent binaries (drawn randomly)

@@ -54,6 +54,7 @@ void Settings::fromYaml (const string yamlFile)
     Node simConfNode = getNode (configNode, "simCluster");
     Node isoConfNode = getNode (configNode, "makeIsochrone");
     Node scatterConfNode = getNode (configNode, "scatterCluster");
+    Node sampleMassNode = getNode (configNode, "sampleMass");
 
     mainSequence.filterSet = static_cast<MsFilter>(getOrDie<int>(mainSequenceNode, "filterSet"));
     mainSequence.msRgbModel = static_cast<MsModel>(getOrDie<int>(mainSequenceNode, "msRgbModel"));
@@ -120,6 +121,8 @@ void Settings::fromYaml (const string yamlFile)
     scatterCluster.relevantFilt = getOrDie<int>(scatterConfNode, "relevantFilt");
     scatterCluster.limitS2N = getOrDie<double>(scatterConfNode, "limitS2N");
 
+    sampleMass.deltaMass = getOrDie<double>(sampleMassNode, "deltaMass");
+    sampleMass.deltaMassRatio = getOrDie<double>(sampleMassNode, "deltaMassRatio");
 
     auto temp = getOrDie<vector<double>>(scatterConfNode, "exposures");
     std::copy(temp.begin(), temp.end(), scatterCluster.exposures.begin());
@@ -167,8 +170,6 @@ void Settings::fromCLI (int argc, char **argv)
         {"sigmaAv", required_argument, 0, 0xF3},
         {"priorY", required_argument, 0, 0xF2},
         {"sigmaY", required_argument, 0, 0xF1},
-        {"priorCarbonicity", required_argument, 0, 0xCD},
-        {"sigmaCarbonicity", required_argument, 0, 0xCC},
         {"logClusAge", required_argument, 0, 0xF0},
         {"minMag", required_argument, 0, 0xEF},
         {"maxMag", required_argument, 0, 0xEE},
@@ -194,6 +195,10 @@ void Settings::fromCLI (int argc, char **argv)
         {"version", no_argument, 0, 0xDA},
         {"bigStepBurnin", no_argument, 0, 0xCF},
         {"threads", required_argument, 0, 0xCE},
+        {"priorCarbonicity", required_argument, 0, 0xCD},
+        {"sigmaCarbonicity", required_argument, 0, 0xCC},
+        {"deltaMass", required_argument, 0, 0xCB},
+        {"deltaMassRatio", required_argument, 0, 0xCA},
         {0, 0, 0, 0}
     };
 
@@ -388,6 +393,14 @@ void Settings::fromCLI (int argc, char **argv)
                 }
                 break;
 
+            case 0xCB:
+                istringstream (string (optarg)) >> sampleMass.deltaMass;
+                break;
+
+            case 0xCA:
+                istringstream (string (optarg)) >> sampleMass.deltaMassRatio;
+                break;
+
             case '?':
                 // getopt_long already printed an error message.
                 printUsage ();
@@ -498,7 +511,9 @@ static void printUsage ()
     cerr << "\t--photFile" << endl;
     cerr << "\t--scatterFile" << endl;
     cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
-    cerr << "\t--modelDirectory\tThe directory in which models are located" << endl;
+    cerr << "\t--modelDirectory\tThe directory in which models are located\n" << endl;
+    cerr << "\t--deltaMass\t\tSet the delta for primary mass in sampleMass" << endl;
+    cerr << "\t--deltaMassRatio\tSet the delta for mass ratio in sampleMass" << endl;
     cerr << "\n9.3.0 flags" << endl;
     cerr <<   "===========" << endl;
     cerr << "\t--threads\t\tSpecify the number of local threads to run with" << endl;
