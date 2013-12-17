@@ -6,6 +6,7 @@
 #include <iostream>
 #include <random>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <boost/format.hpp>
@@ -30,20 +31,6 @@ using std::cerr;
 using std::cout;
 using std::endl;
 using std::flush;
-
-const int N_AGE = 30;
-const int N_FEH = 1;
-const int N_MOD = 1;
-const int N_ABS = 1;
-const int N_Y = 1;
-const int N_IFMR_INT = 10;
-const int N_IFMR_SLOPE = 10;
-const int N_GRID = (N_AGE * N_FEH * N_MOD * N_ABS * N_Y * N_IFMR_INT * N_IFMR_SLOPE);
-const int MASTER = 0;       /* taskid of first process */
-
-const int ALLOC_CHUNK = 1;
-
-//base::utility::ThreadPool pool;
 
 struct ifmrGridControl
 {
@@ -98,86 +85,7 @@ vector<int> filters;
 
 /* TEMPORARY - global variable */
 const double dMass1 = 0.005; //0.0005;
-const double dMassRatio = 0.01;
-
-Settings settings;
-
-// O(3n²)
-std::tuple<double, double, double> sampleMass(std::mt19937 &gen, const Cluster &clust, const Model &evoModels, const double baseMass, const double maxMass, const double deltaPrimaryMass, const double deltaMassRatio, Star star)
-{
-    double maxLogPost = std::numeric_limits<double>::min(); 
-    double U = std::generate_canonical<double, 53>(gen);
-    double cumulative = 0.0, denom = 0.0, postClusterStar = 0.0;
-    int primaryMassIndex = 0, massRatioIndex = 0;
-
-    const int maxPrimaryIndex = std::ceil((maxMass - baseMass) / deltaPrimaryMass);
-    const int maxRatioIndex   = std::ceil(1.0 / deltaMassRatio);
-
-    Vatrix<double> logPosts;
-    logPosts.reserve( maxPrimaryIndex + 1 );
-
-    // O(n²)
-    for (int i = 0; i <= maxPrimaryIndex; ++i)
-    {
-        const double primaryMass = baseMass + (deltaPrimaryMass * i);
-
-        logPosts.emplace_back();
-        logPosts.back().reserve( maxRatioIndex + 1 );
-        
-        for (int j = 0; j <= maxRatioIndex; ++j)
-        {
-            const double massRatio = (deltaMassRatio * j);
-
-            star.U = primaryMass;
-            star.massRatio = massRatio;
-
-            try
-            {
-                array<double, 2> ltau;
-                array<double, FILTS> globalMags;
-                evolve (clust, evoModels, globalMags, filters, star, ltau);
-
-                auto thisLogPost = logPost1Star(star, clust, evoModels, filterPriorMin, filterPriorMax);
-                logPosts.back().push_back( thisLogPost );
-
-                postClusterStar += exp(thisLogPost);
-
-                maxLogPost = std::max(maxLogPost, thisLogPost);
-            }
-            catch ( WDBoundsError &e )
-            {
-                // Go ahead and silence this error...
-                cerr << e.what() << endl;
-    
-                logPosts.back().push_back(std::numeric_limits<double>::min());
-            }
-        }
-    }
-
-    // O(n²)
-    for (auto v : logPosts)
-    {
-        for (auto logPost : v)
-        {
-            denom += exp(logPost - maxLogPost);
-        }
-    }
-
-    // O(n²)
-    while (cumulative <= U)
-    {
-        cumulative += exp(logPosts.at(primaryMassIndex).at(massRatioIndex) - maxLogPost) / denom;
-        ++massRatioIndex;
-        
-        if (massRatioIndex > maxRatioIndex)
-        {
-            massRatioIndex = 0;
-            ++primaryMassIndex; // This should never exceed primaryMasses.size() before cumulative > U.
-        }
-    }
-
-    return std::make_tuple(baseMass + (primaryMassIndex * deltaPrimaryMass), massRatioIndex * deltaMassRatio, postClusterStar);
-}
+const double dMassRatio = 0.5;
 
 /*
  * read control parameters from input stream
@@ -188,8 +96,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
     {
-        ctrl->priorMean[CARBONICITY] = mc->clust.carbonicity = mc->clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
-        ctrl->priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
+        ctrl->priorMean[CARBONICITY] = mc->clust.carbonicity = mc->clust.priorMean[CARBONICITY] = s.cluster.carbonicity;
+        ctrl->priorVar[CARBONICITY] = s.cluster.sigma.carbonicity;
     }
     else
     {
@@ -198,28 +106,28 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     }
 
 
-    ctrl->priorMean[FEH] = settings.cluster.Fe_H;
-    ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;
+    ctrl->priorMean[FEH] = s.cluster.Fe_H;
+    ctrl->priorVar[FEH] = s.cluster.sigma.Fe_H;
     if (ctrl->priorVar[FEH] < 0.0)
     {
         ctrl->priorVar[FEH] = 0.0;
     }
 
-    ctrl->priorMean[MOD] = settings.cluster.distMod;
-    ctrl->priorVar[MOD] = settings.cluster.sigma.distMod;
+    ctrl->priorMean[MOD] = s.cluster.distMod;
+    ctrl->priorVar[MOD] = s.cluster.sigma.distMod;
     if (ctrl->priorVar[MOD] < 0.0)
     {
         ctrl->priorVar[MOD] = 0.0;
     }
 
-    ctrl->priorMean[ABS] = settings.cluster.Av;
-    ctrl->priorVar[ABS] = settings.cluster.sigma.Av;
+    ctrl->priorMean[ABS] = s.cluster.Av;
+    ctrl->priorVar[ABS] = s.cluster.sigma.Av;
     if (ctrl->priorVar[ABS] < 0.0)
     {
         ctrl->priorVar[ABS] = 0.0;
     }
 
-    ctrl->initialAge = settings.cluster.logClusAge;
+    ctrl->initialAge = s.cluster.logClusAge;
     ctrl->priorVar[AGE] = 1.0;
 
     ctrl->priorVar[IFMR_INTERCEPT] = 1.0;
@@ -271,9 +179,9 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     /* open files for reading (data) and writing */
 
-    ctrl->minMag = settings.cluster.minMag;
-    ctrl->maxMag = settings.cluster.maxMag;
-    ctrl->iMag = settings.cluster.index;
+    ctrl->minMag = s.cluster.minMag;
+    ctrl->maxMag = s.cluster.maxMag;
+    ctrl->iMag = s.cluster.index;
     if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
     {
         cerr << "***Error: " << ctrl->iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
@@ -293,15 +201,15 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     }
 } // initIfmrGridControl
 
-void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModels)
+void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModels, const Settings &s)
 {
     string line, pch;
 
     std::ifstream rData;
-    rData.open(settings.files.phot);
+    rData.open(s.files.phot);
     if (!rData)
     {
-        cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+        cerr << "***Error: Photometry file " << s.files.phot << " was not found.***" << endl;
         cerr << "[Exiting...]" << endl;
         exit (1);
     }
@@ -373,11 +281,11 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
 /*
  * Read sampled params
  */
-static void readSampledParams (struct ifmrGridControl *ctrl, vector<clustPar> &sampledPars, Model &evoModels)
+static void readSampledParams (struct ifmrGridControl *ctrl, vector<clustPar> &sampledPars, Model &evoModels, const Settings &s)
 {
     string line;
     std::ifstream parsFile;
-    parsFile.open(settings.files.output + ".res");
+    parsFile.open(s.files.output + ".res");
 
     getline(parsFile, line); // Eat the header
 
@@ -483,7 +391,99 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     }
 } // initChain
 
-int main (int argc, char *argv[])
+
+class Application
+{
+  private:
+    Settings settings;
+    base::utility::ThreadPool pool;
+
+  public:
+    Application(Settings s)
+        : settings(s), pool(s.threads)
+    {}
+
+    void run();
+    std::tuple<double, double, double> sampleMass(const double, const Cluster&, const Model&, const double, const double, const double, const double, Star);
+};
+
+// O(3n²)
+std::tuple<double, double, double> Application::sampleMass(const double U, const Cluster &clust, const Model &evoModels, const double baseMass, const double maxMass, const double deltaPrimaryMass, const double deltaMassRatio, Star star)
+{
+    double maxLogPost = std::numeric_limits<double>::min();
+    double cumulative = 0.0, denom = 0.0, postClusterStar = 0.0;
+    int primaryMassIndex = 0, massRatioIndex = 0;
+
+    const int maxPrimaryIndex = std::ceil((maxMass - baseMass) / deltaPrimaryMass);
+    const int maxRatioIndex   = std::ceil(1.0 / deltaMassRatio);
+
+    Vatrix<double> logPosts;
+    logPosts.reserve( maxPrimaryIndex + 1 );
+
+    // O(n²)
+    for (int i = 0; i <= maxPrimaryIndex; ++i)
+    {
+        const double primaryMass = baseMass + (deltaPrimaryMass * i);
+
+        logPosts.emplace_back();
+        logPosts.back().reserve( maxRatioIndex + 1 );
+        
+        for (int j = 0; j <= maxRatioIndex; ++j)
+        {
+            const double massRatio = (deltaMassRatio * j);
+
+            star.U = primaryMass;
+            star.massRatio = massRatio;
+
+            try
+            {
+                array<double, 2> ltau;
+                array<double, FILTS> globalMags;
+                evolve (clust, evoModels, globalMags, filters, star, ltau);
+
+                auto thisLogPost = logPost1Star(star, clust, evoModels, filterPriorMin, filterPriorMax);
+                logPosts.back().push_back( thisLogPost );
+
+                postClusterStar += exp(thisLogPost);
+
+                maxLogPost = std::max(maxLogPost, thisLogPost);
+            }
+            catch ( WDBoundsError &e )
+            {
+                // Go ahead and silence this error...
+                cerr << e.what() << endl;
+    
+                logPosts.back().push_back(std::numeric_limits<double>::min());
+            }
+        }
+    }
+
+    // O(n²)
+    for (auto v : logPosts)
+    {
+        for (auto logPost : v)
+        {
+            denom += exp(logPost - maxLogPost);
+        }
+    }
+
+    // O(n²)
+    while (cumulative <= U)
+    {
+        cumulative += exp(logPosts.at(primaryMassIndex).at(massRatioIndex) - maxLogPost) / denom;
+        ++massRatioIndex;
+        
+        if (massRatioIndex > maxRatioIndex)
+        {
+            massRatioIndex = 0;
+            ++primaryMassIndex; // This should never exceed primaryMasses.size() before cumulative > U.
+        }
+    }
+
+    return std::make_tuple(baseMass + (primaryMassIndex * deltaPrimaryMass), massRatioIndex * deltaMassRatio, postClusterStar);
+}
+
+void Application::run()
 {
     Chain mc;
     struct ifmrGridControl ctrl;
@@ -494,18 +494,6 @@ int main (int argc, char *argv[])
 
     vector<std::pair<double, double>> masses;
     vector<double> memberships;
-
-    settings.fromCLI (argc, argv);
-    if (!settings.files.config.empty())
-    {
-        settings.fromYaml (settings.files.config);
-    }
-    else
-    {
-        settings.fromYaml ("base9.yaml");
-    }
-
-    settings.fromCLI (argc, argv);
 
     std::mt19937 gen(settings.seed * uint32_t(2654435761)); // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
     {
@@ -528,7 +516,7 @@ int main (int argc, char *argv[])
 
     evoModels.WDatm = BERGERON;
 
-    readCmdData (mc, ctrl, evoModels);
+    readCmdData (mc, ctrl, evoModels, settings);
 
     evoModels.numFilts = ctrl.numFilts;
 
@@ -547,11 +535,14 @@ int main (int argc, char *argv[])
     }
     fsLike = exp (logFieldStarLikelihood);
 
-    readSampledParams (&ctrl, sampledPars, evoModels);
+    readSampledParams (&ctrl, sampledPars, evoModels, settings);
     cout << "sampledPars[0].age = " << sampledPars.at(0).age << endl;
 
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
+
+    masses.resize(mc.stars.size());
+    memberships.resize(mc.stars.size());
 
     // Open the file
     string filename = settings.files.output + ".massSamples";
@@ -598,15 +589,12 @@ int main (int argc, char *argv[])
         double ops = ctrl.nSamples * mc.stars.size() * ((mc.clust.M_wd_up - 0.15) / dMass1) * (1.0 / dMassRatio);
         double propOps = 1.9 * ((mc.clust.M_wd_up - 0.15) / dm) * (1.0 / dr);
 
-        masses.clear();
-        memberships.clear();
-
         auto then = std::chrono::high_resolution_clock::now();
 
         mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
-        sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.front());
-        sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.back());
+        sampleMass(std::generate_canonical<double, 53>(gen), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.front());
+        sampleMass(std::generate_canonical<double, 53>(gen), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.back());
 
         auto now = std::chrono::high_resolution_clock::now();
 
@@ -638,20 +626,29 @@ int main (int argc, char *argv[])
         }
 
         /************ sample WD masses for different parameters ************/
-        masses.clear();
-        memberships.clear();
+       mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
-        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
+        mutex logPostMutex;
 
-        for (auto star : mc.stars)
+        vector<double> rands;
+
+        for (unsigned int i = 0; i < mc.stars.size(); ++i)
         {
-            auto sampleTuple = sampleMass(gen, mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dMass1, dMassRatio, star);
-            masses.emplace_back(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
+            rands.push_back(std::generate_canonical<double, 53>(gen));
+        }
+
+        pool.parallelFor(mc.stars.size(), [=,&logPostMutex, &masses, &memberships, &rands](int i)
+        {
+            auto sampleTuple = sampleMass(rands.at(i), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dMass1, dMassRatio, mc.stars.at(i));
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (mc.clust.M_wd_up - 0.15);
-            memberships.push_back(star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike));
-        }
+
+            std::lock_guard<mutex> lk(logPostMutex);
+            masses.at(i) = std::pair<double, double>(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
+
+            memberships.at(i) = mc.stars.at(i).clustStarPriorDens * postClusterStar / (mc.stars.at(i).clustStarPriorDens * postClusterStar + (1.0 - mc.stars.at(i).clustStarPriorDens) * fsLike);
+        });
 
         massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
                        << boost::format("%10.6f") % sampledPars.at(m).FeH
@@ -688,6 +685,25 @@ int main (int argc, char *argv[])
     membershipFile.close();
 
     cout << "Completed successfully" << endl;
+}
+
+int main (int argc, char *argv[])
+{
+    Settings settings;
+
+    settings.fromCLI (argc, argv);
+    if (!settings.files.config.empty())
+    {
+        settings.fromYaml (settings.files.config);
+    }
+    else
+    {
+        settings.fromYaml ("base9.yaml");
+    }
+
+    settings.fromCLI (argc, argv);
+
+    Application(settings).run();
 
     return 0;
 }
