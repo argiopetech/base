@@ -89,6 +89,12 @@ class Settings
         int index;
     };
 
+    struct SampleMassSettings
+    {
+        double deltaMass;
+        double deltaMassRatio;
+    };
+
     struct Files
     {
         std::string phot;
@@ -105,6 +111,7 @@ class Settings
     struct ClusterSettings cluster;
     struct SimClusterSettings simCluster;
     struct ScatterClusterSettings scatterCluster;
+    struct SampleMassSettings sampleMass;
 
   private:
     template <typename T> T getDefault (YAML::Node &, std::string &&, T);

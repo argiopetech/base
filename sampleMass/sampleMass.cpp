@@ -83,10 +83,6 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 /* Used by a bunch of different functions. */
 vector<int> filters;
 
-/* TEMPORARY - global variable */
-const double dMass1 = 0.005; //0.0005;
-const double dMassRatio = 0.5;
-
 /*
  * read control parameters from input stream
  */
@@ -489,6 +485,8 @@ void Application::run()
     struct ifmrGridControl ctrl;
 
     double fsLike;
+    const double dMass1 = settings.sampleMass.deltaMass;
+    const double dMassRatio = settings.sampleMass.deltaMassRatio;
 
     vector<clustPar> sampledPars;
 
@@ -587,7 +585,7 @@ void Application::run()
         const double dm = 0.005, dr = 0.1;
 
         double ops = ctrl.nSamples * mc.stars.size() * ((mc.clust.M_wd_up - 0.15) / dMass1) * (1.0 / dMassRatio);
-        double propOps = 1.9 * ((mc.clust.M_wd_up - 0.15) / dm) * (1.0 / dr);
+        double propOps = 1.45 * ((mc.clust.M_wd_up - 0.15) / dm) * (1.0 / dr);
 
         auto then = std::chrono::high_resolution_clock::now();
 
@@ -604,7 +602,7 @@ void Application::run()
 
         double seconds = conversion * (ops / propOps);
 
-        cout << "\n" << (boost::format("%.1g") % ops) << " estimated operations. Approximate run time: " << boost::format("%.2f") % (seconds / 60) << " minutes.\n" << endl;
+        cout << "\n" << (boost::format("%.1g") % ops) << " estimated operations. Approximate single-threaded run time: " << boost::format("%.2f") % (seconds / 60) << " minutes.\n" << endl;
     }
 
     for (int m = 0; m < ctrl.nSamples; m++)
