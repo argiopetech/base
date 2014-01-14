@@ -68,14 +68,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // evolve
-std::array<double, 8> evolve(double mass);
-RcppExport SEXP BASE9_evolve(SEXP massSEXP) {
+std::array<double, 8> evolve(double mass1, double mass2);
+RcppExport SEXP BASE9_evolve(SEXP mass1SEXP, SEXP mass2SEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {
         Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< double >::type mass(massSEXP );
-        std::array<double, 8> __result = evolve(mass);
+        Rcpp::traits::input_parameter< double >::type mass1(mass1SEXP );
+        Rcpp::traits::input_parameter< double >::type mass2(mass2SEXP );
+        std::array<double, 8> __result = evolve(mass1, mass2);
         PROTECT(__sexp_result = Rcpp::wrap(__result));
     }
     UNPROTECT(1);

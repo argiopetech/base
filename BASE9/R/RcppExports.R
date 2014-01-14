@@ -17,7 +17,7 @@ setIFMRParameters <- function(intercept, slope, quadCoef) {
     invisible(.Call('BASE9_setIFMRParameters', PACKAGE = 'BASE9', intercept, slope, quadCoef))
 }
 
-evolve <- function(mass) {
-    .Call('BASE9_evolve', PACKAGE = 'BASE9', mass)
+evolve <- function(mass1, mass2) {
+    .Call('BASE9_evolve', PACKAGE = 'BASE9', mass1, mass2)
 }
 

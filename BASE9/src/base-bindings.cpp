@@ -7,9 +7,11 @@
 #include "Cluster.hpp"
 #include "constants.hpp"
 #include "gBergMag.hpp"
+#include "marg.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
 #include "ifmr.hpp"
+#include "Star.hpp"
 
 namespace evil {
     Settings s;
@@ -201,12 +203,22 @@ void setIFMRParameters(double intercept, double slope, double quadCoef)
 
 
 // [[Rcpp::export]]
-std::array<double, 8> evolve (double mass)
+std::array<double, 8> evolve (double mass1, double mass2)
 {
     if (isInitialized())
     {
-        std::array<double, 14> globalMags;
-        std::array<double, 8> mag;
+        std::array<double, 8> combinedMags;
+        Matrix<double, 3, 14> mags;
+
+        double flux;
+        Star pStar;
+
+        for (auto &mag : mags)
+        {
+            mag.fill(0.0);
+        }
+
+        combinedMags.fill(0.0);
 
         const auto filters = evil::globals::getInstance().filters;
         const auto evoModels = evil::globals::getInstance().evoModels;
@@ -218,35 +230,51 @@ std::array<double, 8> evolve (double mass)
             throw Rcpp::exception("Bounds error in evolve");
         }
 
-        if (mass <= 0.0001)
-        {                           // for non-existent secondary stars
-            for (auto f : filters)
-                mag[f] = 99.999;
-        }
-        else if (mass <= pCluster.AGBt_zmass)
-        {                           // for main seq or giant star
-            evoModels.mainSequenceEvol->msRgbEvol(filters, globalMags, mass);
-            for (auto f : filters)
-                mag[f] = globalMags[f];
-        }
-        else if (mass <= pCluster.M_wd_up)
-        {                           // for white dwarf
-            wdEvol (globalMags, mass);
-            for (auto f : filters)
-                mag[f] = globalMags[f];
-        }
-        else if (mass <= 100.)
-        {                           // for neutron star or black hole remnant
-            for (auto f : filters)
-                mag[f] = 99.999;
-        }
-        else
-        { // This should never happen...
-            for (auto f : filters)
-                mag[f] = 99.999;
+        auto mySetMags = [=](std::array<double, 14> &mag, double mass)
+        {
+            std::array<double, 14> globalMags;
+            globalMags.fill(0.0);
+
+            if (mass <= 0.0001)
+            {                           // for non-existent secondary stars
+                for (auto f : filters)
+                    mag[f] = 99.999;
+            }
+            else if (mass <= pCluster.AGBt_zmass)
+            {                           // for main seq or giant star
+                evoModels.mainSequenceEvol->msRgbEvol(filters, globalMags, mass);
+                for (auto f : filters)
+                    mag[f] = globalMags[f];
+            }
+            else if (mass <= pCluster.M_wd_up)
+            {                           // for white dwarf
+                wdEvol (globalMags, mass);
+                for (auto f : filters)
+                    mag[f] = globalMags[f];
+            }
+            else if (mass <= 100.)
+            {                           // for neutron star or black hole remnant
+                for (auto f : filters)
+                    mag[f] = 99.999;
+            }
+            else
+            { // This should never happen...
+                for (auto f : filters)
+                    mag[f] = 99.999;
+            }
+        };
+
+        mySetMags(mags[0], mass1);
+        mySetMags(mags[1], mass2);
+
+        deriveCombinedMags(mags, pCluster.abs, flux, pCluster, pStar, evoModels, filters);
+
+        for (auto f : filters)
+        {
+            combinedMags[f] = mags[2][f];
         }
 
-        return mag;
+        return combinedMags;
     }
     else
     {
