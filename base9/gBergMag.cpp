@@ -76,6 +76,7 @@ void loadBergeron (string path, MsFilter filterSet)
     {
         for (int t = 0; t < BERG_N_DA_TEFF; ++t)
         {
+            // Teff logg      Mbol BC U B V R I J H K u g r i z y b-y u-b v-y V-I G-R U-V U-G B-V Age
             // Teff logg M/Mo Mbol BC U B V R I J H K u g r i z y b-y u-b v-y V-I G-R U-V U-G B-V Age
             double ignore;
 
@@ -123,6 +124,7 @@ void loadBergeron (string path, MsFilter filterSet)
     {
         for (int t = 0; t < BERG_N_DB_TEFF; ++t)
         {
+            // Teff  log g        Mbol     BC    U      B      V      R      I      J      H      K      u      g      r      i      z      y      b-y    u-b    v-y    V-I    G-R    U-V    U-G    B-V     Age
             // Teff  log g  M/Mo  Mbol     BC    U      B      V      R      I      J      H      K      u      g      r      i      z      y      b-y    u-b    v-y    V-I    G-R    U-V    U-G    B-V     Age
             double ignore;
 
