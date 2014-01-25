@@ -182,13 +182,15 @@ std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff,
             //Interpolate in logTeff
             for (int i = 0; i < 2; i++)
             {
-                logGTrans[i] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[i][0].logG, gIter[i][1].logG, wdLogTeff).val;
+                logGTrans[i] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[0][i].logG, gIter[1][i].logG, wdLogTeff).val;
 
                 for (int f = 0; f < BERG_NFILTS; ++f)
                 {
-                    logGMag[i][f] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[i][0].mags[f], gIter[i][1].mags[f], wdLogTeff).val;
+                    logGMag[i][f] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[0][i].mags[f], gIter[1][i].mags[f], wdLogTeff).val;
                 }
             }
+
+            assert(logGTrans[0] < logGTrans[1]); // Make sure we have a valid logG range to interpolate over
 
             //Interpolate in log(g)
             for (int f = 0; f < BERG_NFILTS; ++f)
