@@ -48,8 +48,7 @@ const int NOW        = 1;
 const int LOW        = 0;
 const int HIGH       = 1;
 
-const int DA         = 0;
-const int DB         = 1;
+enum class WdAtmosphere {DA, DB};
 
 //Be careful adding new sample types.  Their order is important.
 //There are a few places in the code that test for SAMPLE_TYPE > or <.
@@ -66,10 +65,6 @@ const int IFMR_INTERCEPT    =  6;
 const int IFMR_SLOPE        =  7;
 const int IFMR_QUADCOEF     =  8;
 
-const int BERG_N_DA_LOG_G = 6;
-const int BERG_N_DA_TEFF  = 57;
-const int BERG_N_DB_LOG_G = 5;
-const int BERG_N_DB_TEFF  = 31;
 const int BERG_NFILTS     = 8;
 
 #endif
