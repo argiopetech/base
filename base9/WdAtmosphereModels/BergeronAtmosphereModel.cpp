@@ -83,39 +83,42 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
 
             getline(fin, line);
 
-            if (line.at(3) != ' ') // This is an awful, kludgey way to check for the H/He split...
+            if (!line.empty())
             {
-                stringstream in(line);
-
-                in >> teff
-                   >> logG
-                   >> ignore >> ignore;
-
-                for (int f = 0; f < 8; ++f) // Read the first 8 filters
+                if (line.at(2) != ' ') // This is an awful, kludgey way to check for the H/He split...
                 {
-                    in >> mags[f];
-                }
+                    stringstream in(line);
 
-                if (filterSet == MsFilter::SDSS) // iff we are using the ugrizJHK models
-                {
-                    for (int f = 0; f < 5; ++f)
+                    in >> teff
+                       >> logG
+                       >> ignore >> ignore;
+
+                    for (int f = 0; f < 8; ++f) // Read the first 8 filters
                     {
-                        in >> mags[f]; // Read ugriz without overwriting JHK
+                        in >> mags[f];
+                    }
+
+                    if (filterSet == MsFilter::SDSS) // iff we are using the ugrizJHK models
+                    {
+                        for (int f = 0; f < 5; ++f)
+                        {
+                            in >> mags[f]; // Read ugriz without overwriting JHK
+                        }
+                    }
+
+                    // As long as we didn't run out of file somewhere in the middle, this doesn't trigger.
+                    // Honestly, I think it should only happen if we have a corrupt file.
+                    if (!fin.eof())
+                    {
+                        int tTeff = static_cast<int>(teff);
+                        (*theMap)[tTeff].emplace_back(logG, mags);
                     }
                 }
-
-                // As long as we didn't run out of file somewhere in the middle, this doesn't trigger.
-                // Honestly, I think it should only happen if we have a corrupt file.
-                if (!fin.eof())
+                else // This is the split point between H and He tables
                 {
-                    int tTeff = static_cast<int>(teff);
-                    (*theMap)[tTeff].emplace_back(logG, mags);
+                    getline(fin, line); // Eat the extra header line
+                    theMap = &heMap; // And swap maps to the helium curve
                 }
-            }
-            else // This is the split point between H and He tables
-            {
-                getline(fin, line); // Eat the extra header line
-                theMap = &heMap; // And swap maps to the helium curve
             }
         }
 
