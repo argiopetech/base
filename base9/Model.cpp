@@ -1,8 +1,6 @@
 #include <iostream>
 #include <memory>
 
-#include "gBergMag.hpp"
-
 #include "constants.hpp"
 #include "Model.hpp"
 #include "MsRgbModels/ChabMsModel.hpp"
@@ -13,6 +11,7 @@
 #include "WdCoolingModels/MontgomeryWdModel.hpp"
 #include "WdCoolingModels/RenedoWdModel.hpp"
 #include "WdCoolingModels/WoodWdModel.hpp"
+#include "WdAtmosphereModels/BergeronAtmosphereModel.hpp"
 
 using std::cout;
 using std::cerr;
@@ -75,6 +74,19 @@ namespace internal
                 exit (1);
         }
     }
+
+    shared_ptr<WdAtmosphereModel> createWdAtmosphereModel(WdAtmosphereModelSet model)
+    {
+        switch (model)
+        {
+            case WdAtmosphereModelSet::BERGERON:
+                return shared_ptr<BergeronAtmosphereModel>(new BergeronAtmosphereModel);
+            default:
+                cerr << "***Error: No model found for white dwarf atmosphere set " << static_cast<int>(model) << ".***" << endl;
+                cerr << "[Exiting...]" << endl;
+                exit (1);
+        }
+    }
 }
 
 const Model makeModel(const Settings &s)
@@ -83,20 +95,18 @@ const Model makeModel(const Settings &s)
 
     Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
                , internal::createMsFilterSet(s.mainSequence.filterSet)
-               , internal::createWdCoolingModel(s.whiteDwarf.wdModel));
-
+               , internal::createWdCoolingModel(s.whiteDwarf.wdModel)
+               , internal::createWdAtmosphereModel(WdAtmosphereModelSet::BERGERON));
+                 
 // !!! FIX ME !!!
 
     model.IFMR = s.whiteDwarf.ifmr;
-
-    model.WDatm = BERGERON;
 
 // END FIX ME
 
     model.mainSequenceEvol->loadModel(s.files.models, s.mainSequence.filterSet);
     model.WDcooling->loadModel(s.files.models);
-
-    loadBergeron (s.files.models, s.mainSequence.filterSet);
+    model.WDAtmosphere->loadModel(s.files.models, s.mainSequence.filterSet);
 
     cout << " Done." << endl;
 

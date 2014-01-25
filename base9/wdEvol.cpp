@@ -8,8 +8,8 @@
 #include "Star.hpp"
 
 #include "evolve.hpp"
-#include "gBergMag.hpp"
 #include "WdCoolingModel.hpp"
+#include "WdAtmosphereModel.hpp"
 #include "structures.hpp"
 #include "Model.hpp"
 #include "ifmr.hpp"
@@ -51,7 +51,7 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int
     {
         //Calculate logg
         thisWDLogG = LOG_G_PLUS_LOG_M_SUN + log10 (thisWDMass) - 2 * thisWDLogRadius;
-        bergeronTeffToMags (filters, globalMags, thisLogTeff, thisWDLogG, pStar.wdType[cmpnt]);
+        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDLogG, pStar.wdType[cmpnt]);
     }
 
     pStar.massNow[cmpnt] = thisWDMass;
