@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include <cmath>
@@ -12,11 +13,12 @@
 #include "BergeronAtmosphereModel.hpp"
 #include "evolve.hpp"
 #include "LinearTransform.hpp"
-#include "gBergMag.hpp"
+#include "Matrix.hpp"
 #include "binSearch.hpp"
 
 using std::array;
 using std::ifstream;
+using std::stringstream;
 using std::string;
 using std::vector;
 using std::cerr;
@@ -26,17 +28,17 @@ const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
 void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
 {
-    static struct std::string files[] = {
-        "Table_Mass_0.2",
-        "Table_Mass_0.3",
-        "Table_Mass_0.4",
-        "Table_Mass_0.5",
-        "Table_Mass_0.6",
-        "Table_Mass_0.7",
-        "Table_Mass_0.8",
-        "Table_Mass_0.9",
-        "Table_Mass_1.0",
-        "Table_Mass_1.2",
+    static std::string files[] = {
+        {"Table_Mass_0.2"},
+        {"Table_Mass_0.3"},
+        {"Table_Mass_0.4"},
+        {"Table_Mass_0.5"},
+        {"Table_Mass_0.6"},
+        {"Table_Mass_0.7"},
+        {"Table_Mass_0.8"},
+        {"Table_Mass_0.9"},
+        {"Table_Mass_1.0"},
+        {"Table_Mass_1.2"}
     };
 
     ifstream fin;
@@ -44,6 +46,9 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
     double teff, logG;
 
     array<double, FILTS> mags;
+
+    std::map<unsigned int, std::vector<struct record>> hMap;
+    std::map<unsigned int, std::vector<struct record>> heMap;
 
     if (filterSet != MsFilter::UBVRIJHK && filterSet != MsFilter::SDSS)
     {
@@ -68,7 +73,7 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
         getline(fin, line);
         getline(fin, line);
 
-        std::map<unsigned int, std::vector<struct record>> *theMap = &hCurves; // This lets us do the H and He curves in one loop
+        std::map<unsigned int, std::vector<struct record>> *theMap = &hMap; // This lets us do the H and He curves in one loop
 
         while (!fin.eof())
         {
@@ -110,38 +115,41 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
             else // This is the split point between H and He tables
             {
                 getline(fin, line); // Eat the extra header line
-                theMap = &heCurves; // And swap maps to the helium curve
+                theMap = &heMap; // And swap maps to the helium curve
             }
         }
 
         fin.close();
     }
+
+    for ( auto &e : hMap )
+    {
+        hCurves.emplace_back(log10(e.first), e.second);
+    }
+
+    for ( auto &e : heMap )
+    {
+        heCurves.emplace_back(log10(e.first), e.second);
+    }
 }
 
-std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff, double wdLogG, WdAtmosphere wdType)
+std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff, double wdLogG, WdAtmosphere wdType) const
 {
-    auto transformMags = [](std::map<unsigned int, std::vector<struct record>> theMap)
+    auto transformMags = [=](std::vector<struct AtmosCurve> curve)
         {
-            Matrix<2, BERG_NFILTS> logGMag;
+            Matrix<double, 2, BERG_NFILTS> logGMag;
 
-            array<double, 2> logGMag;
+            array<double, 2> logGTrans;
             array<double, FILTS> mags;
 
             mags.fill(0.0);
 
-            if (wdLogG < bLogG[0])
-                l = 0;
-            else if (wdLogG >= bLogG[BERG_N_DA_LOG_G - 2])
-                l = BERG_N_DA_LOG_G - 2;
-            else
-                l = (int) floor ((wdLogG - bLogG[0]) / (bLogG[1] - bLogG[0]));
+            auto teffIter = lower_bound(curve.begin(), curve.end(), AtmosCurve(wdLogTeff, vector<record>()));
 
-            auto t = theMap.lower_bound(wdLogTeff);
-
-            if (teffIter == theMap.begin()) {
+            if (teffIter == curve.begin()) {
                 // log << "Poetential Teff underflow in WD Atmosphere Model" << endl;
             }
-            else if (teffIter == theMap.end()) {
+            else if (teffIter == curve.end()) {
                 // log << "Teff overflow in WD Atmosphere Model" << endl;
                 teffIter -= 2;
             }
@@ -149,15 +157,17 @@ std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff,
                 teffIter -= 1;
             }
 
-            auto gIter = { lower_bound(teffIter[0].second.begin(), teffIter[0].second.end(), wdLogG),
-                           lower_bound(teffIter[1].second.begin(), teffIter[1].second.end(), wdLogG)};
+            std::array<std::vector<record>::iterator, 2> gIter = {
+                lower_bound(teffIter[0].record.begin(), teffIter[0].record.end(), record(wdLogG, mags)),
+                lower_bound(teffIter[1].record.begin(), teffIter[1].record.end(), record(wdLogG, mags))
+            };
 
             for ( int i = 0; i < 2; ++i )
             {
-                if (gIter[i] == teffIter[i].second.begin()) {
+                if (gIter[i] == teffIter[i].record.begin()) {
                     // log << "Poetential Teff underflow in WD Atmosphere Model" << endl;
                 }
-                else if (gIter[i] == teffIter[i].second.end()) {
+                else if (gIter[i] == teffIter[i].record.end()) {
                     // log << "Teff overflow in WD Atmosphere Model" << endl;
                     gIter[i] -= 2;
                 }
@@ -169,11 +179,11 @@ std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff,
             //Interpolate in logTeff
             for (int i = 0; i < 2; i++)
             {
-                logGTrans[i] = linearTransform<>(teffIter[0].first, teffIter[1].first, gIter[i].logG, gIter[i + 1].logG, wdLogTeff).val;
+                logGTrans[i] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[i][0].logG, gIter[i][1].logG, wdLogTeff).val;
 
                 for (int f = 0; f < BERG_NFILTS; ++f)
                 {
-                    logGMag[i][f] = linearTransform<>(teffIter[0].first, teffIter[1].first, gIter[i].mags[f], gIter[i + 1].mags[f], wdLogTeff).val;
+                    logGMag[i][f] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[i][0].mags[f], gIter[i][1].mags[f], wdLogTeff).val;
                 }
             }
 

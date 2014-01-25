@@ -8,7 +8,7 @@
 
 #include "constants.hpp"
 
-class WdCoolingModel
+class WdAtmosphereModel
 {
   protected:
     struct record
@@ -31,15 +31,30 @@ class WdCoolingModel
         std::array<double, FILTS> mags;
     };
 
-  public:
-    virtual ~WdCoolingModel() {}
+    struct AtmosCurve
+    {
+        AtmosCurve(double teff, std::vector<struct record> record)
+            : logTeff(teff), record(record)
+        {;}
 
+        // For use with sort/search functions in <algorithms>
+        bool operator<(const struct AtmosCurve &b) const
+        {
+            return logTeff < b.logTeff;
+        }
+
+        double logTeff;
+        std::vector<struct record> record;
+    };
+
+  public:
+    virtual ~WdAtmosphereModel() {}
 
     virtual void loadModel (std::string path, MsFilter filterSet) = 0;
     virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdLogG, WdAtmosphere wdType) const = 0;
 
   protected:
-    std::map<double, std::vector<struct record>> hCurves;
-    std::map<double, std::vector<struct record>> heCurves;
+    std::vector<AtmosCurve> hCurves;
+    std::vector<AtmosCurve> heCurves;
 };
 #endif

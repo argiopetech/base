@@ -34,6 +34,7 @@ const int LINEAR     = 4;
 
 //WD Cooling
 enum class WdModel {WOOD, MONTGOMERY, ALTHAUS, RENEDO};
+enum class WdAtmosphereModelSet {BERGERON};
 
 //WD Atmosphere
 const int BERGERON   = 0;

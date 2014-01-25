@@ -381,7 +381,7 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         star.varU = 0.0;
 
         for (i = 0; i < 2; i++)
-            star.wdType[i] = DA;
+            star.wdType[i] = WdAtmosphere::DA;
 
         for (i = 0; i < ctrl->numFilts; i++)
         {
@@ -444,8 +444,6 @@ int main (int argc, char *argv[])
     Model evoModels = makeModel(settings);
 
     initIfmrGridControl (&mc, evoModels, &ctrl, settings);
-
-    evoModels.WDatm = BERGERON;
 
     readCmdData (mc, ctrl, evoModels);
 

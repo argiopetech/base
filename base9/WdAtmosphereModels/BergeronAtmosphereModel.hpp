@@ -6,18 +6,15 @@
 #include <string>
 #include <utility>
 
-#include <constants.
+#include "constants.hpp"
+#include "WdAtmosphereModel.hpp"
 
-class BergeronAtmosphereModel : public WdCoolingModel
+class BergeronAtmosphereModel : public WdAtmosphereModel
 {
   public:
     virtual ~BergeronAtmosphereModel() {}
 
     virtual void loadModel (std::string path, MsFilter filterSet);
-    virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdLogG, WdAtmosphere wdType);
-
-  protected:
-    std::map<double, std::vector<struct record>> hCurves;
-    std::map<double, std::vector<struct record>> heCurves;
+    virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdLogG, WdAtmosphere wdType) const;
 };
 #endif

@@ -21,7 +21,7 @@ class Star
 
         // 2-element arrays
         status.fill(0);
-        wdType.fill(0);
+        wdType.fill(WdAtmosphere::DA);
         massNow.fill(0.0);
         wdLogTeff.fill(0.0);
         betaMassRatio.fill(0.0);
@@ -49,7 +49,6 @@ class Star
     Matrix<double, NPARAMS, 2> beta;
 
     std::array<int, 2> status;
-    std::array<int, 2> wdType;
 
     std::array<double, FILTS> obsPhot;
     std::array<double, FILTS> photometry;
@@ -57,6 +56,8 @@ class Star
     std::array<double, 2> betaMassRatio;
     std::array<double, 2> wdLogTeff;
     std::array<double, 2> massNow;      // Actual current masses of each component (i.e. not zams_mass)
+
+    std::array<WdAtmosphere, 2> wdType;
 
     bool isFieldStar = false;
     bool useDuringBurnIn = false;       // switch whether to use star to burn in cluster parameters
