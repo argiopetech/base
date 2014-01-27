@@ -24,8 +24,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-const unsigned int maxIgnore = std::numeric_limits<char>::max();
-
 void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
 {
     static std::string files[] = {
@@ -43,12 +41,9 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
 
     ifstream fin;
     string line, tempFile;
-    double teff, logG;
+    double teff, ignore, mass;
 
     array<double, FILTS> mags;
-
-    std::map<unsigned int, std::vector<struct record>> hMap;
-    std::map<unsigned int, std::vector<struct record>> heMap;
 
     if (filterSet != MsFilter::UBVRIJHK && filterSet != MsFilter::SDSS)
     {
@@ -70,15 +65,16 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
         }
 
         //Skip header lines
-        getline(fin, line);
+        fin >> ignore >> mass; // Get the mass out of line 1 (column 2)
+
+        getline(fin, line); // Eat the rest of the first line
         getline(fin, line);
 
-        std::map<unsigned int, std::vector<struct record>> *theMap = &hMap; // This lets us do the H and He curves in one loop
+        std::vector<record> records;
 
         while (!fin.eof())
         {
             // Teff logg Mbol BC U B V R I J H K u g r i z y b-y u-b v-y V-I G-R U-V U-G B-V Age
-            double ignore;
             mags.fill(0.0);
 
             getline(fin, line);
@@ -90,8 +86,7 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
                     stringstream in(line);
 
                     in >> teff
-                       >> logG
-                       >> ignore >> ignore;
+                       >> ignore >> ignore >> ignore;
 
                     for (int f = 0; f < 8; ++f) // Read the first 8 filters
                     {
@@ -110,92 +105,81 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
                     // Honestly, I think it should only happen if we have a corrupt file.
                     if (!fin.eof())
                     {
-                        int tTeff = static_cast<int>(teff);
-                        (*theMap)[tTeff].emplace_back(logG, mags);
+                        records.emplace_back(teff, mags);
                     }
                 }
                 else // This is the split point between H and He tables
                 {
+                    hCurves.emplace_back(mass, records);
+                    records.clear();
+
                     getline(fin, line); // Eat the extra header line
-                    theMap = &heMap; // And swap maps to the helium curve
                 }
             }
         }
 
+        heCurves.emplace_back(mass, records);
+
         fin.close();
-    }
-
-    for ( auto &e : hMap )
-    {
-        hCurves.emplace_back(log10(e.first), e.second);
-    }
-
-    for ( auto &e : heMap )
-    {
-        heCurves.emplace_back(log10(e.first), e.second);
     }
 }
 
-std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff, double wdLogG, WdAtmosphere wdType) const
+std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff, double wdMass, WdAtmosphere wdType) const
 {
     auto transformMags = [=](std::vector<struct AtmosCurve> curve)
         {
-            Matrix<double, 2, BERG_NFILTS> logGMag;
-
-            array<double, 2> logGTrans;
+            Matrix<double, 2, BERG_NFILTS> logTeffMag;
             array<double, FILTS> mags;
 
             mags.fill(0.0);
 
-            auto teffIter = lower_bound(curve.begin(), curve.end(), AtmosCurve(wdLogTeff, vector<record>()));
+            std::vector<AtmosCurve>::iterator massIter;
 
-            if (teffIter == curve.begin()) {
-                // log << "Poetential Teff underflow in WD Atmosphere Model" << endl;
+            if (wdMass < 0.2) // Below the hard-coded bottom mass
+            {
+                massIter = curve.begin();
             }
-            else if (teffIter == curve.end()) {
-                // log << "Teff overflow in WD Atmosphere Model" << endl;
-                teffIter -= 2;
+            else if (wdMass >= 1.0) // Above the hard-coded top - 2 (there is no 1.1 Mo curve)
+            {
+                massIter = curve.end() - 2;
             }
-            else {
-                teffIter -= 1;
-            }
+            else // Otherwise, hard-coded math magic.
+            {
+                massIter = curve.begin() + (static_cast<int>(wdMass * 10) - 2);
+            } 
 
-            std::array<std::vector<record>::iterator, 2> gIter = {
-                lower_bound(teffIter[0].record.begin(), teffIter[0].record.end(), record(wdLogG, mags)),
-                lower_bound(teffIter[1].record.begin(), teffIter[1].record.end(), record(wdLogG, mags))
+            std::array<std::vector<record>::iterator, 2> teffIter = {
+                lower_bound(massIter[0].record.begin(), massIter[0].record.end(), record(wdLogTeff, mags)),
+                lower_bound(massIter[1].record.begin(), massIter[1].record.end(), record(wdLogTeff, mags))
             };
 
             for ( int i = 0; i < 2; ++i )
             {
-                if (gIter[i] == teffIter[i].record.begin()) {
+                if (teffIter[i] == massIter[i].record.begin()) {
                     // log << "Poetential Teff underflow in WD Atmosphere Model" << endl;
                 }
-                else if (gIter[i] == teffIter[i].record.end()) {
+                else if (teffIter[i] == massIter[i].record.end()) {
                     // log << "Teff overflow in WD Atmosphere Model" << endl;
-                    gIter[i] -= 2;
+                    teffIter[i] -= 2;
                 }
                 else {
-                    gIter[i] -= 1;
+                    teffIter[i] -= 1;
                 }
             }
 
             //Interpolate in logTeff
             for (int i = 0; i < 2; i++)
             {
-                logGTrans[i] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[0][i].logG, gIter[1][i].logG, wdLogTeff).val;
-
                 for (int f = 0; f < BERG_NFILTS; ++f)
                 {
-                    logGMag[i][f] = linearTransform<>(teffIter[0].logTeff, teffIter[1].logTeff, gIter[0][i].mags[f], gIter[1][i].mags[f], wdLogTeff).val;
+                    logTeffMag[i][f] = linearTransform<>(teffIter[i][0].logTeff, teffIter[i][1].logTeff, teffIter[i][0].mags[f], teffIter[i][1].mags[f], wdLogTeff).val;
                 }
             }
 
-            assert(logGTrans[0] < logGTrans[1]); // Make sure we have a valid logG range to interpolate over
-
-            //Interpolate in log(g)
+            //Interpolate in mass
             for (int f = 0; f < BERG_NFILTS; ++f)
             {
-                mags[f] = linearTransform<>(logGTrans[0], logGTrans[1], logGMag[0][f], logGMag[1][f], wdLogG).val;
+                mags[f] = linearTransform<>(massIter[0].mass, massIter[1].mass, logTeffMag[0][f], logTeffMag[1][f], wdMass).val;
             }
 
             return mags;

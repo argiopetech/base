@@ -13,8 +13,8 @@ class WdAtmosphereModel
   protected:
     struct record
     {
-        record(double logG, std::array<double, FILTS> mags)
-            : logG(logG), mags(mags)
+        record(double logTeff, std::array<double, FILTS> mags)
+            : logTeff(logTeff), mags(mags)
         {;}
 
         ~record()
@@ -23,27 +23,27 @@ class WdAtmosphereModel
         // For use with sort/search functions in <algorithms>
         bool operator<(const struct record &b) const
         {
-            return logG < b.logG;
+            return logTeff < b.logTeff;
         }
 
-        double logG;
+        double logTeff;
 
         std::array<double, FILTS> mags;
     };
 
     struct AtmosCurve
     {
-        AtmosCurve(double teff, std::vector<struct record> record)
-            : logTeff(teff), record(record)
+        AtmosCurve(double mass, std::vector<struct record> record)
+            : mass(mass), record(record)
         {;}
 
         // For use with sort/search functions in <algorithms>
         bool operator<(const struct AtmosCurve &b) const
         {
-            return logTeff < b.logTeff;
+            return mass < b.mass;
         }
 
-        double logTeff;
+        double mass;
         std::vector<struct record> record;
     };
 
@@ -51,7 +51,7 @@ class WdAtmosphereModel
     virtual ~WdAtmosphereModel() {}
 
     virtual void loadModel (std::string path, MsFilter filterSet) = 0;
-    virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdLogG, WdAtmosphere wdType) const = 0;
+    virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
 
   protected:
     std::vector<AtmosCurve> hCurves;
