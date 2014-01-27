@@ -6,7 +6,6 @@
 
 #include "Cluster.hpp"
 #include "constants.hpp"
-#include "gBergMag.hpp"
 #include "marg.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
@@ -102,9 +101,8 @@ double wdEvol (std::array<double, 14> &globalMags, double mass)
     }
     else
     {
-        //Calculate logg                                                                      
-        thisWDLogG = LOG_G_PLUS_LOG_M_SUN + log10 (thisWDMass) - 2 * thisWDLogRadius;
-        bergeronTeffToMags (filters, globalMags, thisLogTeff, thisWDLogG, DA); // All WD stars are currently set to DA
+        //Calculate mass
+        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, WdAtmosphere::DA); // All WD stars are currently set to DA
     }
 
     return thisPrecLogAge;
