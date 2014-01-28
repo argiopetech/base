@@ -105,7 +105,7 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
                     // Honestly, I think it should only happen if we have a corrupt file.
                     if (!fin.eof())
                     {
-                        records.emplace_back(teff, mags);
+                        records.emplace_back(log10(teff), mags);
                     }
                 }
                 else // This is the split point between H and He tables
