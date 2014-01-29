@@ -14,6 +14,7 @@
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "WhiteDwarf.hpp"
+#include "Utility.hpp"
 
 using std::array;
 using std::string;
@@ -412,8 +413,6 @@ int main (int argc, char *argv[])
 
     vector<clustPar> sampledPars;
 
-    array<double, 2> ltau;
-
     settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
     {
@@ -502,8 +501,6 @@ int main (int argc, char *argv[])
     if ((wdLogPost = (double *) calloc (nWDLogPosts + 1, sizeof (double))) == NULL)
         perror ("MEMORY ALLOCATION ERROR \n");
 
-    double u, cumSum;
-
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
 
@@ -529,32 +526,40 @@ int main (int argc, char *argv[])
         cerr << "[Exiting...]" << endl;
         exit (1);
     }
+    
+    mutex theMutex, rndMutex;
 
-    for (int m = 0; m < ctrl.nSamples; m++)
+    base::utility::ThreadPool pool(settings.threads);
+
+//    for (int m = 0; m < ctrl.nSamples; m++)
+
+    pool.parallelFor(ctrl.nSamples, [=, &theMutex, &rndMutex, &massSampleFile, &membershipFile, &gen](int m)
     {
-        mc.clust.age = sampledPars.at(m).age;
-        mc.clust.feh = sampledPars.at(m).FeH;
-        mc.clust.mod = sampledPars.at(m).modulus;
-        mc.clust.abs = sampledPars.at(m).absorption;
+        Cluster internalCluster(mc.clust);
+
+        internalCluster.age = sampledPars.at(m).age;
+        internalCluster.feh = sampledPars.at(m).FeH;
+        internalCluster.mod = sampledPars.at(m).modulus;
+        internalCluster.abs = sampledPars.at(m).absorption;
 
         if (evoModels.IFMR >= 4)
         {
-            mc.clust.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
-            mc.clust.ifmrSlope = sampledPars.at(m).ifmrSlope;
+            internalCluster.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
+            internalCluster.ifmrSlope = sampledPars.at(m).ifmrSlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            mc.clust.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
+            internalCluster.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
         }
 
         /************ sample WD masses for different parameters ************/
         int iWD = 0;
         int im;
         double wdPostSum, maxWDLogPost, mass1;
-        double postClusterStar;
+        double postClusterStar, u;
 
-        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
+        internalCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, internalCluster.feh, internalCluster.yyy, internalCluster.age);
 
         for (auto star : mc.stars)
         {
@@ -564,7 +569,7 @@ int main (int argc, char *argv[])
 
                 im = 0;
 
-                for (mass1 = 0.15; mass1 < mc.clust.M_wd_up; mass1 += dMass1)
+                for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
                 {
                     /* condition on WD being cluster star */
                     star.U = mass1;
@@ -573,9 +578,10 @@ int main (int argc, char *argv[])
                     try
                     {
                         array<double, FILTS> globalMags;
-                        evolve (mc.clust, evoModels, globalMags, filters, star, ltau);
+                        array<double, 2> ltau;
+                        evolve (internalCluster, evoModels, globalMags, filters, star, ltau);
 
-                        wdLogPost[im] = logPost1Star (star, mc.clust, evoModels, filterPriorMin, filterPriorMax);
+                        wdLogPost[im] = logPost1Star (star, internalCluster, evoModels, filterPriorMin, filterPriorMax);
                         postClusterStar += exp (wdLogPost[im]);
                     }
                     catch ( WDBoundsError &e )
@@ -591,7 +597,7 @@ int main (int argc, char *argv[])
 
                 /* compute the maximum value */
                 maxWDLogPost = wdLogPost[0];
-                for (mass1 = 0.15; mass1 < mc.clust.M_wd_up; mass1 += dMass1)
+                for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
                 {
                     if (wdLogPost[im] > maxWDLogPost)
                         maxWDLogPost = wdLogPost[im];
@@ -601,18 +607,22 @@ int main (int argc, char *argv[])
                 /* compute the normalizing constant */
                 wdPostSum = 0.0;
                 im = 0;
-                for (mass1 = 0.15; mass1 < mc.clust.M_wd_up; mass1 += dMass1)
+                for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
                 {
                     wdPostSum += exp (wdLogPost[im] - maxWDLogPost);
                     im++;
                 }
 
                 /* now sample a particular mass */
-                u = std::generate_canonical<double, 53>(gen);
-                cumSum = 0.0;
+                {
+                    std::lock_guard<mutex> lk(rndMutex);
+                    u = std::generate_canonical<double, 53>(gen);
+                }
+
+                double cumSum = 0.0;
                 mass1 = 0.15;
                 im = 0;
-                while (cumSum < u && mass1 < mc.clust.M_wd_up)
+                while (cumSum < u && mass1 < internalCluster.M_wd_up)
                 {
                     cumSum += exp (wdLogPost[im] - maxWDLogPost) / wdPostSum;
                     mass1 += dMass1;
@@ -622,12 +632,14 @@ int main (int argc, char *argv[])
 
                 wdMass[m * nWDs + iWD] = mass1;
 
-                postClusterStar *= (mc.clust.M_wd_up - 0.15);
+                postClusterStar *= (internalCluster.M_wd_up - 0.15);
 
                 clusMemPost[m * nWDs + iWD] = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
                 iWD++;
             }
         }
+
+        std::lock_guard<mutex> lk(theMutex);
 
         massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
                        << boost::format("%10.6f") % sampledPars.at(m).FeH
@@ -653,7 +665,7 @@ int main (int argc, char *argv[])
 
         massSampleFile << endl;
         membershipFile << endl;
-    }
+    });
 
     massSampleFile.close();
     membershipFile.close();
