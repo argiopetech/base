@@ -518,6 +518,8 @@ void Application::run()
 
     initChain (&mc, &ctrl);
 
+    mc.clust.M_wd_up = settings.whiteDwarf.M_wd_up;
+
     for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
     {
         mc.stars.at(i).isFieldStar = 0;
