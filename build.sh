@@ -30,7 +30,7 @@ fi
 cp cmake/yaml-cpp-CMakeLists.txt yaml-cpp/CMakeLists.txt
 
 pushd ./BUILD
-cmake -DCMAKE_INSTALL_PREFIX='.' -DCMAKE_BUILD_TYPE="RELWITHDEBINFO" ..
+cmake -DCMAKE_BUILD_TYPE="RELEASE" ..
 make $MULTICPUS
 
 make install
