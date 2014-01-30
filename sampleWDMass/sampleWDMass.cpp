@@ -89,7 +89,7 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 vector<int> filters;
 
 /* TEMPORARY - global variable */
-double dMass1 = 0.0005;
+constexpr double const dMass1 = 0.0005;
 
 Settings settings;
 
@@ -400,13 +400,11 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
 int main (int argc, char *argv[])
 {
-    int filt, nWDs = 0, nWDLogPosts;
+    int filt, nWDs = 0;
 
     Chain mc;
     struct ifmrGridControl ctrl;
 
-    double *wdMass;
-    double *clusMemPost;
     double fsLike;
     obsStar *obs;
     int *starStatus;
@@ -445,6 +443,8 @@ int main (int argc, char *argv[])
     initIfmrGridControl (&mc, evoModels, &ctrl, settings);
 
     readCmdData (mc, ctrl, evoModels);
+
+    mc.clust.M_wd_up = settings.whiteDwarf.M_wd_up;
 
     obs = new obsStar[mc.stars.size()]();
     starStatus = new int[mc.stars.size()]();
@@ -487,19 +487,7 @@ int main (int argc, char *argv[])
     cout << "sampledPars[last].age = " << sampledPars.back().age << endl;
 
     /* initialize WD logpost array and WD indices */
-    nWDLogPosts = (int) ceil ((mc.clust.M_wd_up - 0.15) / dMass1);
-
-    /* try 1D array? */
-    if ((wdMass = (double *) calloc (ctrl.nSamples * nWDs, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-
-    if ((clusMemPost = (double *) calloc ((ctrl.nSamples * nWDs) + 1, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
-
-    double *wdLogPost;
-
-    if ((wdLogPost = (double *) calloc (nWDLogPosts + 1, sizeof (double))) == NULL)
-        perror ("MEMORY ALLOCATION ERROR \n");
+    double nWDLogPosts = (int) ceil ((mc.clust.M_wd_up - 0.15) / dMass1);
 
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
@@ -527,15 +515,28 @@ int main (int argc, char *argv[])
         exit (1);
     }
     
-    mutex theMutex, rndMutex;
+    mutex theMutex;
 
     base::utility::ThreadPool pool(settings.threads);
 
-//    for (int m = 0; m < ctrl.nSamples; m++)
+//  for (int m = 0; m < ctrl.nSamples; m++)
 
-    pool.parallelFor(ctrl.nSamples, [=, &theMutex, &rndMutex, &massSampleFile, &membershipFile, &gen](int m)
+    std::vector<double> us;
+    us.resize(ctrl.nSamples + 1);
+
+    for (auto &u : us)
+    {
+        u = std::generate_canonical<double, 53>(gen);
+    }
+
+
+    pool.parallelFor(ctrl.nSamples, [=, &theMutex, &massSampleFile, &membershipFile](int m)
     {
         Cluster internalCluster(mc.clust);
+        std::vector<double> wdMass, clusMemPost;
+        std::vector<double> wdLogPost;
+
+        wdLogPost.resize(nWDLogPosts + 1);
 
         internalCluster.age = sampledPars.at(m).age;
         internalCluster.feh = sampledPars.at(m).FeH;
@@ -557,7 +558,7 @@ int main (int argc, char *argv[])
         int iWD = 0;
         int im;
         double wdPostSum, maxWDLogPost, mass1;
-        double postClusterStar, u;
+        double postClusterStar;
 
         internalCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, internalCluster.feh, internalCluster.yyy, internalCluster.age);
 
@@ -614,15 +615,10 @@ int main (int argc, char *argv[])
                 }
 
                 /* now sample a particular mass */
-                {
-                    std::lock_guard<mutex> lk(rndMutex);
-                    u = std::generate_canonical<double, 53>(gen);
-                }
-
                 double cumSum = 0.0;
                 mass1 = 0.15;
                 im = 0;
-                while (cumSum < u && mass1 < internalCluster.M_wd_up)
+                while (cumSum < us.at(m) && mass1 < internalCluster.M_wd_up)
                 {
                     cumSum += exp (wdLogPost[im] - maxWDLogPost) / wdPostSum;
                     mass1 += dMass1;
@@ -630,11 +626,11 @@ int main (int argc, char *argv[])
                 }
                 mass1 -= dMass1;        /* maybe not necessary */
 
-                wdMass[m * nWDs + iWD] = mass1;
+                wdMass.push_back(mass1);
 
                 postClusterStar *= (internalCluster.M_wd_up - 0.15);
 
-                clusMemPost[m * nWDs + iWD] = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
+                clusMemPost.push_back(star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike));
                 iWD++;
             }
         }
@@ -659,8 +655,8 @@ int main (int argc, char *argv[])
 
         for (int j = 0; j < nWDs; j++)
         {
-            massSampleFile << boost::format("%10.6f") % wdMass[m  * nWDs + j];
-            membershipFile << boost::format("%10.6f") % clusMemPost[m * nWDs + j];
+            massSampleFile << boost::format("%10.6f") % wdMass.at(j);
+            membershipFile << boost::format("%10.6f") % clusMemPost.at(j);
         }
 
         massSampleFile << endl;
@@ -671,12 +667,6 @@ int main (int argc, char *argv[])
     membershipFile.close();
 
     cout << "Part 2 completed successfully" << endl;
-
-    /* clean up */
-    free (wdLogPost);
-
-    free (wdMass);              /* 1D array */
-    free (clusMemPost);         /* 1D array */
 
     delete[] (obs);
     delete[] (starStatus);
