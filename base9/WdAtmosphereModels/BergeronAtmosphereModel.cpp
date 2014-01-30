@@ -195,7 +195,7 @@ std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff,
     }
     else
     {
-        std::cerr << "Somehow, you've input an invalide WdAtmosphere type." << std::endl;
+        std::cerr << "Somehow, you've input an invalid WdAtmosphere type." << std::endl;
         exit(-1); // I know it isn't nice to exit, but this should be possible in the first place.
     }
 }
