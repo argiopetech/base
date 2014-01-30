@@ -1,6 +1,9 @@
 Bayesian Analysis for Stellar Evolution
 ===============================================
 
+**Note**: Running BASE-9 requires [the models](https://github.com/argiopetech/base-models).
+
+
 Introduction
 ------------
 

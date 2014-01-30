@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB BASE9_FILES *.cpp *.hpp MsRgbModels/*.cpp MsRgbModels/*.hpp WdCoolingModels/*.cpp WdCoolingModels/*.hpp) 
+file(GLOB BASE9_FILES *.cpp *.hpp MsRgbModels/*.cpp MsRgbModels/*.hpp WdCoolingModels/*.cpp WdCoolingModels/*.hpp WdAtmosphereModels/*.cpp WdAtmosphereModels/*.hpp) 
 
 include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 
 add_library(base9 STATIC ${BASE9_FILES})
 
-target_link_libraries(base9 ${GSL_LOC} ${GSLCBLAS_LOC} yaml-cpp)
+set_target_properties(base9 PROPERTIES POSITION_INDEPENDENT_CODE true)
+
+install(TARGETS base9
+        DESTINATION lib)
 
 if (USE_TESTS)
   add_executable(base9_tests

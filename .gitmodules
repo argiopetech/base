@@ -1,0 +1,3 @@
+[submodule "yaml-cpp"]
+	path = yaml-cpp
+	url = git@github.com:argiopetech/yaml-cpp.git

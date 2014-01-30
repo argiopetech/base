@@ -8,8 +8,8 @@
 #include "Star.hpp"
 
 #include "evolve.hpp"
-#include "gBergMag.hpp"
 #include "WdCoolingModel.hpp"
+#include "WdAtmosphereModel.hpp"
 #include "structures.hpp"
 #include "Model.hpp"
 #include "ifmr.hpp"
@@ -17,13 +17,11 @@
 using std::array;
 using std::vector;
 
-const double LOG_G_PLUS_LOG_M_SUN = 26.12302173752;
-
 double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, array<double, FILTS> &globalMags, Star &pStar, int cmpnt)
 {
     std::pair<double, double> teffRadiusPair;
 
-    double thisWDMass = 0.0, thisPrecLogAge = 0.0, thisLogTeff, thisWDLogRadius = 0.0, thisWDLogG = 0.0;
+    double thisWDMass = 0.0, thisPrecLogAge = 0.0, thisLogTeff, thisWDLogRadius = 0.0;
     double mass;
 
     if (cmpnt == 0)
@@ -50,8 +48,7 @@ double wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int
     else
     {
         //Calculate logg
-        thisWDLogG = LOG_G_PLUS_LOG_M_SUN + log10 (thisWDMass) - 2 * thisWDLogRadius;
-        bergeronTeffToMags (filters, globalMags, thisLogTeff, thisWDLogG, pStar.wdType[cmpnt]);
+        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, pStar.wdType[cmpnt]);
     }
 
     pStar.massNow[cmpnt] = thisWDMass;

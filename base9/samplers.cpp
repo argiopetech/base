@@ -3,7 +3,7 @@
 
 #include <random>
 
-#include "Star.cpp"
+#include "Star.hpp"
 #include "samplers.hpp"
 #include "densities.hpp"
 #include "evolve.hpp"

@@ -32,7 +32,10 @@ using std::vector;
 ***************************************************************************************/
 void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILTS> &globalMags, const vector<int> &filters,  Star &star, array<double, 2> &ltau)
 {
-    double mag[3][FILTS], mass[2], flux, clusterAv;
+    array<double, 2> mass;
+    Matrix<double, 3, FILTS> mag;
+
+    double flux, clusterAv;
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster.AGBt_zmass < EPS)
