@@ -565,46 +565,6 @@ void Application::run()
         exit (1);
     }
 
-    {
-        mc.clust.age = sampledPars.at(0).age;
-        mc.clust.feh = sampledPars.at(0).FeH;
-        mc.clust.mod = sampledPars.at(0).modulus;
-        mc.clust.abs = sampledPars.at(0).absorption;
-
-        if (evoModels.IFMR >= 4)
-        {
-            mc.clust.ifmrIntercept = sampledPars.at(0).ifmrIntercept;
-            mc.clust.ifmrSlope = sampledPars.at(0).ifmrSlope;
-        }
-
-        if (evoModels.IFMR >= 9)
-        {
-            mc.clust.ifmrQuadCoef = sampledPars.at(0).ifmrQuadCoef;
-        }
-
-        const double dm = 0.005, dr = 0.1;
-
-        double ops = ctrl.nSamples * mc.stars.size() * ((mc.clust.M_wd_up - 0.15) / dMass1) * (1.0 / dMassRatio);
-        double propOps = 1.45 * ((mc.clust.M_wd_up - 0.15) / dm) * (1.0 / dr);
-
-        auto then = std::chrono::high_resolution_clock::now();
-
-        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
-
-        sampleMass(std::generate_canonical<double, 53>(gen), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.front());
-        sampleMass(std::generate_canonical<double, 53>(gen), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dm, dr, mc.stars.back());
-
-        auto now = std::chrono::high_resolution_clock::now();
-
-        double micros = std::chrono::duration_cast<std::chrono::microseconds>(now - then).count();
-
-        double conversion = micros / 1000000;
-
-        double seconds = conversion * (ops / propOps);
-
-        cout << "\n" << (boost::format("%.1g") % ops) << " estimated operations. Approximate single-threaded run time: " << boost::format("%.2f") % (seconds / 60) << " minutes.\n" << endl;
-    }
-
     for (int m = 0; m < ctrl.nSamples; m++)
     {
         mc.clust.age = sampledPars.at(m).age;
@@ -626,27 +586,17 @@ void Application::run()
         /************ sample WD masses for different parameters ************/
        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
-        mutex logPostMutex;
-
-        vector<double> rands;
-
-        for (unsigned int i = 0; i < mc.stars.size(); ++i)
+        for (int i = 0; i < mc.stars.size(); ++i)
         {
-            rands.push_back(std::generate_canonical<double, 53>(gen));
-        }
-
-        pool.parallelFor(mc.stars.size(), [=,&logPostMutex, &masses, &memberships, &rands](int i)
-        {
-            auto sampleTuple = sampleMass(rands.at(i), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dMass1, dMassRatio, mc.stars.at(i));
+            auto sampleTuple = sampleMass(std::generate_canonical<double, 53>(gen), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dMass1, dMassRatio, mc.stars.at(i));
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (mc.clust.M_wd_up - 0.15);
 
-            std::lock_guard<mutex> lk(logPostMutex);
             masses.at(i) = std::pair<double, double>(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
 
             memberships.at(i) = mc.stars.at(i).clustStarPriorDens * postClusterStar / (mc.stars.at(i).clustStarPriorDens * postClusterStar + (1.0 - mc.stars.at(i).clustStarPriorDens) * fsLike);
-        });
+        }
 
         massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
                        << boost::format("%10.6f") % sampledPars.at(m).FeH
