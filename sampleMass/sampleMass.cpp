@@ -18,6 +18,7 @@
 #include "evolve.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
+#include "samplers.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
 #include "WhiteDwarf.hpp"
@@ -82,6 +83,9 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 
 /* Used by a bunch of different functions. */
 vector<int> filters;
+
+int accepted = 0;
+int rejected = 0;
 
 /*
  * read control parameters from input stream
@@ -388,96 +392,104 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 } // initChain
 
 
+static bool acceptP (std::mt19937 &gen, const double current, const double proposed)
+{
+    if (std::isinf (proposed))
+    {
+//        cerr << "-Inf posterior proposed and rejected" << endl;
+        return false;
+    }
+
+    double alpha = proposed - current;
+
+    if (alpha >= 0) // Short circuit exit to the MH algorithm
+    {
+        return true;
+    }
+
+    double u = std::generate_canonical<double, 53>(gen);
+
+    if (u < 1.e-15)
+        u = 1.e-15;
+    u = log (u);
+
+    if (u < alpha)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 class Application
 {
   private:
     Settings settings;
-    base::utility::ThreadPool pool;
+//    base::utility::ThreadPool pool;
 
   public:
     Application(Settings s)
-        : settings(s), pool(s.threads)
+        : settings(s)//, pool(s.threads)
     {}
 
     void run();
-    std::tuple<double, double, double> sampleMass(const double, const Cluster&, const Model&, const double, const double, const double, const double, Star);
+    std::tuple<double, double, double> sampleMass(const Cluster&, const Model&, std::mt19937&, Star);
 };
 
-// O(3n²)
-std::tuple<double, double, double> Application::sampleMass(const double U, const Cluster &clust, const Model &evoModels, const double baseMass, const double maxMass, const double deltaPrimaryMass, const double deltaMassRatio, Star star)
+
+std::tuple<double, double, double> Application::sampleMass(const Cluster &clust, const Model &evoModels, std::mt19937 &gen, Star star)
 {
-    double maxLogPost = std::numeric_limits<double>::min();
-    double cumulative = 0.0, denom = 0.0, postClusterStar = 0.0;
-    int primaryMassIndex = 0, massRatioIndex = 0;
+    constexpr int iters = 500;
+    constexpr int burnIters = iters / 5;
+    constexpr double scale = 25.0;
+    constexpr double massStepSize = 0.0025;
+//    constexpr double massRatioStepSize = 0.053;
+    constexpr double massRatioStepSize = 0.006;
 
-    const int maxPrimaryIndex = std::ceil((maxMass - baseMass) / deltaPrimaryMass);
-    const int maxRatioIndex   = std::ceil(1.0 / deltaMassRatio);
+    double acceptedPosterior = std::numeric_limits<double>::lowest();
+    double postClusterStar = 0.0;
 
-    Vatrix<double> logPosts;
-    logPosts.reserve( maxPrimaryIndex + 1 );
-
-    // O(n²)
-    for (int i = 0; i <= maxPrimaryIndex; ++i)
+    for (int iter = 0; iter < iters; ++iter)
     {
-        const double primaryMass = baseMass + (deltaPrimaryMass * i);
+        Star propStar = star;
 
-        logPosts.emplace_back();
-        logPosts.back().reserve( maxRatioIndex + 1 );
-        
-        for (int j = 0; j <= maxRatioIndex; ++j)
+        propStar.U += sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
+        propStar.massRatio += sampleT (gen, (iter < burnIters ? scale : 1.0) * massRatioStepSize * massRatioStepSize);
+
+        if ((propStar.massRatio >= 0.0) && (propStar.massRatio <= 1.0) && (propStar.U > 0.1) && (propStar.U < clust.M_wd_up))
         {
-            const double massRatio = (deltaMassRatio * j);
-
-            star.U = primaryMass;
-            star.massRatio = massRatio;
-
             try
             {
                 array<double, 2> ltau;
                 array<double, FILTS> globalMags;
-                evolve (clust, evoModels, globalMags, filters, star, ltau);
+                evolve (clust, evoModels, globalMags, filters, propStar, ltau);
 
-                auto thisLogPost = logPost1Star(star, clust, evoModels, filterPriorMin, filterPriorMax);
-                logPosts.back().push_back( thisLogPost );
+                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, filterPriorMin, filterPriorMax);
 
-                postClusterStar += exp(thisLogPost);
-
-                maxLogPost = std::max(maxLogPost, thisLogPost);
+                if (acceptP(gen, acceptedPosterior, proposedPosterior))
+                {
+                    star = propStar;
+                    acceptedPosterior = proposedPosterior;
+                }
             }
             catch ( WDBoundsError &e )
             {
                 // Go ahead and silence this error...
                 cerr << e.what() << endl;
-    
-                logPosts.back().push_back(std::numeric_limits<double>::min());
             }
         }
-    }
-
-    // O(n²)
-    for (auto v : logPosts)
-    {
-        for (auto logPost : v)
+        else
         {
-            denom += exp(logPost - maxLogPost);
+            ++rejected;
         }
     }
 
-    // O(n²)
-    while (cumulative <= U)
-    {
-        cumulative += exp(logPosts.at(primaryMassIndex).at(massRatioIndex) - maxLogPost) / denom;
-        ++massRatioIndex;
-        
-        if (massRatioIndex > maxRatioIndex)
-        {
-            massRatioIndex = 0;
-            ++primaryMassIndex; // This should never exceed primaryMasses.size() before cumulative > U.
-        }
-    }
-
-    return std::make_tuple(baseMass + (primaryMassIndex * deltaPrimaryMass), massRatioIndex * deltaMassRatio, postClusterStar);
+    return std::make_tuple(star.U, star.massRatio, acceptedPosterior);
 }
+
 
 void Application::run()
 {
@@ -584,11 +596,11 @@ void Application::run()
         }
 
         /************ sample WD masses for different parameters ************/
-       mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
+        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
         for (int i = 0; i < mc.stars.size(); ++i)
         {
-            auto sampleTuple = sampleMass(std::generate_canonical<double, 53>(gen), mc.clust, evoModels, 0.15, mc.clust.M_wd_up, dMass1, dMassRatio, mc.stars.at(i));
+            auto sampleTuple = sampleMass(mc.clust, evoModels, gen, mc.stars.at(i));
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (mc.clust.M_wd_up - 0.15);
