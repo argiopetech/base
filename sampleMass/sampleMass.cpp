@@ -84,9 +84,6 @@ double priorMean[NPARAMS], priorVar[NPARAMS];
 /* Used by a bunch of different functions. */
 vector<int> filters;
 
-int accepted = 0;
-int rejected = 0;
-
 /*
  * read control parameters from input stream
  */
