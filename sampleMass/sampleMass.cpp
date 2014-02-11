@@ -447,7 +447,6 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
     constexpr double massRatioStepSize = 0.006;
 
     double acceptedPosterior = std::numeric_limits<double>::lowest();
-    double postClusterStar = 0.0;
 
     for (int iter = 0; iter < iters; ++iter)
     {
@@ -477,10 +476,6 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
                 // Go ahead and silence this error...
                 cerr << e.what() << endl;
             }
-        }
-        else
-        {
-            ++rejected;
         }
     }
 
