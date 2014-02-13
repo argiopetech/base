@@ -92,8 +92,7 @@ void setMags (Matrix<double, 3, FILTS> &mag, int cmpnt, array<double, 2> &mass, 
     {                           // for main seq or giant star
         pStar.massNow[cmpnt] = mass[cmpnt];
 
-        for (auto f : filters)
-            mag[cmpnt][f] = evoModels.mainSequenceEvol->msRgbEvol(f, mass[cmpnt]);
+        mag[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol(filters, mass[cmpnt]);
 
         pStar.status[cmpnt] = MSRG;    // keep track of evolutionary state
     }
