@@ -99,10 +99,10 @@ include_directories(base9)
 include_directories(yaml-cpp/include)
 
 # Libraries
+add_subdirectory(yaml-cpp)
 add_subdirectory(base9)
 
 # Applications
-add_subdirectory(yaml-cpp)
 add_subdirectory(mpiMcmc)
 #add_subdirectory(makeCMD)
 #add_subdirectory(makeIsochrone)

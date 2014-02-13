@@ -1,11 +1,14 @@
 project(YAML_CPP)
 
+set(Boost_USE_MULTITHREAD ON)
+find_package(Boost REQUIRED)
+
 set(YAML_CPP_VERSION_MAJOR "0")
 set(YAML_CPP_VERSION_MINOR "5")
 set(YAML_CPP_VERSION_PATCH "1")
 set(YAML_CPP_VERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}.${YAML_CPP_VERSION_PATCH}")
 
-set(YAML_CPP_INCLUDE_DIRS "${YAML_CPP_SOURCE_DIR}/include/" PARENT_SCOPE)
+set(YAML_CPP_INCLUDE_DIRS "${YAML_CPP_SOURCE_DIR}/include/" "${Boost_INCLUDE_DIRS}" PARENT_SCOPE)
 
 file(GLOB sources "src/[a-zA-Z]*.cpp")
 file(GLOB_RECURSE public_headers "include/yaml-cpp/[a-zA-Z]*.h")
@@ -17,8 +20,6 @@ file(GLOB contrib_private_headers "src/contrib/[a-zA-Z]*.h")
 include_directories(${YAML_CPP_SOURCE_DIR}/src)
 include_directories(${YAML_CPP_SOURCE_DIR}/include)
 
-set(Boost_USE_MULTITHREAD ON)
-find_package(Boost REQUIRED)
 include_directories(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})
 link_directories(${LINK_DIRECTORIES} ${Boost_LIBRARY_DIRS})
 
