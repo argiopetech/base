@@ -544,32 +544,6 @@ static double feh2z (double FeH)
     return Z;
 }
 
-double YaleMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
-{
-
-/**************************************************************
-// This is the subroutine that actually calculates the mags  //
-// for a given logAge, FeH, and mass                         //
-// Note: this should only be called by evolve after          //
-//       deriveYYAgbTip() which does the bounds checking     //
-//       and creates the isochrone                           //
-**************************************************************/
-
-    int m = 0;
-
-    m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
-
-    for (auto f : filters)
-    {
-        if (f < N_YY_FILTS)
-        {
-            globalMags[f] = linearTransform<>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
-        }
-    }
-
-    return zamsMass;
-}
-
 
 double YaleMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
 /*************************************************************************************

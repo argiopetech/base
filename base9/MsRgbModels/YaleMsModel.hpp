@@ -63,9 +63,11 @@ class YaleMsModel : public MsRgbModel
     virtual ~YaleMsModel() {;}
 
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
-    virtual double msRgbEvol(const std::vector<int>&, std::array<double, FILTS>&, double);
     virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, MsFilter);
+
+  protected:
+    virtual int numFilts() const { return N_YY_FILTS; }
 
   private:
     void intpolAge(int, double);

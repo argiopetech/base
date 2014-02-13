@@ -351,30 +351,6 @@ double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
     return isochrone.AgbTurnoffMass;
 }
 
-
-// Calculates magnitudes for a given mass.
-// Must run loadDsed() and deriveDsedAgbTip()
-// to load and interpolate an isochrone before this subroutine will work
-double DsedMsModel::msRgbEvol (const vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
-{
-    int m;
-
-    m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
-
-    for (auto f : filters)
-    {
-        if (f < N_DSED_FILTS)
-        {
-            globalMags[f] = linearTransform<>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
-            if (fabs (globalMags[f]) < EPS)
-                globalMags[f] = 999.99;
-        }
-    }
-
-    return zamsMass;
-}
-
-
 // Calculates the precursor age for a given wd precursor mass
 // Must run loadDsed() and deriveDsedAgbTip()
 // to load and interpolate an isochrone before this subroutine will work

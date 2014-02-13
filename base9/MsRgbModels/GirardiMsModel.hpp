@@ -18,9 +18,11 @@ class GirardiMsModel : public MsRgbModel
     virtual ~GirardiMsModel() {;}
 
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
-    virtual double msRgbEvol(const std::vector<int>&, std::array<double, FILTS>&, double);
     virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, MsFilter);
+
+  protected:
+    virtual int numFilts() const { return N_GIR_FILTS; }
 
   private:
     double interpInMass (const std::vector<int>&, int, double, int, double *);

@@ -14,7 +14,7 @@ class MsFilterSet
     {}
     virtual ~MsFilterSet() {};
 
-    std::string getFilterName (int index) const { return filterNames[index]; };
+    std::string getFilterName (int index) const { return filterNames.at(index); };
     virtual std::array<double, FILTS> calcAbsCoeffs() const = 0;
 
   protected:

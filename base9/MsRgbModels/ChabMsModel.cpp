@@ -296,32 +296,6 @@ double ChabMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
 
 }
 
-
-// Calculates magnitudes for a given mass.
-// Must run loadChaboyer() and deriveChabAgbTip()
-// to load and interpolate an isochrone before this subroutine will work
-// Stores output values in globalMags[]
-double ChabMsModel::msRgbEvol (const std::vector<int> &filters, std::array<double, FILTS> &globalMags, double zamsMass)
-{
-
-    int m;
-
-    m = binarySearch (isochrone.mass.data(), isochrone.nEntries, zamsMass);
-
-    for (auto f : filters)
-    {
-        if (f < N_CHAB_FILTS) // Do we not like the IFMR models here?
-        {
-            globalMags[f] = linearTransform<>(isochrone.mass[m], isochrone.mass[m + 1], isochrone.mag[m][f], isochrone.mag[m + 1][f], zamsMass).val;
-
-            if (fabs (globalMags[f]) < EPS)
-                globalMags[f] = 999.99;
-        }
-    }
-
-    return zamsMass;
-}
-
 double ChabMsModel::wdPrecLogAge (double, double)
 {
     return 0.0;

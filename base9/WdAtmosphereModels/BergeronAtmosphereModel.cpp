@@ -14,7 +14,6 @@
 #include "evolve.hpp"
 #include "LinearTransform.hpp"
 #include "Matrix.hpp"
-#include "binSearch.hpp"
 
 using std::array;
 using std::ifstream;
