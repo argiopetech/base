@@ -79,40 +79,40 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
     }
 }
 
-void setMags (Matrix<double, 3, FILTS> &mag, int cmpnt, array<double, 2> &mass, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters,  array<double, 2> &ltau, array<double, FILTS> &globalMags)
+void setMags (array<double, FILTS> &mag, int cmpnt, double mass, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters, double &ltau, array<double, FILTS> &globalMags)
 {
-    if (mass[cmpnt] <= 0.0001)
+    if (mass <= 0.0001)
     {                           // for non-existent secondary stars
         for (auto f : filters)
-            mag[cmpnt][f] = 99.999;
+            mag[f] = 99.999;
         pStar.status[cmpnt] = DNE;
         pStar.massNow[cmpnt] = 0.0;
     }
-    else if (mass[cmpnt] <= pCluster.AGBt_zmass)
+    else if (mass <= pCluster.AGBt_zmass)
     {                           // for main seq or giant star
-        pStar.massNow[cmpnt] = mass[cmpnt];
+        pStar.massNow[cmpnt] = mass;
 
-        mag[cmpnt] = evoModels.mainSequenceEvol->msRgbEvol(filters, mass[cmpnt]);
+        mag = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
 
         pStar.status[cmpnt] = MSRG;    // keep track of evolutionary state
     }
-    else if (mass[cmpnt] <= pCluster.M_wd_up)
+    else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
-        ltau[cmpnt] = wdEvol (pCluster, evoModels, filters, globalMags, pStar, cmpnt);
+        ltau = wdEvol (pCluster, evoModels, filters, globalMags, pStar, cmpnt);
         for (auto f : filters)
-            mag[cmpnt][f] = globalMags[f];
+            mag[f] = globalMags[f];
     }
-    else if (mass[cmpnt] <= 100.)
+    else if (mass <= 100.)
     {                           // for neutron star or black hole remnant
         for (auto f : filters)
-            mag[cmpnt][f] = 99.999;
+            mag[f] = 99.999;
         pStar.status[cmpnt] = NSBH;
     }
     else
     {
-        //     log <<  (" This condition should not happen, %.2f greater than 100 Mo\n", mass[cmpnt]);
+        //     log <<  (" This condition should not happen, %.2f greater than 100 Mo\n", mass);
         for (auto f : filters)
-            mag[cmpnt][f] = 99.999;
+            mag[f] = 99.999;
         pStar.status[cmpnt] = DNE;
     }
 }
@@ -159,7 +159,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
 
     int cmpnt = 0;
 
-    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, filters, ltau, globalMags);
+    setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, pStar, evoModels, filters, ltau[cmpnt], globalMags);
 
     double tmpLogPost, tmpPost;
 
@@ -173,7 +173,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
     pStar.massNow[cmpnt] = 0.0;
     ltau[cmpnt] = 0.0;          // may not be a WD, so no precursor age,
     pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-    setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, filters, ltau, globalMags);
+    setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, pStar, evoModels, filters, ltau[cmpnt], globalMags);
 
     deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels, filters);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
@@ -235,7 +235,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
             pStar.massNow[cmpnt] = 0.0;
             ltau[cmpnt] = 0.0;  // may not be a WD, so no precursor age,
             pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-            setMags (mag, cmpnt, mass, pCluster, pStar, evoModels, filters, ltau, globalMags);
+            setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, pStar, evoModels, filters, ltau[cmpnt], globalMags);
 
             deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels, filters);
             /* now have magnitudes, want posterior probability */
