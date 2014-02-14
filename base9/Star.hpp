@@ -49,8 +49,8 @@ class Star
 
 
     void setMags (std::array<double, FILTS> &mag, int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters, double &ltau, std::array<double, FILTS> &globalMags);
-    double wdEvol (const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters, std::array<double, FILTS> &globalMags, Star &pStar, int cmpnt);
-    void deriveCombinedMags (Matrix<double, 3, FILTS> &mag, double clusterAv, double &flux, const Cluster &pCluster, Star &pStar, const Model &evoModels, const std::vector<int> &filters);
+    double wdEvol (const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters, std::array<double, FILTS> &globalMags, int cmpnt);
+    void deriveCombinedMags (Matrix<double, 3, FILTS> &mag, double clusterAv, double &flux, const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters);
 
     Matrix<double, NPARAMS, 2> beta;
 

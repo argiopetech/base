@@ -86,7 +86,7 @@ void Star::setMags (array<double, FILTS> &mag, int cmpnt, double mass, const Clu
     }
     else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
-        ltau = wdEvol (pCluster, evoModels, filters, globalMags, *this, cmpnt);
+        ltau = wdEvol (pCluster, evoModels, filters, globalMags, cmpnt);
         for (auto f : filters)
             mag[f] = globalMags[f];
     }
@@ -105,7 +105,7 @@ void Star::setMags (array<double, FILTS> &mag, int cmpnt, double mass, const Clu
     }
 }
 
-double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, array<double, FILTS> &globalMags, Star &pStar, int cmpnt)
+double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, array<double, FILTS> &globalMags, int cmpnt)
 {
     std::pair<double, double> teffRadiusPair;
 
@@ -113,9 +113,9 @@ double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vect
     double mass;
 
     if (cmpnt == 0)
-        mass = pStar.getMass1();
+        mass = getMass1();
     else
-        mass = pStar.getMass2();
+        mass = getMass2();
 
     thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
 
@@ -136,17 +136,17 @@ double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vect
     else
     {
         //Calculate logg
-        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, pStar.wdType[cmpnt]);
+        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, wdType[cmpnt]);
     }
 
-    pStar.massNow[cmpnt] = thisWDMass;
-    pStar.wdLogTeff[cmpnt] = thisLogTeff;
-    pStar.status[cmpnt] = WD;
+    massNow[cmpnt] = thisWDMass;
+    wdLogTeff[cmpnt] = thisLogTeff;
+    status[cmpnt] = WD;
 
     return thisPrecLogAge;
 }
 
-void Star::deriveCombinedMags (Matrix<double, 3, FILTS> &mag, double clusterAv, double &flux, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters)
+void Star::deriveCombinedMags (Matrix<double, 3, FILTS> &mag, double clusterAv, double &flux, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
@@ -175,6 +175,6 @@ void Star::deriveCombinedMags (Matrix<double, 3, FILTS> &mag, double clusterAv, 
 
         mag[2][f] += pCluster.mod;
         mag[2][f] += (clusterAbs[f] - 1.0) * clusterAv;       // add A_[u-k] (standard defn of modulus already includes Av)
-        pStar.photometry[i] = mag[2][f];
+        photometry[i] = mag[2][f];
     }
 }
