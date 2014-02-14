@@ -67,12 +67,15 @@ void Star::readCMD(const string &s, int filters)
 }
 
 
-void Star::setMags (array<double, FILTS> &mag, int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, double &ltau, array<double, FILTS> &globalMags)
+array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, double &ltau)
 {
+    array<double, FILTS> mags;
+
     if (mass <= 0.0001)
     {                           // for non-existent secondary stars
         for (auto f : filters)
-            mag[f] = 99.999;
+            mags[f] = 99.999;
+
         status[cmpnt] = DNE;
         massNow[cmpnt] = 0.0;
     }
@@ -80,29 +83,30 @@ void Star::setMags (array<double, FILTS> &mag, int cmpnt, double mass, const Clu
     {                           // for main seq or giant star
         massNow[cmpnt] = mass;
 
-        mag = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
+        mags = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
 
         status[cmpnt] = MSRG;    // keep track of evolutionary state
     }
     else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
-        ltau = wdEvol (pCluster, evoModels, filters, globalMags, cmpnt);
-        for (auto f : filters)
-            mag[f] = globalMags[f];
+        ltau = wdEvol (pCluster, evoModels, filters, mags, cmpnt);
     }
     else if (mass <= 100.)
     {                           // for neutron star or black hole remnant
         for (auto f : filters)
-            mag[f] = 99.999;
+            mags[f] = 99.999;
         status[cmpnt] = NSBH;
     }
     else
     {
         //     log <<  (" This condition should not happen, %.2f greater than 100 Mo\n", mass);
         for (auto f : filters)
-            mag[f] = 99.999;
+            mags[f] = 99.999;
+
         status[cmpnt] = DNE;
     }
+
+    return mags;
 }
 
 double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, array<double, FILTS> &globalMags, int cmpnt)

@@ -87,7 +87,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
 
     int cmpnt = 0;
 
-    pStar.setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt], globalMags);
+    mag[cmpnt] = pStar.setMags (cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
 
     double tmpLogPost, tmpPost;
 
@@ -101,7 +101,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
     pStar.massNow[cmpnt] = 0.0;
     ltau[cmpnt] = 0.0;          // may not be a WD, so no precursor age,
     pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-    pStar.setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt], globalMags);
+    mag[cmpnt] = pStar.setMags (cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
 
     pStar.deriveCombinedMags (mag, clusterAv, flux, pCluster, evoModels, filters);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
@@ -163,7 +163,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
             pStar.massNow[cmpnt] = 0.0;
             ltau[cmpnt] = 0.0;  // may not be a WD, so no precursor age,
             pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-            pStar.setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt], globalMags);
+            mag[cmpnt] = pStar.setMags (cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
 
             pStar.deriveCombinedMags (mag, clusterAv, flux, pCluster, evoModels, filters);
             /* now have magnitudes, want posterior probability */

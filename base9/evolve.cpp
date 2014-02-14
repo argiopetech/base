@@ -49,7 +49,7 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
 
     for (int cmpnt = 0; cmpnt < 2; cmpnt++)
     {
-        star.setMags(mag[cmpnt], cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt], globalMags);
+        mag[cmpnt] = star.setMags(cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
     }
 
     star.deriveCombinedMags(mag, clusterAv, flux, pCluster, evoModels, filters);
