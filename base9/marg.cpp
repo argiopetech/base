@@ -82,23 +82,20 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
 
     pStar.setMass1 (mass.at(0));
 
-    int cmpnt = 0;
-
-    mag.at(cmpnt) = pStar.setMags (cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
+    mag.at(0) = pStar.setMags (0, mass.at(0), pCluster, evoModels, filters, ltau.at(0));
 
     double tmpLogPost, tmpPost;
 
     /* first try 0.0 massRatio */
-    cmpnt = 1;
     pStar.massRatio = 0.0;
 
     for (auto f : filters)
         globalMags.at(f) = 99.999;
 
-    pStar.massNow.at(cmpnt) = 0.0;
-    ltau.at(cmpnt) = 0.0;          // may not be a WD, so no precursor age,
-    pStar.wdLogTeff.at(cmpnt) = 0.0;      // no WD Teff,
-    mag.at(cmpnt) = pStar.setMags (cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
+    pStar.massNow.at(1) = 0.0;
+    ltau.at(1) = 0.0;          // may not be a WD, so no precursor age,
+    pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
+    mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters, ltau.at(1));
 
     pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
@@ -149,14 +146,13 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
     {
         if (okMass.at(i))
         {
-            cmpnt = 1;
             pStar.massRatio = mass.at(0) / isochrone.mass.at(i);
             for (auto f : filters)
                 globalMags.at(f) = 99.999;
-            pStar.massNow.at(cmpnt) = 0.0;
-            ltau.at(cmpnt) = 0.0;  // may not be a WD, so no precursor age,
-            pStar.wdLogTeff.at(cmpnt) = 0.0;      // no WD Teff,
-            mag.at(cmpnt) = pStar.setMags (cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
+            pStar.massNow.at(1) = 0.0;
+            ltau.at(1) = 0.0;  // may not be a WD, so no precursor age,
+            pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
+            mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters, ltau.at(1));
 
             pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
             /* now have magnitudes, want posterior probability */

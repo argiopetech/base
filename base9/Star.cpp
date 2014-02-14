@@ -150,7 +150,7 @@ double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vect
     return thisPrecLogAge;
 }
 
-void Star::deriveCombinedMags (Matrix<double, 2, FILTS> &mag, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
+array<double, FILTS> Star::deriveCombinedMags (Matrix<double, 2, FILTS> &mag, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
@@ -187,4 +187,6 @@ void Star::deriveCombinedMags (Matrix<double, 2, FILTS> &mag, const Cluster &pCl
         combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * pCluster.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
         photometry.at(i) = combinedMags.at(f);
     }
+
+    return combinedMags;
 }
