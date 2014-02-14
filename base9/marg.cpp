@@ -80,6 +80,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     double post = 0.0;
 
     Matrix<double, 2, FILTS> mag;
+    array<double, FILTS> combinedMags;
 
     pStar.setMass1 (mass.at(0));
 
@@ -95,8 +96,8 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
     mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters, ltau.at(1));
 
-    pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
-    tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
+    combinedMags = pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
+    tmpLogPost = logPost1Star (pStar, pCluster, evoModels, combinedMags, filterPriorMin, filterPriorMax);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
     tmpPost = exp (tmpLogPost);
@@ -150,9 +151,9 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
             pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
             mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters, ltau.at(1));
 
-            pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
+            combinedMags = pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
             /* now have magnitudes, want posterior probability */
-            tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
+            tmpLogPost = logPost1Star (pStar, pCluster, evoModels, combinedMags, filterPriorMin, filterPriorMax);
             tmpLogPost += log (dMass);
             tmpLogPost += log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / mass.at(0));
             tmpPost = exp (tmpLogPost);

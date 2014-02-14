@@ -141,7 +141,7 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     return prior;
 }
 
-double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Computes log likelihood
 {
     int i;
@@ -158,13 +158,13 @@ double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS
         else
         {
             if (pStar.variance[i] > 1e-9)
-                likelihood -= 0.5 * (log (2 * M_PI * pStar.variance[i]) + (sqr (pStar.photometry[i] - pStar.obsPhot[i]) / pStar.variance[i]));
+                likelihood -= 0.5 * (log (2 * M_PI * pStar.variance[i]) + (sqr (mags[i] - pStar.obsPhot[i]) / pStar.variance[i]));
         }
     }
     return likelihood;
 }
 
-double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Computes log likelihood
 {
     int i;
@@ -187,7 +187,7 @@ double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILT
         {
             if (pStar.variance[i] > 1e-9)
             {
-                quadratic_sum += sqr (pStar.photometry[i] - pStar.obsPhot[i]) / pStar.variance[i];
+                quadratic_sum += sqr (mags[i] - pStar.obsPhot[i]) / pStar.variance[i];
                 likelihood -= 0.5 * (log (M_PI * pStar.variance[i]));
             }
         }
@@ -197,7 +197,7 @@ double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILT
     return likelihood;
 }
 
-double scaledLogLike (int numFilts, const Star &pStar, double varScale, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double scaledLogLike (int numFilts, const Star &pStar, double varScale, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Computes log likelihood
 {
     int i;
@@ -215,7 +215,7 @@ double scaledLogLike (int numFilts, const Star &pStar, double varScale, const ar
         {
             if (pStar.variance[i] > 1e-9)
             {
-                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance[i]) + (sqr (pStar.photometry[i] - pStar.obsPhot[i]) / (varScale * pStar.variance[i])));
+                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance[i]) + (sqr (mags[i] - pStar.obsPhot[i]) / (varScale * pStar.variance[i])));
             }
 
         }
@@ -224,14 +224,14 @@ double scaledLogLike (int numFilts, const Star &pStar, double varScale, const ar
 }
 
 
-double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;
 
     logPrior = logPriorMass (pStar, pCluster);
 
-    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, filterPriorMin, filterPriorMax);
+    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, mags, filterPriorMin, filterPriorMax);
 
     return (logPrior + likelihood);
 }

@@ -185,7 +185,6 @@ array<double, FILTS> Star::deriveCombinedMags (Matrix<double, 2, FILTS> &mag, co
 
         combinedMags.at(f) += pCluster.mod;
         combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * pCluster.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
-        photometry.at(i) = combinedMags.at(f);
     }
 
     return combinedMags;

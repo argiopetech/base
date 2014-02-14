@@ -384,11 +384,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         for (i = 0; i < 2; i++)
             star.wdType[i] = WdAtmosphere::DA;
 
-        for (i = 0; i < ctrl->numFilts; i++)
-        {
-            star.photometry[i] = 0.0;
-        }
-
         // find photometry for initial values of currentClust and mc->stars
         if (star.status[0] == WD)
         {
@@ -580,9 +575,9 @@ int main (int argc, char *argv[])
                     {
                         array<double, FILTS> globalMags;
                         array<double, 2> ltau;
-                        evolve (internalCluster, evoModels, globalMags, filters, star, ltau);
+                        globalMags = evolve (internalCluster, evoModels, filters, star, ltau);
 
-                        wdLogPost[im] = logPost1Star (star, internalCluster, evoModels, filterPriorMin, filterPriorMax);
+                        wdLogPost[im] = logPost1Star (star, internalCluster, evoModels, globalMags, filterPriorMin, filterPriorMax);
                         postClusterStar += exp (wdLogPost[im]);
                     }
                     catch ( WDBoundsError &e )

@@ -18,7 +18,6 @@ class Star
     {
         // NPARAMS-element arrays
         obsPhot.fill(0.0);
-        photometry.fill(0.0);
         variance.fill(0.0);
 
         // 2-element arrays
@@ -56,7 +55,6 @@ class Star
     std::array<int, 2> status;
 
     std::array<double, FILTS> obsPhot;
-    std::array<double, FILTS> photometry;
     std::array<double, FILTS> variance;
     std::array<double, 2> betaMassRatio;
     std::array<double, 2> wdLogTeff;

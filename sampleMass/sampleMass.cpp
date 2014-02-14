@@ -374,11 +374,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         for (i = 0; i < 2; i++)
             star.wdType[i] = WdAtmosphere::DA;
 
-        for (i = 0; i < ctrl->numFilts; i++)
-        {
-            star.photometry[i] = 0.0;
-        }
-
         // find photometry for initial values of currentClust and mc->stars
         if (star.status[0] == WD)
         {
@@ -461,9 +456,9 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
             {
                 array<double, 2> ltau;
                 array<double, FILTS> globalMags;
-                evolve (clust, evoModels, globalMags, filters, propStar, ltau);
+                globalMags = evolve (clust, evoModels, filters, propStar, ltau);
 
-                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, filterPriorMin, filterPriorMax);
+                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, globalMags, filterPriorMin, filterPriorMax);
 
                 if (acceptP(gen, acceptedPosterior, proposedPosterior))
                 {
