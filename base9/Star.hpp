@@ -3,10 +3,12 @@
 
 #include <array>
 #include <string>
+#include <vector>
 
 #include "constants.hpp"
 #include "Cluster.hpp"
 #include "Matrix.hpp"
+#include "Model.hpp"
 
 // Define a structure star that houses all star properties
 class Star
@@ -44,6 +46,10 @@ class Star
     double getMass2() const;
     void setMass1(double);
     // void setMass2 (const Cluster &, double);
+
+
+    void setMags (std::array<double, FILTS> &mag, int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters, double &ltau, std::array<double, FILTS> &globalMags);
+    double wdEvol (const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters, std::array<double, FILTS> &globalMags, Star &pStar, int cmpnt);
 
 
     Matrix<double, NPARAMS, 2> beta;

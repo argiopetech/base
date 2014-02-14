@@ -10,7 +10,6 @@
 
 #include "evolve.hpp"
 #include "marg.hpp"
-#include "wdEvol.hpp"
 #include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
@@ -50,7 +49,7 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
 
     for (int cmpnt = 0; cmpnt < 2; cmpnt++)
     {
-        setMags(mag[cmpnt], cmpnt, mass[cmpnt], pCluster, star, evoModels, filters, ltau[cmpnt], globalMags);
+        star.setMags(mag[cmpnt], cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt], globalMags);
     }
 
     deriveCombinedMags(mag, clusterAv, flux, pCluster, star, evoModels, filters);
