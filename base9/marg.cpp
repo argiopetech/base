@@ -78,39 +78,6 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
     }
 }
 
-void deriveCombinedMags (Matrix<double, 3, FILTS> &mag, double clusterAv, double &flux, const Cluster &pCluster, Star &pStar, const Model &evoModels, const vector<int> &filters)
-{
-    auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
-
-    assert(!filters.empty());
-
-    // can now derive combined mags
-    if (mag[1][filters.front()] < 99.)
-    {                           // if there is a secondary star
-        for (auto f : filters)
-        {
-            flux = exp10((mag[0][f] / -2.5));    // add up the fluxes of the primary
-            flux += exp10((mag[1][f] / -2.5));   // and the secondary
-            mag[2][f] = -2.5 * log10 (flux);    // (these 3 lines [used to?] take 5% of run time for N large)
-            // if primary mag = 99.999, then this works
-        }
-    }                           // to make the combined mag = secondary mag
-    else
-    {
-        for (auto f : filters)
-            mag[2][f] = mag[0][f];
-    }
-
-    for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
-    {
-        int f = filters.at(i);
-
-        mag[2][f] += pCluster.mod;
-        mag[2][f] += (clusterAbs[f] - 1.0) * clusterAv;       // add A_[u-k] (standard defn of modulus already includes Av)
-        pStar.photometry[i] = mag[2][f];
-    }
-}
-
 double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, double &flux, array<double, 2> &mass, const Cluster &pCluster, Star pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
@@ -136,7 +103,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
     pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
     pStar.setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt], globalMags);
 
-    deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels, filters);
+    pStar.deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels, filters);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass[0] / mass[0]);    /* dMassRatio */
@@ -198,7 +165,7 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, double clusterAv, 
             pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
             pStar.setMags (mag[cmpnt], cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt], globalMags);
 
-            deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels, filters);
+            pStar.deriveCombinedMags (mag, clusterAv, flux, pCluster, pStar, evoModels, filters);
             /* now have magnitudes, want posterior probability */
             tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
             tmpLogPost += log (dMass);
