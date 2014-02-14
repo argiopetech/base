@@ -47,21 +47,21 @@ void Star::readCMD(const string &s, int filters)
 
     for (int i = 0; i < filters; i++)
     {
-        in >> obsPhot[i];
+        in >> obsPhot.at(i);
     }
 
     for (int i = 0; i < filters; i++)
     {
         in >> tempSigma;
 
-        variance[i] = tempSigma * fabs (tempSigma);
+        variance.at(i) = tempSigma * fabs (tempSigma);
         // The fabs() keeps the sign of the variance the same as that input by the user for sigma
         // Negative sigma (variance) is used to signal "don't count this band for this star"
     }
 
     in >> U
        >> massRatio
-       >> status[0]
+       >> status.at(0)
        >> clustStarPriorDens
        >> useDuringBurnIn;
 }
@@ -74,18 +74,18 @@ array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pClus
     if (mass <= 0.0001)
     {                           // for non-existent secondary stars
         for (auto f : filters)
-            mags[f] = 99.999;
+            mags.at(f) = 99.999;
 
-        status[cmpnt] = DNE;
-        massNow[cmpnt] = 0.0;
+        status.at(cmpnt) = DNE;
+        massNow.at(cmpnt) = 0.0;
     }
     else if (mass <= pCluster.AGBt_zmass)
     {                           // for main seq or giant star
-        massNow[cmpnt] = mass;
+        massNow.at(cmpnt) = mass;
 
         mags = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
 
-        status[cmpnt] = MSRG;    // keep track of evolutionary state
+        status.at(cmpnt) = MSRG;    // keep track of evolutionary state
     }
     else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
@@ -94,16 +94,16 @@ array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pClus
     else if (mass <= 100.)
     {                           // for neutron star or black hole remnant
         for (auto f : filters)
-            mags[f] = 99.999;
-        status[cmpnt] = NSBH;
+            mags.at(f) = 99.999;
+        status.at(cmpnt) = NSBH;
     }
     else
     {
         //     log <<  (" This condition should not happen, %.2f greater than 100 Mo\n", mass);
         for (auto f : filters)
-            mags[f] = 99.999;
+            mags.at(f) = 99.999;
 
-        status[cmpnt] = DNE;
+        status.at(cmpnt) = DNE;
     }
 
     return mags;
@@ -135,17 +135,17 @@ double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vect
     if (thisPrecLogAge >= pCluster.age)
     {                           // mcmc.c can cause this by adjusting masses and ages
         for (auto f : filters)
-            globalMags[f] = -4.; // place at tip of RGB
+            globalMags.at(f) = -4.; // place at tip of RGB
     }
     else
     {
         //Calculate logg
-        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, wdType[cmpnt]);
+        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, wdType.at(cmpnt));
     }
 
-    massNow[cmpnt] = thisWDMass;
-    wdLogTeff[cmpnt] = thisLogTeff;
-    status[cmpnt] = WD;
+    massNow.at(cmpnt) = thisWDMass;
+    wdLogTeff.at(cmpnt) = thisLogTeff;
+    status.at(cmpnt) = WD;
 
     return thisPrecLogAge;
 }
@@ -163,28 +163,28 @@ void Star::deriveCombinedMags (Matrix<double, 2, FILTS> &mag, const Cluster &pCl
     combinedMags.fill(0.0);
 
     // can now derive combined mags
-    if (mag[1][filters.front()] < 99.)
+    if (mag.at(1).at(filters.front()) < 99.)
     {                           // if there is a secondary star
         for (auto f : filters)
         {
-            flux = exp10((mag[0][f] / -2.5));    // add up the fluxes of the primary
-            flux += exp10((mag[1][f] / -2.5));   // and the secondary
-            combinedMags[f] = -2.5 * log10 (flux);    // (these 3 lines [used to?] take 5% of run time for N large)
+            flux = exp10((mag.at(0).at(f) / -2.5));    // add up the fluxes of the primary
+            flux += exp10((mag.at(1).at(f) / -2.5));   // and the secondary
+            combinedMags.at(f) = -2.5 * log10 (flux);    // (these 3 lines .at(used to?) take 5% of run time for N large)
             // if primary mag = 99.999, then this works
         }
     }                           // to make the combined mag = secondary mag
     else
     {
         for (auto f : filters)
-            combinedMags[f] = mag[0][f];
+            combinedMags.at(f) = mag.at(0).at(f);
     }
 
     for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
     {
         int f = filters.at(i);
 
-        combinedMags[f] += pCluster.mod;
-        combinedMags[f] += (clusterAbs[f] - 1.0) * pCluster.abs;       // add A_[u-k] (standard defn of modulus already includes Av)
-        photometry[i] = combinedMags[f];
+        combinedMags.at(f) += pCluster.mod;
+        combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * pCluster.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
+        photometry.at(i) = combinedMags.at(f);
     }
 }

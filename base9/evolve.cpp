@@ -40,12 +40,12 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
         throw WDBoundsError("Bounds error in evolve.cpp");
     }
 
-    mass[0] = star.getMass1();
-    mass[1] = star.getMass2();
+    mass.at(0) = star.getMass1();
+    mass.at(1) = star.getMass2();
 
     for (int cmpnt = 0; cmpnt < 2; cmpnt++)
     {
-        mag[cmpnt] = star.setMags(cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
+        mag.at(cmpnt) = star.setMags(cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
     }
 
     star.deriveCombinedMags(mag, pCluster, evoModels, filters);

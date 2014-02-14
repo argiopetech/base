@@ -28,8 +28,8 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
     array<double, 2> mass;
     Matrix<double, 2, FILTS> mag;
 
-    mass[0] = 0.0;
-    mass[1] = 0.0;
+    mass.at(0) = 0.0;
+    mass.at(1) = 0.0;
 
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;
@@ -53,13 +53,13 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
         for (auto k = 0; k < isoIncrem; k += 1)
         {
 
-            dIsoMass = isochrone.mass[m + 1] - isochrone.mass[m];
+            dIsoMass = isochrone.mass.at(m + 1) - isochrone.mass.at(m);
 
             /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
             if (dIsoMass > 0.0)
             {
                 dMass = dIsoMass / isoIncrem;
-                mass[0] = isochrone.mass[m] + k * dMass;
+                mass.at(0) = isochrone.mass.at(m) + k * dMass;
 
                 post += calcPost (dMass, mag, mass, pCluster, pStar, evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
             }
@@ -80,11 +80,11 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;
 
-    pStar.setMass1 (mass[0]);
+    pStar.setMass1 (mass.at(0));
 
     int cmpnt = 0;
 
-    mag[cmpnt] = pStar.setMags (cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
+    mag.at(cmpnt) = pStar.setMags (cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
 
     double tmpLogPost, tmpPost;
 
@@ -93,17 +93,17 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
     pStar.massRatio = 0.0;
 
     for (auto f : filters)
-        globalMags[f] = 99.999;
+        globalMags.at(f) = 99.999;
 
-    pStar.massNow[cmpnt] = 0.0;
-    ltau[cmpnt] = 0.0;          // may not be a WD, so no precursor age,
-    pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-    mag[cmpnt] = pStar.setMags (cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
+    pStar.massNow.at(cmpnt) = 0.0;
+    ltau.at(cmpnt) = 0.0;          // may not be a WD, so no precursor age,
+    pStar.wdLogTeff.at(cmpnt) = 0.0;      // no WD Teff,
+    mag.at(cmpnt) = pStar.setMags (cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
 
     pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
     tmpLogPost += log (dMass);
-    tmpLogPost += log (isochrone.mass[0] / mass[0]);    /* dMassRatio */
+    tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
     tmpPost = exp (tmpLogPost);
     post += tmpPost;
 
@@ -113,13 +113,13 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
     int obsFilt = 0;
 
     bool isOverlap = true;          /* do the allowable masses in each filter overlap? */
-    int okMass[MAX_ENTRIES] = { 1 };
+    array<int, MAX_ENTRIES> okMass = { 1 };
     for (auto f : filters)
     {
         if (isOverlap)
         {
-            double diffLow = exp10(((pStar.obsPhot[obsFilt] - nSD * sqrt (pStar.variance[obsFilt])) / -2.5)) - exp10((mag[0][f] / -2.5));
-            double diffUp = exp10(((pStar.obsPhot[obsFilt] + nSD * sqrt (pStar.variance[obsFilt])) / -2.5)) - exp10((mag[0][f] / -2.5));
+            double diffLow = exp10(((pStar.obsPhot.at(obsFilt) - nSD * sqrt (pStar.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
+            double diffUp = exp10(((pStar.obsPhot.at(obsFilt) + nSD * sqrt (pStar.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
                 isOverlap = false;
@@ -131,13 +131,13 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
 
                 for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; i++)
                 {
-                    if (isochrone.mag[i][f] >= magLower && isochrone.mag[i][f] <= magUpper && isochrone.mass[i] <= mass[0])
+                    if (isochrone.mag.at(i).at(f) >= magLower && isochrone.mag.at(i).at(f) <= magUpper && isochrone.mass.at(i) <= mass.at(0))
                     {
-                        okMass[i] *= 1; /* this mass is still ok */
+                        okMass.at(i) *= 1; /* this mass is still ok */
                     }
                     else
                     {
-                        okMass[i] = 0;
+                        okMass.at(i) = 0;
                     }
                 }
             }
@@ -147,22 +147,22 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
 
     for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 2; i++)
     {
-        if (okMass[i])
+        if (okMass.at(i))
         {
             cmpnt = 1;
-            pStar.massRatio = mass[0] / isochrone.mass[i];
+            pStar.massRatio = mass.at(0) / isochrone.mass.at(i);
             for (auto f : filters)
-                globalMags[f] = 99.999;
-            pStar.massNow[cmpnt] = 0.0;
-            ltau[cmpnt] = 0.0;  // may not be a WD, so no precursor age,
-            pStar.wdLogTeff[cmpnt] = 0.0;      // no WD Teff,
-            mag[cmpnt] = pStar.setMags (cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
+                globalMags.at(f) = 99.999;
+            pStar.massNow.at(cmpnt) = 0.0;
+            ltau.at(cmpnt) = 0.0;  // may not be a WD, so no precursor age,
+            pStar.wdLogTeff.at(cmpnt) = 0.0;      // no WD Teff,
+            mag.at(cmpnt) = pStar.setMags (cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
 
             pStar.deriveCombinedMags (mag, pCluster, evoModels, filters);
             /* now have magnitudes, want posterior probability */
             tmpLogPost = logPost1Star (pStar, pCluster, evoModels, filterPriorMin, filterPriorMax);
             tmpLogPost += log (dMass);
-            tmpLogPost += log ((isochrone.mass[i + 1] - isochrone.mass[i]) / mass[0]);
+            tmpLogPost += log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / mass.at(0));
             tmpPost = exp (tmpLogPost);
 
             post += tmpPost;
