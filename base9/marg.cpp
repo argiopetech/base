@@ -20,13 +20,13 @@ using std::vector;
 
 const int MAX_ENTRIES = 370;
 
-double calcPost (double, Matrix<double, 3, FILTS>&, array<double, 2>&, const Cluster&, Star, const Model&, const vector<int>&, array<double, 2>&, array<double, FILTS>&, const array<double, FILTS>&, const array<double, FILTS>&);
+double calcPost (double, Matrix<double, 2, FILTS>&, array<double, 2>&, const Cluster&, Star, const Model&, const vector<int>&, array<double, 2>&, array<double, FILTS>&, const array<double, FILTS>&, const array<double, FILTS>&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
 double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 {
     array<double, 2> mass;
-    Matrix<double, 3, FILTS> mag;
+    Matrix<double, 2, FILTS> mag;
 
     mass[0] = 0.0;
     mass[1] = 0.0;
@@ -75,7 +75,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
     }
 }
 
-double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, array<double, 2> &mass, const Cluster &pCluster, Star pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &mass, const Cluster &pCluster, Star pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;
@@ -123,10 +123,6 @@ double calcPost (double dMass, Matrix<double, 3, FILTS> &mag, array<double, 2> &
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
                 isOverlap = false;
-
-                /**** necessary here??? *****/
-                for ( auto f : filters )
-                    mag[2][f] = mag[0][f];
             }
             else
             {
