@@ -34,15 +34,11 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
     array<double, 2> mass;
     Matrix<double, 3, FILTS> mag;
 
-    double flux, clusterAv;
-
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (pCluster.AGBt_zmass < EPS)
     {
         throw WDBoundsError("Bounds error in evolve.cpp");
     }
-
-    clusterAv = pCluster.abs;
 
     mass[0] = star.getMass1();
     mass[1] = star.getMass2();
@@ -52,5 +48,5 @@ void evolve (const Cluster &pCluster, const Model &evoModels, array<double, FILT
         mag[cmpnt] = star.setMags(cmpnt, mass[cmpnt], pCluster, evoModels, filters, ltau[cmpnt]);
     }
 
-    star.deriveCombinedMags(mag, clusterAv, flux, pCluster, evoModels, filters);
+    star.deriveCombinedMags(mag, pCluster, evoModels, filters);
 }
