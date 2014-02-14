@@ -160,8 +160,6 @@ int MpiMcmcApplication::run()
 
     Cluster propClust;
 
-    array<double, 2> ltau;
-
     array<double, FILTS> filterPriorMin;
     array<double, FILTS> filterPriorMax;
 
@@ -184,8 +182,6 @@ int MpiMcmcApplication::run()
 
     // Begin initChain
     {
-        array<double, FILTS> globalMags;
-
         for (auto star : stars)
         {
             star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
@@ -194,7 +190,7 @@ int MpiMcmcApplication::run()
 
             // find photometry for initial values of currentClust and mc.stars
             clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
-            evolve (clust, evoModels, filters, star, ltau);
+            evolve (clust, evoModels, filters, star);
 
             if (star.status[0] == WD)
             {
@@ -512,9 +508,6 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
     {
         double postClusterStar = 0.0;
 
-        array<double, FILTS> globalMags;
-        array<double, 2> ltau;
-
         /* loop over all (mass1, mass ratio) pairs */
         if (stars.at(i).status[0] == WD)
         {
@@ -530,7 +523,7 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
 
                 try
                 {
-                    globalMags = evolve (propClust, evoModels, filters, wd, ltau);
+                    array<double, FILTS> globalMags = evolve (propClust, evoModels, filters, wd);
 
                     tmpLogPost = logPost1Star (wd, propClust, evoModels, globalMags, filterPriorMin, filterPriorMax);
                     tmpLogPost += log ((propClust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
@@ -549,7 +542,7 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
             try
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, filterPriorMin, filterPriorMax);
+                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, filterPriorMin, filterPriorMax);
             }
             catch ( WDBoundsError &e )
             {

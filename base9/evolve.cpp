@@ -29,7 +29,7 @@ using std::vector;
  * parent routine).  Using all of these inputs, this routine updates the photometry of the
  * star structure in the whichever of the U through K filters are being used (stored in useFilt).
 ***************************************************************************************/
-array<double, FILTS> evolve (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters,  Star &star, array<double, 2> &ltau)
+array<double, FILTS> evolve (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters,  Star &star)
 {
     array<double, 2> mass;
     Matrix<double, 2, FILTS> mag;
@@ -45,7 +45,7 @@ array<double, FILTS> evolve (const Cluster &pCluster, const Model &evoModels, co
 
     for (int cmpnt = 0; cmpnt < 2; cmpnt++)
     {
-        mag.at(cmpnt) = star.setMags(cmpnt, mass.at(cmpnt), pCluster, evoModels, filters, ltau.at(cmpnt));
+        mag.at(cmpnt) = star.setMags(cmpnt, mass.at(cmpnt), pCluster, evoModels, filters);
     }
 
     return star.deriveCombinedMags(mag, pCluster, evoModels, filters);

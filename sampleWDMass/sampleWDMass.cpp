@@ -573,9 +573,7 @@ int main (int argc, char *argv[])
 
                     try
                     {
-                        array<double, FILTS> globalMags;
-                        array<double, 2> ltau;
-                        globalMags = evolve (internalCluster, evoModels, filters, star, ltau);
+                        array<double, FILTS> globalMags = evolve (internalCluster, evoModels, filters, star);
 
                         wdLogPost[im] = logPost1Star (star, internalCluster, evoModels, globalMags, filterPriorMin, filterPriorMax);
                         postClusterStar += exp (wdLogPost[im]);

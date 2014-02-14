@@ -454,9 +454,7 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
         {
             try
             {
-                array<double, 2> ltau;
-                array<double, FILTS> globalMags;
-                globalMags = evolve (clust, evoModels, filters, propStar, ltau);
+                array<double, FILTS> globalMags = evolve (clust, evoModels, filters, propStar);
 
                 auto proposedPosterior = logPost1Star(propStar, clust, evoModels, globalMags, filterPriorMin, filterPriorMax);
 

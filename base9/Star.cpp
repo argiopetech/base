@@ -67,7 +67,7 @@ void Star::readCMD(const string &s, int filters)
 }
 
 
-array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, double &ltau)
+array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
 {
     array<double, FILTS> mags;
 
@@ -89,7 +89,7 @@ array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pClus
     }
     else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
-        ltau = wdEvol (pCluster, evoModels, filters, mags, cmpnt);
+        /*ltau = */wdEvol (pCluster, evoModels, filters, mags, cmpnt);
     }
     else if (mass <= 100.)
     {                           // for neutron star or black hole remnant
