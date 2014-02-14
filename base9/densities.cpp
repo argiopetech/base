@@ -80,7 +80,7 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
     if (pStar.isFieldStar)
     {
         logPrior = logTDens (pStar.U, pStar.meanU, pStar.varU, DOF);
-        if (pStar.status[0] != WD)
+        if (pStar.status.at(0) != WD)
             logPrior += logTDens (pStar.massRatio, pStar.meanMassRatio, pStar.varMassRatio, DOF);
         return logPrior;
     }
@@ -129,14 +129,14 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     double prior = 0.0;
     //DS: with a uniform prior on carbonicity, the above won't change since log(1) = 0.
 
-    if (pCluster.priorVar[FEH] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.feh - pCluster.priorMean[FEH]) / pCluster.priorVar[FEH];
-    if (pCluster.priorVar[MOD] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.mod - pCluster.priorMean[MOD]) / pCluster.priorVar[MOD];
-    if (pCluster.priorVar[ABS] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.abs - pCluster.priorMean[ABS]) / pCluster.priorVar[ABS];
-    if (pCluster.priorVar[YYY] > EPSILON)
-        prior += (-0.5) * sqr (pCluster.yyy - pCluster.priorMean[YYY]) / pCluster.priorVar[YYY];
+    if (pCluster.priorVar.at(FEH) > EPSILON)
+        prior += (-0.5) * sqr (pCluster.feh - pCluster.priorMean.at(FEH)) / pCluster.priorVar.at(FEH);
+    if (pCluster.priorVar.at(MOD) > EPSILON)
+        prior += (-0.5) * sqr (pCluster.mod - pCluster.priorMean.at(MOD)) / pCluster.priorVar.at(MOD);
+    if (pCluster.priorVar.at(ABS) > EPSILON)
+        prior += (-0.5) * sqr (pCluster.abs - pCluster.priorMean.at(ABS)) / pCluster.priorVar.at(ABS);
+    if (pCluster.priorVar.at(YYY) > EPSILON)
+        prior += (-0.5) * sqr (pCluster.yyy - pCluster.priorMean.at(YYY)) / pCluster.priorVar.at(YYY);
 
     return prior;
 }
@@ -151,14 +151,14 @@ double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS
     {
         if (pStar.isFieldStar)
         {
-            assert (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i]);
+            assert (filterPriorMin.at(i) <= pStar.obsPhot.at(i) && pStar.obsPhot.at(i) <= filterPriorMax.at(i));
 
-            likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
+            likelihood -= log (filterPriorMax.at(i) - filterPriorMin.at(i));
         }
         else
         {
-            if (pStar.variance[i] > 1e-9)
-                likelihood -= 0.5 * (log (2 * M_PI * pStar.variance[i]) + (sqr (mags[i] - pStar.obsPhot[i]) / pStar.variance[i]));
+            if (pStar.variance.at(i) > 1e-9)
+                likelihood -= 0.5 * (log (2 * M_PI * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i)));
         }
     }
     return likelihood;
@@ -176,19 +176,19 @@ double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILT
     {
         for (i = 0; i < numFilts; i++)
         {
-            assert (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i]);
+            assert (filterPriorMin.at(i) <= pStar.obsPhot.at(i) && pStar.obsPhot.at(i) <= filterPriorMax.at(i));
 
-            likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
+            likelihood -= log (filterPriorMax.at(i) - filterPriorMin.at(i));
         }
     }
     else
     {
         for (i = 0; i < numFilts; i++)
         {
-            if (pStar.variance[i] > 1e-9)
+            if (pStar.variance.at(i) > 1e-9)
             {
-                quadratic_sum += sqr (mags[i] - pStar.obsPhot[i]) / pStar.variance[i];
-                likelihood -= 0.5 * (log (M_PI * pStar.variance[i]));
+                quadratic_sum += sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i);
+                likelihood -= 0.5 * (log (M_PI * pStar.variance.at(i)));
             }
         }
         likelihood += lgamma (0.5 * (dof + (double) numFilts)) - lgamma (0.5 * dof);
@@ -207,15 +207,15 @@ double scaledLogLike (int numFilts, const Star &pStar, double varScale, const ar
     {
         if (pStar.isFieldStar)
         {
-            assert (filterPriorMin[i] <= pStar.obsPhot[i] && pStar.obsPhot[i] <= filterPriorMax[i]);
+            assert (filterPriorMin.at(i) <= pStar.obsPhot.at(i) && pStar.obsPhot.at(i) <= filterPriorMax.at(i));
 
-            likelihood -= log (filterPriorMax[i] - filterPriorMin[i]);
+            likelihood -= log (filterPriorMax.at(i) - filterPriorMin.at(i));
         }
         else
         {
-            if (pStar.variance[i] > 1e-9)
+            if (pStar.variance.at(i) > 1e-9)
             {
-                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance[i]) + (sqr (mags[i] - pStar.obsPhot[i]) / (varScale * pStar.variance[i])));
+                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / (varScale * pStar.variance.at(i))));
             }
 
         }
