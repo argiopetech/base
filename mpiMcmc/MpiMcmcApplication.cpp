@@ -549,7 +549,7 @@ double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propC
             try
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters, ltau, filterPriorMin, filterPriorMax);
             }
             catch ( WDBoundsError &e )
             {

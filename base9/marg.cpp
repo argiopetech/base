@@ -20,13 +20,12 @@ using std::vector;
 
 const int MAX_ENTRIES = 370;
 
-double calcPost (double, Matrix<double, 2, FILTS>&, array<double, 2>&, const Cluster&, Star, const Model&, const vector<int>&, array<double, 2>&, array<double, FILTS>&, const array<double, FILTS>&, const array<double, FILTS>&);
+double calcPost (double, array<double, 2>&, const Cluster&, Star, const Model&, const vector<int>&, array<double, 2>&, const array<double, FILTS>&, const array<double, FILTS>&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 {
     array<double, 2> mass;
-    Matrix<double, 2, FILTS> mag;
 
     mass.at(0) = 0.0;
     mass.at(1) = 0.0;
@@ -61,7 +60,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
                 dMass = dIsoMass / isoIncrem;
                 mass.at(0) = isochrone.mass.at(m) + k * dMass;
 
-                post += calcPost (dMass, mag, mass, pCluster, pStar, evoModels, filters, ltau, globalMags, filterPriorMin, filterPriorMax);
+                post += calcPost (dMass, mass, pCluster, pStar, evoModels, filters, ltau, filterPriorMin, filterPriorMax);
             }
         }
     }
@@ -75,10 +74,12 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
     }
 }
 
-double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &mass, const Cluster &pCluster, Star pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, array<double, FILTS> &globalMags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, Star pStar, const Model &evoModels, const vector<int> &filters, array<double, 2> &ltau, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;
+
+    Matrix<double, 2, FILTS> mag;
 
     pStar.setMass1 (mass.at(0));
 
@@ -88,9 +89,6 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
 
     /* first try 0.0 massRatio */
     pStar.massRatio = 0.0;
-
-    for (auto f : filters)
-        globalMags.at(f) = 99.999;
 
     pStar.massNow.at(1) = 0.0;
     ltau.at(1) = 0.0;          // may not be a WD, so no precursor age,
@@ -147,8 +145,6 @@ double calcPost (double dMass, Matrix<double, 2, FILTS> &mag, array<double, 2> &
         if (okMass.at(i))
         {
             pStar.massRatio = mass.at(0) / isochrone.mass.at(i);
-            for (auto f : filters)
-                globalMags.at(f) = 99.999;
             pStar.massNow.at(1) = 0.0;
             ltau.at(1) = 0.0;  // may not be a WD, so no precursor age,
             pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
