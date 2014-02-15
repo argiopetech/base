@@ -75,7 +75,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
 }
 
 
-array<double, FILTS> deriveCombinedMags (Matrix<double, 2, FILTS> &mag, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
+array<double, FILTS> deriveCombinedMags (const array<double, FILTS> &primaryMags, const array<double, FILTS> &secondaryMags, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
@@ -88,20 +88,20 @@ array<double, FILTS> deriveCombinedMags (Matrix<double, 2, FILTS> &mag, const Cl
     combinedMags.fill(0.0);
 
     // can now derive combined mags
-    if (mag.at(1).at(filters.front()) < 99.)
+    if (secondaryMags.at(filters.front()) < 99.)
     {                           // if there is a secondary star
         for (auto f : filters)
         {
-            flux = exp10((mag.at(0).at(f) / -2.5));    // add up the fluxes of the primary
-            flux += exp10((mag.at(1).at(f) / -2.5));   // and the secondary
+            flux = exp10((primaryMags.at(f) / -2.5));    // add up the fluxes of the primary
+            flux += exp10((secondaryMags.at(f) / -2.5)); // and the secondary
             combinedMags.at(f) = -2.5 * log10 (flux);    // (these 3 lines .at(used to?) take 5% of run time for N large)
             // if primary mag = 99.999, then this works
         }
-    }                           // to make the combined mag = secondary mag
+    }  // to make the combined mag = secondary mag
     else
     {
         for (auto f : filters)
-            combinedMags.at(f) = mag.at(0).at(f);
+            combinedMags.at(f) = primaryMags.at(f);
     }
 
     for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
@@ -137,7 +137,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
     mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters);
 
-    combinedMags = deriveCombinedMags (mag, pCluster, evoModels, filters);
+    combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
     tmpLogPost = logPost1Star (pStar, pCluster, evoModels, combinedMags, filterPriorMin, filterPriorMax);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
@@ -188,7 +188,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
             pStar.wdLogTeff.at(1) = 0.0; // no WD Teff,
 
             mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters);
-            combinedMags = deriveCombinedMags (mag, pCluster, evoModels, filters);
+            combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
 
             /* now have magnitudes, want posterior probability */
             tmpLogPost = logPost1Star (pStar, pCluster, evoModels, combinedMags, filterPriorMin, filterPriorMax);

@@ -48,5 +48,5 @@ array<double, FILTS> evolve (const Cluster &pCluster, const Model &evoModels, co
         mag.at(cmpnt) = star.setMags(cmpnt, mass.at(cmpnt), pCluster, evoModels, filters);
     }
 
-    return deriveCombinedMags(mag, pCluster, evoModels, filters);
+    return deriveCombinedMags(mag.at(0), mag.at(1), pCluster, evoModels, filters);
 }
