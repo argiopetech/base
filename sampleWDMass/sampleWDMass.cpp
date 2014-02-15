@@ -40,19 +40,17 @@ const int ALLOC_CHUNK = 1;
 struct ifmrGridControl
 {
     double initialAge;
-    double priorMean[NPARAMS];
-    double priorVar[NPARAMS];
+    array<double, NPARAMS> priorMean, priorVar;
     double minMag;
     double maxMag;
     int iMag;
     int iStart;
     int modelSet;
-    double filterPriorMin[FILTS];
-    double filterPriorMax[FILTS];
+    array<double, FILTS> filterPriorMin, filterPriorMax;
     int numFilts;
     int nSamples;
-    double start[NPARAMS];      /* starting points for grid evaluations */
-    double end[NPARAMS];        /* end points for grid evaluations */
+    array<double, NPARAMS> start; /* starting points for grid evaluations */
+    array<double, NPARAMS> end;   /* end points for grid evaluations */
 };
 
 /* For posterior evaluation on a grid */
@@ -73,8 +71,7 @@ struct clustPar
 
 typedef struct
 {
-    double obsPhot[FILTS];
-    double variance[FILTS];
+    array<double, FILTS> obsPhot, variance;
     double clustStarPriorDens;  /* cluster membership prior probability */
 } obsStar;
 
@@ -83,7 +80,7 @@ array<double, FILTS> filterPriorMin;
 array<double, FILTS> filterPriorMax;
 
 /* Used in densities.c. */
-double priorMean[NPARAMS], priorVar[NPARAMS];
+array<double, NPARAMS> priorMean, priorVar;
 
 /* Used by a bunch of different functions. */
 vector<int> filters;
@@ -103,86 +100,86 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
     {
-        ctrl->priorMean[CARBONICITY] = mc->clust.carbonicity = mc->clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
-        ctrl->priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
+        ctrl->priorMean.at(CARBONICITY) = mc->clust.carbonicity = mc->clust.priorMean.at(CARBONICITY) = settings.cluster.carbonicity;
+        ctrl->priorVar.at(CARBONICITY) = settings.cluster.sigma.carbonicity;
     }
     else
     {
-        ctrl->priorMean[CARBONICITY] = mc->clust.carbonicity = mc->clust.priorMean[CARBONICITY] = 0.0;
-        ctrl->priorVar[CARBONICITY] = 0.0;
+        ctrl->priorMean.at(CARBONICITY) = mc->clust.carbonicity = mc->clust.priorMean.at(CARBONICITY) = 0.0;
+        ctrl->priorVar.at(CARBONICITY) = 0.0;
     }
 
 
-    ctrl->priorMean[FEH] = settings.cluster.Fe_H;
-    ctrl->priorVar[FEH] = settings.cluster.sigma.Fe_H;
-    if (ctrl->priorVar[FEH] < 0.0)
+    ctrl->priorMean.at(FEH) = settings.cluster.Fe_H;
+    ctrl->priorVar.at(FEH) = settings.cluster.sigma.Fe_H;
+    if (ctrl->priorVar.at(FEH) < 0.0)
     {
-        ctrl->priorVar[FEH] = 0.0;
+        ctrl->priorVar.at(FEH) = 0.0;
     }
 
-    ctrl->priorMean[MOD] = settings.cluster.distMod;
-    ctrl->priorVar[MOD] = settings.cluster.sigma.distMod;
-    if (ctrl->priorVar[MOD] < 0.0)
+    ctrl->priorMean.at(MOD) = settings.cluster.distMod;
+    ctrl->priorVar.at(MOD) = settings.cluster.sigma.distMod;
+    if (ctrl->priorVar.at(MOD) < 0.0)
     {
-        ctrl->priorVar[MOD] = 0.0;
+        ctrl->priorVar.at(MOD) = 0.0;
     }
 
-    ctrl->priorMean[ABS] = settings.cluster.Av;
-    ctrl->priorVar[ABS] = settings.cluster.sigma.Av;
-    if (ctrl->priorVar[ABS] < 0.0)
+    ctrl->priorMean.at(ABS) = settings.cluster.Av;
+    ctrl->priorVar.at(ABS) = settings.cluster.sigma.Av;
+    if (ctrl->priorVar.at(ABS) < 0.0)
     {
-        ctrl->priorVar[ABS] = 0.0;
+        ctrl->priorVar.at(ABS) = 0.0;
     }
 
     ctrl->initialAge = settings.cluster.logClusAge;
-    ctrl->priorVar[AGE] = 1.0;
+    ctrl->priorVar.at(AGE) = 1.0;
 
-    ctrl->priorVar[IFMR_INTERCEPT] = 1.0;
-    ctrl->priorVar[IFMR_SLOPE] = 1.0;
+    ctrl->priorVar.at(IFMR_INTERCEPT) = 1.0;
+    ctrl->priorVar.at(IFMR_SLOPE) = 1.0;
     if (evoModels.IFMR >= 9)
-        ctrl->priorVar[IFMR_QUADCOEF] = 1.0;
+        ctrl->priorVar.at(IFMR_QUADCOEF) = 1.0;
     else
-        ctrl->priorVar[IFMR_QUADCOEF] = 0.0;
+        ctrl->priorVar.at(IFMR_QUADCOEF) = 0.0;
 
     // copy values to global variables
-    priorVar[AGE] = ctrl->priorVar[AGE];
-    priorVar[FEH] = ctrl->priorVar[FEH];
-    priorVar[MOD] = ctrl->priorVar[MOD];
-    priorVar[ABS] = ctrl->priorVar[ABS];
-    priorVar[IFMR_INTERCEPT] = ctrl->priorVar[IFMR_INTERCEPT];
-    priorVar[IFMR_SLOPE] = ctrl->priorVar[IFMR_SLOPE];
-    priorVar[IFMR_QUADCOEF] = ctrl->priorVar[IFMR_QUADCOEF];
+    priorVar.at(AGE) = ctrl->priorVar.at(AGE);
+    priorVar.at(FEH) = ctrl->priorVar.at(FEH);
+    priorVar.at(MOD) = ctrl->priorVar.at(MOD);
+    priorVar.at(ABS) = ctrl->priorVar.at(ABS);
+    priorVar.at(IFMR_INTERCEPT) = ctrl->priorVar.at(IFMR_INTERCEPT);
+    priorVar.at(IFMR_SLOPE) = ctrl->priorVar.at(IFMR_SLOPE);
+    priorVar.at(IFMR_QUADCOEF) = ctrl->priorVar.at(IFMR_QUADCOEF);
 
-    priorMean[FEH] = ctrl->priorMean[FEH];
-    priorMean[MOD] = ctrl->priorMean[MOD];
-    priorMean[ABS] = ctrl->priorMean[ABS];
+    priorMean.at(FEH) = ctrl->priorMean.at(FEH);
+    priorMean.at(MOD) = ctrl->priorMean.at(MOD);
+    priorMean.at(ABS) = ctrl->priorMean.at(ABS);
 
     /* prior values for linear IFMR */
-    ctrl->priorMean[IFMR_SLOPE] = 0.08;
-    ctrl->priorMean[IFMR_INTERCEPT] = 0.65;
-    ctrl->priorMean[IFMR_QUADCOEF] = 0.0;
-    priorMean[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    priorMean[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    priorMean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+    ctrl->priorMean.at(IFMR_SLOPE) = 0.08;
+    ctrl->priorMean.at(IFMR_INTERCEPT) = 0.65;
+    ctrl->priorMean.at(IFMR_QUADCOEF) = 0.0;
+    priorMean.at(IFMR_SLOPE) = ctrl->priorMean.at(IFMR_SLOPE);
+    priorMean.at(IFMR_INTERCEPT) = ctrl->priorMean.at(IFMR_INTERCEPT);
+    priorMean.at(IFMR_QUADCOEF) = ctrl->priorMean.at(IFMR_QUADCOEF);
 
     /* open model file, choose model set, and load models */
 
     if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
-        scanf ("%lf %lf", &ctrl->priorMean[YYY], &ctrl->priorVar[YYY]);
+        scanf ("%lf %lf", &ctrl->priorMean.at(YYY), &ctrl->priorVar.at(YYY));
 
-        if (ctrl->priorVar[YYY] < 0.0)
+        if (ctrl->priorVar.at(YYY) < 0.0)
         {
-            ctrl->priorVar[YYY] = 0.0;
+            ctrl->priorVar.at(YYY) = 0.0;
         }
     }
     else
     {
-        ctrl->priorMean[YYY] = 0.0;
-        ctrl->priorVar[YYY] = 0.0;
+        ctrl->priorMean.at(YYY) = 0.0;
+        ctrl->priorVar.at(YYY) = 0.0;
     }
-    priorVar[YYY] = ctrl->priorVar[YYY];
-    priorMean[YYY] = ctrl->priorMean[YYY];
+    priorVar.at(YYY) = ctrl->priorVar.at(YYY);
+    priorMean.at(YYY) = ctrl->priorMean.at(YYY);
 
     /* open files for reading (data) and writing */
 
@@ -192,7 +189,7 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
     {
         cerr << "***Error: " << ctrl->iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
-        cerr << "[Exiting...]" << endl;
+        cerr << ".at(Exiting...)" << endl;
         exit (1);
     }
 
@@ -203,8 +200,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     for (j = 0; j < FILTS; j++)
     {
-        ctrl->filterPriorMin[j] = 1000;
-        ctrl->filterPriorMax[j] = -1000;
+        ctrl->filterPriorMin.at(j) = 1000;
+        ctrl->filterPriorMax.at(j) = -1000;
     }
 } // initIfmrGridControl
 
@@ -217,7 +214,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
     if (!rData)
     {
         cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
-        cerr << "[Exiting...]" << endl;
+        cerr << ".at(Exiting...)" << endl;
         exit (1);
     }
 
@@ -262,21 +259,21 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
-            if (mc.stars.back().obsPhot[i] < ctrl.filterPriorMin[i])
+            if (mc.stars.back().obsPhot.at(i) < ctrl.filterPriorMin.at(i))
             {
-                ctrl.filterPriorMin[i] = mc.stars.back().obsPhot[i];
+                ctrl.filterPriorMin.at(i) = mc.stars.back().obsPhot.at(i);
             }
 
-            if (mc.stars.back().obsPhot[i] > ctrl.filterPriorMax[i])
+            if (mc.stars.back().obsPhot.at(i) > ctrl.filterPriorMax.at(i))
             {
-                ctrl.filterPriorMax[i] = mc.stars.back().obsPhot[i];
+                ctrl.filterPriorMax.at(i) = mc.stars.back().obsPhot.at(i);
             }
 
-            filterPriorMin[i] = ctrl.filterPriorMin[i];
-            filterPriorMax[i] = ctrl.filterPriorMax[i];
+            filterPriorMin.at(i) = ctrl.filterPriorMin.at(i);
+            filterPriorMax.at(i) = ctrl.filterPriorMax.at(i);
         }
 
-        if (!(mc.stars.back().status[0] == 3 || (mc.stars.back().obsPhot[ctrl.iMag] >= ctrl.minMag && mc.stars.back().obsPhot[ctrl.iMag] <= ctrl.maxMag)))
+        if (!(mc.stars.back().status.at(0) == 3 || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
         {
             mc.stars.pop_back();
         }
@@ -340,26 +337,26 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
     for (p = 0; p < NPARAMS; p++)
     {
-        mc->acceptClust[p] = mc->rejectClust[p] = 0;
+        mc->acceptClust.at(p) = mc->rejectClust.at(p) = 0;
     }
 
     // If there is no beta in file, initialize everything to prior means
-    mc->clust.feh = ctrl->priorMean[FEH];
-    mc->clust.mod = ctrl->priorMean[MOD];
-    mc->clust.abs = ctrl->priorMean[ABS];
-    mc->clust.yyy = ctrl->priorMean[YYY];
+    mc->clust.feh = ctrl->priorMean.at(FEH);
+    mc->clust.mod = ctrl->priorMean.at(MOD);
+    mc->clust.abs = ctrl->priorMean.at(ABS);
+    mc->clust.yyy = ctrl->priorMean.at(YYY);
     mc->clust.age = ctrl->initialAge;
-    mc->clust.ifmrIntercept = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.ifmrSlope = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.ifmrQuadCoef = ctrl->priorMean[IFMR_QUADCOEF];
-    mc->clust.mean[AGE] = ctrl->initialAge;
-    mc->clust.mean[YYY] = ctrl->priorMean[YYY];
-    mc->clust.mean[MOD] = ctrl->priorMean[MOD];
-    mc->clust.mean[FEH] = ctrl->priorMean[FEH];
-    mc->clust.mean[ABS] = ctrl->priorMean[ABS];
-    mc->clust.mean[IFMR_INTERCEPT] = ctrl->priorMean[IFMR_INTERCEPT];
-    mc->clust.mean[IFMR_SLOPE] = ctrl->priorMean[IFMR_SLOPE];
-    mc->clust.mean[IFMR_QUADCOEF] = ctrl->priorMean[IFMR_QUADCOEF];
+    mc->clust.ifmrIntercept = ctrl->priorMean.at(IFMR_INTERCEPT);
+    mc->clust.ifmrSlope = ctrl->priorMean.at(IFMR_SLOPE);
+    mc->clust.ifmrQuadCoef = ctrl->priorMean.at(IFMR_QUADCOEF);
+    mc->clust.mean.at(AGE) = ctrl->initialAge;
+    mc->clust.mean.at(YYY) = ctrl->priorMean.at(YYY);
+    mc->clust.mean.at(MOD) = ctrl->priorMean.at(MOD);
+    mc->clust.mean.at(FEH) = ctrl->priorMean.at(FEH);
+    mc->clust.mean.at(ABS) = ctrl->priorMean.at(ABS);
+    mc->clust.mean.at(IFMR_INTERCEPT) = ctrl->priorMean.at(IFMR_INTERCEPT);
+    mc->clust.mean.at(IFMR_SLOPE) = ctrl->priorMean.at(IFMR_SLOPE);
+    mc->clust.mean.at(IFMR_QUADCOEF) = ctrl->priorMean.at(IFMR_QUADCOEF);
 
     int i;
 
@@ -373,19 +370,19 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
         for (i = 0; i < NPARAMS; i++)
         {
-            star.beta[i][0] = 0.0;
-            star.beta[i][1] = 0.0;
+            star.beta.at(i).at(0) = 0.0;
+            star.beta.at(i).at(1) = 0.0;
         }
-        star.betaMassRatio[0] = 0.0;
-        star.betaMassRatio[1] = 0.0;
+        star.betaMassRatio.at(0) = 0.0;
+        star.betaMassRatio.at(1) = 0.0;
         star.meanU = 0.0;
         star.varU = 0.0;
 
         for (i = 0; i < 2; i++)
-            star.wdType[i] = WdAtmosphere::DA;
+            star.wdType.at(i) = WdAtmosphere::DA;
 
         // find photometry for initial values of currentClust and mc->stars
-        if (star.status[0] == WD)
+        if (star.status.at(0) == WD)
         {
             star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
             star.massRatio = 0.0;
@@ -401,8 +398,6 @@ int main (int argc, char *argv[])
     struct ifmrGridControl ctrl;
 
     double fsLike;
-    obsStar *obs;
-    int *starStatus;
 
     vector<clustPar> sampledPars;
 
@@ -441,20 +436,23 @@ int main (int argc, char *argv[])
 
     mc.clust.M_wd_up = settings.whiteDwarf.M_wd_up;
 
-    obs = new obsStar[mc.stars.size()]();
-    starStatus = new int[mc.stars.size()]();
+    vector<obsStar> obs;
+    obs.resize(mc.stars.size());
+
+    vector<int> starStatus;
+    starStatus.reserve(mc.stars.size());
 
     for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
     {
         for (filt = 0; filt < ctrl.numFilts; filt++)
         {
-            obs[i].obsPhot[filt] = mc.stars.at(i).obsPhot[filt];
-            obs[i].variance[filt] = mc.stars.at(i).variance[filt];
+            obs.at(i).obsPhot.at(filt) = mc.stars.at(i).obsPhot.at(filt);
+            obs.at(i).variance.at(filt) = mc.stars.at(i).variance.at(filt);
         }
-        obs[i].clustStarPriorDens = mc.stars.at(i).clustStarPriorDens;
-        starStatus[i] = mc.stars.at(i).status[0];
+        obs.at(i).clustStarPriorDens = mc.stars.at(i).clustStarPriorDens;
+        starStatus.at(i) = mc.stars.at(i).status.at(0);
 
-        if (starStatus[i] == WD)
+        if (starStatus.at(i) == WD)
         {
             nWDs++;
         }
@@ -473,13 +471,13 @@ int main (int argc, char *argv[])
 
     for (filt = 0; filt < ctrl.numFilts; filt++)
     {
-        logFieldStarLikelihood -= log (ctrl.filterPriorMax[filt] - ctrl.filterPriorMin[filt]);
+        logFieldStarLikelihood -= log (ctrl.filterPriorMax.at(filt) - ctrl.filterPriorMin.at(filt));
     }
     fsLike = exp (logFieldStarLikelihood);
 
     readSampledParams (&ctrl, sampledPars, evoModels);
-    cout << "sampledPars[0].age    = " << sampledPars.at(0).age << endl;
-    cout << "sampledPars[last].age = " << sampledPars.back().age << endl;
+    cout << "sampledPars.at(0).age    = " << sampledPars.at(0).age << endl;
+    cout << "sampledPars.at(last).age = " << sampledPars.back().age << endl;
 
     /* initialize WD logpost array and WD indices */
     double nWDLogPosts = (int) ceil ((mc.clust.M_wd_up - 0.15) / dMass1);
@@ -495,7 +493,7 @@ int main (int argc, char *argv[])
     if (!massSampleFile)
     {
         cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
+        cerr << ".at(Exiting...)" << endl;
         exit (1);
     }
 
@@ -506,7 +504,7 @@ int main (int argc, char *argv[])
     if (!membershipFile)
     {
         cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
+        cerr << ".at(Exiting...)" << endl;
         exit (1);
     }
     
@@ -559,7 +557,7 @@ int main (int argc, char *argv[])
 
         for (auto star : mc.stars)
         {
-            if (star.status[0] == WD)
+            if (star.status.at(0) == WD)
             {
                 postClusterStar = 0.0;
 
@@ -575,14 +573,14 @@ int main (int argc, char *argv[])
                     {
                         array<double, FILTS> globalMags = evolve (internalCluster, evoModels, filters, star);
 
-                        wdLogPost[im] = logPost1Star (star, internalCluster, evoModels, globalMags, filterPriorMin, filterPriorMax);
-                        postClusterStar += exp (wdLogPost[im]);
+                        wdLogPost.at(im) = logPost1Star (star, internalCluster, evoModels, globalMags, filterPriorMin, filterPriorMax);
+                        postClusterStar += exp (wdLogPost.at(im));
                     }
                     catch ( WDBoundsError &e )
                     {
                         cerr << e.what() << endl;
 
-                        wdLogPost[im] = -HUGE_VAL;
+                        wdLogPost.at(im) = -HUGE_VAL;
                     }
 
                     im++;
@@ -590,11 +588,11 @@ int main (int argc, char *argv[])
                 im = 0;
 
                 /* compute the maximum value */
-                maxWDLogPost = wdLogPost[0];
+                maxWDLogPost = wdLogPost.at(0);
                 for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
                 {
-                    if (wdLogPost[im] > maxWDLogPost)
-                        maxWDLogPost = wdLogPost[im];
+                    if (wdLogPost.at(im) > maxWDLogPost)
+                        maxWDLogPost = wdLogPost.at(im);
                     im++;
                 }
 
@@ -603,7 +601,7 @@ int main (int argc, char *argv[])
                 im = 0;
                 for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
                 {
-                    wdPostSum += exp (wdLogPost[im] - maxWDLogPost);
+                    wdPostSum += exp (wdLogPost.at(im) - maxWDLogPost);
                     im++;
                 }
 
@@ -613,7 +611,7 @@ int main (int argc, char *argv[])
                 im = 0;
                 while (cumSum < us.at(m) && mass1 < internalCluster.M_wd_up)
                 {
-                    cumSum += exp (wdLogPost[im] - maxWDLogPost) / wdPostSum;
+                    cumSum += exp (wdLogPost.at(im) - maxWDLogPost) / wdPostSum;
                     mass1 += dMass1;
                     im++;
                 }
@@ -660,9 +658,6 @@ int main (int argc, char *argv[])
     membershipFile.close();
 
     cout << "Part 2 completed successfully" << endl;
-
-    delete[] (obs);
-    delete[] (starStatus);
 
     return 0;
 }
