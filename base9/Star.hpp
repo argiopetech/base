@@ -26,7 +26,6 @@ class Star
     std::array<double, FILTS> getMags (const Cluster&, const Model&, const std::vector<int>&) const;
     std::array<double, FILTS> wdEvol (const Cluster&, const Model&) const;
 
-
     // Variables
     WdAtmosphere wdType = WdAtmosphere::DA;
 
@@ -52,13 +51,11 @@ class StellarSystem
 
     ~StellarSystem() {;}
 
-
     // Functions
     void readCMD(const std::string&, int);
 
     double getMassRatio() const;
     void setMassRatio(double);
-
 
     // Variables
     Star primary;
