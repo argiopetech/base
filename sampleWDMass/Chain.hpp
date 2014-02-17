@@ -9,7 +9,7 @@ class Chain
   public:
     std::array<bool, NPARAMS> acceptClust;
     std::array<bool, NPARAMS> rejectClust;
-    std::vector<Star> stars;
+    std::vector<StellarSystem> stars;
 
     Cluster clust;
 

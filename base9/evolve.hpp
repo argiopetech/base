@@ -10,6 +10,6 @@
 #include "Model.hpp"
 #include "structures.hpp"
 
-std::array<double, FILTS> evolve (const Cluster &the_cluster, Model const &, const std::vector<int>&, Star &star);
+std::array<double, FILTS> evolve (const Cluster&_cluster, Model const&, const std::vector<int>&, StellarSystem&);
 
 #endif

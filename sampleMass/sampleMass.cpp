@@ -244,7 +244,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
         if (rData.eof())
             break;
 
-        mc.stars.push_back(Star(line, ctrl.numFilts));
+        mc.stars.emplace_back(line, ctrl.numFilts);
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
@@ -262,7 +262,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
             filterPriorMax.at(i) = ctrl.filterPriorMax.at(i);
         }
 
-        if (!(mc.stars.back().status.at(0) == 3 || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
+        if (!(mc.stars.back().primary.status == 3 || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
         {
             mc.stars.pop_back();
         }
@@ -355,17 +355,18 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
         for (i = 0; i < NPARAMS; i++)
         {
-            star.beta.at(i).at(0) = 0.0;
-            star.beta.at(i).at(1) = 0.0;
+            star.primary.beta.at(i) = 0.0;
+            star.secondary.beta.at(i) = 0.0;
         }
-        star.betaMassRatio.at(0) = 0.0;
-        star.betaMassRatio.at(1) = 0.0;
 
-        for (i = 0; i < 2; i++)
-            star.wdType.at(i) = WdAtmosphere::DA;
+        star.primary.betaMassRatio = 0.0;
+        star.secondary.betaMassRatio = 0.0;
+
+        star.primary.wdType = WdAtmosphere::DA;
+        star.secondary.wdType = WdAtmosphere::DA;
 
         // find photometry for initial values of currentClust and mc->stars
-        if (star.status.at(0) == WD)
+        if (star.primary.status == WD)
         {
             star.setMassRatio(0.0);
         }
@@ -417,11 +418,11 @@ class Application
     {}
 
     void run();
-    std::tuple<double, double, double> sampleMass(const Cluster&, const Model&, std::mt19937&, Star);
+    std::tuple<double, double, double> sampleMass(const Cluster&, const Model&, std::mt19937&, StellarSystem);
 };
 
 
-std::tuple<double, double, double> Application::sampleMass(const Cluster &clust, const Model &evoModels, std::mt19937 &gen, Star star)
+std::tuple<double, double, double> Application::sampleMass(const Cluster &clust, const Model &evoModels, std::mt19937 &gen, StellarSystem star)
 {
     constexpr int iters = 500;
     constexpr int burnIters = iters / 5;
@@ -434,12 +435,12 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
 
     for (int iter = 0; iter < iters; ++iter)
     {
-        Star propStar = star;
+        StellarSystem propStar = star;
 
-        propStar.mass += sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
+        propStar.primary.mass += sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
         propStar.setMassRatio(propStar.getMassRatio() + sampleT (gen, (iter < burnIters ? scale : 1.0) * massRatioStepSize * massRatioStepSize));
 
-        if ((propStar.getMassRatio() >= 0.0) && (propStar.getMassRatio() <= 1.0) && (propStar.mass > 0.1) && (propStar.mass < clust.M_wd_up))
+        if ((propStar.getMassRatio() >= 0.0) && (propStar.getMassRatio() <= 1.0) && (propStar.primary.mass > 0.1) && (propStar.primary.mass < clust.M_wd_up))
         {
             try
             {
@@ -461,7 +462,7 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
         }
     }
 
-    return std::make_tuple(star.mass, star.getMassRatio(), acceptedPosterior);
+    return std::make_tuple(star.primary.mass, star.getMassRatio(), acceptedPosterior);
 }
 
 

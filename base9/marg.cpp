@@ -20,10 +20,10 @@ using std::vector;
 
 const int MAX_ENTRIES = 370;
 
-double calcPost (double, array<double, 2>&, const Cluster&, Star, const Model&, const vector<int>&);
+double calcPost (double, array<double, 2>&, const Cluster&, StellarSystem, const Model&, const vector<int>&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const Model &evoModels, const vector<int> &filters)
+double margEvolveWithBinary (const Cluster &pCluster, const StellarSystem &system, const Model &evoModels, const vector<int> &filters)
 {
     array<double, 2> mass;
 
@@ -60,7 +60,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const Star &pStar, const M
             dMass = dIsoMass / isoIncrem;
             mass.at(0) = isochrone.mass.at(m) + k * dMass;
 
-            post += calcPost (dMass, mass, pCluster, pStar, evoModels, filters);
+            post += calcPost (dMass, mass, pCluster, system, evoModels, filters);
         }
     }
 
@@ -116,7 +116,7 @@ array<double, FILTS> deriveCombinedMags (const array<double, FILTS> &primaryMags
 }
 
 
-double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, Star pStar, const Model &evoModels, const vector<int> &filters)
+double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, StellarSystem system, const Model &evoModels, const vector<int> &filters)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;
@@ -124,21 +124,21 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     Matrix<double, 2, FILTS> mag;
     array<double, FILTS> combinedMags;
 
-    pStar.setMass1 (mass.at(0));
+    system.primary.mass = mass.at(0);
 
-    mag.at(0) = pStar.setMags (0, mass.at(0), pCluster, evoModels, filters);
+    mag.at(0) = system.primary.getMags (mass.at(0), pCluster, evoModels, filters);
 
     double tmpLogPost, tmpPost;
 
     /* first try 0.0 massRatio */
-    pStar.setMassRatio(0.0);
+    system.setMassRatio(0.0);
 
-    pStar.massNow.at(1) = 0.0;
-    pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
-    mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters);
+    system.secondary.massNow = 0.0;
+    system.secondary.wdLogTeff = 0.0;      // no WD Teff,
+    mag.at(1) = system.secondary.getMags (mass.at(1), pCluster, evoModels, filters);
 
     combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
-    tmpLogPost = logPost1Star (pStar, pCluster, evoModels, combinedMags);
+    tmpLogPost = logPost1Star (system, pCluster, evoModels, combinedMags);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
     tmpPost = exp (tmpLogPost);
@@ -155,8 +155,8 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     {
         if (isOverlap)
         {
-            double diffLow = exp10(((pStar.obsPhot.at(obsFilt) - nSD * sqrt (pStar.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
-            double diffUp = exp10(((pStar.obsPhot.at(obsFilt) + nSD * sqrt (pStar.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
+            double diffLow = exp10(((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
+            double diffUp = exp10(((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
 
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
@@ -183,15 +183,15 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     {
         if (okMass.at(i))
         {
-            pStar.setMassRatio (mass.at(0) / isochrone.mass.at(i));
-            pStar.massNow.at(1) = 0.0;
-            pStar.wdLogTeff.at(1) = 0.0; // no WD Teff,
+            system.setMassRatio (mass.at(0) / isochrone.mass.at(i));
+            system.secondary.massNow = 0.0;
+            system.secondary.wdLogTeff = 0.0; // no WD Teff,
 
-            mag.at(1) = pStar.setMags (1, mass.at(1), pCluster, evoModels, filters);
+            mag.at(1) = system.secondary.getMags (mass.at(1), pCluster, evoModels, filters);
             combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
 
             /* now have magnitudes, want posterior probability */
-            tmpLogPost = logPost1Star (pStar, pCluster, evoModels, combinedMags);
+            tmpLogPost = logPost1Star (system, pCluster, evoModels, combinedMags);
             tmpLogPost += log (dMass);
             tmpLogPost += log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / mass.at(0));
             tmpPost = exp (tmpLogPost);

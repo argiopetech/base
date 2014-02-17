@@ -180,9 +180,9 @@ int MpiMcmcApplication::run()
         filterPriorMin.fill(1000);
         filterPriorMax.fill(-1000);
 
-        stars = readCmdData (ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
+        systems = readCmdData (ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
 
-        if (stars.size() > 1)
+        if (systems.size() > 1)
         {
             double logFieldStarLikelihood = 0.0;
 
@@ -200,17 +200,17 @@ int MpiMcmcApplication::run()
 
     // Begin initChain
     {
-        for (auto star : stars)
+        for (auto system : systems)
         {
-            star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
+            system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
 
             // find photometry for initial values of currentClust and mc.stars
             clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
-            evolve (clust, evoModels, filters, star);
+            evolve (clust, evoModels, filters, system);
 
-            if (star.status[0] == WD)
+            if (system.primary.status == WD)
             {
-                star.setMassRatio(0.0);
+                system.setMassRatio(0.0);
             }
         }
     }
@@ -506,20 +506,20 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
     propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
 
     /* loop over assigned stars */
-    pool.parallelFor(stars.size(), [=,&logPostMutex,&logPostProp](int i)
+    pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
     {
         double postClusterStar = 0.0;
 
         /* loop over all (mass1, mass ratio) pairs */
-        if (stars.at(i).status[0] == WD)
+        if (systems.at(i).primary.status == WD)
         {
             postClusterStar = 0.0;
 
             for (int j = 0; j < N_WD_MASS1; j++)
             {
                 double tmpLogPost;
-                Star wd(stars.at(i));
-                wd.mass = wdGridMass(j);
+                StellarSystem wd(systems.at(i));
+                wd.primary.mass = wdGridMass(j);
                 wd.setMassRatio(0.0);
 
                 try
@@ -543,7 +543,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
             try
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, stars.at(i), evoModels, filters);
+                postClusterStar = margEvolveWithBinary (propClust, systems.at(i), evoModels, filters);
             }
             catch ( WDBoundsError &e )
             {
@@ -552,11 +552,11 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
             }
         }
 
-        postClusterStar *= stars.at(i).clustStarPriorDens;
+        postClusterStar *= systems.at(i).clustStarPriorDens;
 
         /* marginalize over field star status */
         std::lock_guard<mutex> lk(logPostMutex);
-        logPostProp += log ((1.0 - stars.at(i).clustStarPriorDens) * fsLike + postClusterStar);
+        logPostProp += log ((1.0 - systems.at(i).clustStarPriorDens) * fsLike + postClusterStar);
     });
 
     return logPostProp;

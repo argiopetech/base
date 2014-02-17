@@ -15,29 +15,14 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-double Star::getMass1() const
+double StellarSystem::getMassRatio() const
 {
-    return mass;
+    return secondary.mass / primary.mass;
 }
 
-double Star::getMass2() const
+void StellarSystem::setMassRatio(double r)
 {
-    return mass2;
-}
-
-double Star::getMassRatio() const
-{
-    return mass2 / mass;
-}
-
-void Star::setMass1(double newMass)
-{
-    mass = newMass;
-}
-
-void Star::setMassRatio(double r)
-{
-    mass2 = mass * r;
+    secondary.mass = primary.mass * r;
 }
 
 // *** Unused ***
@@ -46,7 +31,7 @@ void Star::setMassRatio(double r)
 //     massRatio = newMass / getMass1 (pCluster);
 // }
 
-void Star::readCMD(const string &s, int filters)
+void StellarSystem::readCMD(const string &s, int filters)
 {
     double tempSigma, massRatio;
     string starID;
@@ -69,9 +54,9 @@ void Star::readCMD(const string &s, int filters)
         // Negative sigma (variance) is used to signal "don't count this band for this star"
     }
 
-    in >> mass
+    in >> primary.mass
        >> massRatio
-       >> status.at(0)
+       >> primary.status
        >> clustStarPriorDens
        >> useDuringBurnIn;
 
@@ -79,7 +64,7 @@ void Star::readCMD(const string &s, int filters)
 }
 
 
-array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
+array<double, FILTS> Star::getMags (double mass, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
 {
     array<double, FILTS> mags;
 
@@ -88,26 +73,26 @@ array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pClus
         for (auto f : filters)
             mags.at(f) = 99.999;
 
-        status.at(cmpnt) = DNE;
-        massNow.at(cmpnt) = 0.0;
+        status = DNE;
+        massNow = 0.0;
     }
     else if (mass <= pCluster.AGBt_zmass)
     {                           // for main seq or giant star
-        massNow.at(cmpnt) = mass;
+        massNow = mass;
 
         mags = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
 
-        status.at(cmpnt) = MSRG;    // keep track of evolutionary state
+        status = MSRG;    // keep track of evolutionary state
     }
     else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
-        mags = wdEvol (pCluster, evoModels, cmpnt);
+        mags = wdEvol (pCluster, evoModels);
     }
     else if (mass <= 100.)
     {                           // for neutron star or black hole remnant
         for (auto f : filters)
             mags.at(f) = 99.999;
-        status.at(cmpnt) = NSBH;
+        status = NSBH;
     }
     else
     {
@@ -115,21 +100,14 @@ array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pClus
         for (auto f : filters)
             mags.at(f) = 99.999;
 
-        status.at(cmpnt) = DNE;
+        status = DNE;
     }
 
     return mags;
 }
 
-array<double, FILTS> Star::wdEvol (const Cluster &pCluster, const Model &evoModels, int cmpnt)
+array<double, FILTS> Star::wdEvol (const Cluster &pCluster, const Model &evoModels)
 {
-    double mass;
-
-    if (cmpnt == 0)
-        mass = getMass1();
-    else
-        mass = getMass2();
-
     double thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 
     auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
@@ -140,23 +118,16 @@ array<double, FILTS> Star::wdEvol (const Cluster &pCluster, const Model &evoMode
     double logTeff = teffRadiusPair.first;
     // double thisWDLogRadius = teffRadiusPair.second;
     
-    auto mags = evoModels.WDAtmosphere->teffToMags (logTeff, thisWDMass, wdType.at(cmpnt));
+    auto mags = evoModels.WDAtmosphere->teffToMags (logTeff, thisWDMass, wdType);
 
-    massNow.at(cmpnt) = thisWDMass;
-    wdLogTeff.at(cmpnt) = logTeff;
-    status.at(cmpnt) = WD;
+    massNow = thisWDMass;
+    wdLogTeff = logTeff;
+    status = WD;
 
     return mags;
 }
 
-double Star::getLtau(const Cluster &pCluster, const Model &evoModels, int cmpnt) const
+double Star::getLtau(const Cluster &pCluster, const Model &evoModels) const
 {
-    double mass;
-
-    if (cmpnt == 0)
-        mass = getMass1();
-    else
-        mass = getMass2();
-
     return evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
 }

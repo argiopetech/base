@@ -41,11 +41,11 @@ using base::utility::ThreadPool;
 /*
  * Read data
  */
-vector<Star> readCmdData (struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax, const Settings &settings)
+vector<StellarSystem> readCmdData (struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax, const Settings &settings)
 {
     string line, pch;
 
-    vector<Star> stars;
+    vector<StellarSystem> systems;
 
     //Parse the header of the file to determine which filters are being used
     getline(ctrl.rData, line);  // Read in the header line
@@ -80,32 +80,32 @@ vector<Star> readCmdData (struct ifmrMcmcControl &ctrl, const Model &evoModels, 
 
     // This loop reads in photometry data
     // It also reads a best guess for the mass
-    stars.clear();
+    systems.clear();
 
     while (getline(ctrl.rData, line))
     {
-        stars.push_back(Star(line, filters.size()));
+        systems.emplace_back(line, filters.size());
 
         for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
         {
-            if (stars.back().obsPhot.at(i) < filterPriorMin.at(i))
+            if (systems.back().obsPhot.at(i) < filterPriorMin.at(i))
             {
-                filterPriorMin.at(i) = stars.back().obsPhot.at(i);
+                filterPriorMin.at(i) = systems.back().obsPhot.at(i);
             }
 
-            if (stars.back().obsPhot.at(i) > filterPriorMax.at(i))
+            if (systems.back().obsPhot.at(i) > filterPriorMax.at(i))
             {
-                filterPriorMax.at(i) = stars.back().obsPhot.at(i);
+                filterPriorMax.at(i) = systems.back().obsPhot.at(i);
             }
         }
 
-        if (!(stars.back().status.at(0) == 3 || (stars.back().obsPhot.at(settings.cluster.index) >= settings.cluster.minMag && stars.back().obsPhot.at(settings.cluster.index) <= settings.cluster.maxMag)))
+        if (!(systems.back().primary.status == 3 || (systems.back().obsPhot.at(settings.cluster.index) >= settings.cluster.minMag && systems.back().obsPhot.at(settings.cluster.index) <= settings.cluster.maxMag)))
         {
-            stars.pop_back();
+            systems.pop_back();
         }
     }
 
-    return stars;
+    return systems;
 } /* readCmdData */
 
 

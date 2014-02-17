@@ -71,12 +71,12 @@ namespace evil
     };
 }
 
-double logPriorMass (const Star &pStar, const Cluster &pCluster)
+double logPriorMass (const StellarSystem &system, const Cluster &pCluster)
 // Compute log prior density
 {
     double mass1, log_m1, logPrior = 0.0;
 
-    mass1 = pStar.getMass1();
+    mass1 = system.primary.mass;
 
     assert (mass1 > 0.1 && mass1 <= pCluster.M_wd_up);
 
@@ -134,7 +134,7 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     return prior;
 }
 
-double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags)
+double logLikelihood (int numFilts, const StellarSystem &system, const array<double, FILTS> &mags)
 // Computes log likelihood
 {
     int i;
@@ -142,14 +142,14 @@ double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS
 
     for (i = 0; i < numFilts; i++)
     {
-        if (pStar.variance.at(i) > 1e-9)
-            likelihood -= 0.5 * (log (2 * M_PI * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i)));
+        if (system.variance.at(i) > 1e-9)
+            likelihood -= 0.5 * (log (2 * M_PI * system.variance.at(i)) + (sqr (mags.at(i) - system.obsPhot.at(i)) / system.variance.at(i)));
     }
 
     return likelihood;
 }
 
-double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags)
+double tLogLikelihood (int numFilts, const StellarSystem &system, const array<double, FILTS> &mags)
 // Computes log likelihood
 {
     int i;
@@ -159,10 +159,10 @@ double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILT
 
     for (i = 0; i < numFilts; i++)
     {
-        if (pStar.variance.at(i) > 1e-9)
+        if (system.variance.at(i) > 1e-9)
         {
-            quadratic_sum += sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i);
-            likelihood -= 0.5 * (log (M_PI * pStar.variance.at(i)));
+            quadratic_sum += sqr (mags.at(i) - system.obsPhot.at(i)) / system.variance.at(i);
+            likelihood -= 0.5 * (log (M_PI * system.variance.at(i)));
         }
     }
     likelihood += lgamma (0.5 * (dof + (double) numFilts)) - lgamma (0.5 * dof);
@@ -171,7 +171,7 @@ double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILT
     return likelihood;
 }
 
-double scaledLogLike (int numFilts, const Star &pStar, double varScale, const array<double, FILTS> &mags)
+double scaledLogLike (int numFilts, const StellarSystem &system, double varScale, const array<double, FILTS> &mags)
 // Computes log likelihood
 {
     int i;
@@ -179,9 +179,9 @@ double scaledLogLike (int numFilts, const Star &pStar, double varScale, const ar
 
     for (i = 0; i < numFilts; i++)
     {
-        if (pStar.variance.at(i) > 1e-9)
+        if (system.variance.at(i) > 1e-9)
         {
-            likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / (varScale * pStar.variance.at(i))));
+            likelihood -= 0.5 * (log (2 * M_PI * varScale * system.variance.at(i)) + (sqr (mags.at(i) - system.obsPhot.at(i)) / (varScale * system.variance.at(i))));
         }
 
     }
@@ -189,14 +189,14 @@ double scaledLogLike (int numFilts, const Star &pStar, double varScale, const ar
 }
 
 
-double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &mags)
+double logPost1Star (const StellarSystem &system, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &mags)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;
 
-    logPrior = logPriorMass (pStar, pCluster);
+    logPrior = logPriorMass (system, pCluster);
 
-    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, mags);
+    likelihood = scaledLogLike (evoModels.numFilts, system, pCluster.varScale, mags);
 
     return (logPrior + likelihood);
 }

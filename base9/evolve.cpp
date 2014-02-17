@@ -29,9 +29,8 @@ using std::vector;
  * parent routine).  Using all of these inputs, this routine updates the photometry of the
  * star structure in the whichever of the U through K filters are being used (stored in useFilt).
 ***************************************************************************************/
-array<double, FILTS> evolve (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters,  Star &star)
+array<double, FILTS> evolve (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters,  StellarSystem &system)
 {
-    array<double, 2> mass;
     Matrix<double, 2, FILTS> mag;
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
@@ -40,13 +39,8 @@ array<double, FILTS> evolve (const Cluster &pCluster, const Model &evoModels, co
         throw WDBoundsError("Bounds error in evolve.cpp");
     }
 
-    mass.at(0) = star.getMass1();
-    mass.at(1) = star.getMass2();
-
-    for (int cmpnt = 0; cmpnt < 2; cmpnt++)
-    {
-        mag.at(cmpnt) = star.setMags(cmpnt, mass.at(cmpnt), pCluster, evoModels, filters);
-    }
+    mag.at(0) = system.primary.getMags(system.primary.mass, pCluster, evoModels, filters);
+    mag.at(1) = system.secondary.getMags(system.secondary.mass, pCluster, evoModels, filters);
 
     return deriveCombinedMags(mag.at(0), mag.at(1), pCluster, evoModels, filters);
 }

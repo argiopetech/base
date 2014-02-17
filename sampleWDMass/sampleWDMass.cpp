@@ -255,7 +255,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
         if (rData.eof())
             break;
 
-        mc.stars.push_back(Star(line, ctrl.numFilts));
+        mc.stars.emplace_back(line, ctrl.numFilts);
 
         for (int i = 0; i < ctrl.numFilts; i++)
         {
@@ -273,7 +273,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
             filterPriorMax.at(i) = ctrl.filterPriorMax.at(i);
         }
 
-        if (!(mc.stars.back().status.at(0) == 3 || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
+        if (!(mc.stars.back().primary.status == 3 || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
         {
             mc.stars.pop_back();
         }
@@ -366,17 +366,17 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
         for (i = 0; i < NPARAMS; i++)
         {
-            star.beta.at(i).at(0) = 0.0;
-            star.beta.at(i).at(1) = 0.0;
+            star.primary.beta.at(i) = 0.0;
+            star.secondary.beta.at(i) = 0.0;
         }
-        star.betaMassRatio.at(0) = 0.0;
-        star.betaMassRatio.at(1) = 0.0;
+        star.primary.betaMassRatio = 0.0;
+        star.secondary.betaMassRatio = 0.0;
 
-        for (i = 0; i < 2; i++)
-            star.wdType.at(i) = WdAtmosphere::DA;
+        star.primary.wdType = WdAtmosphere::DA;
+        star.secondary.wdType = WdAtmosphere::DA;
 
         // find photometry for initial values of currentClust and mc->stars
-        if (star.status.at(0) == WD)
+        if (star.primary.status == WD)
         {
             star.setMassRatio(0.0);
         }
@@ -443,7 +443,7 @@ int main (int argc, char *argv[])
             obs.at(i).variance.at(filt) = mc.stars.at(i).variance.at(filt);
         }
         obs.at(i).clustStarPriorDens = mc.stars.at(i).clustStarPriorDens;
-        starStatus.at(i) = mc.stars.at(i).status.at(0);
+        starStatus.at(i) = mc.stars.at(i).primary.status;
 
         if (starStatus.at(i) == WD)
         {
@@ -545,7 +545,7 @@ int main (int argc, char *argv[])
 
         for (auto star : mc.stars)
         {
-            if (star.status.at(0) == WD)
+            if (star.primary.status == WD)
             {
                 postClusterStar = 0.0;
 
@@ -554,7 +554,7 @@ int main (int argc, char *argv[])
                 for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
                 {
                     /* condition on WD being cluster star */
-                    star.mass = mass1;
+                    star.primary.mass = mass1;
                     star.setMassRatio(0.0);
 
                     try

@@ -26,8 +26,6 @@ class MpiMcmcApplication : public McmcApplication
 
   private:
     void scaleStepSizes (std::array<double, NPARAMS> &);
-//    std::pair<std::array<double, N_MS_MASS1 * N_MS_MASS_RATIO>, array<double, N_MS_MASS1 * N_MS_MASS_RATIO>> initMsMassRatioGrid (const Chain&);
-//    std::array<double, N_WD_MASS1> initWdMass1Grid (const Chain&);
 
     double wdGridMass (int) const;
 
@@ -35,7 +33,7 @@ class MpiMcmcApplication : public McmcApplication
     const Settings settings;
 
     Cluster clust;
-    vector<Star> stars;
+    vector<StellarSystem> systems;
 
     base::utility::ThreadPool pool;
 
