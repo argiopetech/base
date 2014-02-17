@@ -33,7 +33,9 @@ pushd ./BUILD
 cmake -DCMAKE_BUILD_TYPE="RELEASE" ..
 make $MULTICPUS
 
-make install
+if [[ ! $NOINSTALL ]]; then
+    make install
+fi;
 
 popd
 popd
