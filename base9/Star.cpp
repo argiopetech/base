@@ -161,3 +161,47 @@ void StellarSystem::readCMD(const string &s, int filters)
 
     setMassRatio(massRatio);
 }
+
+
+array<double, FILTS> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters)
+{
+    auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
+
+    assert(!filters.empty());
+
+    auto primaryMags = primary.getMags(clust, evoModels, filters);
+    auto secondaryMags = secondary.getMags(clust, evoModels, filters);
+
+    double flux = 0.0;
+
+    array<double, FILTS> combinedMags;
+
+    combinedMags.fill(0.0);
+
+    // can now derive combined mags
+    if (secondaryMags.at(filters.front()) < 99.)
+    {                           // if there is a secondary star
+        for (auto f : filters)
+        {
+            flux = exp10((primaryMags.at(f) / -2.5));    // add up the fluxes of the primary
+            flux += exp10((secondaryMags.at(f) / -2.5)); // and the secondary
+            combinedMags.at(f) = -2.5 * log10 (flux);    // (these 3 lines .at(used to?) take 5% of run time for N large)
+            // if primary mag = 99.999, then this works
+        }
+    }  // to make the combined mag = secondary mag
+    else
+    {
+        for (auto f : filters)
+            combinedMags.at(f) = primaryMags.at(f);
+    }
+
+    for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
+    {
+        int f = filters.at(i);
+
+        combinedMags.at(f) += clust.mod;
+        combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * clust.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
+    }
+
+    return combinedMags;
+}

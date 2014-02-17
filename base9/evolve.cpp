@@ -39,8 +39,5 @@ array<double, FILTS> evolve (const Cluster &clust, const Model &evoModels, const
         throw WDBoundsError("Bounds error in evolve.cpp");
     }
 
-    mag.at(0) = system.primary.getMags(clust, evoModels, filters);
-    mag.at(1) = system.secondary.getMags(clust, evoModels, filters);
-
-    return deriveCombinedMags(mag.at(0), mag.at(1), clust, evoModels, filters);
+    return system.deriveCombinedMags(clust, evoModels, filters);
 }

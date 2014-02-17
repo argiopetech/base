@@ -75,67 +75,24 @@ double margEvolveWithBinary (const Cluster &clust, const StellarSystem &system, 
 }
 
 
-array<double, FILTS> deriveCombinedMags (const array<double, FILTS> &primaryMags, const array<double, FILTS> &secondaryMags, const Cluster &clust, const Model &evoModels, const vector<int> &filters)
-{
-    auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
-
-    assert(!filters.empty());
-
-    double flux = 0.0;
-
-    array<double, FILTS> combinedMags;
-
-    combinedMags.fill(0.0);
-
-    // can now derive combined mags
-    if (secondaryMags.at(filters.front()) < 99.)
-    {                           // if there is a secondary star
-        for (auto f : filters)
-        {
-            flux = exp10((primaryMags.at(f) / -2.5));    // add up the fluxes of the primary
-            flux += exp10((secondaryMags.at(f) / -2.5)); // and the secondary
-            combinedMags.at(f) = -2.5 * log10 (flux);    // (these 3 lines .at(used to?) take 5% of run time for N large)
-            // if primary mag = 99.999, then this works
-        }
-    }  // to make the combined mag = secondary mag
-    else
-    {
-        for (auto f : filters)
-            combinedMags.at(f) = primaryMags.at(f);
-    }
-
-    for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
-    {
-        int f = filters.at(i);
-
-        combinedMags.at(f) += clust.mod;
-        combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * clust.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
-    }
-
-    return combinedMags;
-}
-
-
 double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, StellarSystem system, const Model &evoModels, const vector<int> &filters)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;
 
-    Matrix<double, 2, FILTS> mag;
+    array<double, FILTS> primaryMags;
     array<double, FILTS> combinedMags;
 
     system.primary.mass = mass.at(0);
 
-    mag.at(0) = system.primary.getMags (clust, evoModels, filters);
+    primaryMags = system.primary.getMags (clust, evoModels, filters);
 
     double tmpLogPost, tmpPost;
 
     /* first try 0.0 massRatio */
     system.secondary.mass = (mass.at(1));
 
-    mag.at(1) = system.secondary.getMags (clust, evoModels, filters);
-
-    combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), clust, evoModels, filters);
+    combinedMags = system.deriveCombinedMags (clust, evoModels, filters);
     tmpLogPost = logPost1Star (system, clust, evoModels, combinedMags);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
@@ -153,8 +110,8 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
     {
         if (isOverlap)
         {
-            double diffLow = exp10(((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
-            double diffUp = exp10(((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((mag.at(0).at(f) / -2.5));
+            double diffLow = exp10(((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((primaryMags.at(f) / -2.5));
+            double diffUp = exp10(((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((primaryMags.at(f) / -2.5));
 
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
@@ -184,8 +141,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
             system.setMassRatio (mass.at(0) / isochrone.mass.at(i));
             system.secondary.mass = mass.at(1);
 
-            mag.at(1) = system.secondary.getMags (clust, evoModels, filters);
-            combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), clust, evoModels, filters);
+            combinedMags = system.deriveCombinedMags (clust, evoModels, filters);
 
             /* now have magnitudes, want posterior probability */
             tmpLogPost = logPost1Star (system, clust, evoModels, combinedMags);
