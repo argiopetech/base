@@ -20,13 +20,15 @@ class Star
 
     ~Star() {;}
 
+
     // Functions
     double getLtau(const Cluster&, const Model&) const;
     double wdLogTeff(const Cluster&, const Model&) const;
     double wdMassNow(double, const Cluster&, const Model&) const;
 
-    std::array<double, FILTS> getMags (double, const Cluster&, const Model&, const std::vector<int>&);
+    std::array<double, FILTS> getMags (double, const Cluster&, const Model&, const std::vector<int>&) const;
     std::array<double, FILTS> wdEvol (const Cluster&, const Model&) const;
+
 
     // Variables
     std::array<double, NPARAMS> beta;
@@ -54,6 +56,7 @@ class StellarSystem
     }
 
     ~StellarSystem() {;}
+
 
     // Functions
     void readCMD(const std::string&, int);
