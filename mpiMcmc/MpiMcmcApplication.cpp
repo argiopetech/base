@@ -261,7 +261,7 @@ int MpiMcmcApplication::run()
 
                 try
                 {
-                    logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+                    logPostProp = logPostStep (propClust, fsLike, filters);
                 }
                 catch(InvalidCluster &e)
                 {
@@ -356,7 +356,7 @@ int MpiMcmcApplication::run()
 
         try
         {
-            logPostProp = logPostStep (stars, propClust, fsLike, filters, filterPriorMin, filterPriorMax);
+            logPostProp = logPostStep (propClust, fsLike, filters);
         }
         catch(InvalidCluster &e)
         {
@@ -494,7 +494,7 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
     return clust;
 }
 
-double MpiMcmcApplication::logPostStep(const vector<Star> &stars, Cluster &propClust, double fsLike, const vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax)
+double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const vector<int> &filters)
 {
     mutex logPostMutex;
     double logPostProp;

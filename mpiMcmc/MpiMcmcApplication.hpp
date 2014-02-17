@@ -22,7 +22,7 @@ class MpiMcmcApplication : public McmcApplication
     Cluster propClustIndep (Cluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &, double scale = 1.0);
     Cluster propClustCorrelated (Cluster, const struct ifmrMcmcControl &);
 
-    double logPostStep (const std::vector<Star> &, Cluster &, double, const std::vector<int>&, std::array<double, FILTS>&, std::array<double, FILTS>&);
+    double logPostStep (Cluster &, double, const std::vector<int>&);
 
   private:
     void scaleStepSizes (std::array<double, NPARAMS> &);
