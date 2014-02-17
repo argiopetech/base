@@ -24,8 +24,6 @@ namespace evil {
         {
             evil::initialized = true;
 
-            for (auto &a : clust.betaAgeMod)
-                a = std::numeric_limits<double>::max();
             for (auto &a : clust.priorVar)
                 a = std::numeric_limits<double>::max();
             for (auto &a : clust.priorMean)
@@ -71,41 +69,6 @@ bool isInitialized()
         throw Rcpp::exception("You need to initialize first...");
         return false; // This will never get called...
     }
-}
-
-double wdEvol (std::array<double, 14> &globalMags, double mass)
-{
-    const auto filters = evil::globals::getInstance().filters;
-    const auto evoModels = evil::globals::getInstance().evoModels;
-    const auto clust = evil::globals::getInstance().clust;
-
-    std::pair<double, double> teffRadiusPair;
-
-    double thisWDMass = 0.0, thisPrecLogAge = 0.0, thisLogTeff, thisWDLogRadius = 0.0, thisWDLogG = 0.0;
-
-    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
-
-    thisWDMass = intlFinalMassReln (clust, evoModels, mass);
-
-    //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (clust.age, clust.carbonicity, thisPrecLogAge, thisWDMass);
-
-    thisLogTeff = teffRadiusPair.first;
-    thisWDLogRadius = teffRadiusPair.second;
-
-    //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
-    if (thisPrecLogAge >= clust.age)
-    {                           // mcmc.c can cause this by adjusting masses and ages         
-        for (auto f : filters)
-            globalMags[f] = -4.; // place at tip of RGB                                       
-    }
-    else
-    {
-        //Calculate mass
-        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, WdAtmosphere::DA); // All WD stars are currently set to DA
-    }
-
-    return thisPrecLogAge;
 }
 
 // [[Rcpp::export]]
@@ -205,11 +168,14 @@ std::array<double, 8> evolve (double mass1, double mass2)
 {
     if (isInitialized())
     {
-        std::array<double, 8> combinedMags;
-        Matrix<double, 3, 14> mags;
+        std::array<double, 8> returnMags;
+        Matrix<double, 2, 14> mags;
+        std::array<double, 14> combinedMags;
 
         double flux;
-        Star pStar;
+        StellarSystem system;
+        system.primary.mass = mass1;
+        system.secondary.mass = mass2;
 
         for (auto &mag : mags)
         {
@@ -228,51 +194,14 @@ std::array<double, 8> evolve (double mass1, double mass2)
             throw Rcpp::exception("Bounds error in evolve");
         }
 
-        auto mySetMags = [=](std::array<double, 14> &mag, double mass)
-        {
-            std::array<double, 14> globalMags;
-            globalMags.fill(0.0);
-
-            if (mass <= 0.0001)
-            {                           // for non-existent secondary stars
-                for (auto f : filters)
-                    mag[f] = 99.999;
-            }
-            else if (mass <= clust.AGBt_zmass)
-            {                           // for main seq or giant star
-                evoModels.mainSequenceEvol->msRgbEvol(filters, globalMags, mass);
-                for (auto f : filters)
-                    mag[f] = globalMags[f];
-            }
-            else if (mass <= clust.M_wd_up)
-            {                           // for white dwarf
-                wdEvol (globalMags, mass);
-                for (auto f : filters)
-                    mag[f] = globalMags[f];
-            }
-            else if (mass <= 100.)
-            {                           // for neutron star or black hole remnant
-                for (auto f : filters)
-                    mag[f] = 99.999;
-            }
-            else
-            { // This should never happen...
-                for (auto f : filters)
-                    mag[f] = 99.999;
-            }
-        };
-
-        mySetMags(mags[0], mass1);
-        mySetMags(mags[1], mass2);
-
-        deriveCombinedMags(mags, clust.abs, flux, clust, pStar, evoModels, filters);
+        combinedMags = system.deriveCombinedMags (clust, evoModels, filters);
 
         for (auto f : filters)
         {
-            combinedMags[f] = mags[2][f];
+            returnMags[f] = combinedMags[f];
         }
 
-        return combinedMags;
+        return returnMags;
     }
     else
     {
