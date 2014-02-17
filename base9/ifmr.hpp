@@ -4,6 +4,6 @@
 #include "Cluster.hpp"
 #include "Model.hpp"
 
-double intlFinalMassReln (const Cluster &clust, const Model &evoModels, double zamsMass);
+double intlFinalMassReln (const Cluster&, const Model&, double);
 
 #endif

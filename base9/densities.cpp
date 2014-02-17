@@ -1,6 +1,4 @@
 #include <array>
-#include <atomic>
-#include <mutex>
 
 #include <cmath>
 #include <cstdio>
@@ -15,9 +13,6 @@
 #include "densities.hpp"
 
 using std::array;
-using std::atomic;
-using std::once_flag;
-using std::call_once;
 
 constexpr double sqr(double a)
 {

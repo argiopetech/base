@@ -1,9 +1,7 @@
 #include <random>
 
-#include "Star.hpp"
 #include "samplers.hpp"
 #include "densities.hpp"
-#include "evolve.hpp"
 
 double sampleT (std::mt19937 &gen, double var, double nu)
 {

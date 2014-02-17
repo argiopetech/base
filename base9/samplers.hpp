@@ -3,11 +3,7 @@
 
 #include <random>
 
-#include "densities.hpp"
-#include "structures.hpp"
-
-const double AGEPROPSTEPSIZE = 0.02;
-const int AGE_WANDER         = 100;
+#include "constants.hpp"
 
 double sampleT (std::mt19937&, double var, double nu = DOF);
 

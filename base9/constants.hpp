@@ -69,4 +69,7 @@ const int IFMR_QUADCOEF     =  8;
 
 const int BERG_NFILTS     = 8;
 
+const double DOF    = 6.0;
+const double GAMMA6 = -2.0590305444197083417635;   /* GAMMA for DOF=6 */
+
 #endif
