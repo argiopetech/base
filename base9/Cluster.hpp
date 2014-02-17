@@ -11,7 +11,6 @@ class Cluster
     double getParam(int) const;
     void setParam(int, double);
 
-    std::array<double, 3> betaAgeMod;
     std::array<double, NPARAMS> priorVar;
     std::array<double, NPARAMS> priorMean;
     std::array<double, NPARAMS> mean;
