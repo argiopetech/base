@@ -48,8 +48,10 @@ class Star
     void setMassRatio(double);
     //void setMass2 (const Cluster &, double);
 
-    std::array<double, FILTS> setMags (int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters);
-    double wdEvol (const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters, std::array<double, FILTS> &globalMags, int cmpnt);
+    double getLtau(const Cluster&, const Model&, int) const;
+
+    std::array<double, FILTS> setMags (int, double, const Cluster&, const Model&, const std::vector<int>&);
+    std::array<double, FILTS> wdEvol (const Cluster&, const Model&, int);
 
     Matrix<double, NPARAMS, 2> beta;
 

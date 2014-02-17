@@ -101,7 +101,7 @@ array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pClus
     }
     else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
-        /*ltau = */wdEvol (pCluster, evoModels, filters, mags, cmpnt);
+        mags = wdEvol (pCluster, evoModels, cmpnt);
     }
     else if (mass <= 100.)
     {                           // for neutron star or black hole remnant
@@ -121,11 +121,8 @@ array<double, FILTS> Star::setMags (int cmpnt, double mass, const Cluster &pClus
     return mags;
 }
 
-double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters, array<double, FILTS> &globalMags, int cmpnt)
+array<double, FILTS> Star::wdEvol (const Cluster &pCluster, const Model &evoModels, int cmpnt)
 {
-    std::pair<double, double> teffRadiusPair;
-
-    double thisWDMass = 0.0, thisPrecLogAge = 0.0, thisLogTeff, thisWDLogRadius = 0.0;
     double mass;
 
     if (cmpnt == 0)
@@ -133,31 +130,33 @@ double Star::wdEvol (const Cluster &pCluster, const Model &evoModels, const vect
     else
         mass = getMass2();
 
-    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
+    double thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
 
-    thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
+    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.age, pCluster.carbonicity, thisPrecLogAge, thisWDMass);
+    auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.age, pCluster.carbonicity, precLogAge, thisWDMass);
 
-    thisLogTeff = teffRadiusPair.first;
-    thisWDLogRadius = teffRadiusPair.second;
-
-    //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
-    if (thisPrecLogAge >= pCluster.age)
-    {                           // mcmc.c can cause this by adjusting masses and ages
-        for (auto f : filters)
-            globalMags.at(f) = -4.; // place at tip of RGB
-    }
-    else
-    {
-        //Calculate logg
-        globalMags = evoModels.WDAtmosphere->teffToMags (thisLogTeff, thisWDMass, wdType.at(cmpnt));
-    }
+    double logTeff = teffRadiusPair.first;
+    // double thisWDLogRadius = teffRadiusPair.second;
+    
+    auto mags = evoModels.WDAtmosphere->teffToMags (logTeff, thisWDMass, wdType.at(cmpnt));
 
     massNow.at(cmpnt) = thisWDMass;
-    wdLogTeff.at(cmpnt) = thisLogTeff;
+    wdLogTeff.at(cmpnt) = logTeff;
     status.at(cmpnt) = WD;
 
-    return thisPrecLogAge;
+    return mags;
+}
+
+double Star::getLtau(const Cluster &pCluster, const Model &evoModels, int cmpnt) const
+{
+    double mass;
+
+    if (cmpnt == 0)
+        mass = getMass1();
+    else
+        mass = getMass2();
+
+    return evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
 }
