@@ -126,14 +126,14 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
 
     system.primary.mass = mass.at(0);
 
-    mag.at(0) = system.primary.getMags (mass.at(0), pCluster, evoModels, filters);
+    mag.at(0) = system.primary.getMags (pCluster, evoModels, filters);
 
     double tmpLogPost, tmpPost;
 
     /* first try 0.0 massRatio */
-    system.setMassRatio(0.0);
+    system.secondary.mass = (mass.at(1));
 
-    mag.at(1) = system.secondary.getMags (mass.at(1), pCluster, evoModels, filters);
+    mag.at(1) = system.secondary.getMags (pCluster, evoModels, filters);
 
     combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
     tmpLogPost = logPost1Star (system, pCluster, evoModels, combinedMags);
@@ -182,8 +182,9 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
         if (okMass.at(i))
         {
             system.setMassRatio (mass.at(0) / isochrone.mass.at(i));
+            system.secondary.mass = mass.at(1);
 
-            mag.at(1) = system.secondary.getMags (mass.at(1), pCluster, evoModels, filters);
+            mag.at(1) = system.secondary.getMags (pCluster, evoModels, filters);
             combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
 
             /* now have magnitudes, want posterior probability */

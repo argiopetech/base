@@ -9,10 +9,11 @@ const int FILTS      = 14;   // UBVRIJHK, respectively
 const int MAG_LIST   = 26;   // list length for mag vs. S/N
 const int MODEL_LIST = 118;  // age/Mv/V-I entries in WD model array
 
-const int MSRG       = 1;    // Main-sequence or red giant
-const int WD         = 3;    // White dwarf
-const int NSBH       = 4;    // Neutron star or black hole
-const int DNE        = 9;    // Does not exist (zams mass > 100 Msun or < 0.0001)
+enum StarStatus { MSRG = 1    // Main-sequence or red giant
+                , WD   = 3    // White dwarf
+                , NSBH = 4    // Neutron star or black hole
+                , DNE  = 9    // Does not exist (zams mass > 100 Msun or < 0.0001)
+};
 
 const double R_sun   = 6.96342e10;
 

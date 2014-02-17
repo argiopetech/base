@@ -13,26 +13,21 @@
 class Star
 {
   public:
-    Star()
-    {
-        beta.fill(0.0);
-    }
-
+    Star() {;}
     ~Star() {;}
 
-
     // Functions
+    int getStatus(const Cluster&) const;
+
     double getLtau(const Cluster&, const Model&) const;
     double wdLogTeff(const Cluster&, const Model&) const;
-    double wdMassNow(double, const Cluster&, const Model&) const;
+    double wdMassNow(const Cluster&, const Model&) const;
 
-    std::array<double, FILTS> getMags (double, const Cluster&, const Model&, const std::vector<int>&) const;
+    std::array<double, FILTS> getMags (const Cluster&, const Model&, const std::vector<int>&) const;
     std::array<double, FILTS> wdEvol (const Cluster&, const Model&) const;
 
 
     // Variables
-    std::array<double, NPARAMS> beta;
-
     WdAtmosphere wdType = WdAtmosphere::DA;
 
     int status = 0;

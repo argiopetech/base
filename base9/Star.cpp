@@ -15,7 +15,7 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-array<double, FILTS> Star::getMags (double mass, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters) const
+array<double, FILTS> Star::getMags (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters) const
 {
     array<double, FILTS> mags;
 
@@ -23,46 +23,58 @@ array<double, FILTS> Star::getMags (double mass, const Cluster &pCluster, const 
     {                           // for non-existent secondary stars
         for (auto f : filters)
             mags.at(f) = 99.999;
-
-//        status = DNE;
     }
     else if (mass <= pCluster.AGBt_zmass)
     {                           // for main seq or giant star
         mags = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
-
-//        status = MSRG;    // keep track of evolutionary state
     }
     else if (mass <= pCluster.M_wd_up)
     {                           // for white dwarf
         mags = wdEvol (pCluster, evoModels);
-//        status = WD;
     }
     else if (mass <= 100.)
     {                           // for neutron star or black hole remnant
         for (auto f : filters)
             mags.at(f) = 99.999;
-//        status = NSBH;
     }
     else
     {
         //     log <<  (" This condition should not happen, %.2f greater than 100 Mo\n", mass);
         for (auto f : filters)
             mags.at(f) = 99.999;
-
-//        status = DNE;
     }
 
     return mags;
 }
 
-array<double, FILTS> Star::wdEvol (const Cluster &pCluster, const Model &evoModels) const
+int Star::getStatus(const Cluster &clust) const
 {
-    double thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
+    if (mass <= clust.AGBt_zmass)
+    {                           // for main seq or giant star
+        return MSRG;
+    }
+    else if (mass <= clust.M_wd_up)
+    {                           // for white dwarf
+        return WD;
+    }
+    else if (mass <= 100.)
+    {                           // for neutron star or black hole remnant
+        return NSBH;
+    }
+    else
+    {                           // for everything else
+        return DNE;
+    }
+}
 
-    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
+array<double, FILTS> Star::wdEvol (const Cluster &clust, const Model &evoModels) const
+{
+    double thisWDMass = intlFinalMassReln (clust, evoModels, mass);
+
+    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.age, pCluster.carbonicity, precLogAge, thisWDMass);
+    auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (clust.age, clust.carbonicity, precLogAge, thisWDMass);
 
     double logTeff = teffRadiusPair.first;
     // double thisWDLogRadius = teffRadiusPair.second;
@@ -74,15 +86,15 @@ array<double, FILTS> Star::wdEvol (const Cluster &pCluster, const Model &evoMode
 
 
 // Returns actual current mass (i.e. not zams_mass)
-double Star::wdMassNow(double mass, const Cluster &pCluster, const Model &evoModels) const
+double Star::wdMassNow(const Cluster &clust, const Model &evoModels) const
 {
-    if (mass <= pCluster.AGBt_zmass)
+    if (mass <= clust.AGBt_zmass)
     {                           // for main seq or giant star
         return mass;
     }
-    else if (mass <= pCluster.M_wd_up)
+    else if (mass <= clust.M_wd_up)
     {                           // for white dwarf
-        return intlFinalMassReln (pCluster, evoModels, mass);
+        return intlFinalMassReln (clust, evoModels, mass);
     }
     else
     {
@@ -91,21 +103,21 @@ double Star::wdMassNow(double mass, const Cluster &pCluster, const Model &evoMod
 }
 
 
-double Star::wdLogTeff(const Cluster &pCluster, const Model &evoModels) const
+double Star::wdLogTeff(const Cluster &clust, const Model &evoModels) const
 {
-    double thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
+    double thisWDMass = intlFinalMassReln (clust, evoModels, mass);
 
-    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
+    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
 
-    auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.age, pCluster.carbonicity, precLogAge, thisWDMass);
+    auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (clust.age, clust.carbonicity, precLogAge, thisWDMass);
 
     return teffRadiusPair.first;
 }
 
 
-double Star::getLtau(const Cluster &pCluster, const Model &evoModels) const
+double Star::getLtau(const Cluster &clust, const Model &evoModels) const
 {
-    return evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
+    return evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
 }
 
 double StellarSystem::getMassRatio() const

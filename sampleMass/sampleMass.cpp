@@ -347,17 +347,9 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     mc->clust.mean.at(IFMR_SLOPE) = ctrl->priorMean.at(IFMR_SLOPE);
     mc->clust.mean.at(IFMR_QUADCOEF) = ctrl->priorMean.at(IFMR_QUADCOEF);
 
-    int i;
-
     for (auto star : mc->stars)
     {
         star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
-
-        for (i = 0; i < NPARAMS; i++)
-        {
-            star.primary.beta.at(i) = 0.0;
-            star.secondary.beta.at(i) = 0.0;
-        }
 
         star.primary.wdType = WdAtmosphere::DA;
         star.secondary.wdType = WdAtmosphere::DA;
