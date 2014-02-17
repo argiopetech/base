@@ -362,10 +362,7 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
     for (auto star : mc->stars)
     {
-        star.meanMassRatio = 0.0;
         star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
-        star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-        star.massRatioStepSize = 0.001;
 
         for (i = 0; i < NPARAMS; i++)
         {
@@ -374,8 +371,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         }
         star.betaMassRatio.at(0) = 0.0;
         star.betaMassRatio.at(1) = 0.0;
-        star.meanU = 0.0;
-        star.varU = 0.0;
 
         for (i = 0; i < 2; i++)
             star.wdType.at(i) = WdAtmosphere::DA;
@@ -383,7 +378,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         // find photometry for initial values of currentClust and mc->stars
         if (star.status.at(0) == WD)
         {
-            star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
             star.massRatio = 0.0;
         }
     }

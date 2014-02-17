@@ -65,14 +65,9 @@ class Star
 
     double clustStarPriorDens = 0.0;    // prior probability that the star is a cluster star
     double clustStarProposalDens = 0.0; // proposal density for steps to the cluster star model
+
     double U = 0.0;
     double massRatio = 0.0;             // massRatio = secondary mass / primary mass (between 0 and 1)
-    double meanU = 0.0;
-    double varU = 0.0;
-    double meanMassRatio = 0.0;
-    double varMassRatio = 0.0;
-    double UStepSize = 0.0;
-    double massRatioStepSize = 0.0;
 };
 
 #endif

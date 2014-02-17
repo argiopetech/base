@@ -160,9 +160,6 @@ int MpiMcmcApplication::run()
 
     Cluster propClust;
 
-    array<double, FILTS> filterPriorMin;
-    array<double, FILTS> filterPriorMax;
-
     MVatrix<double, NPARAMS> params; // Must be initialized after nSave has been set.
 
     std::vector<int> filters;
@@ -174,19 +171,38 @@ int MpiMcmcApplication::run()
 
     increment = trialIter / (2 * nSave);
 
-    /* Initialize filter prior mins and maxes */
-    filterPriorMin.fill(1000);
-    filterPriorMax.fill(-1000);
+    // Read photometry and calculate fsLike
+    {
+        array<double, FILTS> filterPriorMin;
+        array<double, FILTS> filterPriorMax;
 
-    stars = readCmdData (ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
+        /* Initialize filter prior mins and maxes */
+        filterPriorMin.fill(1000);
+        filterPriorMax.fill(-1000);
+
+        stars = readCmdData (ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
+
+        if (stars.size() > 1)
+        {
+            double logFieldStarLikelihood = 0.0;
+
+            for (decltype(filters.size()) filt = 0; filt < filters.size(); filt++)
+            {
+                logFieldStarLikelihood -= log (filterPriorMax[filt] - filterPriorMin[filt]);
+            }
+            fsLike = exp (logFieldStarLikelihood);
+        }
+        else
+        {
+            fsLike = 0;
+        }
+    }
 
     // Begin initChain
     {
         for (auto star : stars)
         {
             star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
-            star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
-            star.massRatioStepSize = 0.001;
 
             // find photometry for initial values of currentClust and mc.stars
             clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
@@ -194,27 +210,13 @@ int MpiMcmcApplication::run()
 
             if (star.status[0] == WD)
             {
-                star.UStepSize = 0.05;      // use larger initial step size for white dwarfs
                 star.massRatio = 0.0;
             }
         }
     }
     // end initChain
 
-    if (stars.size() > 1)
-    {
-        double logFieldStarLikelihood = 0.0;
 
-        for (decltype(filters.size()) filt = 0; filt < filters.size(); filt++)
-        {
-            logFieldStarLikelihood -= log (filterPriorMax[filt] - filterPriorMin[filt]);
-        }
-        fsLike = exp (logFieldStarLikelihood);
-    }
-    else
-    {
-        fsLike = 0;
-    }
 
     cout << "Bayesian analysis of stellar evolution" << endl;
 
