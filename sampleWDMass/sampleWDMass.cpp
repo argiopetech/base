@@ -10,7 +10,6 @@
 
 #include "constants.hpp"
 #include "densities.hpp"
-#include "evolve.hpp"
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "WhiteDwarf.hpp"
@@ -549,9 +548,7 @@ int main (int argc, char *argv[])
 
                     try
                     {
-                        array<double, FILTS> globalMags = evolve (internalCluster, evoModels, filters, star);
-
-                        wdLogPost.at(im) = logPost1Star (star, internalCluster, evoModels, globalMags);
+                        wdLogPost.at(im) = logPost1Star (star, internalCluster, evoModels, filters);
                         postClusterStar += exp (wdLogPost.at(im));
                     }
                     catch ( WDBoundsError &e )

@@ -163,7 +163,7 @@ void StellarSystem::readCMD(const string &s, int filters)
 }
 
 
-array<double, FILTS> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters)
+array<double, FILTS> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 

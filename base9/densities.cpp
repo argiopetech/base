@@ -1,4 +1,5 @@
 #include <array>
+#include <vector>
 
 #include <cmath>
 #include <cstdio>
@@ -8,11 +9,12 @@
 #include "Star.hpp"
 
 #include "constants.hpp"
-#include "evolve.hpp"
 #include "structures.hpp"
 #include "densities.hpp"
+#include "WhiteDwarf.hpp"
 
 using std::array;
+using std::vector;
 
 constexpr double sqr(double a)
 {
@@ -184,10 +186,18 @@ double scaledLogLike (int numFilts, const StellarSystem &system, double varScale
 }
 
 
-double logPost1Star (const StellarSystem &system, const Cluster &clust, const Model &evoModels, const array<double, FILTS> &mags)
+double logPost1Star (const StellarSystem &system, const Cluster &clust, const Model &evoModels, const vector<int> &filters)
 // Compute posterior density for 1 star:
 {
+    // AGBt_zmass never set because age and/or metallicity out of range of models.
+    if (clust.AGBt_zmass < EPS)
+    {
+        throw WDBoundsError("Bounds error in evolve.cpp");
+    }
+
     double likelihood = 0.0, logPrior = 0.0;
+
+    const array<double, FILTS> mags = system.deriveCombinedMags(clust, evoModels, filters);
 
     logPrior = logPriorMass (system, clust);
 

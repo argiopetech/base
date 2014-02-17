@@ -5,12 +5,9 @@
 
 #include <cmath>
 
-#include <boost/lexical_cast.hpp>
-
 #include "Cluster.hpp"
 #include "Star.hpp"
 
-#include "evolve.hpp"
 #include "LinearTransform.hpp"
 #include "binSearch.hpp"
 #include "YaleMsModel.hpp"

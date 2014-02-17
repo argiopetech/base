@@ -4,7 +4,6 @@
 
 #include "Cluster.hpp"
 #include "Star.hpp"
-#include "evolve.hpp"
 #include "LinearTransform.hpp"
 
 using std::cerr;
@@ -221,17 +220,18 @@ large as 9.0.
     else
     {
         int lo = 1;
-        int hi = 10;
+        int hi = 9;
         int mid;
 
         // binary search on zams_mass
         while (1)
         {
-            mid = ((lo + hi) >> 1);
+            mid = (lo + hi) / 2;
 
-            if (initMassW[mid - 1] <= zamsMass && zamsMass <= initMassW[mid])
+            if ((initMassW[mid - 1] <= zamsMass) && (zamsMass <= initMassW[mid]))
             {
                 auto wdMass = linearTransform<TransformMethod::Interp>(initMassW[mid - 1], initMassW[mid], finalMassW[mid - 1], finalMassW[mid], zamsMass);
+
                 return wdMass.val;
             }
 

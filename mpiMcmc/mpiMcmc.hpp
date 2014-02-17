@@ -5,7 +5,10 @@
 #include <string>
 #include <fstream>
 
-#include "evolve.hpp"
+#include "Cluster.hpp"
+#include "constants.hpp"
+#include "Matrix.hpp"
+#include "Star.hpp"
 
 const double MIN_MASS1    = 0.15;
 const int N_MS_MASS1      = 500;

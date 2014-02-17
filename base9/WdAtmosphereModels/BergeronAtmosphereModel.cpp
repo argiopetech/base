@@ -11,7 +11,6 @@
 #include "Star.hpp"
 
 #include "BergeronAtmosphereModel.hpp"
-#include "evolve.hpp"
 #include "LinearTransform.hpp"
 #include "Matrix.hpp"
 

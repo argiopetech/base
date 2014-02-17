@@ -204,10 +204,6 @@ int MpiMcmcApplication::run()
         {
             system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
 
-            // find photometry for initial values of currentClust and mc.stars
-            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
-            evolve (clust, evoModels, filters, system);
-
             if (system.primary.status == WD)
             {
                 system.setMassRatio(0.0);
@@ -524,9 +520,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
 
                 try
                 {
-                    array<double, FILTS> globalMags = evolve (propClust, evoModels, filters, wd);
-
-                    tmpLogPost = logPost1Star (wd, propClust, evoModels, globalMags);
+                    tmpLogPost = logPost1Star (wd, propClust, evoModels, filters);
                     tmpLogPost += log ((propClust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
                     postClusterStar +=  exp (tmpLogPost);

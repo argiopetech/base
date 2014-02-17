@@ -15,7 +15,6 @@
 
 #include "constants.hpp"
 #include "densities.hpp"
-#include "evolve.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
 #include "samplers.hpp"
@@ -433,9 +432,7 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
         {
             try
             {
-                array<double, FILTS> globalMags = evolve (clust, evoModels, filters, propStar);
-
-                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, globalMags);
+                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, filters);
 
                 if (acceptP(gen, acceptedPosterior, proposedPosterior))
                 {
