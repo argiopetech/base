@@ -359,9 +359,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
             star.secondary.beta.at(i) = 0.0;
         }
 
-        star.primary.betaMassRatio = 0.0;
-        star.secondary.betaMassRatio = 0.0;
-
         star.primary.wdType = WdAtmosphere::DA;
         star.secondary.wdType = WdAtmosphere::DA;
 

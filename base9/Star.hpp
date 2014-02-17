@@ -30,7 +30,6 @@ class Star
 
     int status = 0;
 
-    double betaMassRatio = 0.0;
     double wdLogTeff = 0.0;
     double massNow = 0.0;      // Actual current masses of each component (i.e. not zams_mass)
 
