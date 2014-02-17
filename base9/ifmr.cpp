@@ -12,18 +12,18 @@
 using std::cerr;
 using std::endl;
 
-double weidemannIFMR (double zamsMass);
-double williamsIFMR (double zamsMass);
-double salarisLinearIFMR (double zamsMass);
-double salarisPiecewiseIFMR (double zamsMass);
-double linearIFMRshift (const Cluster &clust, double zamsMass);
-double linearIFMR0 (const Cluster &clust, double zamsMass);
-double linearIFMRage (const Cluster &clust, double zamsMass);
-double linearIFMRhighShift (const Cluster &clust, double zamsMass);
-double linearIFMRedit (double zamsMass);
-double quadraticIFMRshift (const Cluster &clust, double zamsMass);
-double quadraticIFMRrotate (const Cluster &clust, double zamsMass);
-double piecewiseLinearIFMR (const Cluster &clust, double zamsMass);
+double weidemannIFMR (double);
+double williamsIFMR (double);
+double salarisLinearIFMR (double);
+double salarisPiecewiseIFMR (double);
+double linearIFMRedit (double);
+double linearIFMRshift (const Cluster&, double);
+double linearIFMR0 (const Cluster&, double);
+double linearIFMRage (const Cluster&, double);
+double linearIFMRhighShift (const Cluster&, double);
+double quadraticIFMRshift (const Cluster&, double);
+double quadraticIFMRrotate (const Cluster&, double);
+double piecewiseLinearIFMR (const Cluster&, double);
 
 double intlFinalMassReln (const Cluster &clust, const Model &evoModels, double zamsMass)
 {
