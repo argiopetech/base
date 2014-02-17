@@ -352,7 +352,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     for (auto star : mc->stars)
     {
         star.meanMassRatio = 0.0;
-        star.isFieldStar = 0;
         star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
         star.UStepSize = 0.001; // within factor of ~2 for most main sequence stars
         star.massRatioStepSize = 0.001;
@@ -452,7 +451,7 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
             {
                 array<double, FILTS> globalMags = evolve (clust, evoModels, filters, propStar);
 
-                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, globalMags, filterPriorMin, filterPriorMax);
+                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, globalMags);
 
                 if (acceptP(gen, acceptedPosterior, proposedPosterior))
                 {
@@ -512,11 +511,6 @@ void Application::run()
     initChain (&mc, &ctrl);
 
     mc.clust.M_wd_up = settings.whiteDwarf.M_wd_up;
-
-    for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
-    {
-        mc.stars.at(i).isFieldStar = 0;
-    }
 
     double logFieldStarLikelihood = 0.0;
 

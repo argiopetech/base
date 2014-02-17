@@ -30,6 +30,9 @@ static_assert(M_PI < 3.15, "M_PI is defined and less than 3.15");
 const double mf_sigma = 0.67729, mf_mu = -1.02;
 const double loglog10 = log (log (10));
 
+// Forward Declarations
+double Phi (double);
+
 namespace evil
 {
     // Calculate the mass normalization factor once so that we don't have to
@@ -77,19 +80,9 @@ double logPriorMass (const Star &pStar, const Cluster &pCluster)
 
     assert (mass1 > 0.1 && mass1 <= pCluster.M_wd_up);
 
-    if (pStar.isFieldStar)
-    {
-        logPrior = logTDens (pStar.U, pStar.meanU, pStar.varU, DOF);
-        if (pStar.status.at(0) != WD)
-            logPrior += logTDens (pStar.massRatio, pStar.meanMassRatio, pStar.varMassRatio, DOF);
-        return logPrior;
-    }
-    else
-    {
-        log_m1 = log10 (mass1);
-        logPrior = evil::logMassNorm::getInstance(pCluster).getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
-        return logPrior;
-    }
+    log_m1 = log10 (mass1);
+    logPrior = evil::logMassNorm::getInstance(pCluster).getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
+    return logPrior;
 }
 
 // Compute log prior density for cluster properties
@@ -141,7 +134,7 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     return prior;
 }
 
-double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags)
 // Computes log likelihood
 {
     int i;
@@ -149,22 +142,14 @@ double logLikelihood (int numFilts, const Star &pStar, const array<double, FILTS
 
     for (i = 0; i < numFilts; i++)
     {
-        if (pStar.isFieldStar)
-        {
-            assert (filterPriorMin.at(i) <= pStar.obsPhot.at(i) && pStar.obsPhot.at(i) <= filterPriorMax.at(i));
-
-            likelihood -= log (filterPriorMax.at(i) - filterPriorMin.at(i));
-        }
-        else
-        {
-            if (pStar.variance.at(i) > 1e-9)
-                likelihood -= 0.5 * (log (2 * M_PI * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i)));
-        }
+        if (pStar.variance.at(i) > 1e-9)
+            likelihood -= 0.5 * (log (2 * M_PI * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i)));
     }
+
     return likelihood;
 }
 
-double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILTS> &mags)
 // Computes log likelihood
 {
     int i;
@@ -172,32 +157,21 @@ double tLogLikelihood (int numFilts, const Star &pStar, const array<double, FILT
     double dof = 3.0;
     double quadratic_sum = 0.0;
 
-    if (pStar.isFieldStar)
+    for (i = 0; i < numFilts; i++)
     {
-        for (i = 0; i < numFilts; i++)
+        if (pStar.variance.at(i) > 1e-9)
         {
-            assert (filterPriorMin.at(i) <= pStar.obsPhot.at(i) && pStar.obsPhot.at(i) <= filterPriorMax.at(i));
+            quadratic_sum += sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i);
+            likelihood -= 0.5 * (log (M_PI * pStar.variance.at(i)));
+        }
+    }
+    likelihood += lgamma (0.5 * (dof + (double) numFilts)) - lgamma (0.5 * dof);
+    likelihood -= 0.5 * (dof + (double) numFilts) * log (1 + quadratic_sum);
 
-            likelihood -= log (filterPriorMax.at(i) - filterPriorMin.at(i));
-        }
-    }
-    else
-    {
-        for (i = 0; i < numFilts; i++)
-        {
-            if (pStar.variance.at(i) > 1e-9)
-            {
-                quadratic_sum += sqr (mags.at(i) - pStar.obsPhot.at(i)) / pStar.variance.at(i);
-                likelihood -= 0.5 * (log (M_PI * pStar.variance.at(i)));
-            }
-        }
-        likelihood += lgamma (0.5 * (dof + (double) numFilts)) - lgamma (0.5 * dof);
-        likelihood -= 0.5 * (dof + (double) numFilts) * log (1 + quadratic_sum);
-    }
     return likelihood;
 }
 
-double scaledLogLike (int numFilts, const Star &pStar, double varScale, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double scaledLogLike (int numFilts, const Star &pStar, double varScale, const array<double, FILTS> &mags)
 // Computes log likelihood
 {
     int i;
@@ -205,33 +179,24 @@ double scaledLogLike (int numFilts, const Star &pStar, double varScale, const ar
 
     for (i = 0; i < numFilts; i++)
     {
-        if (pStar.isFieldStar)
+        if (pStar.variance.at(i) > 1e-9)
         {
-            assert (filterPriorMin.at(i) <= pStar.obsPhot.at(i) && pStar.obsPhot.at(i) <= filterPriorMax.at(i));
-
-            likelihood -= log (filterPriorMax.at(i) - filterPriorMin.at(i));
+            likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / (varScale * pStar.variance.at(i))));
         }
-        else
-        {
-            if (pStar.variance.at(i) > 1e-9)
-            {
-                likelihood -= 0.5 * (log (2 * M_PI * varScale * pStar.variance.at(i)) + (sqr (mags.at(i) - pStar.obsPhot.at(i)) / (varScale * pStar.variance.at(i))));
-            }
 
-        }
     }
     return likelihood;
 }
 
 
-double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &mags, const array<double, FILTS> &filterPriorMin, const array<double, FILTS> &filterPriorMax)
+double logPost1Star (const Star &pStar, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &mags)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;
 
     logPrior = logPriorMass (pStar, pCluster);
 
-    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, mags, filterPriorMin, filterPriorMax);
+    likelihood = scaledLogLike (evoModels.numFilts, pStar, pCluster.varScale, mags);
 
     return (logPrior + likelihood);
 }

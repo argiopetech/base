@@ -61,7 +61,6 @@ class Star
 
     std::array<WdAtmosphere, 2> wdType;
 
-    bool isFieldStar = false;
     bool useDuringBurnIn = false;       // switch whether to use star to burn in cluster parameters
 
     double clustStarPriorDens = 0.0;    // prior probability that the star is a cluster star
