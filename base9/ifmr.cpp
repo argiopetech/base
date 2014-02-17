@@ -1,8 +1,6 @@
 #include <iostream>
 
-#include <cstdio>
 #include <cmath>
-#include <cstdlib>
 
 #include "Cluster.hpp"
 #include "Star.hpp"
