@@ -60,9 +60,9 @@ namespace evil
         double var;
 
       public:
-        static logMassNorm& getInstance(const Cluster &pCluster)
+        static logMassNorm& getInstance(const Cluster &clust)
         {
-            static logMassNorm instance(pCluster.M_wd_up);
+            static logMassNorm instance(clust.M_wd_up);
 
             return instance;
         }
@@ -71,28 +71,28 @@ namespace evil
     };
 }
 
-double logPriorMass (const StellarSystem &system, const Cluster &pCluster)
+double logPriorMass (const StellarSystem &system, const Cluster &clust)
 // Compute log prior density
 {
     double mass1, log_m1, logPrior = 0.0;
 
     mass1 = system.primary.mass;
 
-    assert (mass1 > 0.1 && mass1 <= pCluster.M_wd_up);
+    assert (mass1 > 0.1 && mass1 <= clust.M_wd_up);
 
     log_m1 = log10 (mass1);
-    logPrior = evil::logMassNorm::getInstance(pCluster).getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
+    logPrior = evil::logMassNorm::getInstance(clust).getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / (sqr (mf_sigma)) - log (mass1) - loglog10;
     return logPrior;
 }
 
 // Compute log prior density for cluster properties
-double logPriorClust (const Cluster &pCluster, const Model &evoModels)
+double logPriorClust (const Cluster &clust, const Model &evoModels)
 {
-    if ((pCluster.age < evoModels.mainSequenceEvol->getMinAge())
-        || (pCluster.age > evoModels.mainSequenceEvol->getMaxAge())
-        || (pCluster.ifmrSlope < 0.0)
-        || (pCluster.abs < 0.0)
-        || ((evoModels.IFMR == 11) && (pCluster.ifmrQuadCoef < 0.0)))
+    if ((clust.age < evoModels.mainSequenceEvol->getMinAge())
+        || (clust.age > evoModels.mainSequenceEvol->getMaxAge())
+        || (clust.ifmrSlope < 0.0)
+        || (clust.abs < 0.0)
+        || ((evoModels.IFMR == 11) && (clust.ifmrQuadCoef < 0.0)))
     {
         throw InvalidCluster("Invalid cluster parameter");
     }
@@ -101,14 +101,14 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     if (evoModels.IFMR == 10)
     {
         double massLower = 0.15;
-        double massUpper = pCluster.M_wd_up;
+        double massUpper = clust.M_wd_up;
         double massShift = 3.0;
-        double angle = atan (pCluster.ifmrSlope);
-        double aa = cos (angle) * (1 + pCluster.ifmrSlope * pCluster.ifmrSlope);
+        double angle = atan (clust.ifmrSlope);
+        double aa = cos (angle) * (1 + clust.ifmrSlope * clust.ifmrSlope);
         double xLower = aa * (massLower - massShift);
         double xUpper = aa * (massUpper - massShift);
 
-        double dydx_xLower = pCluster.ifmrQuadCoef * (xLower - xUpper);
+        double dydx_xLower = clust.ifmrQuadCoef * (xLower - xUpper);
         double dydx_xUpper = -dydx_xLower;
 
         double slopeLower = tan (angle + atan (dydx_xLower));
@@ -122,14 +122,14 @@ double logPriorClust (const Cluster &pCluster, const Model &evoModels)
     double prior = 0.0;
     //DS: with a uniform prior on carbonicity, the above won't change since log(1) = 0.
 
-    if (pCluster.priorVar.at(FEH) > EPSILON)
-        prior += (-0.5) * sqr (pCluster.feh - pCluster.priorMean.at(FEH)) / pCluster.priorVar.at(FEH);
-    if (pCluster.priorVar.at(MOD) > EPSILON)
-        prior += (-0.5) * sqr (pCluster.mod - pCluster.priorMean.at(MOD)) / pCluster.priorVar.at(MOD);
-    if (pCluster.priorVar.at(ABS) > EPSILON)
-        prior += (-0.5) * sqr (pCluster.abs - pCluster.priorMean.at(ABS)) / pCluster.priorVar.at(ABS);
-    if (pCluster.priorVar.at(YYY) > EPSILON)
-        prior += (-0.5) * sqr (pCluster.yyy - pCluster.priorMean.at(YYY)) / pCluster.priorVar.at(YYY);
+    if (clust.priorVar.at(FEH) > EPSILON)
+        prior += (-0.5) * sqr (clust.feh - clust.priorMean.at(FEH)) / clust.priorVar.at(FEH);
+    if (clust.priorVar.at(MOD) > EPSILON)
+        prior += (-0.5) * sqr (clust.mod - clust.priorMean.at(MOD)) / clust.priorVar.at(MOD);
+    if (clust.priorVar.at(ABS) > EPSILON)
+        prior += (-0.5) * sqr (clust.abs - clust.priorMean.at(ABS)) / clust.priorVar.at(ABS);
+    if (clust.priorVar.at(YYY) > EPSILON)
+        prior += (-0.5) * sqr (clust.yyy - clust.priorMean.at(YYY)) / clust.priorVar.at(YYY);
 
     return prior;
 }
@@ -189,14 +189,14 @@ double scaledLogLike (int numFilts, const StellarSystem &system, double varScale
 }
 
 
-double logPost1Star (const StellarSystem &system, const Cluster &pCluster, const Model &evoModels, const array<double, FILTS> &mags)
+double logPost1Star (const StellarSystem &system, const Cluster &clust, const Model &evoModels, const array<double, FILTS> &mags)
 // Compute posterior density for 1 star:
 {
     double likelihood = 0.0, logPrior = 0.0;
 
-    logPrior = logPriorMass (system, pCluster);
+    logPrior = logPriorMass (system, clust);
 
-    likelihood = scaledLogLike (evoModels.numFilts, system, pCluster.varScale, mags);
+    likelihood = scaledLogLike (evoModels.numFilts, system, clust.varScale, mags);
 
     return (logPrior + likelihood);
 }

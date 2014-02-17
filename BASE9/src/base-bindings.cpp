@@ -24,23 +24,23 @@ namespace evil {
         {
             evil::initialized = true;
 
-            for (auto &a : pCluster.betaAgeMod)
+            for (auto &a : clust.betaAgeMod)
                 a = std::numeric_limits<double>::max();
-            for (auto &a : pCluster.priorVar)
+            for (auto &a : clust.priorVar)
                 a = std::numeric_limits<double>::max();
-            for (auto &a : pCluster.priorMean)
+            for (auto &a : clust.priorMean)
                 a = std::numeric_limits<double>::max();
-            for (auto &a : pCluster.mean)
+            for (auto &a : clust.mean)
                 a = std::numeric_limits<double>::max();
 
-            pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, pCluster.feh, pCluster.yyy, pCluster.age);    // determine AGBt ZAMS mass, to find evol state
+            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
         }
         globals(const globals&) = delete;
         globals(const globals&&) = delete;
         globals& operator=(const globals&) = delete;
 
       public:
-        Cluster pCluster;
+        Cluster clust;
         Model evoModels;
         std::vector<int> filters = {0, 1, 2, 3, 4, 5, 6, 7};
 
@@ -77,24 +77,24 @@ double wdEvol (std::array<double, 14> &globalMags, double mass)
 {
     const auto filters = evil::globals::getInstance().filters;
     const auto evoModels = evil::globals::getInstance().evoModels;
-    const auto pCluster = evil::globals::getInstance().pCluster;
+    const auto clust = evil::globals::getInstance().clust;
 
     std::pair<double, double> teffRadiusPair;
 
     double thisWDMass = 0.0, thisPrecLogAge = 0.0, thisLogTeff, thisWDLogRadius = 0.0, thisWDLogG = 0.0;
 
-    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(pCluster.feh, mass);
+    thisPrecLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
 
-    thisWDMass = intlFinalMassReln (pCluster, evoModels, mass);
+    thisWDMass = intlFinalMassReln (clust, evoModels, mass);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
-    teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (pCluster.age, pCluster.carbonicity, thisPrecLogAge, thisWDMass);
+    teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (clust.age, clust.carbonicity, thisPrecLogAge, thisWDMass);
 
     thisLogTeff = teffRadiusPair.first;
     thisWDLogRadius = teffRadiusPair.second;
 
     //*******this now gets trapped for in wdMassToTeffAndRadius so it should be unnecessary here (???)
-    if (thisPrecLogAge >= pCluster.age)
+    if (thisPrecLogAge >= clust.age)
     {                           // mcmc.c can cause this by adjusting masses and ages         
         for (auto f : filters)
             globalMags[f] = -4.; // place at tip of RGB                                       
@@ -152,16 +152,16 @@ void setClusterParameters(double age, double feh, double distMod, double av, dou
     {
         const auto filters = evil::globals::getInstance().filters;
         const auto evoModels = evil::globals::getInstance().evoModels;
-        auto &pCluster = evil::globals::getInstance().pCluster;
+        auto &clust = evil::globals::getInstance().clust;
 
-        evil::globals::getInstance().pCluster.age = age;
-        evil::globals::getInstance().pCluster.feh = feh;
-        evil::globals::getInstance().pCluster.mod = distMod;
-        evil::globals::getInstance().pCluster.abs = av;
-        evil::globals::getInstance().pCluster.yyy = y;
-        evil::globals::getInstance().pCluster.carbonicity = carbonicity;
+        evil::globals::getInstance().clust.age = age;
+        evil::globals::getInstance().clust.feh = feh;
+        evil::globals::getInstance().clust.mod = distMod;
+        evil::globals::getInstance().clust.abs = av;
+        evil::globals::getInstance().clust.yyy = y;
+        evil::globals::getInstance().clust.carbonicity = carbonicity;
 
-        pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, pCluster.feh, pCluster.yyy, pCluster.age);    // determine AGBt ZAMS mass, to find evol state
+        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
     }
 }
 
@@ -179,11 +179,11 @@ void changeModels(int msFilter, int msModel, int wdModel, int ifmr)
 
         const auto filters = evil::globals::getInstance().filters;
         const auto evoModels = evil::globals::getInstance().evoModels;
-        auto &pCluster = evil::globals::getInstance().pCluster;
+        auto &clust = evil::globals::getInstance().clust;
 
         evil::globals::getInstance().reloadModels();
 
-        pCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, pCluster.feh, pCluster.yyy, pCluster.age);    // determine AGBt ZAMS mass, to find evol state
+        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
     }
 }
 
@@ -193,9 +193,9 @@ void setIFMRParameters(double intercept, double slope, double quadCoef)
 {
     if (isInitialized())
     {
-        evil::globals::getInstance().pCluster.ifmrIntercept = intercept;
-        evil::globals::getInstance().pCluster.ifmrSlope = slope;
-        evil::globals::getInstance().pCluster.ifmrQuadCoef = quadCoef;
+        evil::globals::getInstance().clust.ifmrIntercept = intercept;
+        evil::globals::getInstance().clust.ifmrSlope = slope;
+        evil::globals::getInstance().clust.ifmrQuadCoef = quadCoef;
     }
 }
 
@@ -220,10 +220,10 @@ std::array<double, 8> evolve (double mass1, double mass2)
 
         const auto filters = evil::globals::getInstance().filters;
         const auto evoModels = evil::globals::getInstance().evoModels;
-        const auto pCluster = evil::globals::getInstance().pCluster;
+        const auto clust = evil::globals::getInstance().clust;
 
         // AGBt_zmass never set because age and/or metallicity out of range of models.
-        if (pCluster.AGBt_zmass < EPS)
+        if (clust.AGBt_zmass < EPS)
         {
             throw Rcpp::exception("Bounds error in evolve");
         }
@@ -238,13 +238,13 @@ std::array<double, 8> evolve (double mass1, double mass2)
                 for (auto f : filters)
                     mag[f] = 99.999;
             }
-            else if (mass <= pCluster.AGBt_zmass)
+            else if (mass <= clust.AGBt_zmass)
             {                           // for main seq or giant star
                 evoModels.mainSequenceEvol->msRgbEvol(filters, globalMags, mass);
                 for (auto f : filters)
                     mag[f] = globalMags[f];
             }
-            else if (mass <= pCluster.M_wd_up)
+            else if (mass <= clust.M_wd_up)
             {                           // for white dwarf
                 wdEvol (globalMags, mass);
                 for (auto f : filters)
@@ -265,7 +265,7 @@ std::array<double, 8> evolve (double mass1, double mass2)
         mySetMags(mags[0], mass1);
         mySetMags(mags[1], mass2);
 
-        deriveCombinedMags(mags, pCluster.abs, flux, pCluster, pStar, evoModels, filters);
+        deriveCombinedMags(mags, clust.abs, flux, clust, pStar, evoModels, filters);
 
         for (auto f : filters)
         {

@@ -15,7 +15,7 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-array<double, FILTS> Star::getMags (const Cluster &pCluster, const Model &evoModels, const vector<int> &filters) const
+array<double, FILTS> Star::getMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
 {
     array<double, FILTS> mags;
 
@@ -24,13 +24,13 @@ array<double, FILTS> Star::getMags (const Cluster &pCluster, const Model &evoMod
         for (auto f : filters)
             mags.at(f) = 99.999;
     }
-    else if (mass <= pCluster.AGBt_zmass)
+    else if (mass <= clust.AGBt_zmass)
     {                           // for main seq or giant star
         mags = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
     }
-    else if (mass <= pCluster.M_wd_up)
+    else if (mass <= clust.M_wd_up)
     {                           // for white dwarf
-        mags = wdEvol (pCluster, evoModels);
+        mags = wdEvol (clust, evoModels);
     }
     else if (mass <= 100.)
     {                           // for neutron star or black hole remnant

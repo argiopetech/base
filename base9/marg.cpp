@@ -23,7 +23,7 @@ const int MAX_ENTRIES = 370;
 double calcPost (double, array<double, 2>&, const Cluster&, StellarSystem, const Model&, const vector<int>&);
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-double margEvolveWithBinary (const Cluster &pCluster, const StellarSystem &system, const Model &evoModels, const vector<int> &filters)
+double margEvolveWithBinary (const Cluster &clust, const StellarSystem &system, const Model &evoModels, const vector<int> &filters)
 {
     array<double, 2> mass;
 
@@ -34,7 +34,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const StellarSystem &syste
     double post = 0.0;
 
     // AGBt_zmass never set because age and/or metallicity out of range of models.
-    if (pCluster.AGBt_zmass < EPS)
+    if (clust.AGBt_zmass < EPS)
     {
         throw WDBoundsError("Bounds error in marg.cpp");
     }
@@ -60,7 +60,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const StellarSystem &syste
             dMass = dIsoMass / isoIncrem;
             mass.at(0) = isochrone.mass.at(m) + k * dMass;
 
-            post += calcPost (dMass, mass, pCluster, system, evoModels, filters);
+            post += calcPost (dMass, mass, clust, system, evoModels, filters);
         }
     }
 
@@ -75,7 +75,7 @@ double margEvolveWithBinary (const Cluster &pCluster, const StellarSystem &syste
 }
 
 
-array<double, FILTS> deriveCombinedMags (const array<double, FILTS> &primaryMags, const array<double, FILTS> &secondaryMags, const Cluster &pCluster, const Model &evoModels, const vector<int> &filters)
+array<double, FILTS> deriveCombinedMags (const array<double, FILTS> &primaryMags, const array<double, FILTS> &secondaryMags, const Cluster &clust, const Model &evoModels, const vector<int> &filters)
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
@@ -108,15 +108,15 @@ array<double, FILTS> deriveCombinedMags (const array<double, FILTS> &primaryMags
     {
         int f = filters.at(i);
 
-        combinedMags.at(f) += pCluster.mod;
-        combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * pCluster.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
+        combinedMags.at(f) += clust.mod;
+        combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * clust.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
     }
 
     return combinedMags;
 }
 
 
-double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, StellarSystem system, const Model &evoModels, const vector<int> &filters)
+double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, StellarSystem system, const Model &evoModels, const vector<int> &filters)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     double post = 0.0;
@@ -126,17 +126,17 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
 
     system.primary.mass = mass.at(0);
 
-    mag.at(0) = system.primary.getMags (pCluster, evoModels, filters);
+    mag.at(0) = system.primary.getMags (clust, evoModels, filters);
 
     double tmpLogPost, tmpPost;
 
     /* first try 0.0 massRatio */
     system.secondary.mass = (mass.at(1));
 
-    mag.at(1) = system.secondary.getMags (pCluster, evoModels, filters);
+    mag.at(1) = system.secondary.getMags (clust, evoModels, filters);
 
-    combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
-    tmpLogPost = logPost1Star (system, pCluster, evoModels, combinedMags);
+    combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), clust, evoModels, filters);
+    tmpLogPost = logPost1Star (system, clust, evoModels, combinedMags);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
     tmpPost = exp (tmpLogPost);
@@ -184,11 +184,11 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
             system.setMassRatio (mass.at(0) / isochrone.mass.at(i));
             system.secondary.mass = mass.at(1);
 
-            mag.at(1) = system.secondary.getMags (pCluster, evoModels, filters);
-            combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
+            mag.at(1) = system.secondary.getMags (clust, evoModels, filters);
+            combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), clust, evoModels, filters);
 
             /* now have magnitudes, want posterior probability */
-            tmpLogPost = logPost1Star (system, pCluster, evoModels, combinedMags);
+            tmpLogPost = logPost1Star (system, clust, evoModels, combinedMags);
             tmpLogPost += log (dMass);
             tmpLogPost += log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / mass.at(0));
             tmpPost = exp (tmpLogPost);
