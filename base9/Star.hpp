@@ -22,16 +22,15 @@ class Star
     ~Star() {;}
 
     double getLtau(const Cluster&, const Model&) const;
+    double wdLogTeff(const Cluster&, const Model&) const;
+    double wdMassNow(double, const Cluster&, const Model&) const;
 
     std::array<double, FILTS> getMags (double, const Cluster&, const Model&, const std::vector<int>&);
-    std::array<double, FILTS> wdEvol (const Cluster&, const Model&);
+    std::array<double, FILTS> wdEvol (const Cluster&, const Model&) const;
 
     std::array<double, NPARAMS> beta;
 
     int status = 0;
-
-    double wdLogTeff = 0.0;
-    double massNow = 0.0;      // Actual current masses of each component (i.e. not zams_mass)
 
     WdAtmosphere wdType = WdAtmosphere::DA;
 

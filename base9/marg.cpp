@@ -133,8 +133,6 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     /* first try 0.0 massRatio */
     system.setMassRatio(0.0);
 
-    system.secondary.massNow = 0.0;
-    system.secondary.wdLogTeff = 0.0;      // no WD Teff,
     mag.at(1) = system.secondary.getMags (mass.at(1), pCluster, evoModels, filters);
 
     combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
@@ -184,8 +182,6 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
         if (okMass.at(i))
         {
             system.setMassRatio (mass.at(0) / isochrone.mass.at(i));
-            system.secondary.massNow = 0.0;
-            system.secondary.wdLogTeff = 0.0; // no WD Teff,
 
             mag.at(1) = system.secondary.getMags (mass.at(1), pCluster, evoModels, filters);
             combinedMags = deriveCombinedMags (mag.at(0), mag.at(1), pCluster, evoModels, filters);
