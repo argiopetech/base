@@ -89,43 +89,6 @@ double Cluster::logPrior (const Model &evoModels) const
     return prior;
 }
 
-// double logLikelihood (int numFilts, const StellarSystem &system, const array<double, FILTS> &mags)
-// // Computes log likelihood
-// {
-//     int i;
-//     double likelihood = 0.0;
-
-//     for (i = 0; i < numFilts; i++)
-//     {
-//         if (system.variance.at(i) > 1e-9)
-//             likelihood -= 0.5 * (log (2 * M_PI * system.variance.at(i)) + (sqr (mags.at(i) - system.obsPhot.at(i)) / system.variance.at(i)));
-//     }
-
-//     return likelihood;
-// }
-
-// double tLogLikelihood (int numFilts, const StellarSystem &system, const array<double, FILTS> &mags)
-// // Computes log likelihood
-// {
-//     double likelihood = 0.0;
-//     double dof = 3.0;
-//     double quadratic_sum = 0.0;
-
-//     for (int i = 0; i < numFilts; i++)
-//     {
-//         if (system.variance.at(i) > 1e-9)
-//         {
-//             quadratic_sum += sqr (mags.at(i) - system.obsPhot.at(i)) / system.variance.at(i);
-//             likelihood -= 0.5 * (log (M_PI * system.variance.at(i)));
-//         }
-//     }
-
-//     likelihood += lgamma (0.5 * (dof + (double) numFilts)) - lgamma (0.5 * dof);
-//     likelihood -= 0.5 * (dof + (double) numFilts) * log (1 + quadratic_sum);
-
-//     return likelihood;
-// }
-
 static double scaledLogLike (const vector<double> &obsPhot, const vector<double> &variance, const array<double, FILTS> &mags, double varScale)
 {
     double likelihood = 0.0;
