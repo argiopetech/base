@@ -210,7 +210,7 @@ int MpiMcmcApplication::run()
 
             if (star.status[0] == WD)
             {
-                star.massRatio = 0.0;
+                star.setMassRatio(0.0);
             }
         }
     }
@@ -519,8 +519,8 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
             {
                 double tmpLogPost;
                 Star wd(stars.at(i));
-                wd.U = wdGridMass(j);
-                wd.massRatio = 0.0;
+                wd.mass = wdGridMass(j);
+                wd.setMassRatio(0.0);
 
                 try
                 {

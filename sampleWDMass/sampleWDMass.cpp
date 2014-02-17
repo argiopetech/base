@@ -378,7 +378,7 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         // find photometry for initial values of currentClust and mc->stars
         if (star.status.at(0) == WD)
         {
-            star.massRatio = 0.0;
+            star.setMassRatio(0.0);
         }
     }
 } // initChain
@@ -554,8 +554,8 @@ int main (int argc, char *argv[])
                 for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
                 {
                     /* condition on WD being cluster star */
-                    star.U = mass1;
-                    star.massRatio = 0.0;
+                    star.mass = mass1;
+                    star.setMassRatio(0.0);
 
                     try
                     {

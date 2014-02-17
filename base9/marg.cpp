@@ -131,7 +131,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     double tmpLogPost, tmpPost;
 
     /* first try 0.0 massRatio */
-    pStar.massRatio = 0.0;
+    pStar.setMassRatio(0.0);
 
     pStar.massNow.at(1) = 0.0;
     pStar.wdLogTeff.at(1) = 0.0;      // no WD Teff,
@@ -183,7 +183,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &pCluster, 
     {
         if (okMass.at(i))
         {
-            pStar.massRatio = mass.at(0) / isochrone.mass.at(i);
+            pStar.setMassRatio (mass.at(0) / isochrone.mass.at(i));
             pStar.massNow.at(1) = 0.0;
             pStar.wdLogTeff.at(1) = 0.0; // no WD Teff,
 

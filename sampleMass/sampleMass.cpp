@@ -367,7 +367,7 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         // find photometry for initial values of currentClust and mc->stars
         if (star.status.at(0) == WD)
         {
-            star.massRatio = 0.0;
+            star.setMassRatio(0.0);
         }
     }
 } // initChain
@@ -436,10 +436,10 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
     {
         Star propStar = star;
 
-        propStar.U += sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
-        propStar.massRatio += sampleT (gen, (iter < burnIters ? scale : 1.0) * massRatioStepSize * massRatioStepSize);
+        propStar.mass += sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
+        propStar.setMassRatio(propStar.getMassRatio() + sampleT (gen, (iter < burnIters ? scale : 1.0) * massRatioStepSize * massRatioStepSize));
 
-        if ((propStar.massRatio >= 0.0) && (propStar.massRatio <= 1.0) && (propStar.U > 0.1) && (propStar.U < clust.M_wd_up))
+        if ((propStar.getMassRatio() >= 0.0) && (propStar.getMassRatio() <= 1.0) && (propStar.mass > 0.1) && (propStar.mass < clust.M_wd_up))
         {
             try
             {
@@ -461,7 +461,7 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
         }
     }
 
-    return std::make_tuple(star.U, star.massRatio, acceptedPosterior);
+    return std::make_tuple(star.mass, star.getMassRatio(), acceptedPosterior);
 }
 
 

@@ -43,8 +43,10 @@ class Star
 
     double getMass1() const;
     double getMass2() const;
+    double getMassRatio() const;
     void setMass1(double);
-    // void setMass2 (const Cluster &, double);
+    void setMassRatio(double);
+    //void setMass2 (const Cluster &, double);
 
     std::array<double, FILTS> setMags (int cmpnt, double mass, const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters);
     double wdEvol (const Cluster &pCluster, const Model &evoModels, const std::vector<int> &filters, std::array<double, FILTS> &globalMags, int cmpnt);
@@ -66,8 +68,10 @@ class Star
     double clustStarPriorDens = 0.0;    // prior probability that the star is a cluster star
     double clustStarProposalDens = 0.0; // proposal density for steps to the cluster star model
 
-    double U = 0.0;
-    double massRatio = 0.0;             // massRatio = secondary mass / primary mass (between 0 and 1)
+    double mass = 0.0;
+
+  private:
+    double mass2 = 0.0;             // massRatio = secondary mass / primary mass (between 0 and 1)
 };
 
 #endif

@@ -17,17 +17,27 @@ using std::vector;
 
 double Star::getMass1() const
 {
-    return U;
+    return mass;
 }
 
 double Star::getMass2() const
 {
-    return U * massRatio;
+    return mass2;
+}
+
+double Star::getMassRatio() const
+{
+    return mass2 / mass;
 }
 
 void Star::setMass1(double newMass)
 {
-    U = newMass;
+    mass = newMass;
+}
+
+void Star::setMassRatio(double r)
+{
+    mass2 = mass * r;
 }
 
 // *** Unused ***
@@ -38,7 +48,7 @@ void Star::setMass1(double newMass)
 
 void Star::readCMD(const string &s, int filters)
 {
-    double tempSigma;
+    double tempSigma, massRatio;
     string starID;
 
     stringstream in(s);  
@@ -59,11 +69,13 @@ void Star::readCMD(const string &s, int filters)
         // Negative sigma (variance) is used to signal "don't count this band for this star"
     }
 
-    in >> U
+    in >> mass
        >> massRatio
        >> status.at(0)
        >> clustStarPriorDens
        >> useDuringBurnIn;
+
+    setMassRatio(massRatio);
 }
 
 
