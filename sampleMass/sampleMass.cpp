@@ -428,11 +428,11 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
         propStar.primary.mass += sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
         propStar.setMassRatio(propStar.getMassRatio() + sampleT (gen, (iter < burnIters ? scale : 1.0) * massRatioStepSize * massRatioStepSize));
 
-        if ((propStar.getMassRatio() >= 0.0) && (propStar.getMassRatio() <= 1.0) && (propStar.primary.mass > 0.1) && (propStar.primary.mass < clust.M_wd_up))
+        if ((propStar.getMassRatio() >= 0.0) && (propStar.getMassRatio() <= 1.0) && (propStar.primary.mass > 0.1) && (propStar.primary.mass < clust.getM_wd_up()))
         {
             try
             {
-                auto proposedPosterior = logPost1Star(propStar, clust, evoModels, filters);
+                auto proposedPosterior = propStar.logPost(clust, evoModels, filters);
 
                 if (acceptP(gen, acceptedPosterior, proposedPosterior))
                 {
@@ -491,7 +491,7 @@ void Application::run()
 
     initChain (&mc, &ctrl);
 
-    mc.clust.M_wd_up = settings.whiteDwarf.M_wd_up;
+    mc.clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     double logFieldStarLikelihood = 0.0;
 
@@ -559,7 +559,7 @@ void Application::run()
             auto sampleTuple = sampleMass(mc.clust, evoModels, gen, mc.stars.at(i));
 
             double postClusterStar = std::get<2>(sampleTuple);
-            postClusterStar *= (mc.clust.M_wd_up - 0.15);
+            postClusterStar *= (mc.clust.getM_wd_up() - 0.15);
 
             masses.at(i) = std::pair<double, double>(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
 

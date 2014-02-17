@@ -85,6 +85,8 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     else
         clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
 
+    clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
+
     for (auto &var : ctrl.priorVar)
     {
         if (var < 0.0)
@@ -497,7 +499,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
     mutex logPostMutex;
     double logPostProp;
 
-    logPostProp = logPriorClust (propClust, evoModels);
+    logPostProp = propClust.logPrior (evoModels);
 
     propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
 
@@ -520,8 +522,8 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
 
                 try
                 {
-                    tmpLogPost = logPost1Star (wd, propClust, evoModels, filters);
-                    tmpLogPost += log ((propClust.M_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
+                    tmpLogPost = wd.logPost(propClust, evoModels, filters);
+                    tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
 
                     postClusterStar +=  exp (tmpLogPost);
                 }

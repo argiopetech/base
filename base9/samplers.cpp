@@ -5,6 +5,20 @@
 
 double sampleT (std::mt19937 &gen, double var, double nu)
 {
+    // do not call this routine with nu = 2, which wouldn't make much sense anyway
+    auto logTDens = [](double x, double mean, double var, double nu)
+    {
+        double logp = 0;
+        double s;
+
+        s = sqrt (nu / (var * (nu - 2)));
+
+        logp = log (s) + gamma(nu) - 3.5 * log (1 + pow (s * (x - mean), 2) / nu);
+
+        return logp;
+    };
+
+
     double u = 0.0;
     double y = 0.0;
     double peak = 0.0;

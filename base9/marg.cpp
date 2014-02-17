@@ -91,7 +91,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
     /* first try 0.0 massRatio */
     system.secondary.mass = mass.at(1);
 
-    tmpLogPost = logPost1Star (system, clust, evoModels, filters);
+    tmpLogPost = system.logPost (clust, evoModels, filters);
     tmpLogPost += log (dMass);
     tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
     tmpPost = exp (tmpLogPost);
@@ -140,7 +140,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
             system.secondary.mass = mass.at(1);
 
             /* now have magnitudes, want posterior probability */
-            tmpLogPost = logPost1Star (system, clust, evoModels, filters);
+            tmpLogPost = system.logPost (clust, evoModels, filters);
             tmpLogPost += log (dMass);
             tmpLogPost += log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / mass.at(0));
             tmpPost = exp (tmpLogPost);

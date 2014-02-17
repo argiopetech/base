@@ -416,7 +416,7 @@ int main (int argc, char *argv[])
 
     readCmdData (mc, ctrl, evoModels);
 
-    mc.clust.M_wd_up = settings.whiteDwarf.M_wd_up;
+    mc.clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     vector<obsStar> obs;
     obs.resize(mc.stars.size());
@@ -457,7 +457,7 @@ int main (int argc, char *argv[])
     cout << "sampledPars.at(last).age = " << sampledPars.back().age << endl;
 
     /* initialize WD logpost array and WD indices */
-    double nWDLogPosts = (int) ceil ((mc.clust.M_wd_up - 0.15) / dMass1);
+    double nWDLogPosts = (int) ceil ((mc.clust.getM_wd_up() - 0.15) / dMass1);
 
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
@@ -540,7 +540,7 @@ int main (int argc, char *argv[])
 
                 im = 0;
 
-                for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
+                for (mass1 = 0.15; mass1 < internalCluster.getM_wd_up(); mass1 += dMass1)
                 {
                     /* condition on WD being cluster star */
                     star.primary.mass = mass1;
@@ -548,7 +548,7 @@ int main (int argc, char *argv[])
 
                     try
                     {
-                        wdLogPost.at(im) = logPost1Star (star, internalCluster, evoModels, filters);
+                        wdLogPost.at(im) = star.logPost (internalCluster, evoModels, filters);
                         postClusterStar += exp (wdLogPost.at(im));
                     }
                     catch ( WDBoundsError &e )
@@ -564,7 +564,7 @@ int main (int argc, char *argv[])
 
                 /* compute the maximum value */
                 maxWDLogPost = wdLogPost.at(0);
-                for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
+                for (mass1 = 0.15; mass1 < internalCluster.getM_wd_up(); mass1 += dMass1)
                 {
                     if (wdLogPost.at(im) > maxWDLogPost)
                         maxWDLogPost = wdLogPost.at(im);
@@ -574,7 +574,7 @@ int main (int argc, char *argv[])
                 /* compute the normalizing constant */
                 wdPostSum = 0.0;
                 im = 0;
-                for (mass1 = 0.15; mass1 < internalCluster.M_wd_up; mass1 += dMass1)
+                for (mass1 = 0.15; mass1 < internalCluster.getM_wd_up(); mass1 += dMass1)
                 {
                     wdPostSum += exp (wdLogPost.at(im) - maxWDLogPost);
                     im++;
@@ -584,7 +584,7 @@ int main (int argc, char *argv[])
                 double cumSum = 0.0;
                 mass1 = 0.15;
                 im = 0;
-                while (cumSum < us.at(m) && mass1 < internalCluster.M_wd_up)
+                while (cumSum < us.at(m) && mass1 < internalCluster.getM_wd_up())
                 {
                     cumSum += exp (wdLogPost.at(im) - maxWDLogPost) / wdPostSum;
                     mass1 += dMass1;
@@ -594,7 +594,7 @@ int main (int argc, char *argv[])
 
                 wdMass.push_back(mass1);
 
-                postClusterStar *= (internalCluster.M_wd_up - 0.15);
+                postClusterStar *= (internalCluster.getM_wd_up() - 0.15);
 
                 clusMemPost.push_back(star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike));
                 iWD++;

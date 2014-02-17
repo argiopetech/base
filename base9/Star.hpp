@@ -38,10 +38,7 @@ class StellarSystem
 {
   public:
     StellarSystem()
-    {
-        obsPhot.fill(0.0);
-        variance.fill(0.0);
-    }
+    {;}
 
     StellarSystem(const std::string &s, int filters)
         : StellarSystem()
@@ -54,8 +51,9 @@ class StellarSystem
     // Functions
     void readCMD(const std::string&, int);
 
-    double getMassRatio() const;
     void setMassRatio(double);
+    double getMassRatio() const;
+    double logPost (const Cluster &clust, const Model &evoModels, const std::vector<int> &filters) const;
 
     std::array<double, FILTS> deriveCombinedMags (const Cluster&, const Model&, const std::vector<int>&) const;
 
@@ -63,8 +61,8 @@ class StellarSystem
     Star primary;
     Star secondary;
 
-    std::array<double, FILTS> obsPhot;
-    std::array<double, FILTS> variance;
+    std::vector<double> obsPhot;
+    std::vector<double> variance;
 
     bool useDuringBurnIn = false;       // switch whether to use star to burn in cluster parameters
 

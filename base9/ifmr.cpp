@@ -156,7 +156,7 @@ double quadraticIFMRrotate (const Cluster &clust, double zamsMass)
 {
     constexpr double shiftMass = 3.0;
     constexpr double massLower = 0.15;
-    double massUpper = clust.M_wd_up;
+    double massUpper = clust.getM_wd_up();
 
     double angle = atan (clust.ifmrSlope);
 

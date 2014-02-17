@@ -28,7 +28,7 @@ array<double, FILTS> Star::getMags (const Cluster &clust, const Model &evoModels
     {                           // for main seq or giant star
         mags = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
     }
-    else if (mass <= clust.M_wd_up)
+    else if (mass <= clust.getM_wd_up())
     {                           // for white dwarf
         mags = wdEvol (clust, evoModels);
     }
@@ -53,7 +53,7 @@ int Star::getStatus(const Cluster &clust) const
     {                           // for main seq or giant star
         return MSRG;
     }
-    else if (mass <= clust.M_wd_up)
+    else if (mass <= clust.getM_wd_up())
     {                           // for white dwarf
         return WD;
     }
@@ -92,7 +92,7 @@ double Star::wdMassNow(const Cluster &clust, const Model &evoModels) const
     {                           // for main seq or giant star
         return mass;
     }
-    else if (mass <= clust.M_wd_up)
+    else if (mass <= clust.getM_wd_up())
     {                           // for white dwarf
         return intlFinalMassReln (clust, evoModels, mass);
     }
@@ -141,14 +141,17 @@ void StellarSystem::readCMD(const string &s, int filters)
 
     for (int i = 0; i < filters; i++)
     {
-        in >> obsPhot.at(i);
+        double t;
+        in >> t;
+
+        obsPhot.push_back(t);
     }
 
     for (int i = 0; i < filters; i++)
     {
         in >> tempSigma;
 
-        variance.at(i) = tempSigma * fabs (tempSigma);
+        variance.push_back(tempSigma * fabs (tempSigma));
         // The fabs() keeps the sign of the variance the same as that input by the user for sigma
         // Negative sigma (variance) is used to signal "don't count this band for this star"
     }

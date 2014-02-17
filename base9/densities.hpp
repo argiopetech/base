@@ -11,7 +11,5 @@
 #include "Model.hpp"
 #include "Star.hpp"
 
-double logPriorClust (const Cluster&, const Model&);
-double logPost1Star (const StellarSystem&, const Cluster&, const Model&, const std::vector<int>&);
 double logTDens (double, double, double, double);
 #endif

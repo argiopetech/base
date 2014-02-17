@@ -4,19 +4,32 @@
 #include <array>
 
 #include "constants.hpp"
+#include "Model.hpp"
 
 class Cluster
 {
   public:
-    double getParam(int) const;
+    Cluster()
+    {
+        setM_wd_up(8.0);
+    }
+
     void setParam(int, double);
+    double getParam(int) const;
+
+    void setM_wd_up(double);
+    double getM_wd_up() const { return M_wd_up; }
+
+    double getLogMassNorm() const { return logMassNorm; }
+
+    double logPrior(const Model&) const;
+    double logPriorMass(double) const;
 
     std::array<double, NPARAMS> priorVar;
     std::array<double, NPARAMS> priorMean;
     std::array<double, NPARAMS> mean;
 
     int photometrySet;
-    double M_wd_up = 8.0;
     double AGBt_zmass = 0.0;
     double varScale = 1.0;
 
@@ -30,6 +43,9 @@ class Cluster
     double ifmrSlope = 0.0;
     double ifmrQuadCoef = 0.0;
 
+  private:
+    double logMassNorm;
+    double M_wd_up;
 };
 
 class InvalidCluster : public std::range_error
