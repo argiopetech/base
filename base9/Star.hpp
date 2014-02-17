@@ -10,7 +10,6 @@
 #include "Matrix.hpp"
 #include "Model.hpp"
 
-// Define a structure star that houses all star properties
 class Star
 {
   public:
@@ -21,6 +20,7 @@ class Star
 
     ~Star() {;}
 
+    // Functions
     double getLtau(const Cluster&, const Model&) const;
     double wdLogTeff(const Cluster&, const Model&) const;
     double wdMassNow(double, const Cluster&, const Model&) const;
@@ -28,11 +28,12 @@ class Star
     std::array<double, FILTS> getMags (double, const Cluster&, const Model&, const std::vector<int>&);
     std::array<double, FILTS> wdEvol (const Cluster&, const Model&) const;
 
+    // Variables
     std::array<double, NPARAMS> beta;
 
-    int status = 0;
-
     WdAtmosphere wdType = WdAtmosphere::DA;
+
+    int status = 0;
 
     double mass = 0.0;
 };
@@ -52,11 +53,16 @@ class StellarSystem
         readCMD(s, filters);
     }
 
+    ~StellarSystem() {;}
+
+    // Functions
     void readCMD(const std::string&, int);
 
     double getMassRatio() const;
     void setMassRatio(double);
 
+
+    // Variables
     Star primary;
     Star secondary;
 
