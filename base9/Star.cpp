@@ -179,8 +179,6 @@ array<double, FILTS> StellarSystem::deriveCombinedMags (const Cluster &clust, co
     auto primaryMags = primary.getMags(clust, evoModels, filters);
     auto secondaryMags = secondary.getMags(clust, evoModels, filters);
 
-    double flux = 0.0;
-
     array<double, FILTS> combinedMags;
 
     combinedMags.fill(0.0);
@@ -188,6 +186,8 @@ array<double, FILTS> StellarSystem::deriveCombinedMags (const Cluster &clust, co
     // can now derive combined mags
     if (secondaryMags.at(filters.front()) < 99.)
     {                           // if there is a secondary star
+        double flux = 0.0;
+
         for (auto f : filters)
         {
             flux = exp10((primaryMags.at(f) / -2.5));    // add up the fluxes of the primary
