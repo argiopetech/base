@@ -124,14 +124,14 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
 
 std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff, double wdMass, WdAtmosphere wdType) const
 {
-    auto transformMags = [=](std::vector<struct AtmosCurve> curve)
+    auto transformMags = [=](const std::vector<struct AtmosCurve> &curve)
         {
             Matrix<double, 2, BERG_NFILTS> logTeffMag;
             array<double, FILTS> mags;
 
             mags.fill(0.0);
 
-            std::vector<AtmosCurve>::iterator massIter;
+            std::vector<AtmosCurve>::const_iterator massIter;
 
             if (wdMass < 0.2) // Below the hard-coded bottom mass
             {
@@ -143,10 +143,10 @@ std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff,
             }
             else // Otherwise, hard-coded math magic.
             {
-                massIter = curve.begin() + (static_cast<int>(wdMass * 10) - 2);
+                massIter = curve.cbegin() + (static_cast<int>(wdMass * 10) - 2);
             } 
 
-            std::array<std::vector<record>::iterator, 2> teffIter = {
+            std::array<std::vector<record>::const_iterator, 2> teffIter = {
                 lower_bound(massIter[0].record.begin(), massIter[0].record.end(), record(wdLogTeff, mags)),
                 lower_bound(massIter[1].record.begin(), massIter[1].record.end(), record(wdLogTeff, mags))
             };

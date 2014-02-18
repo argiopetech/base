@@ -55,7 +55,7 @@ double margEvolveWithBinary (const Cluster &clust, const StellarSystem &system, 
             dIsoMass = isochrone.mass.at(m + 1) - isochrone.mass.at(m);
 
             /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
-            assert (dIsoMass > 0.0);
+            assert (dIsoMass >= 0.0);
 
             dMass = dIsoMass / isoIncrem;
             mass.at(0) = isochrone.mass.at(m) + k * dMass;
@@ -82,18 +82,18 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
 
     array<double, FILTS> primaryMags;
 
-    system.primary.mass = mass.at(0);
+    system.primary.mass = mass[0];
 
     primaryMags = system.primary.getMags (clust, evoModels, filters);
 
     double tmpLogPost, tmpPost;
 
     /* first try 0.0 massRatio */
-    system.secondary.mass = mass.at(1);
+    system.secondary.mass = mass[1];
 
     tmpLogPost = system.logPost (clust, evoModels, filters);
     tmpLogPost += log (dMass);
-    tmpLogPost += log (isochrone.mass.at(0) / mass.at(0));    /* dMassRatio */
+    tmpLogPost += log (isochrone.mass[0] / mass[0]);    /* dMassRatio */
     tmpPost = exp (tmpLogPost);
     post += tmpPost;
 
@@ -108,8 +108,8 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
     {
         if (isOverlap)
         {
-            double diffLow = exp10(((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((primaryMags.at(f) / -2.5));
-            double diffUp = exp10(((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5)) - exp10((primaryMags.at(f) / -2.5));
+            double diffLow = exp10(((system.obsPhot[obsFilt] - nSD * sqrt (system.variance[obsFilt])) / -2.5)) - exp10((primaryMags[f] / -2.5));
+            double diffUp = exp10(((system.obsPhot[obsFilt] + nSD * sqrt (system.variance[obsFilt])) / -2.5)) - exp10((primaryMags[f] / -2.5));
 
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
@@ -122,9 +122,9 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
 
                 for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; i++)
                 {
-                    if (!(isochrone.mag.at(i).at(f) >= magLower && isochrone.mag.at(i).at(f) <= magUpper && isochrone.mass.at(i) <= mass.at(0)))
+                    if (!(isochrone.mag[i][f] >= magLower && isochrone.mag[i][f] <= magUpper && isochrone.mass[i] <= mass[0]))
                     {
-                        okMass.at(i) = false;
+                        okMass[i] = false;
                     }
                 }
             }
@@ -134,14 +134,14 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
 
     for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 2; ++i)
     {
-        if (okMass.at(i))
+        if (okMass[i])
         {
-            system.setMassRatio (isochrone.mass.at(i) / mass.at(0));
+            system.setMassRatio (isochrone.mass[i] / mass[0]);
 
             /* now have magnitudes, want posterior probability */
             tmpLogPost = system.logPost (clust, evoModels, filters);
             tmpLogPost += log (dMass);
-            tmpLogPost += log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / mass.at(0));
+            tmpLogPost += log ((isochrone.mass[i + 1] - isochrone.mass[i]) / mass[0]);
             tmpPost = exp (tmpLogPost);
 
             post += tmpPost;
