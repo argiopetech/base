@@ -1,4 +1,5 @@
 #include <array>
+#include <bitset>
 #include <vector>
 
 #include <cassert>
@@ -14,6 +15,8 @@
 #include "Model.hpp"
 #include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
+
+#include "boost/dynamic_bitset.hpp"
 
 using std::array;
 using std::vector;
@@ -102,7 +105,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
     int obsFilt = 0;
 
     bool isOverlap = true;          /* do the allowable masses in each filter overlap? */
-    array<bool, MAX_ENTRIES> okMass = { true };
+    boost::dynamic_bitset<> okMass(isochrone.nEntries, true);
 
     for (auto f : filters)
     {
