@@ -6,7 +6,7 @@
 double sampleT (std::mt19937 &gen, double var, double nu)
 {
     // do not call this routine with nu = 2, which wouldn't make much sense anyway
-    auto logTDens = [](double x, double mean, double var, double nu)
+    auto logTDens = [nu](double x, double mean, double var)
     {
         double logp = 0;
         double s;
@@ -23,7 +23,7 @@ double sampleT (std::mt19937 &gen, double var, double nu)
     double y = 0.0;
     double peak = 0.0;
 
-    peak = exp (logTDens (0, 0, var, nu));
+    peak = exp (logTDens (0, 0, var));
 
     do
     {
@@ -34,7 +34,7 @@ double sampleT (std::mt19937 &gen, double var, double nu)
         if (y < 1.e-15)
             y = 1.e-15;         /* (TvH) - trap for u = 0; does 53 bit resolution mean 1/(2^53)? */
         y = log (y);
-    } while (y > logTDens (u, 0, var, nu));
+    } while (y > logTDens (u, 0, var));
 
     return u;
 }
