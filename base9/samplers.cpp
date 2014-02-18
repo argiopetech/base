@@ -6,7 +6,7 @@
 double sampleT (std::mt19937 &gen, double var, double nu)
 {
     // do not call this routine with nu = 2, which wouldn't make much sense anyway
-    auto logTDens = [nu](double x, double mean, double var)
+    auto logTDens = [=](double x, double mean)
     {
         double logp = 0;
         double s;
