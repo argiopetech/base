@@ -127,6 +127,10 @@ double StellarSystem::getMassRatio() const
 
 void StellarSystem::setMassRatio(double r)
 {
+    // Secondary stars should always be between 0 and the primary's mass.
+    assert ( r >= 0.0 );
+    assert ( r <= 1.0 );
+
     secondary.mass = primary.mass * r;
 }
 

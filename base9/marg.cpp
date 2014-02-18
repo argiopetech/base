@@ -122,7 +122,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
 
                 for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; i++)
                 {
-                    if ((isochrone.mag.at(i).at(f) < magLower) || (isochrone.mag.at(i).at(f) > magUpper) || (isochrone.mass.at(i) > mass.at(0)))
+                    if (!(isochrone.mag.at(i).at(f) >= magLower && isochrone.mag.at(i).at(f) <= magUpper && isochrone.mass.at(i) <= mass.at(0)))
                     {
                         okMass.at(i) = false;
                     }
@@ -132,12 +132,11 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
         }
     }
 
-    for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 2; i++)
+    for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 2; ++i)
     {
         if (okMass.at(i))
         {
-            system.setMassRatio (mass.at(0) / isochrone.mass.at(i));
-            system.secondary.mass = mass.at(1);
+            system.setMassRatio (isochrone.mass.at(i) / mass.at(0));
 
             /* now have magnitudes, want posterior probability */
             tmpLogPost = system.logPost (clust, evoModels, filters);
