@@ -219,33 +219,14 @@ large as 9.0.
         return finalMassW[9];   // limiting values
     else
     {
-        int lo = 1;
-        int hi = 9;
-        int mid;
-
-        // binary search on zams_mass
-        while (1)
+        for (int i = 0; i < 10; ++i)
         {
-            mid = (lo + hi) / 2;
-
-            if ((initMassW[mid - 1] <= zamsMass) && (zamsMass <= initMassW[mid]))
+            if ((initMassW[i - 1] <= zamsMass) && (zamsMass <= initMassW[i]))
             {
-                auto wdMass = linearTransform<TransformMethod::Interp>(initMassW[mid - 1], initMassW[mid], finalMassW[mid - 1], finalMassW[mid], zamsMass);
-
-                return wdMass.val;
+                return linearTransform<TransformMethod::Interp>(initMassW[i - 1], initMassW[i], finalMassW[i - 1], finalMassW[i], zamsMass).val;
             }
-
-            if (lo >= hi)
-            {
-                cerr << "ERROR: BINARY SEARCH FAILURE" << endl;
-                break;
-            }
-
-            if (zamsMass > initMassW[mid])
-                lo = mid + 1;
-            if (zamsMass < initMassW[mid])
-                hi = mid - 1;
         }
     }
+
     return 0.0;
 }

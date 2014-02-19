@@ -58,10 +58,10 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     {
         if (isOverlap)
         {
-            double diffLow = exp10 (((system.obsPhot[obsFilt] - nSD * sqrt (system.variance[obsFilt])) / -2.5))
-                           - exp10 ((primaryMags[f] / -2.5));
-            double diffUp = exp10 (((system.obsPhot[obsFilt] + nSD * sqrt (system.variance[obsFilt])) / -2.5))
-                          - exp10 ((primaryMags[f] / -2.5));
+            const double diffLow = exp10 (((system.obsPhot[obsFilt] - nSD * sqrt (system.variance[obsFilt])) / -2.5))
+                                 - exp10 ((primaryMags[f] / -2.5));
+            const double diffUp = exp10 (((system.obsPhot[obsFilt] + nSD * sqrt (system.variance[obsFilt])) / -2.5))
+                                - exp10 ((primaryMags[f] / -2.5));
 
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
@@ -69,8 +69,8 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
             }
             else
             {
-                double magLower = -2.5 * log10 (diffLow);
-                double magUpper = -2.5 * log10 (diffUp);
+                const double magLower = -2.5 * log10 (diffLow);
+                const double magUpper = -2.5 * log10 (diffUp);
 
                 for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; i++)
                 {
