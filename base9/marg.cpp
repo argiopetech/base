@@ -21,87 +21,31 @@
 using std::array;
 using std::vector;
 
-const int MAX_ENTRIES = 370;
+const int isoIncrem = 80;    /* ok for YY models? */
 
-double calcPost (double, array<double, 2>&, const Cluster&, StellarSystem, const Model&, const vector<int>&);
-
-/* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-double margEvolveWithBinary (const Cluster &clust, const StellarSystem &system, const Model &evoModels, const vector<int> &filters)
-{
-    array<double, 2> mass;
-
-    mass.at(0) = 0.0;
-    mass.at(1) = 0.0;
-
-    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
-    double post = 0.0;
-
-    // AGBt_zmass never set because age and/or metallicity out of range of models.
-    if (clust.AGBt_zmass < EPS)
-    {
-        throw WDBoundsError("Bounds error in marg.cpp");
-    }
-
-    double dMass;
-
-    double dIsoMass = 0.0;
-
-    int isoIncrem = 80;    /* ok for YY models? */
-
-    assert(isochrone.nEntries >= 2);
-
-    for (decltype(isochrone.nEntries) m = 0; m < isochrone.nEntries - 2; m++)
-    {
-        for (auto k = 0; k < isoIncrem; k += 1)
-        {
-
-            dIsoMass = isochrone.mass.at(m + 1) - isochrone.mass.at(m);
-
-            /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
-            assert (dIsoMass >= 0.0);
-
-            dMass = dIsoMass / isoIncrem;
-            mass.at(0) = isochrone.mass.at(m) + k * dMass;
-
-            post += calcPost (dMass, mass, clust, system, evoModels, filters);
-        }
-    }
-
-    if (post >= 0.0)
-    {
-        return post;
-    }
-    else
-    {
-        return 0.0;
-    }
-}
-
-
-double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, StellarSystem system, const Model &evoModels, const vector<int> &filters)
+// ASSUMPTIONS
+//   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
+//   2. margEvolveWithBinary passes the StellarSystem with primary.mass already set appropriately
+//   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
+static double calcPost (double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, const vector<int> &filters)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
-    double post = 0.0;
 
-    array<double, FILTS> primaryMags;
-
-    system.primary.mass = mass[0];
-
-    primaryMags = system.primary.getMags (clust, evoModels, filters);
-
-    double tmpLogPost, tmpPost;
+    // Get the mags based on the primary's mass set by margEvolve
+    // Also, go ahead and rename system.primary.mass to primaryMass for this function
+    array<double, FILTS> primaryMags = system.primary.getMags (clust, evoModels, filters);
+    const double primaryMass = system.primary.mass;
 
     /* first try 0.0 massRatio */
-    system.secondary.mass = mass[1];
+    system.secondary.mass = 0.0;
 
-    tmpLogPost = system.logPost (clust, evoModels, filters);
-    tmpLogPost += log (dMass);
-    tmpLogPost += log (isochrone.mass[0] / mass[0]);    /* dMassRatio */
-    tmpPost = exp (tmpLogPost);
-    post += tmpPost;
+    double tmpLogPost = system.logPost (clust, evoModels, filters)
+                      + log (dMass)
+                      + log (isochrone.mass[0] / primaryMass);   // dMassRatio
+    double post = exp (tmpLogPost);
 
     /**** now see if any binary companions are OK ****/
-    double nSD = 4.0;           /* num of st dev from obs that will contribute to likelihood */
+    const double nSD = 4.0;           /* num of st dev from obs that will contribute to likelihood */
     int obsFilt = 0;
 
     bool isOverlap = true;          /* do the allowable masses in each filter overlap? */
@@ -125,7 +69,7 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
 
                 for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; i++)
                 {
-                    if (!(isochrone.mag[i][f] >= magLower && isochrone.mag[i][f] <= magUpper && isochrone.mass[i] <= mass[0]))
+                    if (!(isochrone.mag[i][f] >= magLower && isochrone.mag[i][f] <= magUpper && isochrone.mass[i] <= primaryMass))
                     {
                         okMass[i] = false;
                     }
@@ -139,17 +83,58 @@ double calcPost (double dMass, array<double, 2> &mass, const Cluster &clust, Ste
     {
         if (okMass[i])
         {
-            system.setMassRatio (isochrone.mass[i] / mass[0]);
+            system.setMassRatio (isochrone.mass[i] / primaryMass);
 
             /* now have magnitudes, want posterior probability */
-            tmpLogPost = system.logPost (clust, evoModels, filters);
-            tmpLogPost += log (dMass);
-            tmpLogPost += log ((isochrone.mass[i + 1] - isochrone.mass[i]) / mass[0]);
-            tmpPost = exp (tmpLogPost);
+            tmpLogPost = system.logPost (clust, evoModels, filters)
+                       + log (dMass)
+                       + log ((isochrone.mass[i + 1] - isochrone.mass[i]) / primaryMass);
 
-            post += tmpPost;
+            post += exp (tmpLogPost);
         }
     }
 
     return post;
+}
+
+
+/* evaluate on a grid of primary mass and mass ratio to approximate the integral */
+double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const Model &evoModels, const vector<int> &filters)
+{
+    // AGBt_zmass never set because age and/or metallicity out of range of models.
+    if (clust.AGBt_zmass < EPS)
+    {
+        throw WDBoundsError("Bounds error in marg.cpp");
+    }
+
+    double post = 0.0;
+
+    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
+    assert(isochrone.nEntries >= 2);
+
+    for (decltype(isochrone.nEntries) m = 0; m < isochrone.nEntries - 2; m++)
+    {
+        for (auto k = 0; k < isoIncrem; k += 1)
+        {
+
+            double dIsoMass = isochrone.mass.at(m + 1) - isochrone.mass.at(m);
+
+            /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
+            assert (dIsoMass >= 0.0);
+
+            double dMass = dIsoMass / isoIncrem;
+            system.primary.mass = isochrone.mass.at(m) + k * dMass;
+
+            post += calcPost (dMass, clust, system, evoModels, filters);
+        }
+    }
+
+    if (post >= 0.0)
+    {
+        return post;
+    }
+    else
+    {
+        return 0.0;
+    }
 }
