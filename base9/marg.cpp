@@ -72,7 +72,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
                 const double magLower = -2.5 * log10 (diffLow);
                 const double magUpper = -2.5 * log10 (diffUp);
 
-                for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; i++)
+                for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries; ++i)
                 {
                     if (!(isochrone.mag[i][f] >= magLower && isochrone.mag[i][f] <= magUpper && isochrone.mass[i] <= primaryMass))
                     {
@@ -84,7 +84,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
         }
     }
 
-    for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 2; ++i)
+    for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; ++i)
     {
         if (okMass[i])
         {
