@@ -27,7 +27,7 @@ const int isoIncrem = 80;    /* ok for YY models? */
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
 //   2. margEvolveWithBinary passes the StellarSystem with primary.mass already set appropriately
 //   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
-static double calcPost (double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, const vector<int> &filters)
+static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, const vector<int> &filters)
 {
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
@@ -36,11 +36,14 @@ static double calcPost (double dMass, const Cluster &clust, StellarSystem &syste
     array<double, FILTS> primaryMags = system.primary.getMags (clust, evoModels, filters);
     const double primaryMass = system.primary.mass;
 
+    // Other useful constants
+    const double logdMass = log (dMass);
+
     /* first try 0.0 massRatio */
     system.secondary.mass = 0.0;
 
     double tmpLogPost = system.logPost (clust, evoModels, filters)
-                      + log (dMass)
+                      + logdMass
                       + log (isochrone.mass[0] / primaryMass);   // dMassRatio
     double post = exp (tmpLogPost);
 
@@ -55,8 +58,10 @@ static double calcPost (double dMass, const Cluster &clust, StellarSystem &syste
     {
         if (isOverlap)
         {
-            double diffLow = exp10(((system.obsPhot[obsFilt] - nSD * sqrt (system.variance[obsFilt])) / -2.5)) - exp10((primaryMags[f] / -2.5));
-            double diffUp = exp10(((system.obsPhot[obsFilt] + nSD * sqrt (system.variance[obsFilt])) / -2.5)) - exp10((primaryMags[f] / -2.5));
+            double diffLow = exp10 (((system.obsPhot[obsFilt] - nSD * sqrt (system.variance[obsFilt])) / -2.5))
+                           - exp10 ((primaryMags[f] / -2.5));
+            double diffUp = exp10 (((system.obsPhot[obsFilt] + nSD * sqrt (system.variance[obsFilt])) / -2.5))
+                          - exp10 ((primaryMags[f] / -2.5));
 
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
@@ -87,7 +92,7 @@ static double calcPost (double dMass, const Cluster &clust, StellarSystem &syste
 
             /* now have magnitudes, want posterior probability */
             tmpLogPost = system.logPost (clust, evoModels, filters)
-                       + log (dMass)
+                       + logdMass
                        + log ((isochrone.mass[i + 1] - isochrone.mass[i]) / primaryMass);
 
             post += exp (tmpLogPost);
