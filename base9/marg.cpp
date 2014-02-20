@@ -18,10 +18,12 @@
 
 #include "boost/dynamic_bitset.hpp"
 
+#include <iostream>
+
 using std::array;
 using std::vector;
 
-const int isoIncrem = 80;    /* ok for YY models? */
+int okMasses;
 
 // ASSUMPTIONS
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
@@ -44,56 +46,82 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
     double tmpLogPost = system.logPost (clust, evoModels, filters)
                       + logdMass
-                      + log (isochrone.mass[0] / primaryMass);   // dMassRatio
+                      + log (isochrone.mass.at(0) / primaryMass);   // dMassRatio
     double post = exp (tmpLogPost);
 
     /**** now see if any binary companions are OK ****/
     const double nSD = 4.0;           /* num of st dev from obs that will contribute to likelihood */
-    int obsFilt = 0;
 
-    bool isOverlap = true;          /* do the allowable masses in each filter overlap? */
-    boost::dynamic_bitset<> okMass(isochrone.nEntries, true);
+    boost::dynamic_bitset<> okMass(isochrone.nEntries, false);
 
-    for (auto f : filters)
+    struct diffStruct
     {
-        if (isOverlap)
+        diffStruct(int filter, double magLower, double magUpper)
+            : filter(filter), magLower(magLower), magUpper(magUpper)
+        {;}
+        ~diffStruct() {;}
+
+        const int filter;
+        const double magLower;
+        const double magUpper;
+    };
+
+    vector<diffStruct> diffs;
+
+    {
+        int obsFilt = 0;
+    
+        for (auto f : filters)
         {
-            const double diffLow = exp10 (((system.obsPhot[obsFilt] - nSD * sqrt (system.variance[obsFilt])) / -2.5))
-                                 - exp10 ((primaryMags[f] / -2.5));
-            const double diffUp = exp10 (((system.obsPhot[obsFilt] + nSD * sqrt (system.variance[obsFilt])) / -2.5))
-                                - exp10 ((primaryMags[f] / -2.5));
+            const double diffLow = exp10 (((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
+                                 - exp10 ((primaryMags.at(f) / -2.5));
+            const double diffUp = exp10 (((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
+                                - exp10 ((primaryMags.at(f) / -2.5));
 
             if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
             {
-                isOverlap = false;
+                return 0.0;
             }
             else
             {
                 const double magLower = -2.5 * log10 (diffLow);
                 const double magUpper = -2.5 * log10 (diffUp);
 
-                for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries; ++i)
-                {
-                    if (!(isochrone.mag[i][f] >= magLower && isochrone.mag[i][f] <= magUpper && isochrone.mass[i] <= primaryMass))
-                    {
-                        okMass[i] = false;
-                    }
-                }
+                assert(!std::isnan(magLower));
+                assert(!std::isnan(magUpper));
+            
+                diffs.emplace_back(obsFilt, magLower, magUpper);
             }
-            obsFilt++;
+
+            ++obsFilt;
         }
     }
 
     for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; ++i)
     {
-        if (okMass[i])
+        bool okMass = true;
+
+        for (auto diff : diffs)
         {
-            system.setMassRatio (isochrone.mass[i] / primaryMass);
+            if (! (isochrone.mag.at(i).at(diff.filter) >= diff.magLower
+                && isochrone.mag.at(i).at(diff.filter) <= diff.magUpper
+                && isochrone.mass.at(i) <= primaryMass))
+            {
+                okMass = false;
+                break;
+            }
+        }
+
+        if (okMass)
+        {
+            ++okMasses;
+
+            system.setMassRatio (isochrone.mass.at(i) / primaryMass);
 
             /* now have magnitudes, want posterior probability */
             tmpLogPost = system.logPost (clust, evoModels, filters)
                        + logdMass
-                       + log ((isochrone.mass[i + 1] - isochrone.mass[i]) / primaryMass);
+                       + log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / primaryMass);
 
             post += exp (tmpLogPost);
         }
@@ -112,27 +140,32 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
         throw WDBoundsError("Bounds error in marg.cpp");
     }
 
+    const int isoIncrem = 80;    /* ok for YY models? */
+
     double post = 0.0;
+    okMasses = 0;
 
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     assert(isochrone.nEntries >= 2);
 
-    for (decltype(isochrone.nEntries) m = 0; m < isochrone.nEntries - 2; m++)
+    for (decltype(isochrone.nEntries) m = 0; m < isochrone.nEntries - 1; m++)
     {
+        double dIsoMass = isochrone.mass.at(m + 1) - isochrone.mass.at(m);
+
+        /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
+        assert (dIsoMass >= 0.0);
+
+        double dMass = dIsoMass / isoIncrem;
+
         for (auto k = 0; k < isoIncrem; k += 1)
         {
-
-            double dIsoMass = isochrone.mass.at(m + 1) - isochrone.mass.at(m);
-
-            /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
-            assert (dIsoMass >= 0.0);
-
-            double dMass = dIsoMass / isoIncrem;
-            system.primary.mass = isochrone.mass.at(m) + k * dMass;
+            system.primary.mass = isochrone.mass.at(m) + (k * dMass);
 
             post += calcPost (dMass, clust, system, evoModels, filters);
         }
     }
+
+    std::cout << okMasses << " ok Masses" << std::endl;
 
     if (post >= 0.0)
     {
