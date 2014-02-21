@@ -504,8 +504,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
     propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
 
     /* loop over assigned stars */
-//    pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
-    for (int i = 0; i < systems.size(); ++i)
+    pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
     {
         double postClusterStar = 0.0;
 
@@ -554,7 +553,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
         /* marginalize over field star status */
         std::lock_guard<mutex> lk(logPostMutex);
         logPostProp += log ((1.0 - systems.at(i).clustStarPriorDens) * fsLike + postClusterStar);
-    };//);
+    });
 
     return logPostProp;
 }
