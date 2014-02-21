@@ -29,8 +29,7 @@ The former does 3-D interpolation of the Girardi isochrones.
 
 deriveAgbTipMass() needs to be called first
 ****************************************************************************************/
-    std::array<double, FILTS> msRgbEvol (const std::vector<int>&, double);
-
+    std::array<double, FILTS> msRgbEvol (const std::vector<int>&, double) const;
 
 /****************************************************************************************
 Derive WD precursor age for a given metallicity, calling in turn wd_prec_g_lage to
