@@ -16,14 +16,8 @@
 #include "MsFilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
-#include "boost/dynamic_bitset.hpp"
-
-#include <iostream>
-
 using std::array;
 using std::vector;
-
-int okMasses;
 
 // ASSUMPTIONS
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
@@ -31,29 +25,7 @@ int okMasses;
 //   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
 static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, const vector<int> &filters)
 {
-    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
-
-    // Get the mags based on the primary's mass set by margEvolve
-    // Also, go ahead and rename system.primary.mass to primaryMass for this function
-    array<double, FILTS> primaryMags = system.primary.getMags (clust, evoModels, filters);
-    const double primaryMass = system.primary.mass;
-
-    // Other useful constants
-    const double logdMass = log (dMass);
-
-    /* first try 0.0 massRatio */
-    system.secondary.mass = 0.0;
-
-    double tmpLogPost = system.logPost (clust, evoModels, filters)
-                      + logdMass
-                      + log (isochrone.mass.at(0) / primaryMass);   // dMassRatio
-    double post = exp (tmpLogPost);
-
-    /**** now see if any binary companions are OK ****/
-    const double nSD = 4.0;           /* num of st dev from obs that will contribute to likelihood */
-
-    boost::dynamic_bitset<> okMass(isochrone.nEntries, false);
-
+    // This struct is only used inside this function, so we don't want it escaping
     struct diffStruct
     {
         diffStruct(int filter, double magLower, double magUpper)
@@ -66,10 +38,33 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
         const double magUpper;
     };
 
-    vector<diffStruct> diffs;
+    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
+    // Get the mags based on the primary's mass set by margEvolve
+    // Also, go ahead and rename system.primary.mass to primaryMass for this function
+    array<double, FILTS> primaryMags = system.primary.getMags (clust, evoModels, filters);
+    const double primaryMass = system.primary.mass;
+
+    // Other useful constants
+    const double logdMass = log (dMass); // This is a pre-optimzation so we only have to call log once (instead of nEntries times)
+
+    /* first try 0.0 massRatio */
+    system.secondary.mass = 0.0;
+
+    double tmpLogPost = system.logPost (clust, evoModels, filters)
+                      + logdMass
+                      + log (isochrone.mass.at(0) / primaryMass);   // dMassRatio
+    double post = exp (tmpLogPost);
+
+    /**** now see if any binary companions are OK ****/
+    const double nSD = 4.0;           // num of st dev from obs that will contribute to likelihood
+
+    vector<diffStruct> diffs; // Keeps track of diffStructs for every filter
+
+    // Pre-calculate diffLow and diffUp so they can be cached for the loop below
+    // In its own block to contain obsFilt
     {
-        int obsFilt = 0;
+        int obsFilt = 0; // Counts the number of filters we've gone through
     
         for (auto f : filters)
         {
@@ -78,52 +73,60 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
             const double diffUp = exp10 (((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
                                 - exp10 ((primaryMags.at(f) / -2.5));
 
-            if (diffLow <= 0.0 || diffUp <= 0.0 || diffLow == diffUp)
+            if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
             {
-                return 0.0;
+                return 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
+                            // that no mass combinations would lead to a positive posterior density
             }
             else
             {
                 const double magLower = -2.5 * log10 (diffLow);
                 const double magUpper = -2.5 * log10 (diffUp);
 
-                assert(!std::isnan(magLower));
-                assert(!std::isnan(magUpper));
+                assert(!std::isnan(magLower)); // Even though we checked it above, we still check it here
+                                               // magUpper is allowed to be NaN, as it is checked below.
             
-                diffs.emplace_back(obsFilt, magLower, magUpper);
+                diffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
             }
 
             ++obsFilt;
         }
     }
 
+    // Evaluate the posterior at all reasonable points in the isochrone
     for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; ++i)
     {
+        // All filters should be acceptable if we are to evaluate at a grid point
+        // okMass starts out true, and gets set false if any filter is not acceptable
         bool okMass = true;
 
+        // For all the diffSets (i.e., every filter)
         for (auto diff : diffs)
         {
-            if (! (isochrone.mag.at(i).at(diff.filter) >= diff.magLower
-                && isochrone.mag.at(i).at(diff.filter) <= diff.magUpper
-                && isochrone.mass.at(i) <= primaryMass))
+            // The isochrone mag should be between magLower and magUpper
+            // and the isochrone mass should be less than primaryMass
+            //
+            // Exception: If magUpper is NaN (i.e., it was < 0 as diffUp above), consider it irrelevant
+            if ( ! (isochrone.mag.at(i).at(diff.filter) >= diff.magLower
+                && (isochrone.mag.at(i).at(diff.filter) <= diff.magUpper || std::isnan(diff.magUpper))
+                &&  isochrone.mass.at(i) <= primaryMass))
             {
-                okMass = false;
-                break;
+                okMass = false; // If it isn't, that isn't OK
+                break;          // And break out of the loop to avoid further calculation (pre-optimization)
             }
         }
 
+        // Now, only if we left the above loop without triggering the condition, calculate the posterior density for the system
         if (okMass)
         {
-            ++okMasses;
+            system.setMassRatio (isochrone.mass.at(i) / primaryMass); // Set the massRatio (and therefore the secondary mass)
 
-            system.setMassRatio (isochrone.mass.at(i) / primaryMass);
-
-            /* now have magnitudes, want posterior probability */
+            // Calculate the posterior density for this system
             tmpLogPost = system.logPost (clust, evoModels, filters)
                        + logdMass
                        + log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / primaryMass);
 
-            post += exp (tmpLogPost);
+            post += exp (tmpLogPost); // And add it to the running total
         }
     }
 
@@ -143,7 +146,6 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
     const int isoIncrem = 80;    /* ok for YY models? */
 
     double post = 0.0;
-    okMasses = 0;
 
     const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
     assert(isochrone.nEntries >= 2);
@@ -164,8 +166,6 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
             post += calcPost (dMass, clust, system, evoModels, filters);
         }
     }
-
-    std::cout << okMasses << " ok Masses" << std::endl;
 
     if (post >= 0.0)
     {
