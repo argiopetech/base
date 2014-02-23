@@ -57,7 +57,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     double post = exp (tmpLogPost);
 
     /**** now see if any binary companions are OK ****/
-    const double nSD = 4.0;           // num of st dev from obs that will contribute to likelihood
+    const double nSD = 3.0;           // num of st dev from obs that will contribute to likelihood
 
     vector<diffStruct> diffs; // Keeps track of diffStructs for every filter
 
