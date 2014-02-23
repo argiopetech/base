@@ -33,7 +33,7 @@ pushd ./BUILD
 cmake -DCMAKE_BUILD_TYPE="RELEASE" ..
 make $MULTICPUS
 
-if [[ $? == 0 ]]; then
+if [[ $? == 0 && ! $NO_INSTALL ]]; then
     make install
 fi;
 
