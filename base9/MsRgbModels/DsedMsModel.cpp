@@ -356,8 +356,6 @@ double DsedMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
     int thisIndexAge[2], f;
     double logAge[2], AgbTurnoffMass[2], wdPrecLogAge[2], FeH[2], temp;
 
-    int reverseBinarySearch (double *searchArray, int size, double searchItem);
-
     AgbTurnoffMass[1] = AgbTurnoffMass[0] = 0.0;
 
     FeH[0] = dFeH[iFeH];
