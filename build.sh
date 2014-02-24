@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Get the number of CPUs on the system
 # This is not portable
