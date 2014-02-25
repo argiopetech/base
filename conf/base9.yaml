@@ -26,14 +26,14 @@ general:
             distMod:     0.0
             Av:          0.009
             Y:           0.29
-            carbonicity: 0.5
+            carbonicity: 0.38 # Good default value, per Mike Montgomery
 
         sigmas:
             Fe_H:        0.05
             distMod:     0.05
             Av:          0.006
             Y:           0.0
-            carbonicity: 0.0833
+            carbonicity: 0.0
 
         starting:
             Fe_H:        0.07
