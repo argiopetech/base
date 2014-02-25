@@ -32,7 +32,7 @@ struct globalIso
     unsigned int nEntries;
 
     double AgbTurnoffMass = 0.0;
-    double FeH = 0.0;
+//    double FeH = 0.0;
     double logAge = 0.0;
     double age = 0.0;
     double Y = 0.0;

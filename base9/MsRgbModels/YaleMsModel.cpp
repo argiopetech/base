@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -38,7 +39,6 @@ static void eepset (double x[], double y[], int nstep, int igrd, double *slope);
 static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorder);
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS]);
 static double feh2z (double FeH);
-static void intpolZ (int iZ, int iAge, double newZ);
 
 void YaleMsModel::loadModel (string path, MsFilter filterSet)
 {
@@ -249,22 +249,10 @@ double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, d
     iAge = -1;
     iZ = -1;
 
-    if (newAge < yyAge[0][0])
-    {
-        //     log << ("\n Requested age (%.3f) too young. (gYaleMag.c)", newLogAge);
-        return 0.0;
-    }
-    if (newAge > yyAge[N_YY_Z - 1][N_YY_AGES - 1])
-    {
-        //     log << ("\n Requested age (%.3f) too old. (gYaleMag.c)", newLogAge);
-        return 0.0;
-    }
-    if (newZ < yyZ[0])
-    {
-        //     log << ("\n Requested Z (%.3f, FeH = %.3f) too low. (gYaleMag.c)", newZ, newFeH);
-        return 0.0;
-    }
-    if (newZ > yyZ[N_YY_Z - 1])
+    if ((newAge < yyAge[0][0])
+     || (newAge > yyAge[N_YY_Z - 1][N_YY_AGES - 1])
+     || (newZ < yyZ[0])
+     || (newZ > yyZ[N_YY_Z - 1]))
     {
         //     log << ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
         return 0.0;
@@ -283,31 +271,14 @@ double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, d
         iZ = 0;
 //    newY = dydz*(newZ-zp)+yp;
 
-    intpolZ (iZ, iAge, newZ);
-    intpolAge (iAge, newAge);
-
-    isochrone.age = newAge;
-    isochrone.logAge = log10 (newAge * 1e9);
-    isochrone.FeH = newFeH;
-    isochrone.z = newZ;
-    isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
-
-    return isochrone.AgbTurnoffMass;
-}
-
-
-static void intpolZ (int iZ, int iAge, double newZ)
-{
-
-    int i, p, m;
-
     //Will eventually interpolate in age between these two isochrones
-    for (i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++)
     {
-        for (m = 0; m < yyIso[iZ + 1][i + iAge].nEntries; m++)
+        for (int m = 0; m < yyIso[iZ + 1][i + iAge].nEntries; m++)
         {
             tempIso[i].mass[m] = CUBEINT (log (yyZ[iZ]), yyIso[iZ][i + iAge].mass[m], log (yyZ[iZ + 1]), yyIso[iZ + 1][i + iAge].mass[m], log (yyZ[iZ + 2]), yyIso[iZ + 2][i + iAge].mass[m], log (yyZ[iZ + 3]), yyIso[iZ + 3][i + iAge].mass[m], log (newZ));
-            for (p = 0; p < N_YY_FILTS; p++)
+
+            for (int p = 0; p < N_YY_FILTS; p++)
             {
                 tempIso[i].mag[m][p] = CUBEINT (log (yyZ[iZ]), yyIso[iZ][i + iAge].mag[m][p], log (yyZ[iZ + 1]), yyIso[iZ + 1][i + iAge].mag[m][p], log (yyZ[iZ + 2]), yyIso[iZ + 2][i + iAge].mag[m][p], log (yyZ[iZ + 3]), yyIso[iZ + 3][i + iAge].mag[m][p], log (newZ));
             }
@@ -318,35 +289,35 @@ static void intpolZ (int iZ, int iAge, double newZ)
         tempIso[i].logAge = yyIso[iZ][iAge + i].logAge;
     }
 
-    return;
-}
-
-
-void YaleMsModel::intpolAge (int iAge, double newAge)
-{
-
-    int iYYm, m, p;
-
     //SD -- Isochrones for the lower ages have fewer entries (~35 instead of 140)
     //If this age is right on the border, just use the two higher age entries
     //that have all 140 entries (and extrapolate, technically)
-    iYYm = tempIso[0].nEntries; //yyIso[iZ][iAge+1].nEntries;
+    int iYYm = tempIso[0].nEntries; //yyIso[iZ][iAge+1].nEntries;
     if (yyIso[iZ][iAge].nEntries < iYYm)
         iAge++;
 
-    for (m = 0; m < iYYm; m++)
+    for (int m = 0; m < iYYm; m++)
     {
         isochrone.mass[m] = POLLIN (tempIso[0].age, tempIso[0].mass[m], tempIso[1].age, tempIso[1].mass[m], newAge);
 
-        for (p = 0; p < N_YY_FILTS; p++)
+        for (int p = 0; p < N_YY_FILTS; p++)
         {
             isochrone.mag[m][p] = POLLIN (tempIso[0].age, tempIso[0].mag[m][p], tempIso[1].age, tempIso[1].mag[m][p], newAge);
         }
     }
 
     isochrone.nEntries = iYYm;
-    return;
+
+    isochrone.age = newAge;
+    isochrone.logAge = log10 (newAge * 1e9);
+    isochrone.z = newZ;
+    isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
+
+    assert(is_sorted(isochrone.mass.begin(), isochrone.mass.begin() + isochrone.nEntries));
+
+    return isochrone.AgbTurnoffMass;
 }
+
 
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS])
 {

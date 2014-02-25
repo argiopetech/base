@@ -287,7 +287,6 @@ double ChabMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
     isochrone.nEntries = neweep;
     isochrone.age = newAge;
     isochrone.logAge = newLogAge;
-    isochrone.FeH = newFeH;
     isochrone.Y = newY;
     isochrone.AgbTurnoffMass = isochrone.mass[neweep - 1];
 

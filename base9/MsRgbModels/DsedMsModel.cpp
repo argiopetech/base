@@ -63,7 +63,18 @@ static double dAgbCoeff[N_DSED_Z][2] = { {-3.3734996, 0.8357878},
                                          {-3.5500060, 0.6773844}
 };
 
-static void calcCoeff (double a[], double b[], double x);
+
+// a and b are 1-d arrays with two elements
+// a contains the two bounding values to be interpolated
+// x is the value to be interpolated at
+// b returns the coefficients
+static void calcCoeff (double a[], double b[], double x)
+{
+    b[0] = (a[1] - x) / (a[1] - a[0]);
+    b[1] = (x - a[0]) / (a[1] - a[0]);
+    return;
+}
+
 
 void DsedMsModel::loadModel (string path, MsFilter filterSet)
 {
@@ -342,7 +353,6 @@ double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
     //Transfer to globalIsochrone structure
     isochrone.nEntries = neweep;
     isochrone.logAge = newLogAge;
-    isochrone.FeH = newFeH;
     isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
 
     return isochrone.AgbTurnoffMass;
@@ -396,16 +406,4 @@ double DsedMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
     temp = linearTransform<TransformMethod::Interp>(FeH[0], FeH[1], wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
 
     return temp;
-}
-
-
-// a and b are 1-d arrays with two elements
-// a contains the two bounding values to be interpolated
-// x is the value to be interpolated at
-// b returns the coefficients
-static void calcCoeff (double a[], double b[], double x)
-{
-    b[0] = (a[1] - x) / (a[1] - a[0]);
-    b[1] = (x - a[0]) / (a[1] - a[0]);
-    return;
 }

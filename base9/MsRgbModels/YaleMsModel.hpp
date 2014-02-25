@@ -21,17 +21,17 @@ const double FeHa4 = -0.470;
 
 constexpr double QUAD(double x1, double y1, double x2, double y2, double x3, double y3, double x)
 {
-    return  y1 * (x2 - x) * (x3 - x) / ((x2 - x1) * (x3 - x1))       \
-        + y2 * (x1 - x) * (x3 - x) / ((x1 - x2) * (x3 - x2))         \
-        + y3 * (x1 - x) * (x2 - x) / ((x1 - x3) * (x2 - x3));
+    return  y1 * (x2 - x) * (x3 - x) / ((x2 - x1) * (x3 - x1))
+          + y2 * (x1 - x) * (x3 - x) / ((x1 - x2) * (x3 - x2))
+          + y3 * (x1 - x) * (x2 - x) / ((x1 - x3) * (x2 - x3));
 }
 
 constexpr double CUBEINT(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x)
 {
-    return (x-x2)*(x-x3)*(x-x4)*y1/((x1-x2)*(x1-x3)*(x1-x4))            \
-        +(x-x1)*(x-x3)*(x-x4)*y2/((x2-x1)*(x2-x3)*(x2-x4))              \
-        +(x-x1)*(x-x2)*(x-x4)*y3/((x3-x1)*(x3-x2)*(x3-x4))              \
-        +(x-x1)*(x-x2)*(x-x3)*y4/((x4-x1)*(x4-x2)*(x4-x3));
+    return (x-x2)*(x-x3)*(x-x4)*y1/((x1-x2)*(x1-x3)*(x1-x4))
+         + (x-x1)*(x-x3)*(x-x4)*y2/((x2-x1)*(x2-x3)*(x2-x4))
+         + (x-x1)*(x-x2)*(x-x4)*y3/((x3-x1)*(x3-x2)*(x3-x4))
+         + (x-x1)*(x-x2)*(x-x3)*y4/((x4-x1)*(x4-x2)*(x4-x3));
 }
 
 constexpr double POLLIN(double x1, double y1, double x2, double y2, double x)
@@ -70,7 +70,6 @@ class YaleMsModel : public MsRgbModel
     virtual int numFilts() const { return N_YY_FILTS; }
 
   private:
-    void intpolAge(int, double);
 };
 
 #endif

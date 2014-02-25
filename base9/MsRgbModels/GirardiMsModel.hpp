@@ -23,9 +23,6 @@ class GirardiMsModel : public MsRgbModel
 
   protected:
     virtual int numFilts() const { return N_GIR_FILTS; }
-
-  private:
-    double interpInMass (const std::vector<int>&, int, double, int, double *);
 };
 
 #endif
