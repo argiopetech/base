@@ -1,6 +1,7 @@
 #include <array>
 #include <vector>
 
+#include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -9,7 +10,6 @@
 #include "Star.hpp"
 
 #include "constants.hpp"
-#include "structures.hpp"
 #include "densities.hpp"
 #include "WhiteDwarf.hpp"
 

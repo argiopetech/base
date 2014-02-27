@@ -8,7 +8,6 @@
 
 #include "constants.hpp"
 #include "Isochrone.hpp"
-#include "structures.hpp"
 
 class MsRgbModel
 {

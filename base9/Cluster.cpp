@@ -1,7 +1,6 @@
 #include <cstdio>
 
 #include "Cluster.hpp"
-#include "structures.hpp"
 
 double Cluster::getParam(int p) const
 {
