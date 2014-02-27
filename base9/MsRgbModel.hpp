@@ -7,10 +7,35 @@
 #include <vector>
 
 #include "constants.hpp"
+#include "Isochrone.hpp"
 #include "structures.hpp"
 
 class MsRgbModel
 {
+  protected:
+    struct FehCurve
+    {
+        FehCurve(double feh, std::vector<Isochrone> isochrones)
+            : feh(feh), isochrones(isochrones)
+        {;}
+
+        ~FehCurve()
+        {;}
+
+        static bool compareFeh(const FehCurve &a, const double b)
+        {
+            return a.feh < b;
+        }
+
+        bool operator<(const struct FehCurve &b) const
+        {
+            return feh < b.feh;
+        }
+
+        double feh;
+        std::vector<Isochrone> isochrones;
+    };
+
   public:
     virtual ~MsRgbModel() {;}
 
@@ -46,13 +71,14 @@ modified for different model sets.
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }
 
-    const struct globalIso& getIsochrone() const { return isochrone; }
+    const Isochrone& getIsochrone() const { return isochrone; }
 
   protected:
     virtual int numFilts() const = 0;
 
     std::pair<double, double> ageLimit;
 
-    struct globalIso isochrone;
+    Isochrone isochrone;
+    std::vector<struct FehCurve> fehCurves;
 };
 #endif

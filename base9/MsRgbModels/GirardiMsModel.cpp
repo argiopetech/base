@@ -1,5 +1,9 @@
-#include <string>
+#include <algorithm>
+#include <array>
+#include <fstream>
 #include <iostream>
+#include <string>
+#include <sstream>
 #include <vector>
 
 #include <cstdio>
@@ -8,73 +12,80 @@
 #include <cstring>
 
 #include "Cluster.hpp"
+#include "Isochrone.hpp"
 #include "Star.hpp"
 
 #include "LinearTransform.hpp"
-#include "binSearch.hpp"
 #include "GirardiMsModel.hpp"
 
+using std::array;
 using std::string;
 using std::vector;
+using std::stringstream;
+using std::lower_bound;
 using std::cerr;
+using std::cout;
 using std::endl;
+using std::ifstream;
 
-static int gNumEntries[N_GIR_Z];
-static int gBoundary[2][N_GIR_Z][N_GIR_AGES];
+const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
-static double gFeH    [N_GIR_Z];
-static double gIsoMass[N_GIR_Z][MAX_GIR_ENTRIES];
-static double gIsoMag [N_GIR_Z][N_GIR_FILTS][MAX_GIR_ENTRIES];
-static double gLogAge [N_GIR_Z][N_GIR_AGES];
-static double gAGBt   [N_GIR_Z][N_GIR_AGES];
+static vector<string> getFileNames (string path, MsFilter filterSet)
+{
+    const array<string, 8> fileNames = { "0", "0001", "0004", "001", "004", "008", "019", "030" };
+    vector<string> files;
 
-static void calcCoeff (double a[], double b[], double x);
+    for (auto file : fileNames)
+    {
+        string tempFile = path;
 
-// Set by derive_AGBt_zmass and used by getGirardiMags
-static int iAge, iFeH;
-static double currentAge, currentFeH;
+        if (filterSet == MsFilter::ACS)
+            tempFile += "gIsoACS/iso_acs_z";
+        else
+            tempFile += "gIsoStan/iso_stan_z";
 
-static char tempFile[100];
-static void getFileName (string path, int z, MsFilter filterSet);
+        tempFile += file;
+        tempFile += ".50.dat";
+
+        files.push_back(tempFile);
+    }
+
+    return files;
+}
 
 
+/****************************************************************************
+ ***********************    filterSet = UBVRIJHK      ***********************
+ *********************** Girardi models, standard mags **********************
+ ** For simplicity, the 8 input files are assumed to have 50 ages each,    **
+ ** which is the minimum set among all of these isochrones.  These ages    **
+ ** span the range log(age) = 7.80 to 10.25.                               **
+ ** The eight files and their metallicities are                            **
+ **   iso_stan_z0.50.dat     Z = 0.0                                       **
+ **   iso_stan_z0001.50.dat  Z = 0.0001                                    **
+ **   iso_stan_z0004.50.dat  Z = 0.0004                                 **
+ **   iso_stan_z001.50.dat   Z = 0.001                                  **
+ **   iso_stan_z004.50.dat   Z = 0.004                                  **
+ **   iso_stan_z008.50.dat   Z = 0.008                                  **
+ **   iso_stan_z019.50.dat   Z = 0.019                                  **
+ **   iso_stan_z030.50.dat   Z = 0.030                                  **
+ ***************************************************************************/
+
+/****************************************************************************
+ **********************        filterSet == ACS       ***********************
+ ********************** Girardi models, ACS mags ****************************
+ ** For simplicity, the input files are assumed to have 50 ages, just as   **
+ ** the above-used Girardi standard mag isochrones.  This meant reducing   **
+ ** the 50-74 ages by limiting them to log(age) = 7.80 to 10.25, which is  **
+ ** fine for now as the rejected isochrones are younger than any of the    **
+ ** clusters for which we have data.  The metallicities are also all the   **
+ ** same.  These are the same isochrones, just convolved by Girardi with   **
+ ** different filters.  The file names are different only in that the      **
+ ** "stan" becomes "acs".                                                  **
+ ***************************************************************************/
 void GirardiMsModel::loadModel (string path, MsFilter filterSet)
 {
-
-    /****************************************************************************
-     ***********************    filterSet = UBVRIJHK      ***********************
-     *********************** Girardi models, standard mags **********************
-     ** For simplicity, the 8 input files are assumed to have 50 ages each,    **
-     ** which is the minimum set among all of these isochrones.  These ages    **
-     ** span the range log(age) = 7.80 to 10.25.                               **
-     ** The eight files and their metallicities are                            **
-     **   iso_stan_z0.50.dat     Z = 0.0                                       **
-     **   iso_stan_z0001.50.dat  Z = 0.0001                                    **
-     **   iso_stan_z0004.50.dat  Z = 0.0004                                 **
-     **   iso_stan_z001.50.dat   Z = 0.001                                  **
-     **   iso_stan_z004.50.dat   Z = 0.004                                  **
-     **   iso_stan_z008.50.dat   Z = 0.008                                  **
-     **   iso_stan_z019.50.dat   Z = 0.019                                  **
-     **   iso_stan_z030.50.dat   Z = 0.030                                  **
-     ***************************************************************************/
-
-    /****************************************************************************
-     **********************        filterSet == ACS       ***********************
-     ********************** Girardi models, ACS mags ****************************
-     ** For simplicity, the input files are assumed to have 50 ages, just as   **
-     ** the above-used Girardi standard mag isochrones.  This meant reducing   **
-     ** the 50-74 ages by limiting them to log(age) = 7.80 to 10.25, which is  **
-     ** fine for now as the rejected isochrones are younger than any of the    **
-     ** clusters for which we have data.  The metallicities are also all the   **
-     ** same.  These are the same isochrones, just convolved by Girardi with   **
-     ** different filters.  The file names are different only in that the      **
-     ** "stan" becomes "acs".                                                  **
-     ***************************************************************************/
-
-    int z, a, i;
-    double thisLogAge, lastLogAge;
-    FILE *pGirardi;
-    char line[240];
+    ifstream fin;
 
     if (filterSet != MsFilter::UBVRIJHK && filterSet != MsFilter::SDSS && filterSet != MsFilter::ACS)
     {
@@ -82,268 +93,310 @@ void GirardiMsModel::loadModel (string path, MsFilter filterSet)
         exit (1);
     }
 
-    for (z = 0; z < N_GIR_Z; z++)
-    {                           // foreach Girardi metallicity/isochrone file
+    for (auto file : getFileNames(path, filterSet))
+    {
+        double fileZ, logAge, ignore;
 
-        for (a = 0; a < N_GIR_AGES; a++)
-        {                               // initialize age/boundary pointers
-            gBoundary[LOW][z][a] = 0;
-            gBoundary[HIGH][z][a] = 0;
-            gLogAge[z][a] = 0.0;
-        }
+        string line;
+        stringstream lin;
 
-        for (i = 0; i < MAX_GIR_ENTRIES; i++)
-        {                               // initialize array of model parameters
-            gIsoMass[z][i] = 0.0; // ZAMS mass
-            for (int filt = 0; filt < N_GIR_FILTS; filt++)
-                gIsoMag[z][filt][i] = 99.999;   // U through K absolute mags
-        }
+        vector<Isochrone> isochrones;
+        vector<EvolutionaryPoint> eeps;
 
-        getFileName (path, z, filterSet);
-        //fscanf(pModelList,"%s",tempFile);                                 // work on one Girardi model at a time
-        if ((pGirardi = fopen (tempFile, "r")) == NULL)
-        {                               // open file
-            cerr << "\nFile " << tempFile << " was not found - exiting" << endl;
+        // Open the file
+        fin.open(file);
+
+        // Ensure the file opened successfully
+        if (!fin)
+        {
+            cerr << "\n file " << file << " was not found - exiting" << endl;
             exit (1);
         }
 
+        // Get Z from the first header line
+        fin.ignore(maxIgnore, '='); // Eat the first bit of the line
+        fin >> fileZ;
+        fin.ignore(maxIgnore, '\n'); // Eat the last bit of the line
+        getline(fin, line); // Eat the second header line to avoid the "new isochrone" code
 
-        i = 0;
-        a = 0;                  // a = [0,49], gLogAge contains the 50 ages
-        lastLogAge = 0.0;
-        while (fgets (line, 240, pGirardi) != NULL && i < MAX_GIR_ENTRIES)
-        {                               // load first Z=# Girardi model for all ages
-            if (line[0] != '#')
+        // Now, for every other line in the file...
+        while (!fin.eof())
+        {
+            getline(fin, line);
+
+            if (!line.empty() && (line.at(0) != '#'))
             {
+                double tempMass;
+
+                stringstream in(line);
+
+                array<double, FILTS> mags;
+                mags.fill(99.999);
+
                 if (filterSet == MsFilter::UBVRIJHK)
                 {                       // Girardi UBVRIJHK isocrhones
-                    sscanf (line, "%lf %lf %*f %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf %lf %lf %*f", &thisLogAge, &gIsoMass[z][i], &gIsoMag[z][0][i], &gIsoMag[z][1][i], &gIsoMag[z][2][i], &gIsoMag[z][3][i], &gIsoMag[z][4][i], &gIsoMag[z][5][i], &gIsoMag[z][6][i], &gIsoMag[z][7][i]);
-                }
-                // for filterSet == ACS, use same set of variables but now have F435W F475W F550M F555W F606W F625W F775W F814W
-                // absolute mags, instead of UBVRIJHK absolute mags
-                if (filterSet == MsFilter::ACS)
-                {                       // Girardi hST/ACS/WF isochrones
-                    sscanf (line, "%lf %lf %*f %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf %*f %*f %lf %lf %*f %*f %*f", &thisLogAge, &gIsoMass[z][i], &gIsoMag[z][0][i], &gIsoMag[z][1][i], &gIsoMag[z][2][i], &gIsoMag[z][3][i], &gIsoMag[z][4][i], &gIsoMag[z][5][i], &gIsoMag[z][6][i], &gIsoMag[z][7][i]);
-                }
-                if (fabs (lastLogAge - thisLogAge) > EPS)
-                {                       // find model boundaries for ease/speed later
-                    gBoundary[LOW][z][a] = i;   // gBoundary contains beginning boundary of age
-                    gLogAge[z][a] = thisLogAge;
-                    if (a > 0)
+                    in >> logAge
+                       >> tempMass
+                       >> ignore >> ignore >> ignore >> ignore >> ignore;
+
+                    for (int filt = 0; filt < 8; ++filt)
                     {
-                        gAGBt[z][a - 1] = gIsoMass[z][i - 1];
-                        gBoundary[HIGH][z][a - 1] = i - 1;
+                        in >> mags.at(filt);
                     }
 
-                    lastLogAge = thisLogAge;
-                    a++;
+                    // Ignore Flum
                 }
-                i++;
+                else if (filterSet == MsFilter::ACS)
+                {                       // Girardi hST/ACS/WF isochrones
+                    in >> logAge
+                       >> tempMass
+                       >> ignore >> ignore >> ignore >> ignore >> ignore;
+
+                    for (int filt = 0; filt < 6; ++filt)
+                    {
+                        in >> mags.at(filt);
+                    }
+
+                    in >> ignore >> ignore
+                       >> mags.at(6)
+                       >> mags.at(7);
+
+                    // Ignore the remaining two filters and Flum
+                }
+
+                // As long as we didn't run out of file somewhere in the middle, this doesn't trigger.
+                // Honestly, I think it should only happen if we have a corrupt file.
+                if (!fin.eof())
+                {
+                    // Girardi doesn't have EEPs, so we'll pretend with 0
+                    eeps.emplace_back(0, tempMass, mags);
+                }
             }
+            else if (!line.empty() && (line.at(0) == '#')) // Time for a new isochrone
+            {
+                isochrones.emplace_back(logAge, eeps);
+                eeps.clear();
+
+                getline(fin, line); // Eat the extra header line
+            }
+        } // EOF
+
+        if (fileZ == 0.0)
+        {
+            fileZ = -5.0; // Rescue the -inf case (which causes problems with interpolation)
         }
-        gAGBt[z][a - 1] = gIsoMass[z][i - 1];     // Add last entry to AGBt table
-        gBoundary[HIGH][z][a - 1] = i - 1;
-        gNumEntries[z] = i;
+        else
+        {
+            fileZ = log10(fileZ / modelZSolar);
+        }
+
+        isochrones.emplace_back(logAge, eeps); // Push in the last age for this [Fe/H]
+        fehCurves.emplace_back(fileZ, isochrones); // Push the entire isochrone set into the model's FehCurve vector
+
+        fin.close();
     }
 
-    gFeH[0] = -5.0;             // Girardi isochrone metallicities: close enough for Z=0.0
-    gFeH[1] = -2.278754;                //                                  equiv to Z=0.0001
-    gFeH[2] = -1.676694;                //                                             0.0004
-    gFeH[3] = -1.278754;                //                                             0.001
-    gFeH[4] = -0.676694;                //                                             0.004
-    gFeH[5] = -0.375664;                //                                             0.008
-    gFeH[6] = 0.0;              // (i.e., Z_solar=0.019)                       0.019
-    gFeH[7] = 0.198368;         //                                             0.030
-
-    ageLimit.first = gLogAge[0][0];
-    ageLimit.second = gLogAge[0][N_GIR_AGES - 1];
-
-    fclose (pGirardi);
-
-}
-
-static void getFileName (string path, int z, MsFilter filterSet)
-{
-
-    char fileNames[][5] = { "0", "0001", "0004", "001", "004", "008", "019", "030" };
-
-    strcpy (tempFile, "");
-    strcat (tempFile, path.c_str());
-    if (filterSet == MsFilter::ACS)
-        strcat (tempFile, "gIsoACS/iso_acs_z");
-    else
-        strcat (tempFile, "gIsoStan/iso_stan_z");
-    strcat (tempFile, fileNames[z]);
-    strcat (tempFile, ".50.dat");
-
+    ageLimit.first = fehCurves.front().isochrones.front().logAge;
+    ageLimit.second = fehCurves.front().isochrones.back().logAge;
 }
 
 
-double GirardiMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double, double newAge)
 /****************************************************************************************
-last update: 12nov07
-
 Derive AGBt mass (actually the ZAMS mass for the appropriate AGBt star) for a given
 cluster age, interpolating in isochrones as necessary.
 ****************************************************************************************/
+double GirardiMsModel::deriveAgbTipMass (const vector<int> &filters, double newFeH, double ignored, double newAge)
 {
-    double interpAge[2], interpFeH[2];
+    isochrone = deriveIsochrone(filters, newFeH, ignored, newAge);
 
-    if ((newAge < 7.80)
-     || (newAge > 10.25)
-     || (newFeH < gFeH[0])
-     || (newFeH > gFeH[N_GIR_Z - 1]))
-    {
-        //     log << ("\n Requested FeH too high. (drv_g_AGB_m.c)");
-        return 0.0;
-    }
-
-    interpAge[HIGH] = ceil (20. * newAge) / 20.;        // round up to nearest 0.05
-    interpAge[LOW] = interpAge[HIGH] - 0.05;
-
-    iAge = (int) (rint ((interpAge[LOW] - 7.8) * 20));  // In this line, PFM. Takes the interpAge which we previously rounded to the next lowest 0.05, subtracts the minimum age of the Girardi isochrones, multiplies by the integral of the Girardi logAge step size, and rounds to an integer (which conveniently ends up being the age index).
-    iFeH = binarySearch (gFeH, N_GIR_Z, newFeH);        // function returns lower bound
-
-    interpFeH[LOW] = gFeH[iFeH];
-    interpFeH[HIGH] = gFeH[iFeH + 1];
-
-    double b[2], d[2];
-    calcCoeff (&gFeH[iFeH], d, newFeH);
-    calcCoeff (&gLogAge[iFeH][iAge], b, newAge);
-/*
-    AGBt_zmass_lo = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH][iAge], gAGBt[iFeH][iAge + 1], newAge).val;
-    AGBt_zmass_hi = linearTransform<TransformMethod::Interp>(interpAge[LOW], interpAge[HIGH], gAGBt[iFeH + 1][iAge], gAGBt[iFeH + 1][iAge + 1], newAge).val;
-
-    AGBt_zmass = linearTransform<TransformMethod::Interp>(interpFeH[LOW], interpFeH[HIGH], AGBt_zmass_lo, AGBt_zmass_hi, newFeH).val;
-*/
-    currentAge = newAge;
-    currentFeH = newFeH;
-
-    // Discover the range of the lower age isochrone
-    int newimax = MAX_GIR_ENTRIES;
-    for (int a = iAge; a < iAge + 2; a++)
-    {
-        for (int z = iFeH; z < iFeH + 2; z++)
-        {
-            int nMassPoints = gBoundary[HIGH][z][a] - gBoundary[LOW][z][a] + 1;
-
-            if (nMassPoints < newimax)
-                newimax = nMassPoints;
-        }
-    }
-
-    for (int m = 0; m < newimax; m++)
-    {
-        isochrone.mass[m] = 0.0;
-        for (auto f : filters)
-            if (f < N_GIR_FILTS)
-                isochrone.mag[m][f] = 0.0;
-
-        for (int a = 0; a < 2; a++)
-        {
-            for (int z = 0; z < 2; z++)
-            {
-                const int entry = gBoundary[LOW][iFeH + z][iAge + a] + m;
-                isochrone.mass[m] += b[a] * d[z] * gIsoMass[iFeH + z][entry];
-
-                for (auto f : filters)
-                {
-                    if (f < N_GIR_FILTS)
-                    {
-                        isochrone.mag[m][f] += b[a] * d[z] * gIsoMag[iFeH + z][f][entry];
-                    }
-                }
-            }
-        }
-
-        // Sometimes the interpolation process can leave the
-        // mass entries out of order.  This swaps them so that
-        // the later mass interpolation can function properly
-        if (m > 0)
-        {
-            int n = m;
-            while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
-            {
-                swapGlobalEntries (isochrone, filters, n);
-                n--;
-            }
-        }
-    }
-
-    isochrone.nEntries = newimax;
-    isochrone.logAge = newAge;
-    isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
-
-    return isochrone.AgbTurnoffMass;
+    return isochrone.agbTipMass();
 }
 
 
-double GirardiMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
-/*************************************************************************************
-last update: 12nov07
+Isochrone GirardiMsModel::deriveIsochrone(const std::vector<int>& filters, double newFeH, double, double newAge) const
+{
+    // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
+    // Check for requested age or [Fe/H] out of bounds
+    if ((newAge < 7.80)
+     || (newAge > 10.25)
+     || (newFeH < fehCurves.front().feh)
+     || (newFeH > fehCurves.back().feh))
+    {
+        throw InvalidCluster("Age or FeH out of bounds in GirardiMsModel.cpp");
+    }
 
+    // Take the newAge and round it to the nearest 0.05
+    double roundAge = (ceil (20. * newAge) / 20.) - 0.05;
+
+    // In this line, PFM. Takes the interpAge which we previously rounded to the
+    // next lowest 0.05, subtracts the minimum age of the Girardi isochrones,
+    // multiplies by the integral of the Girardi logAge step size, and rounds to
+    // an integer (which conveniently ends up being the age index).
+    int iAge = (int) (rint ((roundAge - 7.8) * 20));
+
+    auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), newFeH, FehCurve::compareFeh);
+
+    if (fehIter == fehCurves.end())
+    {
+        fehIter -= 2;
+    }
+    else if (fehIter != fehCurves.begin())
+    {
+        fehIter -= 1;
+    }
+
+    // Assure that the iAge is reasonable
+    // Age gridding is identical between [Fe/H] grid points
+    assert(fehIter->isochrones.at(iAge).logAge     < newAge);
+    assert(fehIter->isochrones.at(iAge + 1).logAge > newAge);
+
+    vector<Isochrone> interpIso;
+
+    // Interpolate between two ages in two FeHs.
+    for (int i = 0; i < 2; ++i)
+    {
+        // Shortcut iterator to replace the full path from fehIter
+        auto ageIter = fehIter[i].isochrones.begin() + iAge;
+
+        assert(ageIter[0].eeps.front().mass == ageIter[1].eeps.front().mass);
+
+        // Girardi doesn't have real EEPs, so we have to assume the same number
+        // of mass points and interpolate among them.
+        size_t numEeps = std::min(ageIter[0].eeps.size(), ageIter[1].eeps.size());
+
+        vector<EvolutionaryPoint> interpEeps;
+
+        for (size_t e = 0; e < numEeps; ++e)
+        {
+            array<double, FILTS> mags;
+            mags.fill(99.999);
+
+            for (auto f : filters)
+            {
+                mags[f] = linearTransform<>(ageIter[0].logAge
+                                          , ageIter[1].logAge
+                                          , ageIter[0].eeps.at(e).mags.at(f)
+                                          , ageIter[1].eeps.at(e).mags.at(f)
+                                          , newAge).val;
+            }
+
+            // Still using 0 for EEP, since Girardi doesn't know about EEPs
+            interpEeps.emplace_back(0, ageIter[0].eeps.at(e).mass, mags);
+        }
+
+        double interpAge = linearTransform<>(fehIter[0].feh
+                                           , fehIter[1].feh
+                                           , ageIter[0].logAge
+                                           , ageIter[1].logAge
+                                           , newFeH).val;
+
+        // These won't necessarily be true if extrapolation is allowed (which it
+        // is), but should be be true due to the age and FeH checks at the
+        // beginning of this function
+        assert(ageIter[0].logAge < interpAge);
+        assert(ageIter[1].logAge > interpAge);
+
+        interpIso.emplace_back(interpAge, interpEeps);
+    }
+
+    assert(interpIso.size() == 2);
+    assert(interpIso[0].logAge == interpIso[1].logAge);
+
+    // Now, interpolate between the two derived isochrones using FeH
+    vector<EvolutionaryPoint> interpEeps;
+    size_t numEeps = std::min(interpIso.at(0).eeps.size(), interpIso.at(1).eeps.size());
+
+    for (size_t e = 0; e < numEeps; ++e)
+    {
+        array<double, FILTS> mags;
+        mags.fill(99.999);
+
+        for (auto f : filters)
+        {
+            mags[f] = linearTransform<>(fehIter[0].feh
+                                      , fehIter[1].feh
+                                      , interpIso.at(0).eeps.at(e).mags.at(f)
+                                      , interpIso.at(1).eeps.at(e).mags.at(f)
+                                      , newFeH).val;
+        }
+
+        double interpMass = linearTransform<>(fehIter[0].feh
+                                            , fehIter[1].feh
+                                            , interpIso.at(0).eeps.at(e).mass
+                                            , interpIso.at(1).eeps.at(e).mass
+                                            , newFeH).val;
+
+        // Still using 0 for EEP, since Girardi doesn't know about EEPs
+        interpEeps.emplace_back(0, interpMass, mags);
+    }
+
+    assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
+
+    return {interpIso.at(0).logAge, interpEeps};
+}
+
+/*************************************************************************************
 Determine WD precursor age by 2-D interpolating among the AGBt mass versus age values.
 Note that the appropriate AGBt mass and lifetime is not the ZAMS mass and lifetime of
 the star currently at the AGBt, but rather refers to the properties of the potentially
 higher mass and younger AGBt star that was the WD precursor.
 *************************************************************************************/
+double GirardiMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
 {
+    auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
 
-
-    int thisIndexAge[2], f;
-    double logAge[2], AGBt_zmass[2], wdPrecLogAge[2], FeHLo, FeHHi, temp;
-
-    AGBt_zmass[HIGH] = AGBt_zmass[LOW] = 0.0;
-
-    FeHLo = gFeH[iFeH];
-    FeHHi = gFeH[iFeH + 1];
-
-    // Find wdPrecLogAge for the lower and upper metallicity cases
-    for (f = 0; f < 2; f++)
+    if (fehIter == fehCurves.end())
     {
+        fehIter -= 2;
+    }
+    else if (fehIter != fehCurves.begin())
+    {
+        fehIter -= 1;
+    }
 
-        if (zamsMass < gAGBt[iFeH + f][N_GIR_AGES - 1])
-        {                               // possible if cluster older than logAge=9.0
-            wdPrecLogAge[f] = gLogAge[iFeH + f][N_GIR_AGES - 1];        // FOR NOW just use logAge = 9.0
-            //     log << (" %.3f Mo < smallest AGBt (%.2f) model mass.  Setting precursor log age to %.3f.\n", zamsMass, gAGBt[iFeH + f][N_GIR_AGES - 1], wdPrecLogAge[f]);
-        }
-        else if (zamsMass > gAGBt[iFeH + f][0])
+    array<double, 2> wdPrecLogAge;
+
+    for (int i = 0; i < 2; ++i)
+    {
+        // The AGBt for the youngest isochrone in the given [Fe/H]
+        // This should be the largest AGBt for that [Fe/H]
+        // Possible if the cluster logAge is less than 7.8
+        if (zamsMass > fehIter[i].isochrones.front().agbTipMass())
         {
-            wdPrecLogAge[f] = -2.7 * log10 (zamsMass / gAGBt[iFeH + f][0]) + gLogAge[iFeH + f][0];
-
-            //     log << (" %.3f Mo > largest AGBt (%.2f) model mass.  Extrapolating precursor log age.\n", zamsMass, gAGBt[iFeH + f][0]);
+            wdPrecLogAge[i] = -2.7 * log10 (zamsMass / fehIter[i].isochrones.front().agbTipMass()) + fehIter[i].isochrones.front().logAge;
         }
-
         else
         {
-            thisIndexAge[LOW] = reverseBinarySearch (gAGBt[iFeH + f], N_GIR_AGES, zamsMass);    // Because masses are in reverse order
-            thisIndexAge[HIGH] = thisIndexAge[LOW] + 1;
+            // Search ages in reverse (since the agbTips decrease as age increases)
+            auto ageIter = lower_bound(fehIter[i].isochrones.rbegin(), fehIter[i].isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
 
-            logAge[LOW] = gLogAge[iFeH + f][thisIndexAge[LOW]];
-            logAge[HIGH] = gLogAge[iFeH + f][thisIndexAge[HIGH]];
+            if (ageIter == fehIter[i].isochrones.rend())
+            {
+                ageIter -= 2;
+            }
+            else if (ageIter != fehIter[i].isochrones.rbegin())
+            {
+                ageIter -= 1;
+            }
 
-            AGBt_zmass[LOW] = gAGBt[iFeH + f][thisIndexAge[LOW]];
-            AGBt_zmass[HIGH] = gAGBt[iFeH + f][thisIndexAge[HIGH]];
+            // Ensure that we found a reasonable value here
+            // This seems backward in the context of the reverse_iterator
+            // because the AGBt decreases as logAge increases.
+            assert(ageIter[0].agbTipMass() < zamsMass);
+            assert(ageIter[1].agbTipMass() > zamsMass);
 
-            // Linearly interpolate in mass
-            wdPrecLogAge[f] = linearTransform<TransformMethod::Interp>(AGBt_zmass[LOW], AGBt_zmass[HIGH], logAge[LOW], logAge[HIGH], zamsMass).val;
+            wdPrecLogAge[i] = linearTransform<TransformMethod::Interp>(ageIter[0].agbTipMass()
+                                                                     , ageIter[1].agbTipMass()
+                                                                     , ageIter[0].logAge
+                                                                     , ageIter[1].logAge
+                                                                     , zamsMass).val;
+
+            // This seems backwards because of the reverse_iterator
+            assert(ageIter[0].logAge > wdPrecLogAge[i]);
+            assert(ageIter[1].logAge < wdPrecLogAge[i]);
         }
     }
 
     // Linearly interpolate in FeH
-    temp = linearTransform<TransformMethod::Interp>(FeHLo, FeHHi, wdPrecLogAge[LOW], wdPrecLogAge[HIGH], thisFeH).val;
-
-    return temp;
-
-}
-
-// a and b are 1-d arrays with two elements
-// a contains the two bounding values to be interpolated
-// x is the value to be interpolated at
-// b returns the coefficients
-static void calcCoeff (double a[], double b[], double x)
-{
-    b[0] = (a[1] - x) / (a[1] - a[0]);
-    b[1] = (x - a[0]) / (a[1] - a[0]);
-    return;
+    return linearTransform<TransformMethod::Interp>(fehIter[0].feh, fehIter[1].feh, wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
 }

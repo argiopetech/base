@@ -39,7 +39,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
         const double magUpper;
     };
 
-    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
+    auto &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
     // Get the mags based on the primary's mass set by margEvolve
     // Also, go ahead and rename system.primary.mass to primaryMass for this function
@@ -54,7 +54,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
     double tmpLogPost = system.logPost (clust, evoModels, filters)
                       + logdMass
-                      + log (isochrone.mass.at(0) / primaryMass);   // dMassRatio
+                      + log (isochrone.eeps.at(0).mass / primaryMass);   // dMassRatio
     double post = exp (tmpLogPost);
 
     /**** now see if any binary companions are OK ****/
@@ -98,7 +98,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     }
 
     // Evaluate the posterior at all reasonable points in the isochrone
-    for (decltype(isochrone.nEntries) i = 0; i < isochrone.nEntries - 1; ++i)
+    for (decltype(isochrone.eeps.size()) i = 0; i < isochrone.eeps.size() - 1; ++i)
     {
         // All filters should be acceptable if we are to evaluate at a grid point
         // okMass starts out true, and gets set false if any filter is not acceptable
@@ -111,9 +111,9 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
             // and the isochrone mass should be less than primaryMass
             //
             // Exception: If magUpper is NaN (i.e., it was < 0 as diffUp above), consider it irrelevant
-            if ( ! (isochrone.mag.at(i).at(diff.filter) >= diff.magLower
-                && (isochrone.mag.at(i).at(diff.filter) <= diff.magUpper || std::isnan(diff.magUpper))
-                &&  isochrone.mass.at(i) <= primaryMass))
+            if ( ! (isochrone.eeps.at(i).mags.at(diff.filter) >= diff.magLower
+                && (isochrone.eeps.at(i).mags.at(diff.filter) <= diff.magUpper || std::isnan(diff.magUpper))
+                &&  isochrone.eeps.at(i).mass <= primaryMass))
             {
                 okMass = false; // If it isn't, that isn't OK
                 break;          // And break out of the loop to avoid further calculation (pre-optimization)
@@ -123,12 +123,12 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
         // Now, only if we left the above loop without triggering the condition, calculate the posterior density for the system
         if (okMass)
         {
-            system.setMassRatio (isochrone.mass.at(i) / primaryMass); // Set the massRatio (and therefore the secondary mass)
+            system.setMassRatio (isochrone.eeps.at(i).mass / primaryMass); // Set the massRatio (and therefore the secondary mass)
 
             // Calculate the posterior density for this system
             tmpLogPost = system.logPost (clust, evoModels, filters)
                        + logdMass
-                       + log ((isochrone.mass.at(i + 1) - isochrone.mass.at(i)) / primaryMass);
+                       + log ((isochrone.eeps.at(i + 1).mass - isochrone.eeps.at(i).mass) / primaryMass);
 
             post += exp (tmpLogPost); // And add it to the running total
         }
@@ -151,12 +151,12 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
 
     double post = 0.0;
 
-    const struct globalIso &isochrone = evoModels.mainSequenceEvol->getIsochrone();
-    assert(isochrone.nEntries >= 2);
+    auto &isochrone = evoModels.mainSequenceEvol->getIsochrone();
+    assert(isochrone.eeps.size() >= 2);
 
-    for (decltype(isochrone.nEntries) m = 0; m < isochrone.nEntries - 1; m++)
+    for (decltype(isochrone.eeps.size()) m = 0; m < isochrone.eeps.size() - 1; m++)
     {
-        double dIsoMass = isochrone.mass.at(m + 1) - isochrone.mass.at(m);
+        double dIsoMass = isochrone.eeps.at(m + 1).mass - isochrone.eeps.at(m).mass;
 
         /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
         assert (dIsoMass >= 0.0);
@@ -165,7 +165,7 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
 
         for (auto k = 0; k < isoIncrem; k += 1)
         {
-            system.primary.mass = isochrone.mass.at(m) + (k * dMass);
+            system.primary.mass = isochrone.eeps.at(m).mass + (k * dMass);
 
             post += calcPost (dMass, clust, system, evoModels, filters);
         }

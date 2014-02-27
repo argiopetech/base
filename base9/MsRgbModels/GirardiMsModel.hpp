@@ -18,11 +18,15 @@ class GirardiMsModel : public MsRgbModel
     virtual ~GirardiMsModel() {;}
 
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
+    Isochrone deriveIsochrone(const std::vector<int>& filters, double newFeH, double, double newAge) const;
     virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, MsFilter);
 
   protected:
     virtual int numFilts() const { return N_GIR_FILTS; }
+
+  private:
+    double modelZSolar = 0.019;
 };
 
 #endif
