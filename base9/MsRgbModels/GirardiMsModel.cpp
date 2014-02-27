@@ -63,12 +63,12 @@ static vector<string> getFileNames (string path, MsFilter filterSet)
  ** The eight files and their metallicities are                            **
  **   iso_stan_z0.50.dat     Z = 0.0                                       **
  **   iso_stan_z0001.50.dat  Z = 0.0001                                    **
- **   iso_stan_z0004.50.dat  Z = 0.0004                                 **
- **   iso_stan_z001.50.dat   Z = 0.001                                  **
- **   iso_stan_z004.50.dat   Z = 0.004                                  **
- **   iso_stan_z008.50.dat   Z = 0.008                                  **
- **   iso_stan_z019.50.dat   Z = 0.019                                  **
- **   iso_stan_z030.50.dat   Z = 0.030                                  **
+ **   iso_stan_z0004.50.dat  Z = 0.0004                                    **
+ **   iso_stan_z001.50.dat   Z = 0.001                                     **
+ **   iso_stan_z004.50.dat   Z = 0.004                                     **
+ **   iso_stan_z008.50.dat   Z = 0.008                                     **
+ **   iso_stan_z019.50.dat   Z = 0.019                                     **
+ **   iso_stan_z030.50.dat   Z = 0.030                                     **
  ***************************************************************************/
 
 /****************************************************************************
