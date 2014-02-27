@@ -222,7 +222,7 @@ Isochrone GirardiMsModel::deriveIsochrone(const std::vector<int>& filters, doubl
      || (newFeH < fehCurves.front().feh)
      || (newFeH > fehCurves.back().feh))
     {
-        throw InvalidCluster("Age or FeH out of bounds in GirardiMsModel.cpp");
+        throw InvalidCluster("Age or FeH out of bounds in GirardiMsModel::deriveIsochrone");
     }
 
     // Take the newAge and round it to the nearest 0.05
