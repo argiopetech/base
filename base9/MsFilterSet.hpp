@@ -46,4 +46,12 @@ class ACS : public MsFilterSet
     virtual std::array<double, FILTS> calcAbsCoeffs() const;
 };
 
+class UVIS : public MsFilterSet
+{
+  public:
+    UVIS();
+
+    virtual std::array<double, FILTS> calcAbsCoeffs() const;
+};
+
 #endif

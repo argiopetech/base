@@ -5,7 +5,6 @@
 
 using std::array;
 
-
 UBVRIJHK::UBVRIJHK()
     : MsFilterSet({"U", "B", "V", "R", "I", "J", "H", "K"})
 {}
@@ -40,7 +39,6 @@ array<double, FILTS> SDSS::calcAbsCoeffs() const
 }
 
 
-
 ACS::ACS()
     : MsFilterSet({"F435W","F475W","F550M","F555W","F606W","F625W","F775W","F814W"})
 {}
@@ -55,4 +53,16 @@ array<double, FILTS> ACS::calcAbsCoeffs() const
            , 2.637 / 3.1    // M0  3.994 3.555 3.030 3.115 2.716 2.616 1.965 1.796
            , 1.982 / 3.1
            , 1.825 / 3.1};    // using values for G2 star, usually ~2% of O5 or M0 value
+}
+
+
+UVIS::UVIS()
+    : MsFilterSet({"UVf275w", "UVf336w", "UVf438w"})
+{}
+
+array<double, FILTS> UVIS::calcAbsCoeffs() const
+{
+    return { 2.094     // Based on calculations of Ax/Av by Rachel Wagner-Kaiser
+           , 1.665     // from the theoretical values given in the Cardelli paper.
+           , 1.343};
 }

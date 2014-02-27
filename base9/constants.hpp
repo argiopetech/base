@@ -21,7 +21,7 @@ const double R_sun   = 6.96342e10;
 const int NPARAMS            = 9;
 
 // Filter sets
-enum class MsFilter {UBVRIJHK, ACS, SDSS};
+enum class MsFilter {UBVRIJHK, ACS, SDSS, UVIS};
 
 // Define model sets
 //Main sequence evolution

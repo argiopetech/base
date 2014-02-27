@@ -9,7 +9,7 @@ general:
         scatterFile:    ""    # Empty string.  This is primarily a CLI option
 
     main_sequence:
-        filterSet:      0     # 0 = UBVRIJHK, 1 = ACS, 2 = SDSS + JHK
+        filterSet:      0     # 0 = UBVRIJHK, 1 = ACS, 2 = SDSS + JHK, 4 = UVIS
         msRgbModel:     2     # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling, 2 = Yale-Yonsei, 3 = DSED
 
     white_dwarfs:
