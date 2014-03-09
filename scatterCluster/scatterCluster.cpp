@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 #include <vector>
 
 #include <cstdio>
@@ -7,8 +8,7 @@
 #include <cstring>
 #include <boost/format.hpp>
 
-#include "mt19937ar.hpp"
-#include "evolve.hpp"
+#include "Model.hpp"
 #include "structures.hpp"
 #include "Settings.hpp"
 #include "MsFilterSet.hpp"
@@ -18,8 +18,6 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-unsigned long seed = 0;
-
 static double mass1, mass2, phot[FILTS], exptime[FILTS], sigma[FILTS];
 static int stage1, stage2, starID;
 
@@ -27,7 +25,7 @@ double signalToNoise (double mag, double exptime, int filt);
 int readLine (FILE * filePtr);
 int magCutoff (int firstFilt, double brightLimit, double faintLimit);
 int stageCutoff (int isFS);
-int scatterPhot (double limitSigToNoise);
+int scatterPhot (double limitSigToNoise, std::mt19937);
 double gen_norm (double mean, double std_dev);  // Returns a normal rv
 int outputScatter (FILE * w_ptr, int isFS, double clusterMemberPrior);
 
@@ -104,8 +102,6 @@ int main (int argc, char *argv[])
     if (nFieldStars < 0)
         nFieldStars = 0;
 
-    seed = settings.seed;
-
     strcpy (filename, settings.files.output.c_str());
     strcat (filename, ".sim.scatter");
     if ((w_ptr = fopen (filename, "w")) == NULL)
@@ -117,7 +113,8 @@ int main (int argc, char *argv[])
     clusterMemberPrior = (double) nStars / (nStars + nFieldStars);
     if(clusterMemberPrior > 0.99) clusterMemberPrior = 0.99;
 
-    init_genrand (seed);
+
+    std::mt19937 gen(uint32_t(settings.seed * uint32_t(2654435761))); // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
 
     //Output headers
     for (filt = 0; filt < FILTS; filt++)
@@ -167,7 +164,7 @@ int main (int argc, char *argv[])
             continue;
         if (stageCutoff (isFS) == 0)
             continue;
-        if (scatterPhot (limitSigToNoise) == 0)
+        if (scatterPhot (limitSigToNoise, gen) == 0)
             continue;
         if (mass1 < 0.25 && mass2 < 0.25 && stage1 != BD)
             continue;                   // limit on modelSet=4 is 0.4 Mo - what to do?
@@ -236,12 +233,12 @@ int main (int argc, char *argv[])
 
 
 static double s2nCoeffs[][2] = {
-    {9.33989, 0.3375778},               // U
-    {10.0478, 0.3462758},               // B
-    {10.48098, 0.368201},               // V
+    {9.33989, 0.3375778},       // U
+    {10.0478, 0.3462758},       // B
+    {10.48098, 0.368201},       // V
     {10.71151, 0.3837847},      // R
     {10.61035, 0.3930941},      // I
-    {9.282385, 0.386258},               // J
+    {9.282385, 0.386258},       // J
     {9.197463, 0.3970419},      // H
     {9.024068, 0.3985604},      // K
     {9.024068, 0.3985604},      // IRAC Blue
@@ -249,7 +246,7 @@ static double s2nCoeffs[][2] = {
     {9.024068, 0.3985604},      // Band 1
     {9.024068, 0.3985604},      // Band 2
     {9.024068, 0.3985604},      // Band 3
-    {9.024068, 0.3985604}               // Band 4
+    {9.024068, 0.3985604}       // Band 4
 };
 
 double signalToNoise (double mag, double exptime, int filter)
@@ -330,7 +327,7 @@ int stageCutoff (int isFS)
     return 1;
 }
 
-int scatterPhot (double limitSigToNoise)
+int scatterPhot (double limitSigToNoise, std::mt19937 gen)
 {
     int filt;
     double sigToNoise;
@@ -349,7 +346,9 @@ int scatterPhot (double limitSigToNoise)
         sigma[filt] = 1. / (sigToNoise);
         if (sigma[filt] < 0.01)
             sigma[filt] = 0.01;
-        phot[filt] += gen_norm(0., sigma[filt]);
+
+        std::normal_distribution<double> normDist(0., sigma[filt]);
+        phot[filt] += normDist(gen);
     }
     return 1;
 }

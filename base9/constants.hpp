@@ -12,6 +12,7 @@ const int MODEL_LIST = 118;  // age/Mv/V-I entries in WD model array
 enum StarStatus { MSRG = 1    // Main-sequence or red giant
                 , WD   = 3    // White dwarf
                 , NSBH = 4    // Neutron star or black hole
+                , BD   = 5    // Brown dwarf/planet
                 , DNE  = 9    // Does not exist (zams mass > 100 Msun or < 0.0001)
 };
 

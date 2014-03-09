@@ -6,7 +6,7 @@ include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 
 add_executable(scatterCluster ${SCATTERCLUSTER_FILES})
 
-target_link_libraries(scatterCluster base9 m ${MPI_LIBRARIES})
+target_link_libraries(scatterCluster base9 m yaml-cpp)
 
 install(TARGETS scatterCluster
         DESTINATION bin)
