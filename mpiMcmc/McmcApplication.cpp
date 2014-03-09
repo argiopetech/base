@@ -12,7 +12,7 @@ using std::endl;
 // Decides whether to accept a proposed cluster property
 bool McmcApplication::acceptClustMarg (const double logPostCurr, const double logPostProp)
 {
-    if (isinf (logPostProp))
+    if (std::isinf (logPostProp))
     {
 //        cerr << "-Inf posterior proposed and rejected" << endl;
         rejected += 1;
