@@ -9,9 +9,11 @@
 #include <cstring>
 #include <boost/format.hpp>
 
-#include "evolve.hpp"
+#include "Cluster.hpp"
+#include "Model.hpp"
 #include "structures.hpp"
 #include "Settings.hpp"
+#include "Star.hpp"
 #include "MsFilterSet.hpp"
 
 #include "WhiteDwarf.hpp"
@@ -42,13 +44,10 @@ int main (int argc, char *argv[])
     char w_file[100];
     FILE *w_ptr;
     Cluster theCluster;
-    Star theStar;
+    StellarSystem theStar;
 
     double drawFromIMF (std::mt19937&);
-    void updateCount (Star *pStar, int cmpnt);
-
-    array<double, 2> ltau;
-    array<double, FILTS> globalMags;
+    void updateCount (const StellarSystem&, int cmpnt);
 
     Settings settings;
 
@@ -70,7 +69,7 @@ int main (int argc, char *argv[])
         filters.push_back(filt); // Calculate all of U-K
 
 //    theCluster.nStars = settings.simCluster.nStars;
-    theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
+    theCluster.setM_wd_up(settings.whiteDwarf.M_wd_up);
     fractionBinary = settings.simCluster.percentBinary;
     fractionDB = settings.simCluster.percentDB;
     theCluster.mod = settings.cluster.distMod;
@@ -142,90 +141,74 @@ int main (int argc, char *argv[])
     {                           // for all systems in the cluster
         do
         {
-            theStar.U = drawFromIMF (gen); // create single stars in arbitrary mass order
-        } while (theStar.U < minMass);
+            theStar.primary.mass = drawFromIMF (gen); // create single stars in arbitrary mass order
+        } while (theStar.primary.mass < minMass);
         nStars++;                       // keep track of the number of stars created
-        massTotal += theStar.U;
-        theStar.massRatio = 0.0;
+        massTotal += theStar.primary.mass;
+        theStar.setMassRatio(0.0);
 
-        try
-        {
-            evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // given inputs, derive mags for first component
-        }
-        catch(WDBoundsError &e)
-        {
-            cout << e.what() << endl;
-        }
+        fprintf (w_ptr, "%4d %7.3f ", i + 1, theStar.primary.mass); // output primary star data
 
-        fprintf (w_ptr, "%4d %7.3f ", i + 1, theStar.getMass1()); // output primary star data
+        auto photometry = theStar.primary.getMags(theCluster, evoModels, filters);
+
         for (auto f : filters)
         {
-                fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);
+                fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);
         }
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], (theStar.status[0] == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
+        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.status, (theStar.primary.status == WD ? theStar.primary.wdMassNow(theCluster, evoModels) : 0.0), 0, theStar.primary.wdLogTeff(theCluster, evoModels), theStar.primary.getLtau(theCluster, evoModels));
 
-        tempU = theStar.U;              // save so we can output the total photometry below
-        if (theStar.status[0] != NSBH && theStar.status[0] != WD)
+        tempU = theStar.primary.mass;              // save so we can output the total photometry below
+        if (theStar.primary.status != NSBH && theStar.primary.status != WD)
         {
             if (std::generate_canonical<double, 53>(gen) < fractionBinary)
             {                           // create binaries among appropriate fraction
                 do
                 {
-                    theStar.massRatio = normDist(gen);
-                } while (theStar.massRatio < 0 || theStar.massRatio > 1);
-                theStar.U = tempU * theStar.massRatio;
+                    theStar.setMassRatio(normDist(gen));
+                } while (theStar.getMassRatio() < 0 || theStar.getMassRatio() > 1);
+                theStar.primary.mass = tempU * theStar.getMassRatio();
                 nStars++;
-                massTotal += theStar.U;
-                theStar.massRatio = 0.0;
+                massTotal += theStar.primary.mass;
+                theStar.setMassRatio(0.0);
             }
             else
-                theStar.U = 0.0;
+                theStar.primary.mass = 0.0;
         }
         else
-            theStar.U = 0.0;
-
-        try
-        {
-            evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // Evolve secondary star by itself
-        }
-        catch(WDBoundsError &e)
-        {
-            cout << e.what() << endl;
-        }
+            theStar.primary.mass = 0.0;
 
 
-        fprintf (w_ptr, "%7.3f ", theStar.getMass1());    // output secondary star data
+        // Evolve secondary star by itself
+        photometry = theStar.primary.getMags(theCluster, evoModels, filters);
+
+        fprintf (w_ptr, "%7.3f ", theStar.primary.mass);    // output secondary star data
         for (auto f : filters)
         {
-                fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);
+                fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);
         }
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], (theStar.status[0] == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
+        // !! FIX ME !!
+        // Should this really be the primary if we're outputting secondary star data?
+        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.status, (theStar.primary.status == WD ? theStar.primary.wdMassNow(theCluster, evoModels) : 0.0), 0, theStar.primary.wdLogTeff(theCluster, evoModels), theStar.primary.getLtau(theCluster, evoModels));
 
-        theStar.massRatio = theStar.U / tempU;
-        theStar.U = tempU;
+        theStar.secondary.mass = theStar.primary.mass;
+        theStar.primary.mass = tempU;
 
-        try
-        {
-            evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // Find the photometry for the whole system        
-        }
-        catch(WDBoundsError &e)
-        {
-            cout << e.what() << endl;
-        }
+
+        photometry = theStar.deriveCombinedMags(theCluster, evoModels, filters);
 
         for (cmpnt = 0; cmpnt < 2; cmpnt++)
             updateCount (&theStar, cmpnt);
 
         for (auto f : filters)
-            fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);  // output photometry for whole system
+            fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);  // output photometry for whole system
         fprintf (w_ptr, "\n");
 
         // Update min and max
-        if (theStar.photometry[2] < 97 && theStar.status[0] != WD && theStar.status[1] != WD)
+        if (photometry[2] < 97 && theStar.primary.status != WD && theStar.secondary.status != WD)
         {
-            if (theStar.photometry[2] < minV)
+            if (photometry[2] < minV)
                 minV = theStar.photometry[2];
-            if (theStar.photometry[2] > maxV)
+            if (photometry[2] > maxV)
                 maxV = theStar.photometry[2];
         }
     }
@@ -236,20 +219,20 @@ int main (int argc, char *argv[])
 /*
     for (i = 0; i < nBrownDwarfs; i++)
     {                           // for all systems in the cluster
-        theStar.U = 0.0995 * std::generate_canonical<double, 53>(gen) + 0.0005; // create single stars in arbitrary mass order
+        theStar.primary.mass = 0.0995 * std::generate_canonical<double, 53>(gen) + 0.0005; // create single stars in arbitrary mass order
         nStars++;                       // keep track of the number of stars created
-        massTotal += theStar.U;
+        massTotal += theStar.primary.mass;
         theStar.massRatio = 0.0;
-        theStar.status[0] = BD;
+        theStar.primary.status = BD;
 
         evolve (theCluster, evoModels, globalMags, filters, theStar, ltau);      // given inputs, derive mags for first component
 
-        fprintf (w_ptr, "%4d %7.4f ", i + 10001, theStar.getMass1());     // output primary star data
+        fprintf (w_ptr, "%4d %7.4f ", i + 10001, theStar.primary.mass());     // output primary star data
         for (auto f : filters)
         {
                 fprintf (w_ptr, "%6.3f ", theStar.photometry[f] < 99. ? theStar.photometry[f] : 99.999);
         }
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], 0.0, 0, theStar.wdLogTeff[0], ltau[0]);
+        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.status, 0.0, 0, theStar.wdLogTeff[0], ltau[0]);
 
         fprintf (w_ptr, "%7.3f ", 0.00);        // output secondary star data
         for (auto f [[gnu::unused]] : filters)
@@ -332,8 +315,8 @@ int main (int argc, char *argv[])
         {
             do
             {
-                theStar.U = drawFromIMF (gen);
-            } while (theStar.U < minMass);
+                theStar.primary.mass = drawFromIMF (gen);
+            } while (theStar.primary.mass < minMass);
             theStar.massRatio = std::generate_canonical<double, 53>(gen);
 
             // Draw a new age and metallicity
@@ -359,14 +342,14 @@ int main (int argc, char *argv[])
 
         } while (theStar.photometry[2] < minV || theStar.photometry[2] > maxV || theStar.photometry[1] - theStar.photometry[2] < -0.5 || theStar.photometry[1] - theStar.photometry[2] > 1.7);
 
-        fprintf (w_ptr, "%4d %7.3f ", i + 20001, theStar.getMass1());
+        fprintf (w_ptr, "%4d %7.3f ", i + 20001, theStar.primary.mass());
         for (auto f [[gnu::unused]] : filters)
             fprintf (w_ptr, "%6.3f ", 99.999);
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[0], (theStar.status[0] == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
+        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.status, (theStar.primary.status == 3 ? theStar.massNow[0] : 0.0), 0, theStar.wdLogTeff[0], ltau[0]);
         fprintf (w_ptr, "%7.3f ", theStar.getMass2());
         for (auto f [[gnu::unused]] : filters)
             fprintf (w_ptr, "%6.3f ", 99.999);
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.status[1], 0.0, 0, theStar.wdLogTeff[1], ltau[1]);
+        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.secondary.status, 0.0, 0, theStar.wdLogTeff[1], ltau[1]);
         for (auto f : filters)
             fprintf (w_ptr, "%9.6f ", theStar.photometry[f]);
         fprintf (w_ptr, "\n");
@@ -379,7 +362,7 @@ int main (int argc, char *argv[])
     return (0);
 }
 
-void updateCount (Star *pStar, int cmpnt)
+void updateCount (const StellarSystem &pStar, int cmpnt)
 {
 
     switch (pStar->status[cmpnt])

@@ -17,7 +17,7 @@ class Star
     ~Star() {;}
 
     // Functions
-    int getStatus(const Cluster&) const;
+    StarStatus getStatus(const Cluster&) const;
 
     double getLtau(const Cluster&, const Model&) const;
     double wdLogTeff(const Cluster&, const Model&) const;
@@ -28,8 +28,6 @@ class Star
 
     // Variables
     WdAtmosphere wdType = WdAtmosphere::DA;
-
-    int status = 0;
 
     double mass = 0.0;
 };
@@ -60,6 +58,8 @@ class StellarSystem
     // Variables
     Star primary;
     Star secondary;
+
+    StarStatus observedStatus;
 
     std::vector<double> obsPhot;
     std::vector<double> variance;

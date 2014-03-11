@@ -17,39 +17,32 @@ using std::vector;
 
 array<double, FILTS> Star::getMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
 {
-    array<double, FILTS> mags;
+    // Masses greater than 100Mo should never occur
+    assert (mass <= 100.0);
 
-    if (mass <= 0.0001)
-    {                           // for non-existent secondary stars
-        for (auto f : filters)
-            mags.at(f) = 99.999;
-    }
-    else if (mass <= clust.AGBt_zmass)
-    {                           // for main seq or giant star
-        mags = evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
-    }
-    else if (mass <= clust.getM_wd_up())
-    {                           // for white dwarf
-        mags = wdEvol (clust, evoModels);
-    }
-    else if (mass <= 100.)
-    {                           // for neutron star or black hole remnant
-        for (auto f : filters)
-            mags.at(f) = 99.999;
-    }
-    else
+    switch(getStatus(clust))
     {
-        //     log <<  (" This condition should not happen, %.2f greater than 100 Mo\n", mass);
-        for (auto f : filters)
-            mags.at(f) = 99.999;
-    }
+        case MSRG: // for main seq or giant star
+            return evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
 
-    return mags;
+        case WD:   // for white dwarf
+            return wdEvol (clust, evoModels);
+
+        default:   // For brown dwarfs, neutron stars, black hole remnants, and 0-mass secondaries
+            array<double, FILTS> mags;
+            mags.fill(99.999);
+
+            return mags;
+    }
 }
 
-int Star::getStatus(const Cluster &clust) const
+StarStatus Star::getStatus(const Cluster &clust) const
 {
-    if (mass <= clust.AGBt_zmass)
+    if (mass <= 0.0001)
+    {                           // for non-existent secondaries
+        return DNE;
+    }
+    else if (mass <= clust.AGBt_zmass)
     {                           // for main seq or giant star
         return MSRG;
     }
@@ -136,7 +129,8 @@ void StellarSystem::setMassRatio(double r)
 
 void StellarSystem::readCMD(const string &s, int filters)
 {
-    double tempSigma, massRatio;
+    int status;
+    double tempSigma, ignore;
     string starID;
 
     stringstream in(s);  
@@ -160,13 +154,21 @@ void StellarSystem::readCMD(const string &s, int filters)
         // Negative sigma (variance) is used to signal "don't count this band for this star"
     }
 
-    in >> primary.mass
-       >> massRatio
-       >> primary.status
+    in >> ignore // primary.mass
+       >> ignore // massRatio
+       >> status
        >> clustStarPriorDens
        >> useDuringBurnIn;
 
-    setMassRatio(massRatio);
+    if ((status == 1)   // MSRGB
+     || (status == 3)   // WD
+     || (status == 4)   // NSBH
+     || (status == 5))  // BD
+    {
+        observedStatus = static_cast<StarStatus>(status);
+    }
+    else
+        observedStatus = DNE;
 }
 
 

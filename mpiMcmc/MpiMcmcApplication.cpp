@@ -206,7 +206,7 @@ int MpiMcmcApplication::run()
         {
             system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
 
-            if (system.primary.status == WD)
+            if (system.observedStatus == WD)
             {
                 system.setMassRatio(0.0);
             }
@@ -509,7 +509,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
         double postClusterStar = 0.0;
 
         /* loop over all (mass1, mass ratio) pairs */
-        if (systems.at(i).primary.status == WD)
+        if (systems.at(i).observedStatus == WD)
         {
             postClusterStar = 0.0;
 

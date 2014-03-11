@@ -99,7 +99,7 @@ vector<StellarSystem> readCmdData (struct ifmrMcmcControl &ctrl, const Model &ev
             }
         }
 
-        if (!(systems.back().primary.status == 3 || (systems.back().obsPhot.at(settings.cluster.index) >= settings.cluster.minMag && systems.back().obsPhot.at(settings.cluster.index) <= settings.cluster.maxMag)))
+        if (!(systems.back().observedStatus == WD || (systems.back().obsPhot.at(settings.cluster.index) >= settings.cluster.minMag && systems.back().obsPhot.at(settings.cluster.index) <= settings.cluster.maxMag)))
         {
             systems.pop_back();
         }

@@ -272,7 +272,7 @@ void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModel
             filterPriorMax.at(i) = ctrl.filterPriorMax.at(i);
         }
 
-        if (!(mc.stars.back().primary.status == 3 || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
+        if (!(mc.stars.back().observedStatus == WD || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
         {
             mc.stars.pop_back();
         }
@@ -365,7 +365,7 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
         star.secondary.wdType = WdAtmosphere::DA;
 
         // find photometry for initial values of currentClust and mc->stars
-        if (star.primary.status == WD)
+        if (star.observedStatus == WD)
         {
             star.setMassRatio(0.0);
         }
@@ -432,7 +432,7 @@ int main (int argc, char *argv[])
             obs.at(i).variance.at(filt) = mc.stars.at(i).variance.at(filt);
         }
         obs.at(i).clustStarPriorDens = mc.stars.at(i).clustStarPriorDens;
-        starStatus.at(i) = mc.stars.at(i).primary.status;
+        starStatus.at(i) = mc.stars.at(i).observedStatus;
 
         if (starStatus.at(i) == WD)
         {
@@ -534,7 +534,7 @@ int main (int argc, char *argv[])
 
         for (auto star : mc.stars)
         {
-            if (star.primary.status == WD)
+            if (star.observedStatus == WD)
             {
                 postClusterStar = 0.0;
 
