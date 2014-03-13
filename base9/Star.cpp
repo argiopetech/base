@@ -130,7 +130,7 @@ void StellarSystem::setMassRatio(double r)
 void StellarSystem::readCMD(const string &s, int filters)
 {
     int status;
-    double tempSigma, ignore;
+    double tempSigma, massRatio;
     string starID;
 
     stringstream in(s);  
@@ -154,8 +154,8 @@ void StellarSystem::readCMD(const string &s, int filters)
         // Negative sigma (variance) is used to signal "don't count this band for this star"
     }
 
-    in >> ignore // primary.mass
-       >> ignore // massRatio
+    in >> primary.mass
+       >> massRatio
        >> status
        >> clustStarPriorDens
        >> useDuringBurnIn;
@@ -169,6 +169,8 @@ void StellarSystem::readCMD(const string &s, int filters)
     }
     else
         observedStatus = DNE;
+
+    setMassRatio(massRatio);
 }
 
 
