@@ -382,7 +382,11 @@ double GirardiMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
             // Ensure that we found a reasonable value here
             // This seems backward in the context of the reverse_iterator
             // because the AGBt decreases as logAge increases.
-            assert(ageIter[0].agbTipMass() < zamsMass);
+
+            // This was previously asserted, but it doesn't hold if
+            // we're looking for a zamsMass smaller than the minimum
+            // (which happens in simCluster)
+            // assert(ageIter[0].agbTipMass() <= zamsMass);
             assert(ageIter[1].agbTipMass() > zamsMass);
 
             wdPrecLogAge[i] = linearTransform<TransformMethod::Interp>(ageIter[0].agbTipMass()
@@ -392,8 +396,8 @@ double GirardiMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
                                                                      , zamsMass).val;
 
             // This seems backwards because of the reverse_iterator
-            assert(ageIter[0].logAge > wdPrecLogAge[i]);
-            assert(ageIter[1].logAge < wdPrecLogAge[i]);
+            assert(ageIter[0].logAge >= wdPrecLogAge[i]);
+            assert(ageIter[1].logAge <= wdPrecLogAge[i]);
         }
     }
 
