@@ -11,7 +11,6 @@
 
 #include "Cluster.hpp"
 #include "Model.hpp"
-#include "structures.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
 #include "MsFilterSet.hpp"

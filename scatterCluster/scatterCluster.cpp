@@ -9,7 +9,6 @@
 #include <boost/format.hpp>
 
 #include "Model.hpp"
-#include "structures.hpp"
 #include "Settings.hpp"
 #include "MsFilterSet.hpp"
 
