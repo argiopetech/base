@@ -37,7 +37,7 @@ int *filterPriorMax;
 int main (int argc, char *argv[])
 {
 
-    int count, nr, nStars, filterSet, wdCount, i, filt, firstFilt, nFieldStars, isFS, isBD;
+    int count, nr, nStars, filterSet, wdCount, i, firstFilt, nFieldStars, isFS, isBD;
     double limitSigToNoise, brightLimit, faintLimit, clusterMemberPrior;
     char filename[100], line[1000], aFilterName[10];
     FILE *r_ptr, *w_ptr;
@@ -117,16 +117,13 @@ int main (int argc, char *argv[])
     std::mt19937 gen(uint32_t(settings.seed * uint32_t(2654435761))); // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
 
     //Output headers
-    for (filt = 0; filt < FILTS; filt++)
-        fprintf (w_ptr, "%s ", evoModels.filterSet->getFilterName (filt).c_str());
-
     fprintf (w_ptr, "id ");
 
-    for (filt = 0; filt < FILTS; filt++)
+    for (int filt = 0; filt < FILTS; filt++)
         if (exptime[filt] > EPS)
             fprintf (w_ptr, "%6s ", evoModels.filterSet->getFilterName (filt).c_str());
 
-    for (filt = 0; filt < FILTS; filt++)
+    for (int filt = 0; filt < FILTS; filt++)
         if (exptime[filt] > EPS)
             fprintf (w_ptr, "sig%-5s ", evoModels.filterSet->getFilterName (filt).c_str());
 
