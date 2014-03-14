@@ -87,7 +87,7 @@ void GirardiMsModel::loadModel (string path, MsFilter filterSet)
 {
     ifstream fin;
 
-    if (filterSet != MsFilter::UBVRIJHK && filterSet != MsFilter::SDSS && filterSet != MsFilter::ACS)
+    if (!(filterSet == MsFilter::UBVRIJHK || filterSet == MsFilter::ACS))
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Girardi models.  Exiting..." << endl;
         exit (1);
@@ -247,6 +247,8 @@ Isochrone GirardiMsModel::deriveIsochrone(const std::vector<int>& filters, doubl
 
     // Assure that the iAge is reasonable
     // Age gridding is identical between [Fe/H] grid points
+    assert(iAge >= 0);
+    assert(fehIter->isochrones.size() > iAge);
     assert(fehIter->isochrones.at(iAge).logAge     < newAge);
     assert(fehIter->isochrones.at(iAge + 1).logAge > newAge);
 
