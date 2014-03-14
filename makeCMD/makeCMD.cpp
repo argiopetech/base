@@ -10,8 +10,7 @@
 #include <cstring>
 #include <unistd.h>
 
-#include "evolve.hpp"
-#include "structures.hpp"
+#include "Star.hpp"
 #include "Settings.hpp"
 #include "ifmr.hpp"
 #include "FilterSet.hpp"
@@ -70,7 +69,7 @@ int main (int argc, char *argv[])
     array<double, 2> ltau;
 
     Cluster theCluster;
-    vector<Star> stars;
+    vector<StellarSystem> stars;
 
     Settings settings;
 
@@ -199,13 +198,13 @@ int main (int argc, char *argv[])
     ///////// and load models /////////
     ///////////////////////////////////
 
-    theCluster.M_wd_up = settings.whiteDwarf.M_wd_up;
+    theCluster.setM_wd_up(settings.whiteDwarf.M_wd_up);
     // verbose = settings.verbose;
 
     // if (verbose < 0 || verbose > 2)
     //     verbose = 1;            // give standard feedback if incorrectly specified
 
-    theCluster.carbonicity = settings.whiteDwarf.carbonicity;
+    theCluster.carbonicity = settings.cluster.carbonicity;
 
     //////////////////////////////
     /////// Output headers ///////
@@ -299,9 +298,9 @@ int main (int argc, char *argv[])
                     fscanf (rDataPtr, "%lf ", &(stars.at(j).obsPhot[p]));
                 for (auto p = 0; p < evoModels.numFilts; p++)
                     fscanf (rDataPtr, "%*f ");
-                fscanf (rDataPtr, "%*f %*f %d ", &stars.at(j).status[0]);
+                fscanf (rDataPtr, "%*f %*f %d ", &stars.at(j).observedStatus);
                 fgets (line, 240, rDataPtr);
-            } while (stars.at(j).status[0] == MSRG && (stars.at(j).obsPhot[iMag] < minMag || stars.at(j).obsPhot[iMag] > maxMag));
+            } while (stars.at(j).primary.getStatus(theCluster) == MSRG && (stars.at(j).obsPhot[iMag] < minMag || stars.at(j).obsPhot[iMag] > maxMag));
         }
         if (nr == EOF)
             break;
@@ -325,7 +324,7 @@ int main (int argc, char *argv[])
                 stuckParam[p]++;
             sumStepSizeParam[p] += thisStep;
             prevParam[p] = param[p];
-            theCluster.parameter[p] = param[p];
+            theCluster.setParam(p, param[p]);
         }
 
 
@@ -360,14 +359,11 @@ int main (int argc, char *argv[])
                     prevMass[m][j] = mass[m][j];
                     isClusterMember[m][j]++;    // Keep track of how many iterations we're averaging for each star
 
-                    stars.at(j).U = mass[0][j];
-                    stars.at(j).massRatio = mass[1][j] / mass[0][j];
+                    stars.at(j).primary.mass = mass[0][j];
+                    stars.at(j).setMassRatio(mass[1][j] / mass[0][j]);
                 }
             }
         }
-
-        for (auto s : stars)
-            evolve (theCluster, evoModels, globalMags, filters, s, ltau);
 
         for (decltype(stars.size()) j = 0; j < stars.size(); j++)
         {
@@ -375,8 +371,10 @@ int main (int argc, char *argv[])
             {                           // if it is a cluster star
                 for (auto filt = 0; filt < evoModels.numFilts; filt++)
                 {
-                    sumPhot[j][filt] += stars.at(j).photometry[filt];
-                    sumSquaresPhot[j][filt] += stars.at(j).photometry[filt] * stars.at(j).photometry[filt];
+                    auto photometry = stars.at(j).deriveCombinedMags(theCluster, evoModels, filters);
+
+                    sumPhot[j][filt] += photometry[filt];
+                    sumSquaresPhot[j][filt] += photometry[filt] * photometry[filt];
                 }
             }
         }
@@ -418,7 +416,7 @@ int main (int argc, char *argv[])
             fprintf (wCmdPtr, "%11.5f %9.5f %10.5f %10.5f %6d  %8.6f  ", meanMass[m][j], sigma, minMass[m][j], maxMass[m][j], stuckMass[m][j], meanStepSizeMass[m][j]);
             if (m == 0)
             {
-                if (stars.at(j).status[0] == WD)
+                if (stars.at(j).primary.getStatus(theCluster) == WD)
                     // fprintf(wCmdPtr,"%10.5f  %9.3e  ", intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR),
                     //         intlFinalMassReln(meanMass[m][j], theCluster.evoModels.IFMR) -
                     //         intlFinalMassReln(meanMass[m][j] - sigma, theCluster.evoModels.IFMR));
@@ -458,18 +456,15 @@ int main (int argc, char *argv[])
         fprintf (wClusterStatPtr, "%s %8.5f %9.5f %10.5f %8.5f %6d  %8.5f\n", paramNames[p], meanParam[p], sqrt (varParam[p]), minParam[p], maxParam[p], stuckParam[p], sumStepSizeParam[p] / (row - 1));
 
     // Create a simulated cluster based on the cluster stats and output for comparison
-    stars.resize((int) (theCluster.M_wd_up * 100) + 1);
+    stars.resize((int) (theCluster.getM_wd_up() * 100) + 1);
     for (auto p = 0; p < NPARAMS; p++)
-        theCluster.parameter[p] = meanParam[p];
+        theCluster.setParam(p, meanParam[p]);
 
     for (decltype(stars.size()) j = 0; j < stars.size(); j++)
     {
-        stars.at(j).U = j * .01;
-        stars.at(j).massRatio = 0.0;
+        stars.at(j).primary.mass = j * .01;
+        stars.at(j).setMassRatio(0.0);
     }
-
-    for (auto s : stars)
-        evolve (theCluster, evoModels, globalMags, filters, s, ltau);
 
     fprintf (wDebugPtr, " mass stage1");
     for (auto f : filters)
@@ -482,17 +477,19 @@ int main (int argc, char *argv[])
 
     for (auto star : stars)
     {
-        if (star.photometry[0] < 90)
+        auto photometry = star.deriveCombinedMags(theCluster, evoModels, filters);
+
+        if (photometry[0] < 90)
         {
-            if (star.status[0] == MSRG)
+            if (star.primary.getStatus(theCluster) == MSRG)
             {
-                if (prevV > star.photometry[0])
+                if (prevV > photometry[0])
                 {
-                    fprintf (wDebugPtr, "%5.2f %6d ", star.U, star.status[0]);
+                    fprintf (wDebugPtr, "%5.2f %6d ", star.primary.mass, star.primary.getStatus(theCluster));
                     for (auto filt = 0; filt < evoModels.numFilts; filt++)
-                        fprintf (wDebugPtr, "%10f ", star.photometry[filt]);
+                        fprintf (wDebugPtr, "%10f ", photometry[filt]);
                     fprintf (wDebugPtr, "\n");
-                    prevV = star.photometry[0];
+                    prevV = photometry[0];
                 }
                 else
                 {
@@ -502,9 +499,9 @@ int main (int argc, char *argv[])
             }
             else
             {
-                fprintf (wDebugPtr, "%5.2f %3d ", star.U, star.status[0]);
+                fprintf (wDebugPtr, "%5.2f %3d ", star.primary.mass, star.primary.getStatus(theCluster));
                 for (auto filt = 0; filt < evoModels.numFilts; filt++)
-                    fprintf (wDebugPtr, "%10f ", star.photometry[filt]);
+                    fprintf (wDebugPtr, "%10f ", photometry[filt]);
                 fprintf (wDebugPtr, "\n");
             }
         }
