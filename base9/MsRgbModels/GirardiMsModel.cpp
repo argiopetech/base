@@ -53,6 +53,7 @@ static vector<string> getFileNames (string path, FilterSetName filterSet)
     return files;
 }
 
+
 bool GirardiMsModel::isSupported(FilterSetName filterSet)
 {
     return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::ACS);
@@ -92,11 +93,7 @@ void GirardiMsModel::loadModel (string path, FilterSetName filterSet)
 {
     ifstream fin;
 
-    if (! isSupported(filterSet))
-    {
-        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Girardi models.  Exiting..." << endl;
-        exit (1);
-    }
+    assert(isSupported(filterSet));
 
     for (auto file : getFileNames(path, filterSet))
     {

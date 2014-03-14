@@ -75,6 +75,12 @@ static void calcCoeff (double a[], double b[], double x)
 }
 
 
+bool DsedMsModel::isSupported(FilterSetName filterSet)
+{
+    return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS);
+}
+
+
 void DsedMsModel::loadModel (string path, FilterSetName filterSet)
 {
 
@@ -83,12 +89,7 @@ void DsedMsModel::loadModel (string path, FilterSetName filterSet)
     char line[240];
     string tempFile;
 
-    if (filterSet != FilterSetName::SDSS && filterSet != FilterSetName::UBVRIJHK)
-    {
-        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on DSED models.  Exiting..." << endl;
-        exit (1);
-    }
-
+    assert(isSupported(filterSet));
 
     for (z = 0; z < N_DSED_Z; z++)
     {                           // foreach Dsed metallicity/isochrone file

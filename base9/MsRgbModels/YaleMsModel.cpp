@@ -38,8 +38,17 @@ static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorde
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS]);
 static double feh2z (double FeH);
 
+
+bool YaleMsModel::isSupported(FilterSetName filterSet)
+{
+    return (filterSet == FilterSetName::UBVRIJHK);
+}
+
+
 void YaleMsModel::loadModel (string path, FilterSetName filterSet)
 {
+    assert(isSupported(filterSet));
+
     // ifstream fin;
     // int a, p;
     // string line;

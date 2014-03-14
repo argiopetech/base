@@ -66,6 +66,8 @@ class YaleMsModel : public MsRgbModel
     virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, FilterSetName);
 
+    virtual bool isSupported(FilterSetName);
+
   protected:
     virtual int numFilts() const { return N_YY_FILTS; }
 

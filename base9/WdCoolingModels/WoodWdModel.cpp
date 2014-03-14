@@ -21,7 +21,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-void WoodWdModel::loadModel(string path)
+void WoodWdModel::loadModel(string path, FilterSetName)
 {
     string tempFile, line;
     double newAge, newTeff, newMass, newRadius;

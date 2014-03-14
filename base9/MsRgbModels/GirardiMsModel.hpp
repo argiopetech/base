@@ -24,7 +24,7 @@ class GirardiMsModel : public MsRgbModel
 
     Isochrone deriveIsochrone(const std::vector<int>& filters, double newFeH, double, double newAge) const;
 
-    bool isSupported(FilterSetName);
+    virtual bool isSupported(FilterSetName);
 
   protected:
     virtual int numFilts() const { return N_GIR_FILTS; }

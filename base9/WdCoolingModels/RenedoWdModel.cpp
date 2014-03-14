@@ -28,7 +28,7 @@ struct renedoModel
     const double mass;
 };
 
-void RenedoWdModel::loadModel (string path)
+void RenedoWdModel::loadModel (string path, FilterSetName)
 {
     static struct renedoModel renedo[] = {
         {"wd0524_z001.trk", 0.52490},

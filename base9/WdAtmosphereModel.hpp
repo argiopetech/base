@@ -7,8 +7,9 @@
 #include <utility>
 
 #include "constants.hpp"
+#include "StellarModel.hpp"
 
-class WdAtmosphereModel
+class WdAtmosphereModel : virtual public StellarModel
 {
   protected:
     struct record
@@ -50,7 +51,6 @@ class WdAtmosphereModel
   public:
     virtual ~WdAtmosphereModel() {}
 
-    virtual void loadModel (std::string path, FilterSetName filterSet) = 0;
     virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
 
   protected:

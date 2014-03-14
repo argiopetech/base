@@ -22,6 +22,10 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
+bool BergeronAtmosphereModel::isSupported(FilterSetName filterSet)
+{
+    return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS);
+}
 void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterSet)
 {
     static std::string files[] = {
@@ -43,10 +47,7 @@ void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterS
 
     array<double, FILTS> mags;
 
-    if (filterSet != FilterSetName::UBVRIJHK && filterSet != FilterSetName::SDSS)
-    {
-        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Bergeron models.  Continue at your own risk..." << endl;
-    }
+    assert(isSupported(filterSet));
 
     // Open the appropriate file for each mass
     for (auto f : files)

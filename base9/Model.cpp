@@ -6,12 +6,14 @@
 #include "MsRgbModels/ChabMsModel.hpp"
 #include "MsRgbModels/DsedMsModel.hpp"
 #include "MsRgbModels/GirardiMsModel.hpp"
+#include "MsRgbModels/InvalidMsModel.hpp"
 #include "MsRgbModels/YaleMsModel.hpp"
 #include "WdCoolingModels/AlthausWdModel.hpp"
 #include "WdCoolingModels/MontgomeryWdModel.hpp"
 #include "WdCoolingModels/RenedoWdModel.hpp"
 #include "WdCoolingModels/WoodWdModel.hpp"
 #include "WdAtmosphereModels/BergeronAtmosphereModel.hpp"
+#include "WdAtmosphereModels/InvalidAtmosphereModel.hpp"
 
 using std::cout;
 using std::cerr;
@@ -98,6 +100,18 @@ const Model makeModel(const Settings &s)
                , internal::createWdCoolingModel(s.whiteDwarf.wdModel)
                , internal::createWdAtmosphereModel(WdAtmosphereModelSet::BERGERON));
                  
+    if (! model.mainSequenceEvol->isSupported(s.mainSequence.filterSet))
+    {
+        cout << "\n\tMSRGB model does not support the selected filter set. Only WD operations will be supported." << endl;
+        model.mainSequenceEvol = shared_ptr<InvalidMsModel>(new InvalidMsModel());
+    }
+
+    if (! model.WDAtmosphere->isSupported(s.mainSequence.filterSet))
+    {
+        cout << "\n\tWD Atmosphere model does not support the selected filter set. Only MS operations will be supported." << endl;
+        model.WDAtmosphere = shared_ptr<InvalidAtmosphereModel>(new InvalidAtmosphereModel());
+    }
+
 // !!! FIX ME !!!
 
     model.IFMR = s.whiteDwarf.ifmr;
@@ -105,10 +119,10 @@ const Model makeModel(const Settings &s)
 // END FIX ME
 
     model.mainSequenceEvol->loadModel(s.files.models, s.mainSequence.filterSet);
-    model.WDcooling->loadModel(s.files.models);
+    model.WDcooling->loadModel(s.files.models, s.mainSequence.filterSet);
     model.WDAtmosphere->loadModel(s.files.models, s.mainSequence.filterSet);
 
-    cout << " Done." << endl;
+    cout << " Done.\n" << endl;
 
     return model;
 }

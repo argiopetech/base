@@ -40,6 +40,13 @@ static void initIso (struct cIsochrone *iso);
 static void getFileName (string path, int z, int y);
 static char tempFile[100];
 
+
+bool ChabMsModel::isSupported(FilterSetName filterSet)
+{
+    return (filterSet == FilterSetName::UBVRIJHK);
+}
+
+
 void ChabMsModel::loadModel (string path, FilterSetName filterSet)
 {
     // ************************************************************************************
@@ -53,11 +60,7 @@ void ChabMsModel::loadModel (string path, FilterSetName filterSet)
     char line[240];             //,tempFile[100];
     FILE *pChaboyer;
 
-    if (filterSet != FilterSetName::UBVRIJHK)
-    {
-        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Chaboyer helium models.  Exiting..." << endl;
-        exit (1);
-    }
+    assert(isSupported(filterSet));
 
     for (z = 0; z < N_CHAB_Z; z++)
     {                           // foreach Chaboyer metallicity/isochrone file

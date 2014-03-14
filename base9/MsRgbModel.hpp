@@ -8,8 +8,9 @@
 
 #include "constants.hpp"
 #include "Isochrone.hpp"
+#include "StellarModel.hpp"
 
-class MsRgbModel
+class MsRgbModel : virtual public StellarModel
 {
   protected:
     struct FehCurve
@@ -64,8 +65,6 @@ Distributed most of the code to the respective subroutines, leaving only those t
 modified for different model sets.
 ****************************************************************************************/
     virtual double wdPrecLogAge(double, double) = 0;
-
-    virtual void loadModel(std::string, FilterSetName) = 0;
 
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }

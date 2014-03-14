@@ -5,7 +5,9 @@
 #include <utility>
 #include <vector>
 
-class WdCoolingModel
+#include "StellarModel.hpp"
+
+class WdCoolingModel : public StellarModel
 {
   protected:
     struct record
@@ -79,8 +81,10 @@ class WdCoolingModel
   public:
     virtual ~WdCoolingModel() {}
 
-    virtual void loadModel (std::string path) = 0;
     virtual std::pair<double, double> wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass) const = 0;
+
+    // WD Cooling models are FilterSet agnostic
+    virtual bool isSupported(FilterSetName) { return true; }
 
   protected:
     std::vector<struct wdCoolingCurve> wdCurves;
