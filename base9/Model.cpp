@@ -39,15 +39,15 @@ namespace internal
         }
     }
 
-    shared_ptr<MsFilterSet> createMsFilterSet(MsFilter filter)
+    shared_ptr<FilterSet> createFilterSet(FilterSetName filter)
     {
         switch (filter)
         {
-            case MsFilter::UBVRIJHK:
+            case FilterSetName::UBVRIJHK:
                 return shared_ptr<UBVRIJHK>(new UBVRIJHK);
-            case MsFilter::ACS:
+            case FilterSetName::ACS:
                 return shared_ptr<ACS>(new ACS);
-            case MsFilter::SDSS:
+            case FilterSetName::SDSS:
                 return shared_ptr<SDSS>(new SDSS);
             default:
                 cerr << "***Error: No models found for filter set " << static_cast<int>(filter) << ".***" << endl;
@@ -94,7 +94,7 @@ const Model makeModel(const Settings &s)
     cout << "Reading models..." << std::flush;
 
     Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
-               , internal::createMsFilterSet(s.mainSequence.filterSet)
+               , internal::createFilterSet(s.mainSequence.filterSet)
                , internal::createWdCoolingModel(s.whiteDwarf.wdModel)
                , internal::createWdAtmosphereModel(WdAtmosphereModelSet::BERGERON));
                  

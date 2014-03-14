@@ -14,7 +14,7 @@
 #include "densities.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
-#include "MsFilterSet.hpp"
+#include "FilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;

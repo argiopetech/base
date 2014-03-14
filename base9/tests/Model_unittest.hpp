@@ -14,7 +14,7 @@ TEST(Model, FilterSet)
     s.whiteDwarf.wdModel = WdModel::WOOD;
     s.mainSequence.msRgbModel = MsModel::GIRARDI;
 
-    s.mainSequence.filterSet = static_cast<MsFilter>(5);
+    s.mainSequence.filterSet = static_cast<FilterSetName>(5);
     EXPECT_EXIT(makeModel(s), ::testing::ExitedWithCode(1), "");
 }
 
@@ -22,7 +22,7 @@ TEST(Model, makeModel)
 {
     Settings s;
     s.whiteDwarf.wdModel = WdModel::WOOD;
-    s.mainSequence.filterSet = MsFilter::ACS;
+    s.mainSequence.filterSet = FilterSetName::ACS;
 
     s.mainSequence.msRgbModel = MsModel::GIRARDI;
     EXPECT_EQ(typeid(*(new GirardiMsModel)), typeid(*makeModel(s).mainSequenceEvol));    

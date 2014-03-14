@@ -13,7 +13,7 @@
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
-#include "MsFilterSet.hpp"
+#include "FilterSet.hpp"
 
 #include "WhiteDwarf.hpp"
 

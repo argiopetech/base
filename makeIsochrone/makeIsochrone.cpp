@@ -10,7 +10,7 @@
 
 #include "evolve.hpp"
 #include "Settings.hpp"
-#include "MsFilterSet.hpp"
+#include "FilterSet.hpp"
 
 using std::array;
 using std::vector;

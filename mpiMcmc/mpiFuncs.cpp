@@ -12,7 +12,7 @@
 
 #include "Star.hpp"
 #include "densities.hpp"
-#include "MsFilterSet.hpp"
+#include "FilterSet.hpp"
 #include "marg.hpp"
 #include "Model.hpp"
 #include "mpiMcmc.hpp"

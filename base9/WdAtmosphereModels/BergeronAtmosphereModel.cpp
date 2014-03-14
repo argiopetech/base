@@ -22,7 +22,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
+void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterSet)
 {
     static std::string files[] = {
         {"Table_Mass_0.2"},
@@ -43,7 +43,7 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
 
     array<double, FILTS> mags;
 
-    if (filterSet != MsFilter::UBVRIJHK && filterSet != MsFilter::SDSS)
+    if (filterSet != FilterSetName::UBVRIJHK && filterSet != FilterSetName::SDSS)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Bergeron models.  Continue at your own risk..." << endl;
     }
@@ -90,7 +90,7 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
                         in >> mags[f];
                     }
 
-                    if (filterSet == MsFilter::SDSS) // iff we are using the ugrizJHK models
+                    if (filterSet == FilterSetName::SDSS) // iff we are using the ugrizJHK models
                     {
                         for (int f = 0; f < 5; ++f)
                         {

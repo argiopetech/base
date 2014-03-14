@@ -6,13 +6,13 @@
 
 #include "constants.hpp"
 
-class MsFilterSet
+class FilterSet
 {
   public:
-    MsFilterSet(std::array<std::string, FILTS> filts)
+    FilterSet(std::array<std::string, FILTS> filts)
         : filterNames(filts)
     {}
-    virtual ~MsFilterSet() {};
+    virtual ~FilterSet() {};
 
     std::string getFilterName (int index) const { return filterNames.at(index); };
     virtual std::array<double, FILTS> calcAbsCoeffs() const = 0;
@@ -22,7 +22,7 @@ class MsFilterSet
 };
 
 
-class UBVRIJHK : public MsFilterSet
+class UBVRIJHK : public FilterSet
 {
   public:
     UBVRIJHK();
@@ -30,7 +30,7 @@ class UBVRIJHK : public MsFilterSet
     virtual std::array<double, FILTS> calcAbsCoeffs() const;
 };
 
-class SDSS : public MsFilterSet
+class SDSS : public FilterSet
 {
   public:
     SDSS();
@@ -38,7 +38,7 @@ class SDSS : public MsFilterSet
     virtual std::array<double, FILTS> calcAbsCoeffs() const;
 };
 
-class ACS : public MsFilterSet
+class ACS : public FilterSet
 {
   public:
     ACS();
@@ -46,7 +46,7 @@ class ACS : public MsFilterSet
     virtual std::array<double, FILTS> calcAbsCoeffs() const;
 };
 
-class UVIS : public MsFilterSet
+class UVIS : public FilterSet
 {
   public:
     UVIS();

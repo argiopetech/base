@@ -11,7 +11,6 @@
 #include "Star.hpp"
 
 #include "ChabMsModel.hpp"
-#include "binSearch.hpp"
 #include "LinearTransform.hpp"
 
 using std::string;
@@ -24,7 +23,6 @@ struct cIsochrone
     double age;                 //In Gyr
     double logAge;
     double FeH;
-    double Y;
     int numEeps;
     int eeps[MAX_CHAB_ENTRIES];
     double mass[MAX_CHAB_ENTRIES];
@@ -42,7 +40,7 @@ static void initIso (struct cIsochrone *iso);
 static void getFileName (string path, int z, int y);
 static char tempFile[100];
 
-void ChabMsModel::loadModel (string path, MsFilter filterSet)
+void ChabMsModel::loadModel (string path, FilterSetName filterSet)
 {
     // ************************************************************************************
     // **********************    Chaboyer models   ****************************************
@@ -55,7 +53,7 @@ void ChabMsModel::loadModel (string path, MsFilter filterSet)
     char line[240];             //,tempFile[100];
     FILE *pChaboyer;
 
-    if (filterSet != MsFilter::UBVRIJHK)
+    if (filterSet != FilterSetName::UBVRIJHK)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Chaboyer helium models.  Exiting..." << endl;
         exit (1);
@@ -78,7 +76,6 @@ void ChabMsModel::loadModel (string path, MsFilter filterSet)
             {                           // initialize age/boundary pointers
                 cLogAge[z][y][a] = 0.0;
                 initIso (&(cIso[z][y][a]));     // initialize array of model parameters
-                cIso[z][y][a].Y = cY[z][y];
             }
 
             getFileName (path, z, y);
@@ -108,7 +105,6 @@ void ChabMsModel::loadModel (string path, MsFilter filterSet)
                     cLogAge[z][y][a] = cIso[z][y][a].logAge = log10 (cIso[z][y][a].age * (1e9));
                     cAge[z][y][a] = cIso[z][y][a].age;
                     cIso[z][y][a].FeH = cFeH[z];
-                    cIso[z][y][a].Y = cY[z][y];
 
                     if (a > 0)
                     {
@@ -164,133 +160,112 @@ static void getFileName (string path, int z, int y)
 double ChabMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double newY, double newLogAge)
 {
 
-    int iAge = -1, iY = -1, iFeH = -1, newimax = 500, newimin = 0, ioff[2][2][2], neweep;
-    int z = 0, y = 0, a = 0, m = 0, n = 0;
-    double newAge = exp10 (newLogAge) / 1e9;
-    double b[2], c[2], d[2];
+    // int iAge = -1, iY = -1, iFeH = -1, newimax = 500, newimin = 0, ioff[2][2][2], neweep;
+    // int z = 0, y = 0, a = 0, m = 0, n = 0;
+    // double newAge = exp10 (newLogAge) / 1e9;
+    // double b[2], c[2], d[2];
 
-    if (newLogAge < cLogAge[0][0][0])
+    if ((newLogAge < cLogAge[0][0][0])
+     || (newLogAge > cLogAge[N_CHAB_Z - 1][N_CHAB_Y - 1][N_CHAB_AGES - 1])
+     || (newFeH < cFeH[0])
+     || (newFeH > cFeH[N_CHAB_Z - 1])
+     || (newY < cY[0][0])
+     || (newY > cY[N_CHAB_Z - 1][N_CHAB_Y - 1]))
     {
-        //     log << ("\n Requested age (%.3f) too young. (gChabMag.c)", cLogAge[0][0][0]);       //newLogAge);
-        return 0.0;
-    }
-    if (newLogAge > cLogAge[N_CHAB_Z - 1][N_CHAB_Y - 1][N_CHAB_AGES - 1])
-    {
-        //     log << ("\n Requested age (%.3f) too old. (gChabMag.c)", newLogAge);
-        return 0.0;
-    }
-    if (newFeH < cFeH[0])
-    {
-        //     log << ("\n Requested FeH (%.3f) too low. (gChabMag.c)", newFeH);
-        return 0.0;
-    }
-    if (newFeH > cFeH[N_CHAB_Z - 1])
-    {
-        //     log << ("\n Requested FeH (%.3f) too high. (gChabMag.c)", newFeH);
-        return 0.0;
-    }
-    if (newY < cY[0][0])
-    {
-        //     log << ("\n Requested Y (%.3f) too low. (gChabMag.c)", newY);
-        return 0.0;
-    }
-    if (newY > cY[N_CHAB_Z - 1][N_CHAB_Y - 1])
-    {
-        //     log << ("\n Requested Y (%.3f) too high. (gChabMag.c)", newY);
-        return 0.0;
+        throw InvalidCluster("Age or FeH out of bounds in ChabMsModel::deriveAgbTipMass");
     }
 
-    // Find the values for each parameter that we will be interpolating
-    // between and calculate the interpolation coefficients.
-    iFeH = binarySearch (cFeH, N_CHAB_Z, newFeH);
-    iY = binarySearch (cY[N_CHAB_Z - 1], N_CHAB_Y, newY);
-    iAge = binarySearch (cAge[z][y], N_CHAB_AGES, newAge);
+    // // Find the values for each parameter that we will be interpolating
+    // // between and calculate the interpolation coefficients.
+    // iFeH = binarySearch (cFeH, N_CHAB_Z, newFeH);
+    // iY = binarySearch (cY[N_CHAB_Z - 1], N_CHAB_Y, newY);
+    // iAge = binarySearch (cAge[z][y], N_CHAB_AGES, newAge);
 
-    calcCoeff (&cFeH[iFeH], d, newFeH);
-    calcCoeff (&cY[z][iY], c, newY);
-    calcCoeff (&cAge[z][y][iAge], b, newAge);
+    // calcCoeff (&cFeH[iFeH], d, newFeH);
+    // calcCoeff (&cY[z][iY], c, newY);
+    // calcCoeff (&cAge[z][y][iAge], b, newAge);
 
-    // Find the minimum and maximum eep values and set a global
-    // min and max that is the union of the min and max for each isochrone
-    for (a = iAge; a < iAge + 2; a++)
-    {
-        for (y = iY; y < iY + 2; y++)
-        {
-            for (z = iFeH; z < iFeH + 2; z++)
-            {
-                if (cIso[z][y][a].eeps[0] > newimin)
-                    newimin = cIso[z][y][a].eeps[0];
-                if (cIso[z][y][a].eeps[cIso[z][y][a].numEeps - 1] < newimax)
-                    newimax = cIso[z][y][a].eeps[cIso[z][y][a].numEeps - 1];
-            }
-        }
-    }
-    neweep = newimax - newimin + 1;     // = the # of eep points that will be in the new isochrone
+    // // Find the minimum and maximum eep values and set a global
+    // // min and max that is the union of the min and max for each isochrone
+    // for (a = iAge; a < iAge + 2; a++)
+    // {
+    //     for (y = iY; y < iY + 2; y++)
+    //     {
+    //         for (z = iFeH; z < iFeH + 2; z++)
+    //         {
+    //             if (cIso[z][y][a].eeps[0] > newimin)
+    //                 newimin = cIso[z][y][a].eeps[0];
+    //             if (cIso[z][y][a].eeps[cIso[z][y][a].numEeps - 1] < newimax)
+    //                 newimax = cIso[z][y][a].eeps[cIso[z][y][a].numEeps - 1];
+    //         }
+    //     }
+    // }
+    // neweep = newimax - newimin + 1;     // = the # of eep points that will be in the new isochrone
 
-    // For each isochrone, find the amount by which
-    // the min eep # for that isochrone is
-    // offset from the global minimum eep #
-    for (a = 0; a < 2; a++)
-    {
-        for (y = 0; y < 2; y++)
-        {
-            for (z = 0; z < 2; z++)
-            {
-                ioff[z][y][a] = newimin - cIso[z + iFeH][y + iY][a + iAge].eeps[0];
-            }
-        }
-    }
+    // // For each isochrone, find the amount by which
+    // // the min eep # for that isochrone is
+    // // offset from the global minimum eep #
+    // for (a = 0; a < 2; a++)
+    // {
+    //     for (y = 0; y < 2; y++)
+    //     {
+    //         for (z = 0; z < 2; z++)
+    //         {
+    //             ioff[z][y][a] = newimin - cIso[z + iFeH][y + iY][a + iAge].eeps[0];
+    //         }
+    //     }
+    // }
 
-    // Now for each entry in the new isochrone
-    // use the coefficients to calculate the mass
-    // and each color at that eep
-    for (m = 0; m < neweep; m++)
-    {
-        isochrone.mass[m] = 0.0;
-        for (auto f : filters)
-            isochrone.mag[m][f] = 0.0;
+    // // Now for each entry in the new isochrone
+    // // use the coefficients to calculate the mass
+    // // and each color at that eep
+    // for (m = 0; m < neweep; m++)
+    // {
+    //     isochrone.mass[m] = 0.0;
+    //     for (auto f : filters)
+    //         isochrone.mag[m][f] = 0.0;
 
-        for (a = 0; a < 2; a++)
-        {
-            for (y = 0; y < 2; y++)
-            {
-                for (z = 0; z < 2; z++)
-                {
-                    isochrone.mass[m] += b[a] * c[y] * d[z] * cIso[iFeH + z][iY + y][iAge + a].mass[m + ioff[z][y][a]];
-                    for (auto f : filters)
-                    {
-                        if (f < N_CHAB_FILTS)
-                        {
-                            isochrone.mag[m][f] += b[a] * c[y] * d[z] * cIso[iFeH + z][iY + y][iAge + a].mag[m + ioff[z][y][a]][f];
-                        }
-                    }
-                }
-            }
-        }
+    //     for (a = 0; a < 2; a++)
+    //     {
+    //         for (y = 0; y < 2; y++)
+    //         {
+    //             for (z = 0; z < 2; z++)
+    //             {
+    //                 isochrone.mass[m] += b[a] * c[y] * d[z] * cIso[iFeH + z][iY + y][iAge + a].mass[m + ioff[z][y][a]];
+    //                 for (auto f : filters)
+    //                 {
+    //                     if (f < N_CHAB_FILTS)
+    //                     {
+    //                         isochrone.mag[m][f] += b[a] * c[y] * d[z] * cIso[iFeH + z][iY + y][iAge + a].mag[m + ioff[z][y][a]][f];
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        isochrone.eep[m] = cIso[iFeH][iY][iAge].eeps[m + ioff[0][0][0]];
+    //     isochrone.eep[m] = cIso[iFeH][iY][iAge].eeps[m + ioff[0][0][0]];
 
-        // Sometimes the interpolation process can leave the
-        // mass entries out of order.  This swaps them so that
-        // the later mass interpolation can function properly
-        if (m > 0)
-        {
-            n = m;
-            while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
-            {
-                swapGlobalEntries (isochrone, filters, n);
-                n--;
-            }
-        }
-    }
+    //     // Sometimes the interpolation process can leave the
+    //     // mass entries out of order.  This swaps them so that
+    //     // the later mass interpolation can function properly
+    //     if (m > 0)
+    //     {
+    //         n = m;
+    //         while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
+    //         {
+    //             swapGlobalEntries (isochrone, filters, n);
+    //             n--;
+    //         }
+    //     }
+    // }
 
-    isochrone.nEntries = neweep;
-    isochrone.age = newAge;
-    isochrone.logAge = newLogAge;
-    isochrone.Y = newY;
-    isochrone.AgbTurnoffMass = isochrone.mass[neweep - 1];
+    // isochrone.nEntries = neweep;
+    // isochrone.age = newAge;
+    // isochrone.logAge = newLogAge;
+    // isochrone.Y = newY;
+    // isochrone.AgbTurnoffMass = isochrone.mass[neweep - 1];
 
-    return isochrone.AgbTurnoffMass;
+    return isochrone.agbTipMass();
 
 }
 
@@ -307,7 +282,6 @@ static void initIso (struct cIsochrone *newIso)
     newIso->age = 0.0;
     newIso->logAge = 0.0;
     newIso->FeH = 0.0;
-    newIso->Y = 0.0;
     newIso->AGBt = 0.0;
     newIso->numEeps = 0;
     for (i = 0; i < MAX_CHAB_ENTRIES; i++)

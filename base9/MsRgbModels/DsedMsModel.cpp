@@ -12,7 +12,6 @@
 #include "Star.hpp"
 
 #include "DsedMsModel.hpp"
-#include "binSearch.hpp"
 #include "LinearTransform.hpp"
 #include "Matrix.hpp"
 
@@ -76,7 +75,7 @@ static void calcCoeff (double a[], double b[], double x)
 }
 
 
-void DsedMsModel::loadModel (string path, MsFilter filterSet)
+void DsedMsModel::loadModel (string path, FilterSetName filterSet)
 {
 
     FILE *pDsed;                        // = NULL;
@@ -84,7 +83,7 @@ void DsedMsModel::loadModel (string path, MsFilter filterSet)
     char line[240];
     string tempFile;
 
-    if (filterSet != MsFilter::SDSS && filterSet != MsFilter::UBVRIJHK)
+    if (filterSet != FilterSetName::SDSS && filterSet != FilterSetName::UBVRIJHK)
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on DSED models.  Exiting..." << endl;
         exit (1);
@@ -165,9 +164,9 @@ void DsedMsModel::loadModel (string path, MsFilter filterSet)
     ageLimit.second = dLogAge[0][N_DSED_AGES - 1];
 
     //Load in JHK from the UBVRIJHK models
-    if (filterSet == MsFilter::SDSS)
+    if (filterSet == FilterSetName::SDSS)
     {
-        filterSet = MsFilter::UBVRIJHK;
+        filterSet = FilterSetName::UBVRIJHK;
 
         for (z = 0; z < N_DSED_Z; z++)
         {                               // foreach Dsed metallicity/isochrone file
@@ -213,12 +212,12 @@ void DsedMsModel::loadModel (string path, MsFilter filterSet)
 }
 
 
-string DsedMsModel::getFileName (string path, int z, int f, MsFilter filterSet)
+string DsedMsModel::getFileName (string path, int z, int f, FilterSetName filterSet)
 {
 
     const array<string, 9> fileNames = {{ "m25", "m20", "m15", "m10", "m05", "p00", "p02", "p03", "p05" }};
 
-    if (filterSet == MsFilter::SDSS)
+    if (filterSet == FilterSetName::SDSS)
         path += "sdss/feh";
     else
         path += "jc2mass/feh";
@@ -226,7 +225,7 @@ string DsedMsModel::getFileName (string path, int z, int f, MsFilter filterSet)
     path += fileNames[z];
     path += "afep0.";
 
-    if (filterSet == MsFilter::SDSS)
+    if (filterSet == FilterSetName::SDSS)
         path += "ugriz";
     else
         path += "jc2mass";
@@ -243,119 +242,119 @@ string DsedMsModel::getFileName (string path, int z, int f, MsFilter filterSet)
 double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double newFeH, double, double newLogAge)
 {
 
-    int newimax = 500, newimin = 0, ioff[2][2], neweep;
-    int z = 0, a = 0, m = 0, n = 0;
-    double newAge = exp10 (newLogAge) / 1e9;
-    double b[2], d[2];
+    // int newimax = 500, newimin = 0, ioff[2][2], neweep;
+    // int z = 0, a = 0, m = 0, n = 0;
+    // double newAge = exp10 (newLogAge) / 1e9;
+    // double b[2], d[2];
 
-    iAge = -1;
-    iFeH = -1;
+    // iAge = -1;
+    // iFeH = -1;
 
-    if (newLogAge < dLogAge[0][0])
-    {
-        //     log << ("\n Requested age (%.3f) too young. (gDsedMag.c)", newLogAge);
-        return 0.0;
-    }
+    // if (newLogAge < dLogAge[0][0])
+    // {
+    //     //     log << ("\n Requested age (%.3f) too young. (gDsedMag.c)", newLogAge);
+    //     return 0.0;
+    // }
 
-    if (newLogAge > dLogAge[N_DSED_Z - 1][N_DSED_AGES - 1])
-    {
-        //     log << ("\n Requested age (%.3f) too old. (gDsedMag.c)", newLogAge);
-        return 0.0;
-    }
+    // if (newLogAge > dLogAge[N_DSED_Z - 1][N_DSED_AGES - 1])
+    // {
+    //     //     log << ("\n Requested age (%.3f) too old. (gDsedMag.c)", newLogAge);
+    //     return 0.0;
+    // }
 
-    if (newFeH < dFeH[0])
-    {
-        //     log << ("\n Requested FeH (%.3f) too low. (gDsedMag.c)", newFeH);
-        return 0.0;
-    }
+    // if (newFeH < dFeH[0])
+    // {
+    //     //     log << ("\n Requested FeH (%.3f) too low. (gDsedMag.c)", newFeH);
+    //     return 0.0;
+    // }
 
-    if (newFeH > dFeH[N_DSED_Z - 1])
-    {
-        //     log << ("\n Requested FeH (%.3f) too high. (gDsedMag.c)", newFeH);
-        return 0.0;
-    }
+    // if (newFeH > dFeH[N_DSED_Z - 1])
+    // {
+    //     //     log << ("\n Requested FeH (%.3f) too high. (gDsedMag.c)", newFeH);
+    //     return 0.0;
+    // }
 
-    // Find the values for each parameter that we will be interpolating
-    // between and calculate the interpolation coefficients.
-    iFeH = binarySearch (dFeH, N_DSED_Z, newFeH);
-    iAge = binarySearch (dAge[iFeH], N_DSED_AGES, newAge);
+    // // Find the values for each parameter that we will be interpolating
+    // // between and calculate the interpolation coefficients.
+    // iFeH = binarySearch (dFeH, N_DSED_Z, newFeH);
+    // iAge = binarySearch (dAge[iFeH], N_DSED_AGES, newAge);
 
-    calcCoeff (&dFeH[iFeH], d, newFeH);
-    calcCoeff (&dAge[iFeH][iAge], b, newAge);
+    // calcCoeff (&dFeH[iFeH], d, newFeH);
+    // calcCoeff (&dAge[iFeH][iAge], b, newAge);
 
-    // Find the minimum and maximum eep values and set a global
-    // min and max that is the union of the min and max for each isochrone
-    for (a = iAge; a < iAge + 2; a++)
-    {
-        for (z = iFeH; z < iFeH + 2; z++)
-        {
-            if (dIso[z][a].eeps.at(0) > newimin)
-                newimin = dIso[z][a].eeps.at(0);
-            if (dIso[z][a].eeps.at(dIso[z][a].numEeps - 1) < newimax)
-                newimax = dIso[z][a].eeps.at(dIso[z][a].numEeps - 1);
-        }
-    }
+    // // Find the minimum and maximum eep values and set a global
+    // // min and max that is the union of the min and max for each isochrone
+    // for (a = iAge; a < iAge + 2; a++)
+    // {
+    //     for (z = iFeH; z < iFeH + 2; z++)
+    //     {
+    //         if (dIso[z][a].eeps.at(0) > newimin)
+    //             newimin = dIso[z][a].eeps.at(0);
+    //         if (dIso[z][a].eeps.at(dIso[z][a].numEeps - 1) < newimax)
+    //             newimax = dIso[z][a].eeps.at(dIso[z][a].numEeps - 1);
+    //     }
+    // }
 
-    neweep = newimax - newimin + 1;     // = the # of eep points that will be in the new isochrone
+    // neweep = newimax - newimin + 1;     // = the # of eep points that will be in the new isochrone
 
-    // For each isochrone, find the amount by which
-    // the min eep # for that isochrone is
-    // offset from the global minimum eep #
-    for (a = 0; a < 2; a++)
-    {
-        for (z = 0; z < 2; z++)
-        {
-            ioff[z][a] = newimin - dIso[z + iFeH][a + iAge].eeps.at(0);
-        }
-    }
+    // // For each isochrone, find the amount by which
+    // // the min eep # for that isochrone is
+    // // offset from the global minimum eep #
+    // for (a = 0; a < 2; a++)
+    // {
+    //     for (z = 0; z < 2; z++)
+    //     {
+    //         ioff[z][a] = newimin - dIso[z + iFeH][a + iAge].eeps.at(0);
+    //     }
+    // }
 
-    // Now for each entry in the new isochrone
-    // use the coefficients to calculate the mass
-    // and each color at that eep
-    for (m = 0; m < neweep; m++)
-    {
-        isochrone.mass[m] = 0.0;
-        for (auto f : filters)
-            if (f < N_DSED_FILTS)
-                isochrone.mag[m][f] = 0.0;
+    // // Now for each entry in the new isochrone
+    // // use the coefficients to calculate the mass
+    // // and each color at that eep
+    // for (m = 0; m < neweep; m++)
+    // {
+    //     isochrone.mass[m] = 0.0;
+    //     for (auto f : filters)
+    //         if (f < N_DSED_FILTS)
+    //             isochrone.mag[m][f] = 0.0;
 
-        for (a = 0; a < 2; a++)
-        {
-            for (z = 0; z < 2; z++)
-            {
-                isochrone.mass[m] += b[a] * d[z] * dIso[iFeH + z][iAge + a].mass.at(m + ioff[z][a]);
-                for (auto f : filters)
-                {
-                    if (f < N_DSED_FILTS)
-                    {
-                        isochrone.mag[m][f] += b[a] * d[z] * dIso[iFeH + z][iAge + a].mag[m + ioff[z][a]][f];
-                    }
-                }
-            }
-        }
+    //     for (a = 0; a < 2; a++)
+    //     {
+    //         for (z = 0; z < 2; z++)
+    //         {
+    //             isochrone.mass[m] += b[a] * d[z] * dIso[iFeH + z][iAge + a].mass.at(m + ioff[z][a]);
+    //             for (auto f : filters)
+    //             {
+    //                 if (f < N_DSED_FILTS)
+    //                 {
+    //                     isochrone.mag[m][f] += b[a] * d[z] * dIso[iFeH + z][iAge + a].mag[m + ioff[z][a]][f];
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        isochrone.eep[m] = dIso[iFeH][iAge].eeps.at(m + ioff[0][0]);
+    //     isochrone.eep[m] = dIso[iFeH][iAge].eeps.at(m + ioff[0][0]);
 
-        // Sometimes the interpolation process can leave the
-        // mass entries out of order.  This swaps them so that
-        // the later mass interpolation can function properly
-        if (m > 0)
-        {
-            n = m;
-            while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
-            {
-                swapGlobalEntries (isochrone, filters, n);
-                n--;
-            }
-        }
-    }
+    //     // Sometimes the interpolation process can leave the
+    //     // mass entries out of order.  This swaps them so that
+    //     // the later mass interpolation can function properly
+    //     if (m > 0)
+    //     {
+    //         n = m;
+    //         while (isochrone.mass[n] < isochrone.mass[n - 1] && n > 0)
+    //         {
+    //             swapGlobalEntries (isochrone, filters, n);
+    //             n--;
+    //         }
+    //     }
+    // }
 
-    //Transfer to globalIsochrone structure
-    isochrone.nEntries = neweep;
-    isochrone.logAge = newLogAge;
-    isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
+    // //Transfer to globalIsochrone structure
+    // isochrone.nEntries = neweep;
+    // isochrone.logAge = newLogAge;
+    // isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
 
-    return isochrone.AgbTurnoffMass;
+    return isochrone.agbTipMass();
 }
 
 // Calculates the precursor age for a given wd precursor mass
@@ -388,7 +387,7 @@ double DsedMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
         else
         {
 
-            thisIndexAge[0] = reverseBinarySearch (dAGBt[iFeH + f], N_DSED_AGES, zamsMass);     // Because masses are in reverse order
+//            thisIndexAge[0] = reverseBinarySearch (dAGBt[iFeH + f], N_DSED_AGES, zamsMass);     // Because masses are in reverse order
             thisIndexAge[1] = thisIndexAge[0] + 1;
 
             logAge[0] = dLogAge[iFeH + f][thisIndexAge[0]];

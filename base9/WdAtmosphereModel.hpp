@@ -50,7 +50,7 @@ class WdAtmosphereModel
   public:
     virtual ~WdAtmosphereModel() {}
 
-    virtual void loadModel (std::string path, MsFilter filterSet) = 0;
+    virtual void loadModel (std::string path, FilterSetName filterSet) = 0;
     virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
 
   protected:

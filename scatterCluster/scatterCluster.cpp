@@ -10,7 +10,7 @@
 
 #include "Model.hpp"
 #include "Settings.hpp"
-#include "MsFilterSet.hpp"
+#include "FilterSet.hpp"
 
 const int SCATTER_FILTS = 8;
 

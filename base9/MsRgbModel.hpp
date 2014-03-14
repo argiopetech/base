@@ -65,7 +65,7 @@ modified for different model sets.
 ****************************************************************************************/
     virtual double wdPrecLogAge(double, double) = 0;
 
-    virtual void loadModel(std::string, MsFilter) = 0;
+    virtual void loadModel(std::string, FilterSetName) = 0;
 
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }

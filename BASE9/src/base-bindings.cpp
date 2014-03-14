@@ -76,7 +76,7 @@ void initBase(std::string modelDir, int msFilter, int msModel, int wdModel, int 
 {
     evil::s.files.models = modelDir;
 
-    evil::s.mainSequence.filterSet = static_cast<MsFilter>(msFilter);
+    evil::s.mainSequence.filterSet = static_cast<FilterSetName>(msFilter);
     evil::s.mainSequence.msRgbModel = static_cast<MsModel>(msModel);
 
     evil::s.whiteDwarf.ifmr = ifmr;
@@ -133,7 +133,7 @@ void changeModels(int msFilter, int msModel, int wdModel, int ifmr)
 {
     if (isInitialized())
     {
-        evil::s.mainSequence.filterSet = static_cast<MsFilter>(msFilter);
+        evil::s.mainSequence.filterSet = static_cast<FilterSetName>(msFilter);
         evil::s.mainSequence.msRgbModel = static_cast<MsModel>(msModel);
 
         evil::s.whiteDwarf.ifmr = ifmr;

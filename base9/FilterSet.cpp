@@ -1,12 +1,12 @@
 #include <array>
 
 #include "constants.hpp"
-#include "MsFilterSet.hpp"
+#include "FilterSet.hpp"
 
 using std::array;
 
 UBVRIJHK::UBVRIJHK()
-    : MsFilterSet({"U", "B", "V", "R", "I", "J", "H", "K"})
+    : FilterSet({"U", "B", "V", "R", "I", "J", "H", "K"})
 {}
 
 array<double, FILTS> UBVRIJHK::calcAbsCoeffs() const
@@ -23,7 +23,7 @@ array<double, FILTS> UBVRIJHK::calcAbsCoeffs() const
 
 
 SDSS::SDSS()
-    : MsFilterSet({"u", "g", "r", "i", "z", "J", "H", "K"})
+    : FilterSet({"u", "g", "r", "i", "z", "J", "H", "K"})
 {}
 
 array<double, FILTS> SDSS::calcAbsCoeffs() const
@@ -40,7 +40,7 @@ array<double, FILTS> SDSS::calcAbsCoeffs() const
 
 
 ACS::ACS()
-    : MsFilterSet({"F435W","F475W","F550M","F555W","F606W","F625W","F775W","F814W"})
+    : FilterSet({"F435W","F475W","F550M","F555W","F606W","F625W","F775W","F814W"})
 {}
 
 array<double, FILTS> ACS::calcAbsCoeffs() const
@@ -57,7 +57,7 @@ array<double, FILTS> ACS::calcAbsCoeffs() const
 
 
 UVIS::UVIS()
-    : MsFilterSet({"UVf275w", "UVf336w", "UVf438w"})
+    : FilterSet({"UVf275w", "UVf336w", "UVf438w"})
 {}
 
 array<double, FILTS> UVIS::calcAbsCoeffs() const

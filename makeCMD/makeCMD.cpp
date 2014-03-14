@@ -14,7 +14,7 @@
 #include "structures.hpp"
 #include "Settings.hpp"
 #include "ifmr.hpp"
-#include "MsFilterSet.hpp"
+#include "FilterSet.hpp"
 
 using std::array;
 using std::string;

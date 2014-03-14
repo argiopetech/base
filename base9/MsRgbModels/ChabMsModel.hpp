@@ -20,7 +20,7 @@ class ChabMsModel : public MsRgbModel
 
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
     virtual double wdPrecLogAge(double, double);
-    virtual void loadModel(std::string, MsFilter);
+    virtual void loadModel(std::string, FilterSetName);
 
   protected:
     virtual int numFilts() const { return N_CHAB_FILTS; }

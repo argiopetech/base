@@ -30,7 +30,7 @@ using std::ifstream;
 
 const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
-static vector<string> getFileNames (string path, MsFilter filterSet)
+static vector<string> getFileNames (string path, FilterSetName filterSet)
 {
     const array<string, 8> fileNames = { "0", "0001", "0004", "001", "004", "008", "019", "030" };
     vector<string> files;
@@ -39,7 +39,7 @@ static vector<string> getFileNames (string path, MsFilter filterSet)
     {
         string tempFile = path;
 
-        if (filterSet == MsFilter::ACS)
+        if (filterSet == FilterSetName::ACS)
             tempFile += "gIsoACS/iso_acs_z";
         else
             tempFile += "gIsoStan/iso_stan_z";
@@ -51,6 +51,11 @@ static vector<string> getFileNames (string path, MsFilter filterSet)
     }
 
     return files;
+}
+
+bool GirardiMsModel::isSupported(FilterSetName filterSet)
+{
+    return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::ACS);
 }
 
 
@@ -83,11 +88,11 @@ static vector<string> getFileNames (string path, MsFilter filterSet)
  ** different filters.  The file names are different only in that the      **
  ** "stan" becomes "acs".                                                  **
  ***************************************************************************/
-void GirardiMsModel::loadModel (string path, MsFilter filterSet)
+void GirardiMsModel::loadModel (string path, FilterSetName filterSet)
 {
     ifstream fin;
 
-    if (!(filterSet == MsFilter::UBVRIJHK || filterSet == MsFilter::ACS))
+    if (! isSupported(filterSet))
     {
         cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Girardi models.  Exiting..." << endl;
         exit (1);
@@ -133,7 +138,7 @@ void GirardiMsModel::loadModel (string path, MsFilter filterSet)
                 array<double, FILTS> mags;
                 mags.fill(99.999);
 
-                if (filterSet == MsFilter::UBVRIJHK)
+                if (filterSet == FilterSetName::UBVRIJHK)
                 {                       // Girardi UBVRIJHK isocrhones
                     in >> logAge
                        >> tempMass
@@ -146,7 +151,7 @@ void GirardiMsModel::loadModel (string path, MsFilter filterSet)
 
                     // Ignore Flum
                 }
-                else if (filterSet == MsFilter::ACS)
+                else if (filterSet == FilterSetName::ACS)
                 {                       // Girardi hST/ACS/WF isochrones
                     in >> logAge
                        >> tempMass

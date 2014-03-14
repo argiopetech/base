@@ -10,9 +10,7 @@
 #include "Star.hpp"
 
 #include "LinearTransform.hpp"
-#include "binSearch.hpp"
 #include "YaleMsModel.hpp"
-#include "binSearch.hpp"
 
 using std::getline;
 using std::ifstream;
@@ -29,7 +27,7 @@ static double yyFeH[N_YY_Z], yyZ[N_YY_Z];
 static double yyLogAge[N_YY_Z][N_YY_AGES], yyAge[N_YY_Z][N_YY_AGES];
 static struct yyIsochrone yyIso[N_YY_Z][N_YY_AGES];
 static double yyAGBt[N_YY_Z][N_YY_AGES];
-static struct globalIso tempIso[2] {globalIso(MAX_YY_ENTRIES, N_YY_FILTS), globalIso(MAX_YY_ENTRIES, N_YY_FILTS)};
+// static struct globalIso tempIso[2] {globalIso(MAX_YY_ENTRIES, N_YY_FILTS), globalIso(MAX_YY_ENTRIES, N_YY_FILTS)};
 static double coeff[6][8];
 
 //Static funtions
@@ -40,193 +38,193 @@ static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorde
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS]);
 static double feh2z (double FeH);
 
-void YaleMsModel::loadModel (string path, MsFilter filterSet)
+void YaleMsModel::loadModel (string path, FilterSetName filterSet)
 {
-    ifstream fin;
-    int a, p;
-    string line;
-    int m = 0;
+    // ifstream fin;
+    // int a, p;
+    // string line;
+    // int m = 0;
 
-    string tempFile;
+    // string tempFile;
 
-    int meep, kipnm = 0;
-    double eep[MAX_YY_ENTRIES], xeep[MAX_YY_ENTRIES], tlkip = 0.0, blkip = 0.0, slope = 0.0;
-    double temar[MAX_YY_ENTRIES][N_YY_PARAMS], xxeep, xim;
-    double param[MAX_YY_ENTRIES][N_YY_PARAMS];
+    // int meep, kipnm = 0;
+    // double eep[MAX_YY_ENTRIES], xeep[MAX_YY_ENTRIES], tlkip = 0.0, blkip = 0.0, slope = 0.0;
+    // double temar[MAX_YY_ENTRIES][N_YY_PARAMS], xxeep, xim;
+    // double param[MAX_YY_ENTRIES][N_YY_PARAMS];
 
-    if (filterSet != MsFilter::UBVRIJHK)
-    {
-        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on YY models.  Exiting...";
-        exit (1);
-    }
+    // if (filterSet != FilterSetName::UBVRIJHK)
+    // {
+    //     cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on YY models.  Exiting...";
+    //     exit (1);
+    // }
 
-    for (int z = 0; z < N_YY_Z; z++)
-    {                           // foreach Dsed metallicity/isochrone file
-        yyFeH[z] = 0.0;
+    // for (int z = 0; z < N_YY_Z; z++)
+    // {                           // foreach Dsed metallicity/isochrone file
+    //     yyFeH[z] = 0.0;
 
-        for (int a = 0; a < N_YY_AGES; a++)
-        {                               // initialize age/boundary pointers
-            yyLogAge[z][a] = 0.0;
-            yyAge[z][a] = 0.0;
-            initIso (&(yyIso[z][a]));   // initialize array of model parameters
-        }
+    //     for (int a = 0; a < N_YY_AGES; a++)
+    //     {                               // initialize age/boundary pointers
+    //         yyLogAge[z][a] = 0.0;
+    //         yyAge[z][a] = 0.0;
+    //         initIso (&(yyIso[z][a]));   // initialize array of model parameters
+    //     }
 
-        tempFile = getFileName (path, z);
-        fin.open(tempFile);
+    //     tempFile = getFileName (path, z);
+    //     fin.open(tempFile);
 
-        if (!fin)
-        {
-            cerr << "\n file " << tempFile << " was not found - exiting" << endl;
-            exit (1);
-        }
+    //     if (!fin)
+    //     {
+    //         cerr << "\n file " << tempFile << " was not found - exiting" << endl;
+    //         exit (1);
+    //     }
 
-        // Read header line
-        fin.ignore(maxIgnore, '='); // Ignore the first variable name
-        fin >> yyZ[z];              // Grab the value
+    //     // Read header line
+    //     fin.ignore(maxIgnore, '='); // Ignore the first variable name
+    //     fin >> yyZ[z];              // Grab the value
 
-        fin.ignore(maxIgnore, '='); // Ignore the second variable name
-        fin >> yyFeH[z];            // Grab the value.
+    //     fin.ignore(maxIgnore, '='); // Ignore the second variable name
+    //     fin >> yyFeH[z];            // Grab the value.
 
-        fin.ignore(maxIgnore, '\n'); // Eat the rest of the line
+    //     fin.ignore(maxIgnore, '\n'); // Eat the rest of the line
 
-        for (int a = 0; a < N_YY_AGES; a++)
-        {
-            yyIso[z][a].FeH = yyFeH[z];
-            yyIso[z][a].z = yyZ[z];
-        }
+    //     for (int a = 0; a < N_YY_AGES; a++)
+    //     {
+    //         yyIso[z][a].FeH = yyFeH[z];
+    //         yyIso[z][a].z = yyZ[z];
+    //     }
 
-        a = -1;
-        while (!fin.eof()) // YY model for all ages
-        {
-            getline(fin, line);
+    //     a = -1;
+    //     while (!fin.eof()) // YY model for all ages
+    //     {
+    //         getline(fin, line);
 
-            if (!fin.eof())
-            {
-                std::stringstream strs(line);
+    //         if (!fin.eof())
+    //         {
+    //             std::stringstream strs(line);
                 
-                if (line[0] == 'a')
-                {
-                    a++;
+    //             if (line[0] == 'a')
+    //             {
+    //                 a++;
 
-                    strs.ignore(maxIgnore, '=');
-                    strs >> yyAge[z][a];
+    //                 strs.ignore(maxIgnore, '=');
+    //                 strs >> yyAge[z][a];
 
-                    yyIso[z][a].age = yyAge[z][a];
-                    yyIso[z][a].logAge = yyLogAge[z][a] = log10 (yyIso[z][a].age * 1e9);
+    //                 yyIso[z][a].age = yyAge[z][a];
+    //                 yyIso[z][a].logAge = yyLogAge[z][a] = log10 (yyIso[z][a].age * 1e9);
 
-                    strs >> yyIso[z][a].nEntries;
+    //                 strs >> yyIso[z][a].nEntries;
 
-                    m = 0;
-                }
-                else if (line.size() > 1 && line.at(1) != ' ')
-                {
-                    p = 0;
+    //                 m = 0;
+    //             }
+    //             else if (line.size() > 1 && line.at(1) != ' ')
+    //             {
+    //                 p = 0;
 
-                    while (!strs.eof())
-                    {
-                        strs >> param[m][p];
-                        p++;
-                    }
+    //                 while (!strs.eof())
+    //                 {
+    //                     strs >> param[m][p];
+    //                     p++;
+    //                 }
 
-                    // >>> YCK modified for the eep
-                    //--------------yi----------------
-                    if (m <= 0)
-                    {
-                        tlkip = param[m][1];
-                        blkip = param[m][2];
-                        eep[m] = 1.0;
-                    }
-                    else
-                    {
-                        eep[m] = eep[m - 1] + sqrt (100 * SQR (param[m][1] - tlkip) + SQR (param[m][2] - blkip));
-                        tlkip = param[m][1];
-                        blkip = param[m][2];
-                    }
-                    xeep[m] = param[m][1];
-                    if (yyIso[z][a].nEntries < MAX_YY_ENTRIES)
-                        kipnm = yyIso[z][a].nEntries;
-                    m++;
-                }
-                else if (line.size() == 1) //i.e., at the end of each age entry
-                {
-                    // >>> YCK modified for the eep
-                    slope = 3.0e-2;
-                    // to find the turnoff mass to utilize it as an anchor point
-                    if (yyIso[z][a].nEntries != kipnm)
-                    {
-                        eepset (eep, xeep, yyIso[z][a].nEntries, kipnm, &slope);
-                    }
+    //                 // >>> YCK modified for the eep
+    //                 //--------------yi----------------
+    //                 if (m <= 0)
+    //                 {
+    //                     tlkip = param[m][1];
+    //                     blkip = param[m][2];
+    //                     eep[m] = 1.0;
+    //                 }
+    //                 else
+    //                 {
+    //                     eep[m] = eep[m - 1] + sqrt (100 * SQR (param[m][1] - tlkip) + SQR (param[m][2] - blkip));
+    //                     tlkip = param[m][1];
+    //                     blkip = param[m][2];
+    //                 }
+    //                 xeep[m] = param[m][1];
+    //                 if (yyIso[z][a].nEntries < MAX_YY_ENTRIES)
+    //                     kipnm = yyIso[z][a].nEntries;
+    //                 m++;
+    //             }
+    //             else if (line.size() == 1) //i.e., at the end of each age entry
+    //             {
+    //                 // >>> YCK modified for the eep
+    //                 slope = 3.0e-2;
+    //                 // to find the turnoff mass to utilize it as an anchor point
+    //                 if (yyIso[z][a].nEntries != kipnm)
+    //                 {
+    //                     eepset (eep, xeep, yyIso[z][a].nEntries, kipnm, &slope);
+    //                 }
 
-                    for (int im = 0; im < yyIso[z][a].nEntries; im++)
-                    {
-                        xim = im * slope;
-                        xeep[im] = atan (xim) * (eep[yyIso[z][a].nEntries - 1] - eep[0]) / (atan (slope * (yyIso[z][a].nEntries - 1))) + eep[0];
-                    }
+    //                 for (int im = 0; im < yyIso[z][a].nEntries; im++)
+    //                 {
+    //                     xim = im * slope;
+    //                     xeep[im] = atan (xim) * (eep[yyIso[z][a].nEntries - 1] - eep[0]) / (atan (slope * (yyIso[z][a].nEntries - 1))) + eep[0];
+    //                 }
 
-                    for (int im = 0; im < yyIso[z][a].nEntries; im++)
-                    {
-                        xxeep = xeep[im];
-                        meep = binarySearch (eep, yyIso[z][a].nEntries, xxeep);
+    //                 for (int im = 0; im < yyIso[z][a].nEntries; im++)
+    //                 {
+    //                     xxeep = xeep[im];
+    //                     meep = binarySearch (eep, yyIso[z][a].nEntries, xxeep);
 
-                        if (meep >= (yyIso[z][a].nEntries - 2))
-                            meep = yyIso[z][a].nEntries - 2;
-                        if (meep <= 0)
-                            meep = 0;
-                        for (int ii = 0; ii < N_YY_PARAMS; ii++)
-                        {
-                            temar[im][ii] = POLLIN (eep[meep], param[meep][ii], eep[meep + 1], param[meep + 1][ii], xxeep);
-                        }
-                    }
+    //                     if (meep >= (yyIso[z][a].nEntries - 2))
+    //                         meep = yyIso[z][a].nEntries - 2;
+    //                     if (meep <= 0)
+    //                         meep = 0;
+    //                     for (int ii = 0; ii < N_YY_PARAMS; ii++)
+    //                     {
+    //                         temar[im][ii] = POLLIN (eep[meep], param[meep][ii], eep[meep + 1], param[meep + 1][ii], xxeep);
+    //                     }
+    //                 }
 
-                    // normalized
-                    for (int im = 0; im < yyIso[z][a].nEntries; im++)
-                    {
-                        for (int ii = 0; ii < N_YY_PARAMS; ii++)
-                        {
-                            param[im][ii] = temar[im][ii];
-                        }
-                    }
+    //                 // normalized
+    //                 for (int im = 0; im < yyIso[z][a].nEntries; im++)
+    //                 {
+    //                     for (int ii = 0; ii < N_YY_PARAMS; ii++)
+    //                     {
+    //                         param[im][ii] = temar[im][ii];
+    //                     }
+    //                 }
 
-                    convertColorsToMags (&(yyIso[z][a]), param);
+    //                 convertColorsToMags (&(yyIso[z][a]), param);
 
-                    yyAGBt[z][a] = yyIso[z][a].AgbTurnoffMass = yyIso[z][a].mass[yyIso[z][a].nEntries - 1];
-                }
-            }
-        }
+    //                 yyAGBt[z][a] = yyIso[z][a].AgbTurnoffMass = yyIso[z][a].mass[yyIso[z][a].nEntries - 1];
+    //             }
+    //         }
+    //     }
 
-        fin.close();
-    }
+    //     fin.close();
+    // }
 
-    /////////////////////////////////////////////////////////////////////
-    // Read in the coefficients needed to calculate the precurser ages //
-    /////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////
+    // // Read in the coefficients needed to calculate the precurser ages //
+    // /////////////////////////////////////////////////////////////////////
 
-    // Open coeff file for reading
-    tempFile = path + "YYiso/yyAGBtcoeff.dat";
+    // // Open coeff file for reading
+    // tempFile = path + "YYiso/yyAGBtcoeff.dat";
 
-    fin.open(tempFile);
+    // fin.open(tempFile);
 
-    //fscanf(pModelList,"%s",tempFile);
-    if (!fin)
-    {
-        cerr << "\n file " << tempFile << " was not found - exiting" << endl;
-        exit (1);
-    }
+    // //fscanf(pModelList,"%s",tempFile);
+    // if (!fin)
+    // {
+    //     cerr << "\n file " << tempFile << " was not found - exiting" << endl;
+    //     exit (1);
+    // }
 
-    // Read in the coefficients needed to calculate the precurser ages
-    for (int i = 0; i < 6; i++)
-    {
-        for (int j = 0; j < 8; j++)
-        {
-            fin >> coeff[i][j];
-        }
-    }
+    // // Read in the coefficients needed to calculate the precurser ages
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     for (int j = 0; j < 8; j++)
+    //     {
+    //         fin >> coeff[i][j];
+    //     }
+    // }
 
-    //Set the min and max age in this model set (for use in densities.c)
-    ageLimit.first = yyLogAge[0][0];
-    ageLimit.second = yyLogAge[0][N_YY_AGES - 1];
+    // //Set the min and max age in this model set (for use in densities.c)
+    // ageLimit.first = yyLogAge[0][0];
+    // ageLimit.second = yyLogAge[0][N_YY_AGES - 1];
 
-    fin.close();
+    // fin.close();
     return;
 
 }
@@ -241,221 +239,221 @@ void YaleMsModel::loadModel (string path, MsFilter filterSet)
 double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, double, double newLogAge)
 {
 
-    double newAge = exp10 (newLogAge) / 1e9;
-    double newZ;
+//     double newAge = exp10 (newLogAge) / 1e9;
+//     double newZ;
 
-    newZ = feh2z (newFeH);
+//     newZ = feh2z (newFeH);
 
-    iAge = -1;
-    iZ = -1;
+//     iAge = -1;
+//     iZ = -1;
 
-    if ((newAge < yyAge[0][0])
-     || (newAge > yyAge[N_YY_Z - 1][N_YY_AGES - 1])
-     || (newZ < yyZ[0])
-     || (newZ > yyZ[N_YY_Z - 1]))
-    {
-        //     log << ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
-        return 0.0;
-    }
+//     if ((newAge < yyAge[0][0])
+//      || (newAge > yyAge[N_YY_Z - 1][N_YY_AGES - 1])
+//      || (newZ < yyZ[0])
+//      || (newZ > yyZ[N_YY_Z - 1]))
+//     {
+//         //     log << ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
+//         return 0.0;
+//     }
 
 
-    // Find the values for each parameter that we will be interpolating
-    // between and calculate the interpolation coefficients.
-    iZ = binarySearch (yyZ, N_YY_Z, newZ);
-    iAge = binarySearch (yyAge[iZ], N_YY_AGES, newAge);
+//     // Find the values for each parameter that we will be interpolating
+//     // between and calculate the interpolation coefficients.
+//     iZ = binarySearch (yyZ, N_YY_Z, newZ);
+//     iAge = binarySearch (yyAge[iZ], N_YY_AGES, newAge);
 
-    iZ--;
-    if (iZ >= N_YY_Z - 4)
-        iZ = N_YY_Z - 4;
-    if (iZ <= 0)
-        iZ = 0;
-//    newY = dydz*(newZ-zp)+yp;
+//     iZ--;
+//     if (iZ >= N_YY_Z - 4)
+//         iZ = N_YY_Z - 4;
+//     if (iZ <= 0)
+//         iZ = 0;
+// //    newY = dydz*(newZ-zp)+yp;
 
-    //Will eventually interpolate in age between these two isochrones
-    for (int i = 0; i < 2; i++)
-    {
-        for (int m = 0; m < yyIso[iZ + 1][i + iAge].nEntries; m++)
-        {
-            tempIso[i].mass[m] = CUBEINT (log (yyZ[iZ]), yyIso[iZ][i + iAge].mass[m], log (yyZ[iZ + 1]), yyIso[iZ + 1][i + iAge].mass[m], log (yyZ[iZ + 2]), yyIso[iZ + 2][i + iAge].mass[m], log (yyZ[iZ + 3]), yyIso[iZ + 3][i + iAge].mass[m], log (newZ));
+//     //Will eventually interpolate in age between these two isochrones
+//     for (int i = 0; i < 2; i++)
+//     {
+//         for (int m = 0; m < yyIso[iZ + 1][i + iAge].nEntries; m++)
+//         {
+//             tempIso[i].mass[m] = CUBEINT (log (yyZ[iZ]), yyIso[iZ][i + iAge].mass[m], log (yyZ[iZ + 1]), yyIso[iZ + 1][i + iAge].mass[m], log (yyZ[iZ + 2]), yyIso[iZ + 2][i + iAge].mass[m], log (yyZ[iZ + 3]), yyIso[iZ + 3][i + iAge].mass[m], log (newZ));
 
-            for (int p = 0; p < N_YY_FILTS; p++)
-            {
-                tempIso[i].mag[m][p] = CUBEINT (log (yyZ[iZ]), yyIso[iZ][i + iAge].mag[m][p], log (yyZ[iZ + 1]), yyIso[iZ + 1][i + iAge].mag[m][p], log (yyZ[iZ + 2]), yyIso[iZ + 2][i + iAge].mag[m][p], log (yyZ[iZ + 3]), yyIso[iZ + 3][i + iAge].mag[m][p], log (newZ));
-            }
-        }
+//             for (int p = 0; p < N_YY_FILTS; p++)
+//             {
+//                 tempIso[i].mag[m][p] = CUBEINT (log (yyZ[iZ]), yyIso[iZ][i + iAge].mag[m][p], log (yyZ[iZ + 1]), yyIso[iZ + 1][i + iAge].mag[m][p], log (yyZ[iZ + 2]), yyIso[iZ + 2][i + iAge].mag[m][p], log (yyZ[iZ + 3]), yyIso[iZ + 3][i + iAge].mag[m][p], log (newZ));
+//             }
+//         }
 
-        tempIso[i].nEntries = yyIso[iZ + 1][iAge + i].nEntries;
-        tempIso[i].age = yyIso[iZ][iAge + i].age;
-        tempIso[i].logAge = yyIso[iZ][iAge + i].logAge;
-    }
+//         tempIso[i].nEntries = yyIso[iZ + 1][iAge + i].nEntries;
+//         tempIso[i].age = yyIso[iZ][iAge + i].age;
+//         tempIso[i].logAge = yyIso[iZ][iAge + i].logAge;
+//     }
 
-    //SD -- Isochrones for the lower ages have fewer entries (~35 instead of 140)
-    //If this age is right on the border, just use the two higher age entries
-    //that have all 140 entries (and extrapolate, technically)
-    int iYYm = tempIso[0].nEntries; //yyIso[iZ][iAge+1].nEntries;
-    if (yyIso[iZ][iAge].nEntries < iYYm)
-        iAge++;
+//     //SD -- Isochrones for the lower ages have fewer entries (~35 instead of 140)
+//     //If this age is right on the border, just use the two higher age entries
+//     //that have all 140 entries (and extrapolate, technically)
+//     int iYYm = tempIso[0].nEntries; //yyIso[iZ][iAge+1].nEntries;
+//     if (yyIso[iZ][iAge].nEntries < iYYm)
+//         iAge++;
 
-    for (int m = 0; m < iYYm; m++)
-    {
-        isochrone.mass[m] = POLLIN (tempIso[0].age, tempIso[0].mass[m], tempIso[1].age, tempIso[1].mass[m], newAge);
+//     for (int m = 0; m < iYYm; m++)
+//     {
+//         isochrone.mass[m] = POLLIN (tempIso[0].age, tempIso[0].mass[m], tempIso[1].age, tempIso[1].mass[m], newAge);
 
-        for (int p = 0; p < N_YY_FILTS; p++)
-        {
-            isochrone.mag[m][p] = POLLIN (tempIso[0].age, tempIso[0].mag[m][p], tempIso[1].age, tempIso[1].mag[m][p], newAge);
-        }
-    }
+//         for (int p = 0; p < N_YY_FILTS; p++)
+//         {
+//             isochrone.mag[m][p] = POLLIN (tempIso[0].age, tempIso[0].mag[m][p], tempIso[1].age, tempIso[1].mag[m][p], newAge);
+//         }
+//     }
 
-    isochrone.nEntries = iYYm;
+//     isochrone.nEntries = iYYm;
 
-    isochrone.age = newAge;
-    isochrone.logAge = log10 (newAge * 1e9);
-    isochrone.z = newZ;
-    isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
+//     isochrone.age = newAge;
+//     isochrone.logAge = log10 (newAge * 1e9);
+//     isochrone.z = newZ;
+//     isochrone.AgbTurnoffMass = isochrone.mass[isochrone.nEntries - 1];
 
-    assert(is_sorted(isochrone.mass.begin(), isochrone.mass.begin() + isochrone.nEntries));
+//     assert(is_sorted(isochrone.mass.begin(), isochrone.mass.begin() + isochrone.nEntries));
 
-    return isochrone.AgbTurnoffMass;
+    return isochrone.agbTipMass();
 }
 
 
 static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS])
 {
 
-    int m, p;
+    // int m, p;
 
-    for (m = 0; m < iso->nEntries; m++)
-    {
-        iso->mass[m] = param[m][0];     // Mass
-        iso->mag[m][2] = param[m][4];   // V = Mv
-        iso->mag[m][1] = param[m][6] + iso->mag[m][2];  // B = (B-V) + V
-        iso->mag[m][0] = param[m][5] + iso->mag[m][1];  // U = (U-B) + B
-        for (p = 7; p < 14; p++)
-        {                               // R = V - (V-R), etc
-            iso->mag[m][p - 4] = iso->mag[m][2] - param[m][p];
-        }
-    }
-    iso->AgbTurnoffMass = iso->mass[iso->nEntries - 1];
+    // for (m = 0; m < iso->nEntries; m++)
+    // {
+    //     iso->mass[m] = param[m][0];     // Mass
+    //     iso->mag[m][2] = param[m][4];   // V = Mv
+    //     iso->mag[m][1] = param[m][6] + iso->mag[m][2];  // B = (B-V) + V
+    //     iso->mag[m][0] = param[m][5] + iso->mag[m][1];  // U = (U-B) + B
+    //     for (p = 7; p < 14; p++)
+    //     {                               // R = V - (V-R), etc
+    //         iso->mag[m][p - 4] = iso->mag[m][2] - param[m][p];
+    //     }
+    // }
+    // iso->AgbTurnoffMass = iso->mass[iso->nEntries - 1];
 }
 
 static void eepset (double x[], double y[], int nstep, int igrd, double *slope)
 {
-    double xp = 0.0, ybar = 0.0, ymax = 0.0;
-    double tomass, /*totemp, */ anchor, xhi, xlo, eeptag;
-    int ikip = 1, i = 0;
-    int rv = -1;
+    // double xp = 0.0, ybar = 0.0, ymax = 0.0;
+    // double tomass, /*totemp, */ anchor, xhi, xlo, eeptag;
+    // int ikip = 1, i = 0;
+    // int rv = -1;
 
-    //To find the turnoff mass
-    for (i = 0; i < nstep; i++)
-    {
-        if (y[i] >= ymax)
-        {
-            ikip = i;
-            ymax = y[i];
-        }
-    }
+    // //To find the turnoff mass
+    // for (i = 0; i < nstep; i++)
+    // {
+    //     if (y[i] >= ymax)
+    //     {
+    //         ikip = i;
+    //         ymax = y[i];
+    //     }
+    // }
 
-    if (ToffM (&(x[ikip - 1]), &(y[ikip - 1]), &xp, &ybar, 0))
-    {
-        xp = x[ikip];
-    }
-    else
-    {
-        rv = 0;
-        if (xp < x[ikip])
-        {
-            rv = ToffM (&(x[ikip - 2]), &(y[ikip - 2]), &xp, &ybar, 1);
-        }
-        if (rv)
-        {
-            xp = x[ikip];
-        }
-        else
-        {
-            if (xp < x[ikip] && xp > x[ikip + 1])
-                cerr << "possibly incorrect" << endl;
-        }
-    }
+    // if (ToffM (&(x[ikip - 1]), &(y[ikip - 1]), &xp, &ybar, 0))
+    // {
+    //     xp = x[ikip];
+    // }
+    // else
+    // {
+    //     rv = 0;
+    //     if (xp < x[ikip])
+    //     {
+    //         rv = ToffM (&(x[ikip - 2]), &(y[ikip - 2]), &xp, &ybar, 1);
+    //     }
+    //     if (rv)
+    //     {
+    //         xp = x[ikip];
+    //     }
+    //     else
+    //     {
+    //         if (xp < x[ikip] && xp > x[ikip + 1])
+    //             cerr << "possibly incorrect" << endl;
+    //     }
+    // }
 
-    tomass = xp;
+    // tomass = xp;
 
-    // Got the turnoff mass
-    // To find the slope
-    anchor = (tomass - x[0]) / (x[nstep - 1] - x[0]);
-    xhi = 5.0;
-    xlo = 0.005;
-    (*slope) = 0.5 * (xhi + xlo);
+    // // Got the turnoff mass
+    // // To find the slope
+    // anchor = (tomass - x[0]) / (x[nstep - 1] - x[0]);
+    // xhi = 5.0;
+    // xlo = 0.005;
+    // (*slope) = 0.5 * (xhi + xlo);
 
-    while (1)
-    {
-        eeptag = atan ((*slope) * (igrd - 1)) / atan ((*slope) * (nstep - 1));
-        if (fabs (anchor - eeptag) <= 0.5e-7)
-            break;
-        if (eeptag >= anchor)
-            xhi = (*slope);
-        else
-            xlo = (*slope);
-        (*slope) = 0.5 * (xhi + xlo);
-        if (fabs ((xhi - xlo) / (*slope)) <= 0.5e-12)
-            break;
-    }
+    // while (1)
+    // {
+    //     eeptag = atan ((*slope) * (igrd - 1)) / atan ((*slope) * (nstep - 1));
+    //     if (fabs (anchor - eeptag) <= 0.5e-7)
+    //         break;
+    //     if (eeptag >= anchor)
+    //         xhi = (*slope);
+    //     else
+    //         xlo = (*slope);
+    //     (*slope) = 0.5 * (xhi + xlo);
+    //     if (fabs ((xhi - xlo) / (*slope)) <= 0.5e-12)
+    //         break;
+    // }
 
-    // This is never read, so we're getting rid of it. Probably not a good thing.
-    // eeptag = atan((*slope)*(igrd-1))/atan((*slope)*(nstep-1));
+    // // This is never read, so we're getting rid of it. Probably not a good thing.
+    // // eeptag = atan((*slope)*(igrd-1))/atan((*slope)*(nstep-1));
 
-    return;
+    // return;
 }
 
 //SD not to self, makesure iorder is fed in as one less than in Fortran code
 static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorder)
 {
-    int n = 4, k, l, m;
-    double a, b, c, s, xm, xbar;
+    // int n = 4, k, l, m;
+    // double a, b, c, s, xm, xbar;
 
-    vector<double> y(n);
+    // vector<double> y(n);
 
-    for (k = 0; k < n; k++)
-        y.at(k) = yy[k];
+    // for (k = 0; k < n; k++)
+    //     y.at(k) = yy[k];
 
-    for (k = 0; k < n - 1; k++)
-    {
-        for (l = 0; l < n - k - 1; l++)
-        {
-            y.at(l) = (y.at(l + 1) - y.at(l)) / (x[l + k + 1] - x[l]);
-        }
-    }
+    // for (k = 0; k < n - 1; k++)
+    // {
+    //     for (l = 0; l < n - k - 1; l++)
+    //     {
+    //         y.at(l) = (y.at(l + 1) - y.at(l)) / (x[l + k + 1] - x[l]);
+    //     }
+    // }
 
-    a = 3.0 * y.at(0);
-    b = -2.0 * y.at(0) * (x[3] + x[2] + x[1]) + 2.0 * y.at(1);
-    c = y.at(0) * (x[2] * x[3] + x[1] * x[3] + x[1] * x[2]) - y.at(1) * (x[3] + x[2]) + y.at(2);
-    s = sqrt (b * b - 4.0 * a * c);
+    // a = 3.0 * y.at(0);
+    // b = -2.0 * y.at(0) * (x[3] + x[2] + x[1]) + 2.0 * y.at(1);
+    // c = y.at(0) * (x[2] * x[3] + x[1] * x[3] + x[1] * x[2]) - y.at(1) * (x[3] + x[2]) + y.at(2);
+    // s = sqrt (b * b - 4.0 * a * c);
 
-    (*xp) = (-b + s) / (2.0 * a);
-    xm = (-b - s) / (2.0 * a);
+    // (*xp) = (-b + s) / (2.0 * a);
+    // xm = (-b - s) / (2.0 * a);
 
-    if ((*xp) >= x[iorder] && (*xp) <= x[2])
-        xbar = (*xp);
-    else if (xm >= x[iorder] && xm <= x[2])
-        xbar = xm;
-    else
-    {
-        if (iorder >= 1)
-            return 1;
-        else
-        {
-            cerr << "Failed to find the turnoff mass (xp=" << *xp << ", xm=" << xm << ").  Exiting." << endl;
-            exit (1);
-        }
-    }
+    // if ((*xp) >= x[iorder] && (*xp) <= x[2])
+    //     xbar = (*xp);
+    // else if (xm >= x[iorder] && xm <= x[2])
+    //     xbar = xm;
+    // else
+    // {
+    //     if (iorder >= 1)
+    //         return 1;
+    //     else
+    //     {
+    //         cerr << "Failed to find the turnoff mass (xp=" << *xp << ", xm=" << xm << ").  Exiting." << endl;
+    //         exit (1);
+    //     }
+    // }
 
-    (*ybar) = y.at(0);
+    // (*ybar) = y.at(0);
 
-    for (m = 1; m < n; m++)
-    {
-        (*ybar) = (*ybar) * (xbar - x[m]) + y.at(m);
-    }
+    // for (m = 1; m < n; m++)
+    // {
+    //     (*ybar) = (*ybar) * (xbar - x[m]) + y.at(m);
+    // }
 
-    (*xp) = xbar;
+    // (*xp) = xbar;
 
     return 0;
 }
@@ -463,19 +461,19 @@ static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorde
 static void initIso (struct yyIsochrone *newIso)
 {
 
-    int i, j;
+    // int i, j;
 
-    newIso->FeH = 0.0;
-    newIso->age = 0.0;
-    newIso->logAge = 0.0;
-    newIso->z = 0.0;
-    newIso->nEntries = 0;
-    for (i = 0; i < MAX_YY_ENTRIES; i++)
-    {
-        newIso->mass[i] = 0.0;
-        for (j = 0; j < N_YY_FILTS; j++)
-            newIso->mag[i][j] = 0.0;
-    }
+    // newIso->FeH = 0.0;
+    // newIso->age = 0.0;
+    // newIso->logAge = 0.0;
+    // newIso->z = 0.0;
+    // newIso->nEntries = 0;
+    // for (i = 0; i < MAX_YY_ENTRIES; i++)
+    // {
+    //     newIso->mass[i] = 0.0;
+    //     for (j = 0; j < N_YY_FILTS; j++)
+    //         newIso->mag[i][j] = 0.0;
+    // }
 }
 
 static string getFileName (string path, int z)
@@ -525,22 +523,22 @@ higher mass and younger AgbTurnoffMass star that was the WD precursor.
 *************************************************************************************/
 {
 
-    int i, j;
-    double maCoeff[6], wdPrecLogAge;
+    // int i, j;
+    // double maCoeff[6], wdPrecLogAge;
 
-    if (zamsMass < 1.0)
-        zamsMass = 1.0;
-    else if (zamsMass > 8.0)
-        zamsMass = 8.0;
-    wdPrecLogAge = 0.0;
-    for (i = 0; i < 6; i++)
-    {
-        maCoeff[i] = 0.0;
-        for (j = 0; j < 8; j++)
-            maCoeff[i] += coeff[i][j] * pow (thisFeH, j);
-        wdPrecLogAge += maCoeff[i] * pow (zamsMass, i);
-    }
+    // if (zamsMass < 1.0)
+    //     zamsMass = 1.0;
+    // else if (zamsMass > 8.0)
+    //     zamsMass = 8.0;
+    // wdPrecLogAge = 0.0;
+    // for (i = 0; i < 6; i++)
+    // {
+    //     maCoeff[i] = 0.0;
+    //     for (j = 0; j < 8; j++)
+    //         maCoeff[i] += coeff[i][j] * pow (thisFeH, j);
+    //     wdPrecLogAge += maCoeff[i] * pow (zamsMass, i);
+    // }
 
-    return wdPrecLogAge;
+    // return wdPrecLogAge;
 
 }

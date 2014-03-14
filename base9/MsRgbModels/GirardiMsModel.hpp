@@ -17,10 +17,14 @@ class GirardiMsModel : public MsRgbModel
     GirardiMsModel() {;}
     virtual ~GirardiMsModel() {;}
 
+    virtual void loadModel(std::string, FilterSetName);
+
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
-    Isochrone deriveIsochrone(const std::vector<int>& filters, double newFeH, double, double newAge) const;
     virtual double wdPrecLogAge(double, double);
-    virtual void loadModel(std::string, MsFilter);
+
+    Isochrone deriveIsochrone(const std::vector<int>& filters, double newFeH, double, double newAge) const;
+
+    bool isSupported(FilterSetName);
 
   protected:
     virtual int numFilts() const { return N_GIR_FILTS; }
