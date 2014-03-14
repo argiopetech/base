@@ -78,7 +78,7 @@ void RenedoWdModel::loadModel (string path)
 
             if (!pCoolingModels.eof() && newAge >= 0.0)
             {
-                wdCurves.back().carbonCurves.back().records.emplace_back(log10(newRadius * R_sun), log10(1e6 + newAge), newTeff);
+                wdCurves.back().carbonCurves.back().records.emplace_back(log10(newRadius * R_sun), log10(1e6 * newAge), newTeff);
             }
         }
     }
