@@ -272,6 +272,13 @@ double ChabMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
 
 }
 
+
+Isochrone ChabMsModel::deriveIsochrone (const vector<int> &, double newFeH, double, double newAge) const
+{
+    return {};
+}
+
+
 double ChabMsModel::wdPrecLogAge (double, double)
 {
     return 0.0;

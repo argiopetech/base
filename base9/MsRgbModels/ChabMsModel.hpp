@@ -22,6 +22,8 @@ class ChabMsModel : public MsRgbModel
     virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, FilterSetName);
 
+    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
+
     virtual bool isSupported(FilterSetName);
 
   protected:

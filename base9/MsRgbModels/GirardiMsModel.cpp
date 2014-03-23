@@ -166,8 +166,6 @@ void GirardiMsModel::loadModel (string path, FilterSetName filterSet)
                     // Ignore the remaining two filters and Flum
                 }
 
-                // As long as we didn't run out of file somewhere in the middle, this doesn't trigger.
-                // Honestly, I think it should only happen if we have a corrupt file.
                 if (!fin.eof())
                 {
                     // Girardi doesn't have EEPs, so we'll pretend with 0
@@ -215,7 +213,7 @@ double GirardiMsModel::deriveAgbTipMass (const vector<int> &filters, double newF
 }
 
 
-Isochrone GirardiMsModel::deriveIsochrone(const std::vector<int>& filters, double newFeH, double, double newAge) const
+Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double newFeH, double, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
@@ -252,7 +250,7 @@ Isochrone GirardiMsModel::deriveIsochrone(const std::vector<int>& filters, doubl
     assert(iAge >= 0);
     assert(fehIter->isochrones.size() > iAge);
     assert(fehIter->isochrones.at(iAge).logAge     < newAge);
-    assert(fehIter->isochrones.at(iAge + 1).logAge > newAge);
+    assert(fehIter->isochrones.at(iAge + 1).logAge >= newAge);
 
     vector<Isochrone> interpIso;
 

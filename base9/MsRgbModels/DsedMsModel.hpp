@@ -21,13 +21,12 @@ class DsedMsModel : public MsRgbModel
     virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, FilterSetName);
 
+    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
+
     virtual bool isSupported(FilterSetName);
 
   protected:
     virtual int numFilts() const { return N_DSED_FILTS; }
-
-  private:
-    std::string getFileName (std::string, int, int, FilterSetName);
 };
 
 #endif

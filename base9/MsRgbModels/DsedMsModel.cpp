@@ -75,167 +75,179 @@ static void calcCoeff (double a[], double b[], double x)
 }
 
 
+static vector<string> getFileName (string path, int z, int f, FilterSetName filterSet)
+{
+    // const array<string, 9> fileNames = { "m25", "m20", "m15", "m10", "m05", "p00", "p02", "p03", "p05" };
+    // { "fem2", "fep0", "fep2", "fep4", "fep6", "fep8" };
+    // vector<string> files;
+
+    // for (auto file : fileNames)
+    // {
+    //     string tempFile = path;
+
+    //     if (filterSet == FilterSetName::SDSS)
+    //         path += "sdss/feh";
+    //     else if (filterSet == FilterSetName::UBVRIJHK)
+    //         path += "UBVRIJHKsKp/feh";
+    //     else if (filterSet == FilterSetName::UVIS)
+    //         path += "UVIS";
+
+    //     path += file;
+    //     path += "afep0.";
+
+    //     if (filterSet == FilterSetName::SDSS)
+    //         path += "ugriz";
+    //     else if (filterSet == FilterSetName::UBVRIJHK)
+    //         path += "UBVRIJHKsKp";
+    //     else if (filterSet == FilterSetName::UVIS)
+    //         path += "UVIS"
+
+    //     files.push_back(tempFile + ".txt");
+    //     files.push_back(tempFile + "_2.txt");
+    // }
+
+    // return path;
+}
+
+
 bool DsedMsModel::isSupported(FilterSetName filterSet)
 {
-    return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS);
+    return ( filterSet == FilterSetName::UBVRIJHK
+          || filterSet == FilterSetName::SDSS
+          || filterSet == FilterSetName::UVIS);
 }
 
 
 void DsedMsModel::loadModel (string path, FilterSetName filterSet)
 {
+    // ifstream fin;
 
-    FILE *pDsed;                        // = NULL;
-    int z, a, i, f;
-    char line[240];
-    string tempFile;
+    // assert(isSupported(filterSet));
 
-    assert(isSupported(filterSet));
+    // for (auto file : getFileNames(path, filterSet))
+    // {
 
-    for (z = 0; z < N_DSED_Z; z++)
-    {                           // foreach Dsed metallicity/isochrone file
-        dFeH[z] = 0.0;
+    // for (z = 0; z < N_DSED_Z; z++)
+    // {                           // foreach Dsed metallicity/isochrone file
+    //     dFeH[z] = 0.0;
 
-        for (a = 0; a < N_DSED_AGES; a++)
-        {                               // initialize age/boundary pointers
-            dLogAge[z][a] = 0.0;
-            dAge[z][a] = 0.0;
-        }
-        a = -1;                 // a = [0,18], dLogAge contains the 52 ages
-        i = 0;
+    //     for (a = 0; a < N_DSED_AGES; a++)
+    //     {                               // initialize age/boundary pointers
+    //         dLogAge[z][a] = 0.0;
+    //         dAge[z][a] = 0.0;
+    //     }
+    //     a = -1;                 // a = [0,18], dLogAge contains the 52 ages
+    //     i = 0;
 
-        for (f = 0; f < 2; f++)
-        {                               // Each metallicity has 2 files, 0.25-1 Gyr and 1-15 Gyr
-            tempFile = getFileName (path, z, f, filterSet);        // work on one Dsed model at a time
-            if ((pDsed = fopen (tempFile.c_str(), "r")) == NULL)
-            {                           // open file
-                cerr << "\n\n file " << tempFile << " was not found - exiting" << endl;
-                exit (1);
-            }
-            while (fgets (line, 240, pDsed) != NULL)
-            {                           // load each Z=# Dsed model for all ages
-                if (line[1] == 'M')
-                {
-                    if (f == 0)
-                    {
-                        fgets (line, 240, pDsed);
-                        sscanf (line, "%*s %*f %*f %*f %*f %lf", &dFeH[z]);
-                    }
-                }
-                else if (line[1] == 'A')
-                {
-                    a++;
-                    // Skip the first entry of the second file, since it
-                    // duplicates the last entry of the first file
-                    if (a == 16)
-                    {
-                        while (line[0] != '\n')
-                            fgets (line, 240, pDsed);
-                        fgets (line, 240, pDsed);
-                        fgets (line, 240, pDsed);
-                    }
-                    sscanf (line, "#AGE= %lf EEPS= %d", &(dIso[z][a].age), &(dIso[z][a].numEeps));
-                    dLogAge[z][a] = dIso[z][a].logAge = log10 (dIso[z][a].age * (1e9));
-                    dAge[z][a] = dIso[z][a].age;
-                    dIso[z][a].FeH = dFeH[z];
-                    i = 0;
-                }
-                else if (line[0] != '#' && line[0] != '\n')
-                {
-                    sscanf (line, "%d %lf %*f %*f %*f %lf %lf %lf %lf %lf %lf %lf %lf", &dIso[z][a].eeps.at(i), &dIso[z][a].mass.at(i), &dIso[z][a].mag[i][0], &dIso[z][a].mag[i][1], &dIso[z][a].mag[i][2], &dIso[z][a].mag[i][3], &dIso[z][a].mag[i][4], &dIso[z][a].mag[i][5], &dIso[z][a].mag[i][6], &dIso[z][a].mag[i][7]);
+    //     for (f = 0; f < 2; f++)
+    //     {                               // Each metallicity has 2 files, 0.25-1 Gyr and 1-15 Gyr
+    //         tempFile = getFileName (path, z, f, filterSet);        // work on one Dsed model at a time
+    //         if ((pDsed = fopen (tempFile.c_str(), "r")) == NULL)
+    //         {                           // open file
+    //             cerr << "\n\n file " << tempFile << " was not found - exiting" << endl;
+    //             exit (1);
+    //         }
+    //         while (fgets (line, 240, pDsed) != NULL)
+    //         {                           // load each Z=# Dsed model for all ages
+    //             if (line[1] == 'M')
+    //             {
+    //                 if (f == 0)
+    //                 {
+    //                     fgets (line, 240, pDsed);
+    //                     sscanf (line, "%*s %*f %*f %*f %*f %lf", &dFeH[z]);
+    //                 }
+    //             }
+    //             else if (line[1] == 'A')
+    //             {
+    //                 a++;
+    //                 // Skip the first entry of the second file, since it
+    //                 // duplicates the last entry of the first file
+    //                 if (a == 16)
+    //                 {
+    //                     while (line[0] != '\n')
+    //                         fgets (line, 240, pDsed);
+    //                     fgets (line, 240, pDsed);
+    //                     fgets (line, 240, pDsed);
+    //                 }
+    //                 sscanf (line, "#AGE= %lf EEPS= %d", &(dIso[z][a].age), &(dIso[z][a].numEeps));
+    //                 dLogAge[z][a] = dIso[z][a].logAge = log10 (dIso[z][a].age * (1e9));
+    //                 dAge[z][a] = dIso[z][a].age;
+    //                 dIso[z][a].FeH = dFeH[z];
+    //                 i = 0;
+    //             }
+    //             else if (line[0] != '#' && line[0] != '\n')
+    //             {
+    //                 sscanf (line, "%d %lf %*f %*f %*f %lf %lf %lf %lf %lf %lf %lf %lf", &dIso[z][a].eeps.at(i), &dIso[z][a].mass.at(i), &dIso[z][a].mag[i][0], &dIso[z][a].mag[i][1], &dIso[z][a].mag[i][2], &dIso[z][a].mag[i][3], &dIso[z][a].mag[i][4], &dIso[z][a].mag[i][5], &dIso[z][a].mag[i][6], &dIso[z][a].mag[i][7]);
 
-                    if (i == dIso[z][a].numEeps - 1)
-                    {
-                        dIso[z][a].AGBt = dIso[z][a].mass.at(i);
-                    }
-                    i++;
-                }
-            }
-        }
+    //                 if (i == dIso[z][a].numEeps - 1)
+    //                 {
+    //                     dIso[z][a].AGBt = dIso[z][a].mass.at(i);
+    //                 }
+    //                 i++;
+    //             }
+    //         }
+    //     }
 
-        // Lop off the extra bit of evolution in the lower age models
-        for (a = 0; a < N_DSED_AGES; a++)
-        {
-            if (dIso[z][a].numEeps > 280)
-                dIso[z][a].numEeps -= dIso[z][a].eeps.at(dIso[z][a].numEeps - 1) - 220;
-            dAGBt[z][a] = dIso[z][a].mass.at(dIso[z][a].numEeps - 1);
-        }
-    }
+    //     // Lop off the extra bit of evolution in the lower age models
+    //     for (a = 0; a < N_DSED_AGES; a++)
+    //     {
+    //         if (dIso[z][a].numEeps > 280)
+    //             dIso[z][a].numEeps -= dIso[z][a].eeps.at(dIso[z][a].numEeps - 1) - 220;
+    //         dAGBt[z][a] = dIso[z][a].mass.at(dIso[z][a].numEeps - 1);
+    //     }
+    // }
 
-    ageLimit.first = dLogAge[0][0];
-    ageLimit.second = dLogAge[0][N_DSED_AGES - 1];
+    // ageLimit.first = dLogAge[0][0];
+    // ageLimit.second = dLogAge[0][N_DSED_AGES - 1];
 
-    //Load in JHK from the UBVRIJHK models
-    if (filterSet == FilterSetName::SDSS)
-    {
-        filterSet = FilterSetName::UBVRIJHK;
+    // //Load in JHK from the UBVRIJHK models
+    // if (filterSet == FilterSetName::SDSS)
+    // {
+    //     filterSet = FilterSetName::UBVRIJHK;
 
-        for (z = 0; z < N_DSED_Z; z++)
-        {                               // foreach Dsed metallicity/isochrone file
-            a = -1;                     // a = [0,18], dLogAge contains the 52 ages
-            i = 0;
+    //     for (z = 0; z < N_DSED_Z; z++)
+    //     {                               // foreach Dsed metallicity/isochrone file
+    //         a = -1;                     // a = [0,18], dLogAge contains the 52 ages
+    //         i = 0;
 
-            for (f = 0; f < 2; f++)
-            {                           // Each metallicity has 2 files, 0.25-1 Gyr and 1-15 Gyr
-                getFileName (path, z, f, filterSet);    // work on one Dsed model at a time
+    //         for (f = 0; f < 2; f++)
+    //         {                           // Each metallicity has 2 files, 0.25-1 Gyr and 1-15 Gyr
+    //             getFileName (path, z, f, filterSet);    // work on one Dsed model at a time
 
-                if ((pDsed = fopen (tempFile.c_str(), "r")) == NULL)
-                {                       // open file
-                    cerr << "\n\n file " << tempFile << " was not found - exiting" << endl;
-                    exit (1);
-                }
+    //             if ((pDsed = fopen (tempFile.c_str(), "r")) == NULL)
+    //             {                       // open file
+    //                 cerr << "\n\n file " << tempFile << " was not found - exiting" << endl;
+    //                 exit (1);
+    //             }
 
-                while (fgets (line, 240, pDsed) != NULL)
-                {                       // load each Z=# Dsed model for all ages
-                    if (line[1] == 'A')
-                    {
-                        a++;
-                        // Skip the first entry of the second file, since it
-                        // duplicates the last entry of the first file
+    //             while (fgets (line, 240, pDsed) != NULL)
+    //             {                       // load each Z=# Dsed model for all ages
+    //                 if (line[1] == 'A')
+    //                 {
+    //                     a++;
+    //                     // Skip the first entry of the second file, since it
+    //                     // duplicates the last entry of the first file
 
-                        if (a == 16)
-                        {
-                            while (line[0] != '\n')
-                                fgets (line, 240, pDsed);
-                            fgets (line, 240, pDsed);
-                            fgets (line, 240, pDsed);
-                        }
-                        i = 0;
-                    }
-                    else if (line[0] != '#' && line[0] != '\n')
-                    {
-                        sscanf (line, "%*d %*f %*f %*f %*f %*f %*f %*f %*f %*f %lf %lf %lf", &dIso[z][a].mag[i][5], &dIso[z][a].mag[i][6], &dIso[z][a].mag[i][7]);
-                        i++;
-                    }
-                }
-            }
-        }
-    }
+    //                     if (a == 16)
+    //                     {
+    //                         while (line[0] != '\n')
+    //                             fgets (line, 240, pDsed);
+    //                         fgets (line, 240, pDsed);
+    //                         fgets (line, 240, pDsed);
+    //                     }
+    //                     i = 0;
+    //                 }
+    //                 else if (line[0] != '#' && line[0] != '\n')
+    //                 {
+    //                     sscanf (line, "%*d %*f %*f %*f %*f %*f %*f %*f %*f %*f %lf %lf %lf", &dIso[z][a].mag[i][5], &dIso[z][a].mag[i][6], &dIso[z][a].mag[i][7]);
+    //                     i++;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
-
-string DsedMsModel::getFileName (string path, int z, int f, FilterSetName filterSet)
-{
-
-    const array<string, 9> fileNames = {{ "m25", "m20", "m15", "m10", "m05", "p00", "p02", "p03", "p05" }};
-
-    if (filterSet == FilterSetName::SDSS)
-        path += "sdss/feh";
-    else
-        path += "jc2mass/feh";
-
-    path += fileNames[z];
-    path += "afep0.";
-
-    if (filterSet == FilterSetName::SDSS)
-        path += "ugriz";
-    else
-        path += "jc2mass";
-
-    if (!f)
-        path += "_2";
-
-    return path;
-}
 
 // Interpolates between isochrones for two ages using linear interpolation
 // Must run loadDsed() first for this to work.
@@ -357,6 +369,13 @@ double DsedMsModel::deriveAgbTipMass (const std::vector<int> &filters, double ne
 
     return isochrone.agbTipMass();
 }
+
+
+Isochrone DsedMsModel::deriveIsochrone (const vector<int> &, double newFeH, double, double newAge) const
+{
+    return {};
+}
+
 
 // Calculates the precursor age for a given wd precursor mass
 // Must run loadDsed() and deriveDsedAgbTip()

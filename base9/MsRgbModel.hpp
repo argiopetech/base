@@ -66,6 +66,8 @@ modified for different model sets.
 ****************************************************************************************/
     virtual double wdPrecLogAge(double, double) = 0;
 
+    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const = 0;
+
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }
 

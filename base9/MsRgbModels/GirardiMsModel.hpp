@@ -22,7 +22,7 @@ class GirardiMsModel : public MsRgbModel
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
     virtual double wdPrecLogAge(double, double);
 
-    Isochrone deriveIsochrone(const std::vector<int>& filters, double newFeH, double, double newAge) const;
+    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
 
     virtual bool isSupported(FilterSetName);
 
