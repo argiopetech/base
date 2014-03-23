@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../MsRgbModel.hpp"
+#include "../LinearTransform.hpp"
 
 const int N_YY_PARAMS    = 17;
 const int N_YY_Z         = 11;
@@ -34,11 +35,6 @@ constexpr double CUBEINT(double x1, double y1, double x2, double y2, double x3, 
          + (x-x1)*(x-x2)*(x-x3)*y4/((x4-x1)*(x4-x2)*(x4-x3));
 }
 
-constexpr double POLLIN(double x1, double y1, double x2, double y2, double x)
-{
-    return (x - x2) * y1 / (x1-x2) + (x-x1) * y2 / (x2 - x1);
-}
-
 constexpr double SQR(double x)
 {
     return x * x;
@@ -66,12 +62,15 @@ class YaleMsModel : public MsRgbModel
     virtual double wdPrecLogAge(double, double);
     virtual void loadModel(std::string, FilterSetName);
 
+    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
+
     virtual bool isSupported(FilterSetName);
 
   protected:
     virtual int numFilts() const { return N_YY_FILTS; }
 
   private:
+    double modelZSolar = 0.0181;
 };
 
 #endif

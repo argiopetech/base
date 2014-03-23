@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -7,14 +8,16 @@
 #include <cmath>
 
 #include "Cluster.hpp"
-#include "Star.hpp"
-
 #include "LinearTransform.hpp"
+#include "Matrix.hpp"
+#include "Star.hpp"
 #include "YaleMsModel.hpp"
 
+using std::array;
 using std::getline;
 using std::ifstream;
 using std::string;
+using std::stringstream;
 using std::cerr;
 using std::endl;
 using std::vector;
@@ -22,21 +25,52 @@ using std::vector;
 const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
 //global variables
-static int iZ, iAge;
-static double yyFeH[N_YY_Z], yyZ[N_YY_Z];
-static double yyLogAge[N_YY_Z][N_YY_AGES], yyAge[N_YY_Z][N_YY_AGES];
-static struct yyIsochrone yyIso[N_YY_Z][N_YY_AGES];
-static double yyAGBt[N_YY_Z][N_YY_AGES];
+// static int iZ, iAge;
+// static double yyFeH[N_YY_Z], yyZ[N_YY_Z];
+// static double yyLogAge[N_YY_Z][N_YY_AGES], yyAge[N_YY_Z][N_YY_AGES];
+// static struct yyIsochrone yyIso[N_YY_Z][N_YY_AGES];
+// static double yyAGBt[N_YY_Z][N_YY_AGES];
 // static struct globalIso tempIso[2] {globalIso(MAX_YY_ENTRIES, N_YY_FILTS), globalIso(MAX_YY_ENTRIES, N_YY_FILTS)};
-static double coeff[6][8];
+static Matrix<double, 6, 8> coeff;
 
 //Static funtions
-static void initIso (struct yyIsochrone *newIso);
-static string getFileName (string path, int z);
 static void eepset (double x[], double y[], int nstep, int igrd, double *slope);
 static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorder);
-static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS]);
 static double feh2z (double FeH);
+
+
+static vector<string> getFileNames (const string path)
+{
+    const array<string, 11> fileNames = {
+        "76997z00001a0o2v2",
+        "7697z0001a0o2v2",
+        "7688z0004a0o2v2",
+        "767z001a0o2v2",
+        "758z004a0o2v2",
+        "749z007a0o2v2",
+        "74z01a0o2v2",
+        "71z02a0o2v2",
+        "65z04a0o2v2",
+        "59z06a0o2v2",
+        "53z08a0o2v2"
+    };
+
+    vector<string> files;
+
+    for (auto file : fileNames)
+    {
+        string tempFile = path;
+
+        tempFile += "YYiso/yy00l.x";
+
+        tempFile += file;
+
+        files.push_back(tempFile);
+    }
+
+    return files;
+
+}
 
 
 bool YaleMsModel::isSupported(FilterSetName filterSet)
@@ -45,208 +79,161 @@ bool YaleMsModel::isSupported(FilterSetName filterSet)
 }
 
 
-void YaleMsModel::loadModel (string path, FilterSetName filterSet)
+void YaleMsModel::loadModel (const string path, FilterSetName filterSet)
 {
     assert(isSupported(filterSet));
 
-    // ifstream fin;
-    // int a, p;
-    // string line;
-    // int m = 0;
+    ifstream fin;
 
-    // string tempFile;
+    for (auto file : getFileNames(path))
+    {
+        double fileZ, fileFeH, logAge, ignore;
 
-    // int meep, kipnm = 0;
-    // double eep[MAX_YY_ENTRIES], xeep[MAX_YY_ENTRIES], tlkip = 0.0, blkip = 0.0, slope = 0.0;
-    // double temar[MAX_YY_ENTRIES][N_YY_PARAMS], xxeep, xim;
-    // double param[MAX_YY_ENTRIES][N_YY_PARAMS];
+        string line;
+        stringstream lin;
 
-    // if (filterSet != FilterSetName::UBVRIJHK)
-    // {
-    //     cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on YY models.  Exiting...";
-    //     exit (1);
-    // }
+        vector<Isochrone> isochrones;
+        vector<EvolutionaryPoint> eeps;
 
-    // for (int z = 0; z < N_YY_Z; z++)
-    // {                           // foreach Dsed metallicity/isochrone file
-    //     yyFeH[z] = 0.0;
+        // Open the file
+        fin.open(file);
 
-    //     for (int a = 0; a < N_YY_AGES; a++)
-    //     {                               // initialize age/boundary pointers
-    //         yyLogAge[z][a] = 0.0;
-    //         yyAge[z][a] = 0.0;
-    //         initIso (&(yyIso[z][a]));   // initialize array of model parameters
-    //     }
+        // Ensure the file opened successfully
+        if (!fin)
+        {
+            cerr << "\n file " << file << " was not found - exiting" << endl;
+            exit (1);
+        }
 
-    //     tempFile = getFileName (path, z);
-    //     fin.open(tempFile);
+        // Get Z from the first header line
+        fin.ignore(maxIgnore, '='); // Eat the first bit of the line
+        fin >> fileZ;
 
-    //     if (!fin)
-    //     {
-    //         cerr << "\n file " << tempFile << " was not found - exiting" << endl;
-    //         exit (1);
-    //     }
+        // Get FeH from the first header line
+        // Z=0.080000 Y=0.390000 OS=0.20 l/Hp=1.743201 [Fe/H]= 0.305363 [Alpha/Fe]= 0.60
+        fin.ignore(maxIgnore, '='); // Y value
+        fin.ignore(maxIgnore, '='); // OS value
+        fin.ignore(maxIgnore, '='); // l/Hp value
+        fin.ignore(maxIgnore, '='); // [Fe/H] value
+        fin >> fileFeH;
 
-    //     // Read header line
-    //     fin.ignore(maxIgnore, '='); // Ignore the first variable name
-    //     fin >> yyZ[z];              // Grab the value
+        fin.ignore(maxIgnore, '\n'); // Eat the last bit of the line
+        getline(fin, line); // Eat the second header line (column headers)
 
-    //     fin.ignore(maxIgnore, '='); // Ignore the second variable name
-    //     fin >> yyFeH[z];            // Grab the value.
+        // Now, for every other line in the file...
+        while (!fin.eof())
+        {
+            getline(fin, line);
 
-    //     fin.ignore(maxIgnore, '\n'); // Eat the rest of the line
+            if ((line.size() > 1) && (line.at(0) != 'a'))
+            {
+                double tempMass;
 
-    //     for (int a = 0; a < N_YY_AGES; a++)
-    //     {
-    //         yyIso[z][a].FeH = yyFeH[z];
-    //         yyIso[z][a].z = yyZ[z];
-    //     }
+                stringstream in(line);
 
-    //     a = -1;
-    //     while (!fin.eof()) // YY model for all ages
-    //     {
-    //         getline(fin, line);
+                array<double, FILTS> mags;
+                array<double, 7> params;
+                mags.fill(99.999);
 
-    //         if (!fin.eof())
-    //         {
-    //             std::stringstream strs(line);
-                
-    //             if (line[0] == 'a')
-    //             {
-    //                 a++;
+                in >> tempMass
+                   >> ignore >> ignore >> ignore
+                   >> mags.at(2); // V = Mv
 
-    //                 strs.ignore(maxIgnore, '=');
-    //                 strs >> yyAge[z][a];
+                // U-B    B-V    V-R    V-I    V-J    V-H    V-K
+                for (auto &param : params)
+                {
+                    in >> param;
+                }
 
-    //                 yyIso[z][a].age = yyAge[z][a];
-    //                 yyIso[z][a].logAge = yyLogAge[z][a] = log10 (yyIso[z][a].age * 1e9);
+                mags.at(1) = params.at(1) + mags.at(2); // B = (B-V) + V
+                mags.at(0) = params.at(0) + mags.at(1); // U = (U-B) + B
 
-    //                 strs >> yyIso[z][a].nEntries;
+                for (int i = 2; i < 7; ++i)
+                {
+                    mags.at(i + 1) =  mags.at(2) - params.at(i); // R = V - (V-R), etc
+                }
 
-    //                 m = 0;
-    //             }
-    //             else if (line.size() > 1 && line.at(1) != ' ')
-    //             {
-    //                 p = 0;
+                if (!fin.eof())
+                {
+                    // Yale doesn't have EEPs, so we'll pretend with 0
+                    eeps.emplace_back(0, tempMass, mags);
+                }
+            }
+            else if (line.size() == 1) // End of an isochrone
+            {
+                isochrones.emplace_back(logAge, eeps);
+                eeps.clear();
+            }
+            else if (line.at(0) == 'a') // Beginning of a new isochrone
+            {
+                stringstream in(line);
 
-    //                 while (!strs.eof())
-    //                 {
-    //                     strs >> param[m][p];
-    //                     p++;
-    //                 }
+                in.ignore(maxIgnore, '='); // Eat the first bit of the line
+                in >> logAge;
 
-    //                 // >>> YCK modified for the eep
-    //                 //--------------yi----------------
-    //                 if (m <= 0)
-    //                 {
-    //                     tlkip = param[m][1];
-    //                     blkip = param[m][2];
-    //                     eep[m] = 1.0;
-    //                 }
-    //                 else
-    //                 {
-    //                     eep[m] = eep[m - 1] + sqrt (100 * SQR (param[m][1] - tlkip) + SQR (param[m][2] - blkip));
-    //                     tlkip = param[m][1];
-    //                     blkip = param[m][2];
-    //                 }
-    //                 xeep[m] = param[m][1];
-    //                 if (yyIso[z][a].nEntries < MAX_YY_ENTRIES)
-    //                     kipnm = yyIso[z][a].nEntries;
-    //                 m++;
-    //             }
-    //             else if (line.size() == 1) //i.e., at the end of each age entry
-    //             {
-    //                 // >>> YCK modified for the eep
-    //                 slope = 3.0e-2;
-    //                 // to find the turnoff mass to utilize it as an anchor point
-    //                 if (yyIso[z][a].nEntries != kipnm)
-    //                 {
-    //                     eepset (eep, xeep, yyIso[z][a].nEntries, kipnm, &slope);
-    //                 }
+                logAge = log10(logAge * 1e9); // logAge is actually in non-log gigayears in the file
+            }
+        } // EOF
 
-    //                 for (int im = 0; im < yyIso[z][a].nEntries; im++)
-    //                 {
-    //                     xim = im * slope;
-    //                     xeep[im] = atan (xim) * (eep[yyIso[z][a].nEntries - 1] - eep[0]) / (atan (slope * (yyIso[z][a].nEntries - 1))) + eep[0];
-    //                 }
+//        fileZ = log10(fileZ / modelZSolar);
 
-    //                 for (int im = 0; im < yyIso[z][a].nEntries; im++)
-    //                 {
-    //                     xxeep = xeep[im];
-    //                     meep = binarySearch (eep, yyIso[z][a].nEntries, xxeep);
+        fehCurves.emplace_back(fileFeH, isochrones); // Push the entire isochrone set into the model's FehCurve vector
 
-    //                     if (meep >= (yyIso[z][a].nEntries - 2))
-    //                         meep = yyIso[z][a].nEntries - 2;
-    //                     if (meep <= 0)
-    //                         meep = 0;
-    //                     for (int ii = 0; ii < N_YY_PARAMS; ii++)
-    //                     {
-    //                         temar[im][ii] = POLLIN (eep[meep], param[meep][ii], eep[meep + 1], param[meep + 1][ii], xxeep);
-    //                     }
-    //                 }
+        fin.close();
+    }
 
-    //                 // normalized
-    //                 for (int im = 0; im < yyIso[z][a].nEntries; im++)
-    //                 {
-    //                     for (int ii = 0; ii < N_YY_PARAMS; ii++)
-    //                     {
-    //                         param[im][ii] = temar[im][ii];
-    //                     }
-    //                 }
+    /////////////////////////////////////////////////////////////////////
+    // Read in the coefficients needed to calculate the precurser ages //
+    /////////////////////////////////////////////////////////////////////
 
-    //                 convertColorsToMags (&(yyIso[z][a]), param);
+    // Open coeff file for reading
+    auto tempFile = path + "YYiso/yyAGBtcoeff.dat";
+    fin.open(tempFile);
 
-    //                 yyAGBt[z][a] = yyIso[z][a].AgbTurnoffMass = yyIso[z][a].mass[yyIso[z][a].nEntries - 1];
-    //             }
-    //         }
-    //     }
+    //fscanf(pModelList,"%s",tempFile);
+    if (!fin)
+    {
+        cerr << "\n file " << tempFile << " was not found - exiting" << endl;
+        exit (1);
+    }
 
-    //     fin.close();
-    // }
+    // Read in the coefficients needed to calculate the precurser ages
+    for (auto &i : coeff)
+    {
+        for (auto &j : i)
+        {
+            fin >> j;
+        }
+    }
 
-    // /////////////////////////////////////////////////////////////////////
-    // // Read in the coefficients needed to calculate the precurser ages //
-    // /////////////////////////////////////////////////////////////////////
+    fin.close();
 
-    // // Open coeff file for reading
-    // tempFile = path + "YYiso/yyAGBtcoeff.dat";
+    //Set the min and max age in this model set (for use in densities.c)
+    ageLimit.first = fehCurves.front().isochrones.front().logAge;
+    ageLimit.second = fehCurves.front().isochrones.back().logAge;
 
-    // fin.open(tempFile);
-
-    // //fscanf(pModelList,"%s",tempFile);
-    // if (!fin)
-    // {
-    //     cerr << "\n file " << tempFile << " was not found - exiting" << endl;
-    //     exit (1);
-    // }
-
-    // // Read in the coefficients needed to calculate the precurser ages
-    // for (int i = 0; i < 6; i++)
-    // {
-    //     for (int j = 0; j < 8; j++)
-    //     {
-    //         fin >> coeff[i][j];
-    //     }
-    // }
-
-    // //Set the min and max age in this model set (for use in densities.c)
-    // ageLimit.first = yyLogAge[0][0];
-    // ageLimit.second = yyLogAge[0][N_YY_AGES - 1];
-
-    // fin.close();
-    return;
-
+    assert(ageLimit.second == fehCurves.back().isochrones.back().logAge);
 }
 
-/**********************************************************************************
-// Last updated 11apr11--SD
-// Interpolates between isochrones for two ages using linear interpolation
-// Must run loadYale() first for this to work.
-// Currently ignores newY
-**********************************************************************************/
 
-double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, double, double newLogAge)
+double YaleMsModel::deriveAgbTipMass (const vector<int> &filters, double newFeH, double ignored, double newAge)
 {
+    isochrone = deriveIsochrone(filters, newFeH, ignored, newAge);
+
+    return isochrone.agbTipMass();
+}
+
+
+Isochrone YaleMsModel::deriveIsochrone (const vector<int> &filters, double newFeH, double, double newAge) const
+{
+    if ((newAge < fehCurves.front().isochrones.front().logAge)
+     || (newAge > fehCurves.back().isochrones.back().logAge)
+     || (newFeH < fehCurves.front().feh)
+     || (newFeH > fehCurves.back().feh))
+    {
+        throw InvalidCluster("Age or FeH out of bounds in YaleMsModel::deriveIsochrone");
+    }
+
 
 //     double newAge = exp10 (newLogAge) / 1e9;
 //     double newZ;
@@ -255,16 +242,6 @@ double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, d
 
 //     iAge = -1;
 //     iZ = -1;
-
-//     if ((newAge < yyAge[0][0])
-//      || (newAge > yyAge[N_YY_Z - 1][N_YY_AGES - 1])
-//      || (newZ < yyZ[0])
-//      || (newZ > yyZ[N_YY_Z - 1]))
-//     {
-//         //     log << ("\n Requested Z (%.3f, FeH = %.3f) too high. (gYaleMag.c)", newZ, newFeH);
-//         return 0.0;
-//     }
-
 
 //     // Find the values for each parameter that we will be interpolating
 //     // between and calculate the interpolation coefficients.
@@ -305,11 +282,11 @@ double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, d
 
 //     for (int m = 0; m < iYYm; m++)
 //     {
-//         isochrone.mass[m] = POLLIN (tempIso[0].age, tempIso[0].mass[m], tempIso[1].age, tempIso[1].mass[m], newAge);
+//         isochrone.mass[m] = linearTransform<>(tempIso[0].age, tempIso[1].age, tempIso[0].mass[m], tempIso[1].mass[m], newAge).val;
 
 //         for (int p = 0; p < N_YY_FILTS; p++)
 //         {
-//             isochrone.mag[m][p] = POLLIN (tempIso[0].age, tempIso[0].mag[m][p], tempIso[1].age, tempIso[1].mag[m][p], newAge);
+//             isochrone.mag[m][p] = linearTransform<>(tempIso[0].age, tempIso[1].age, tempIso[0].mag[m][p], tempIso[1].mag[m][p], newAge);
 //         }
 //     }
 
@@ -322,28 +299,9 @@ double YaleMsModel::deriveAgbTipMass (const std::vector<int> &, double newFeH, d
 
 //     assert(is_sorted(isochrone.mass.begin(), isochrone.mass.begin() + isochrone.nEntries));
 
-    return isochrone.agbTipMass();
+    return {};
 }
 
-
-static void convertColorsToMags (struct yyIsochrone *iso, double param[MAX_YY_ENTRIES][N_YY_PARAMS])
-{
-
-    // int m, p;
-
-    // for (m = 0; m < iso->nEntries; m++)
-    // {
-    //     iso->mass[m] = param[m][0];     // Mass
-    //     iso->mag[m][2] = param[m][4];   // V = Mv
-    //     iso->mag[m][1] = param[m][6] + iso->mag[m][2];  // B = (B-V) + V
-    //     iso->mag[m][0] = param[m][5] + iso->mag[m][1];  // U = (U-B) + B
-    //     for (p = 7; p < 14; p++)
-    //     {                               // R = V - (V-R), etc
-    //         iso->mag[m][p - 4] = iso->mag[m][2] - param[m][p];
-    //     }
-    // }
-    // iso->AgbTurnoffMass = iso->mass[iso->nEntries - 1];
-}
 
 static void eepset (double x[], double y[], int nstep, int igrd, double *slope)
 {
@@ -467,48 +425,8 @@ static int ToffM (double x[4], double yy[4], double *xp, double *ybar, int iorde
     return 0;
 }
 
-static void initIso (struct yyIsochrone *newIso)
-{
-
-    // int i, j;
-
-    // newIso->FeH = 0.0;
-    // newIso->age = 0.0;
-    // newIso->logAge = 0.0;
-    // newIso->z = 0.0;
-    // newIso->nEntries = 0;
-    // for (i = 0; i < MAX_YY_ENTRIES; i++)
-    // {
-    //     newIso->mass[i] = 0.0;
-    //     for (j = 0; j < N_YY_FILTS; j++)
-    //         newIso->mag[i][j] = 0.0;
-    // }
-}
-
-static string getFileName (string path, int z)
-{
-
-    string fileNames[] = {
-        "76997z00001a0o2v2",
-        "7697z0001a0o2v2",
-        "7688z0004a0o2v2",
-        "767z001a0o2v2",
-        "758z004a0o2v2",
-        "749z007a0o2v2",
-        "74z01a0o2v2",
-        "71z02a0o2v2",
-        "65z04a0o2v2",
-        "59z06a0o2v2",
-        "53z08a0o2v2"
-    };
-
-    return path + "YYiso/yy00l.x" + fileNames[z];
-
-}
-
 static double feh2z (double FeH)
 {
-
     double Z = 0.0, FeH0 = 0.0, ZovX = 0.0;
     double YYaf = 0.0;
 
@@ -520,34 +438,37 @@ static double feh2z (double FeH)
 }
 
 
-double YaleMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
 /*************************************************************************************
-last update: 12nov07
-
 Determine WD precursor age by using coefficients derived from fitting to the current
 Yale-Yonsei models.  If the models change, these will need to change as well.
 Note that the appropriate AgbTurnoffMass mass and lifetime is not the ZAMS mass and lifetime of
 the star currently at the AgbTurnoffMass, but rather refers to the properties of the potentially
 higher mass and younger AgbTurnoffMass star that was the WD precursor.
 *************************************************************************************/
+double YaleMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
 {
+    if (zamsMass < 1.0)
+    {
+        zamsMass = 1.0;
+    }
+    else if (zamsMass > 8.0)
+    {
+        zamsMass = 8.0;
+    }
 
-    // int i, j;
-    // double maCoeff[6], wdPrecLogAge;
+    double wdPrecLogAge = 0.0;
 
-    // if (zamsMass < 1.0)
-    //     zamsMass = 1.0;
-    // else if (zamsMass > 8.0)
-    //     zamsMass = 8.0;
-    // wdPrecLogAge = 0.0;
-    // for (i = 0; i < 6; i++)
-    // {
-    //     maCoeff[i] = 0.0;
-    //     for (j = 0; j < 8; j++)
-    //         maCoeff[i] += coeff[i][j] * pow (thisFeH, j);
-    //     wdPrecLogAge += maCoeff[i] * pow (zamsMass, i);
-    // }
+    for (int i = 0; i < 6; i++)
+    {
+        double maCoeff = 0.0;
 
-    // return wdPrecLogAge;
+        for (int j = 0; j < 8; j++)
+        {
+            maCoeff += coeff[i][j] * pow (thisFeH, j);
+        }
 
+        wdPrecLogAge += maCoeff * pow (zamsMass, i);
+    }
+
+    return wdPrecLogAge;
 }
