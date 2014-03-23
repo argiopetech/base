@@ -49,7 +49,7 @@ double Cluster::logPrior (const Model &evoModels) const
         || (abs < 0.0)
         || ((evoModels.IFMR == 11) && (ifmrQuadCoef < 0.0)))
     {
-        throw InvalidCluster("Invalid cluster parameter");
+        throw InvalidCluster("Invalid cluster parameter in Cluster::logPrior");
     }
 
     // enforce monotonicity in IFMR
