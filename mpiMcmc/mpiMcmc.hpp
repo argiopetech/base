@@ -20,8 +20,6 @@ const int ALLOC_CHUNK = 5;
 struct ifmrMcmcControl
 {
     std::ifstream rData;
-    std::ofstream resFile;
-    std::ofstream burninFile;
     std::string clusterFilename;
 
     int nIter;                  // number of post burn-in iterations

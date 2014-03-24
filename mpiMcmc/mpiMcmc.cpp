@@ -1,5 +1,5 @@
 #include "MpiMcmcApplication.hpp"
-
+#include <stdexcept>
 int main (int argc, char *argv[])
 {
     Settings settings;
@@ -19,5 +19,13 @@ int main (int argc, char *argv[])
 
     MpiMcmcApplication master(settings);
 
-    return master.run();
+    try
+    {
+        return master.run();
+    }
+    catch (exception &e)
+    {
+        cerr << e.what() << endl;
+        return -1;
+    }
 }

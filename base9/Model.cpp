@@ -91,7 +91,7 @@ namespace internal
 
 const Model makeModel(const Settings &s)
 {
-    cout << "\nReading models..." << std::flush;
+    cout << "Reading models..." << std::flush;
 
     Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
                , internal::createMsFilterSet(s.mainSequence.filterSet)

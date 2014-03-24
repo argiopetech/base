@@ -1,3 +1,6 @@
+#ifndef MCMCAPPLICATION_HPP
+#define MCMCAPPLICATION_HPP
+
 #include <iostream>
 #include <random>
 
@@ -9,26 +12,21 @@ class McmcApplication
     {
         const int warmupIter = 10000;
 
-        std::cout << "Warming up generator..." << std::flush;
+        // std::cout << "Warming up generator..." << std::flush;
 
-        for (auto i = 0; i < warmupIter; ++i)
-        {
-            std::generate_canonical<double, 10>(gen);
-        }
+        gen.discard(warmupIter);
 
-        std::cout << " Done." << std::endl;
-        std::cout << "Generated " << warmupIter << " values." << std::endl;
+        // std::cout << " Done." << std::endl;
+        // std::cout << "Generated " << warmupIter << " values." << std::endl;
     }
 
     virtual ~McmcApplication() {}
 
-    virtual int run() = 0;
+    double acceptanceRatio() const { return double(accepted) / (accepted + rejected); }
 
   protected:
     // Decides whether to accept a proposed cluster property
     bool acceptClustMarg (const double logPostCurr, const double logPostProp);
-
-    double acceptanceRatio() const { return double(accepted) / (accepted + rejected); }
 
     void resetRatio()
     {
@@ -42,3 +40,5 @@ class McmcApplication
     int accepted = 0;
     int rejected = 0;
 };
+
+#endif
