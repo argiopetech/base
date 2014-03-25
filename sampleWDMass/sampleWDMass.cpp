@@ -485,12 +485,6 @@ int main (int argc, char *argv[])
         exit (1);
     }
     
-    mutex theMutex;
-
-    base::utility::ThreadPool pool(settings.threads);
-
-//  for (int m = 0; m < ctrl.nSamples; m++)
-
     std::vector<double> us;
     us.resize(ctrl.nSamples + 1);
 
@@ -499,8 +493,7 @@ int main (int argc, char *argv[])
         u = std::generate_canonical<double, 53>(gen);
     }
 
-
-    pool.parallelFor(ctrl.nSamples, [=, &theMutex, &massSampleFile, &membershipFile](int m)
+    for (int m = 0; m < ctrl.nSamples; ++m)
     {
         Cluster internalCluster(mc.clust);
         std::vector<double> wdMass, clusMemPost;
@@ -601,8 +594,6 @@ int main (int argc, char *argv[])
             }
         }
 
-        std::lock_guard<mutex> lk(theMutex);
-
         massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
                        << boost::format("%10.6f") % sampledPars.at(m).FeH
                        << boost::format("%10.6f") % sampledPars.at(m).modulus
@@ -627,7 +618,7 @@ int main (int argc, char *argv[])
 
         massSampleFile << endl;
         membershipFile << endl;
-    });
+    }
 
     massSampleFile.close();
     membershipFile.close();
