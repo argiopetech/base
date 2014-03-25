@@ -70,19 +70,19 @@ void Settings::fromYaml (const string yamlFile)
 
     cluster.distMod = getOrDie<double>(priorsNode, "distMod");
     cluster.sigma.distMod = getOrDie<double>(sigmasNode, "distMod");
-    cluster.starting.Fe_H = getOrDie<double>(startingNode, "distMod");
+    cluster.starting.distMod = getOrDie<double>(startingNode, "distMod");
 
     cluster.Av = getOrDie<double>(priorsNode, "Av");
     cluster.sigma.Av = getOrDie<double>(sigmasNode, "Av");
-    cluster.starting.Fe_H = getOrDie<double>(startingNode, "Av");
+    cluster.starting.Av = getOrDie<double>(startingNode, "Av");
 
     cluster.Y = getOrDie<double>(priorsNode, "Y");
     cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
-    cluster.starting.Fe_H = getOrDie<double>(startingNode, "Y");
+    cluster.starting.Y = getOrDie<double>(startingNode, "Y");
 
     cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
     cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
-    cluster.starting.Fe_H = getOrDie<double>(startingNode, "carbonicity");
+    cluster.starting.carbonicity = getOrDie<double>(startingNode, "carbonicity");
 
     cluster.logClusAge = getOrDie<double>(clusterNode, "logClusAge");
 
