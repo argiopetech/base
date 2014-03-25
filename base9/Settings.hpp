@@ -37,6 +37,8 @@ class Settings
         int maxIter;
         int thin;
 
+        int stage3Iter;
+
         int adaptiveBigSteps;
         int trialIter;
 
@@ -80,6 +82,7 @@ class Settings
         double carbonicity;
 
         struct ClusterSigmas sigma;
+        struct ClusterSigmas starting;
 
         double logClusAge;
 

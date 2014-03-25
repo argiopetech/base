@@ -47,6 +47,7 @@ void Settings::fromYaml (const string yamlFile)
     Node clusterNode = getNode (generalNode, "cluster");
     Node priorsNode = getNode (clusterNode, "priors");
     Node sigmasNode = getNode (clusterNode, "sigmas");
+    Node startingNode = getNode (clusterNode, "starting");
     Node mpiConfNode = getNode (configNode, "mpiMcmc");
     Node mpiAdaptiveNode = getNode(mpiConfNode, "adaptive");
     Node mpiStepNode = getNode (mpiConfNode, "stepSizes");
@@ -65,18 +66,23 @@ void Settings::fromYaml (const string yamlFile)
 
     cluster.Fe_H = getOrDie<double>(priorsNode, "Fe_H");
     cluster.sigma.Fe_H = getOrDie<double>(sigmasNode, "Fe_H");
+    cluster.starting.Fe_H = getOrDie<double>(startingNode, "Fe_H");
 
     cluster.distMod = getOrDie<double>(priorsNode, "distMod");
     cluster.sigma.distMod = getOrDie<double>(sigmasNode, "distMod");
+    cluster.starting.Fe_H = getOrDie<double>(startingNode, "distMod");
 
     cluster.Av = getOrDie<double>(priorsNode, "Av");
     cluster.sigma.Av = getOrDie<double>(sigmasNode, "Av");
+    cluster.starting.Fe_H = getOrDie<double>(startingNode, "Av");
 
     cluster.Y = getOrDie<double>(priorsNode, "Y");
     cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
+    cluster.starting.Fe_H = getOrDie<double>(startingNode, "Y");
 
     cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
     cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
+    cluster.starting.Fe_H = getOrDie<double>(startingNode, "carbonicity");
 
     cluster.logClusAge = getOrDie<double>(clusterNode, "logClusAge");
 
@@ -84,7 +90,8 @@ void Settings::fromYaml (const string yamlFile)
     cluster.maxMag = getOrDie<double>(clusterNode, "maxMag");
     cluster.index = getOrDie<int>(clusterNode, "index");
 
-    mpiMcmc.burnIter = getOrDie<int>(mpiConfNode, "burnIter");
+    mpiMcmc.burnIter = getOrDie<int>(mpiConfNode, "stage2IterMax");
+    mpiMcmc.stage3Iter = getOrDie<int>(mpiConfNode, "stage3Iter");
     mpiMcmc.maxIter = getOrDie<int>(mpiConfNode, "runIter");
     mpiMcmc.thin = getOrDie<int>(mpiConfNode, "thin");
 

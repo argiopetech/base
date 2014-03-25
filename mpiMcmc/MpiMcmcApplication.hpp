@@ -36,6 +36,7 @@ class MpiMcmcApplication : public McmcApplication
     const Settings settings;
 
     Cluster clust;
+    Cluster mainClust;
     vector<StellarSystem> systems;
 
     base::utility::ThreadPool pool;

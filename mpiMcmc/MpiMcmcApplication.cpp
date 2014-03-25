@@ -32,37 +32,42 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 {
     ctrl.priorVar.fill(0);
 
-    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
+    mainClust.feh = settings.cluster.starting.Fe_H;
+    mainClust.priorMean[FEH] = clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
+    mainClust.mod = settings.cluster.starting.distMod;
+    mainClust.priorMean[MOD] = clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    clust.abs = clust.priorMean[ABS] = fabs(s.cluster.Av);
+    mainClust.abs = settings.cluster.starting.Av;
+    mainClust.priorMean[ABS] = clust.abs = clust.priorMean[ABS] = fabs(s.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
+    mainClust.age = mainClust.priorMean[AGE] = clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
     if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
     {
-        clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+        mainClust.carbonicity = settings.cluster.starting.carbonicity;
+        mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
         ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
     }
     else
     {
-        clust.carbonicity = clust.priorMean[CARBONICITY] = 0.0;
+        mainClust.carbonicity = mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = 0.0;
         ctrl.priorVar[CARBONICITY] = 0.0;
     }
 
     if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
-        clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
+        mainClust.yyy = settings.cluster.starting.Y;
+        mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
         ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
     }
     else
     {
-        clust.yyy = clust.priorMean[YYY] = 0.0;
+        mainClust.yyy = mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = 0.0;
         ctrl.priorVar[YYY] = 0.0;
     }
 
@@ -87,15 +92,16 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     }
 
     /* set starting values for IFMR parameters */
-    clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
-    clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
+    mainClust.ifmrSlope = mainClust.priorMean[IFMR_SLOPE] =clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
+    mainClust.ifmrIntercept = mainClust.priorMean[IFMR_INTERCEPT] = clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
 
     if (evoModels.IFMR <= 10)
-        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
+        mainClust.ifmrQuadCoef = mainClust.priorMean[IFMR_QUADCOEF] = clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
-        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
+        mainClust.ifmrQuadCoef = mainClust.priorMean[IFMR_QUADCOEF] = clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
 
     clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
+    mainClust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     for (auto &var : ctrl.priorVar)
     {
@@ -154,6 +160,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     ctrl.clusterFilename = settings.files.output + ".res";
 
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mainClust.priorVar.begin());
 }
 
 
@@ -299,12 +306,14 @@ int MpiMcmcApplication::run()
         } while (adaptiveBurnIter < ctrl.burnIter);
 
         // Stage 3 burnin
+        // Make sure and pull the covariance matrix before resetting the burninChain
+        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
+
         burninChain.reset();
 
         cout << "\nRunning Stage 3 burnin... " << flush;
 
-        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
-        burninChain.run(proposalFunc, logPostFunc, 1000);
+        burninChain.run(proposalFunc, logPostFunc, settings.mpiMcmc.stage3Iter);
 
         cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
 
@@ -331,7 +340,7 @@ int MpiMcmcApplication::run()
 
         auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
 
-        Chain mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, resultFile);
+        Chain mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, mainClust, resultFile);
 
         mainChain.run(proposalFunc, logPostFunc, ctrl.nIter, ctrl.thin);
 
