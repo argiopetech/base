@@ -9,7 +9,7 @@
 
 using std::hash;
 
-class MpiMcmcApplication : public McmcApplication
+class MpiMcmcApplication
 {
   public:
     MpiMcmcApplication(Settings &s);
@@ -34,6 +34,8 @@ class MpiMcmcApplication : public McmcApplication
 
     const Model evoModels;
     const Settings settings;
+
+    std::mt19937 gen;
 
     Cluster clust;
     Cluster mainClust;

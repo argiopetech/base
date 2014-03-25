@@ -28,7 +28,7 @@ using std::flush;
 using namespace std::placeholders;
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s)
-    : McmcApplication(s.seed), evoModels(makeModel(s)), settings(s), pool(s.threads)
+    : evoModels(makeModel(s)), settings(s), gen(uint32_t(s.seed * uint32_t(2654435761))), pool(s.threads) // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
 {
     ctrl.priorVar.fill(0);
 
