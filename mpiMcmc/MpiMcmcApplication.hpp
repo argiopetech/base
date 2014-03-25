@@ -28,7 +28,7 @@ class MpiMcmcApplication : public McmcApplication
 
 
   private:
-    void scaleStepSizes (std::array<double, NPARAMS> &);
+    void scaleStepSizes (std::array<double, NPARAMS> &, double);
 
     double wdGridMass (int) const;
 

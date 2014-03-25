@@ -301,7 +301,8 @@ int MpiMcmcApplication::run()
             {
                 acceptedOne = false;
                 cout << "    Acceptance ratio: " << acceptanceRatio << ". Retrying." << endl;
-                scaleStepSizes(stepSize); // Adjust step sizes
+
+                scaleStepSizes(stepSize, burninChain.acceptanceRatio()); // Adjust step sizes
             }
         } while (adaptiveBurnIter < ctrl.burnIter);
 
@@ -358,7 +359,7 @@ int MpiMcmcApplication::run()
 }
 
 
-void MpiMcmcApplication::scaleStepSizes (array<double, NPARAMS> &stepSize)
+void MpiMcmcApplication::scaleStepSizes (array<double, NPARAMS> &stepSize, double acceptanceRatio)
 {
     function<double(double)> scaleFactor = [](double acceptanceRatio) {
         double factor = 1.0;
@@ -399,7 +400,7 @@ void MpiMcmcApplication::scaleStepSizes (array<double, NPARAMS> &stepSize)
     {
         if (ctrl.priorVar.at(p) > EPSILON)
         {
-            stepSize.at(p) *= scaleFactor(acceptanceRatio());
+            stepSize.at(p) *= scaleFactor(acceptanceRatio);
         }
     }
 }
