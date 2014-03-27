@@ -20,7 +20,7 @@ general:
     brown_dwarfs:
         bdModel:        1     # 0 = None, 1 = Baraffe
 
-    cluster
+    cluster:
         priors:
             Fe_H:        0.07
             distMod:     0.0
