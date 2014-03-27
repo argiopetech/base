@@ -1,6 +1,6 @@
 ## Use the R_HOME indirection to support installations of multiple R version
-PKG_LIBS = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` -L../../BUILD/lib -lbase9 -lyaml-cpp
-PKG_CPPFLAGS += -std=c++11 -I../../base9 -I../../BUILD -I../../yaml-cpp/include
+PKG_LIBS = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` -L../../BUILD/lib -lyaml-cpp
+PKG_CPPFLAGS += -std=c++11 -I../../base9 -I../../base9/MsRgbModels -I../../base9/WdAtmosphereModels -I../../base9/WdCoolingModels -I../../BUILD -I../../yaml-cpp/include
 
 ## As an alternative, one can also add this code in a file 'configure'
 ##
