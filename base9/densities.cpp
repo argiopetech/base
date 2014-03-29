@@ -89,15 +89,19 @@ double Cluster::logPrior (const Model &evoModels) const
     return prior;
 }
 
-static double scaledLogLike (const vector<double> &obsPhot, const vector<double> &variance, const array<double, FILTS> &mags, double varScale)
+static double scaledLogLike (const vector<int> &filters, const vector<double> &obsPhot, const vector<double> &variance, const array<double, FILTS> &mags, double varScale)
 {
     double likelihood = 0.0;
 
-    for (decltype(variance.size()) i = 0; i < variance.size(); i++)
+    auto filtSize = filters.size();
+
+    for (decltype(filters.size()) i = 0; i < filtSize; ++i)
     {
         if (variance.at(i) > 1e-9)
         {
-            likelihood -= 0.5 * (log (2 * M_PI * varScale * variance.at(i)) + (sqr (mags.at(i) - obsPhot.at(i)) / (varScale * variance.at(i))));
+            int f = filters.at(i);
+
+            likelihood -= 0.5 * (log (2 * M_PI * varScale * variance.at(i)) + (sqr (mags.at(f) - obsPhot.at(i)) / (varScale * variance.at(i))));
         }
     }
 
@@ -118,7 +122,7 @@ double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, con
 
     double logPrior = clust.logPriorMass (primary.mass);
 
-    double likelihood = scaledLogLike (obsPhot, variance, mags, clust.varScale);
+    double likelihood = scaledLogLike (filters, obsPhot, variance, mags, clust.varScale);
 
     return (logPrior + likelihood);
 }
