@@ -425,11 +425,14 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
     {
         StellarSystem propStar = star;
 
-        propStar.primary.mass += sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
-        propStar.setMassRatio(propStar.getMassRatio() + sampleT (gen, (iter < burnIters ? scale : 1.0) * massRatioStepSize * massRatioStepSize));
+        double tMass = propStar.primary.mass + sampleT (gen, (iter < burnIters ? scale : 1.0) * massStepSize * massStepSize);
+        double tMassRatio = propStar.getMassRatio() + sampleT (gen, (iter < burnIters ? scale : 1.0) * massRatioStepSize * massRatioStepSize);
 
-        if ((propStar.getMassRatio() >= 0.0) && (propStar.getMassRatio() <= 1.0) && (propStar.primary.mass > 0.1) && (propStar.primary.mass < clust.getM_wd_up()))
+        if ((tMassRatio >= 0.0) && (tMassRatio <= 1.0) && (tMass > 0.1) && (tMass < clust.getM_wd_up()))
         {
+            propStar.primary.mass = tMass;
+            propStar.setMassRatio(tMassRatio);
+
             try
             {
                 auto proposedPosterior = propStar.logPost(clust, evoModels, filters);

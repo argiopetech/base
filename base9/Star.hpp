@@ -70,4 +70,15 @@ class StellarSystem
     double clustStarProposalDens = 0.0; // proposal density for steps to the cluster star model
 };
 
+
+class InvalidStar : public std::range_error
+{
+  public:
+    explicit InvalidStar (const std::string& what_arg)
+        : std::range_error(what_arg) {}
+
+    explicit InvalidStar (const char* what_arg)
+        : std::range_error(what_arg) {}
+};
+
 #endif
