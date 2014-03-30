@@ -374,7 +374,7 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
 int main (int argc, char *argv[])
 {
-    int filt, nWDs = 0;
+    int nWDs = 0;
 
     Chain mc;
     struct ifmrGridControl ctrl;
@@ -418,15 +418,17 @@ int main (int argc, char *argv[])
 
     mc.clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
+    auto numStars = mc.stars.size();
+
     vector<obsStar> obs;
-    obs.resize(mc.stars.size());
+    obs.resize(numStars);
 
     vector<int> starStatus;
-    starStatus.reserve(mc.stars.size());
+    starStatus.resize(numStars);
 
-    for (decltype(mc.stars.size()) i = 0; i < mc.stars.size(); i++)
+    for (decltype(numStars) i = 0; i < numStars; ++i)
     {
-        for (filt = 0; filt < ctrl.numFilts; filt++)
+        for (int filt = 0; filt < ctrl.numFilts; ++filt)
         {
             obs.at(i).obsPhot.at(filt) = mc.stars.at(i).obsPhot.at(filt);
             obs.at(i).variance.at(filt) = mc.stars.at(i).variance.at(filt);
@@ -446,7 +448,7 @@ int main (int argc, char *argv[])
 
     double logFieldStarLikelihood = 0.0;
 
-    for (filt = 0; filt < ctrl.numFilts; filt++)
+    for (int filt = 0; filt < ctrl.numFilts; ++filt)
     {
         logFieldStarLikelihood -= log (ctrl.filterPriorMax.at(filt) - ctrl.filterPriorMin.at(filt));
     }
