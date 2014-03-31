@@ -295,8 +295,8 @@ Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double new
         // These won't necessarily be true if extrapolation is allowed (which it
         // is), but should be be true due to the age and FeH checks at the
         // beginning of this function
-        assert(ageIter[0].logAge < interpAge);
-        assert(ageIter[1].logAge > interpAge);
+        assert(ageIter[0].logAge <= interpAge);
+        assert(ageIter[1].logAge >= interpAge);
 
         interpIso.emplace_back(interpAge, interpEeps);
     }
