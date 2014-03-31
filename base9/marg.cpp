@@ -1,5 +1,6 @@
 #include <array>
 #include <bitset>
+#include <iostream>
 #include <vector>
 
 #include <cassert>
@@ -68,25 +69,28 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     
         for (auto f : filters)
         {
-            const double diffLow = exp10 (((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
-                                 - exp10 ((primaryMags.at(f) / -2.5));
-            const double diffUp = exp10 (((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
-                                - exp10 ((primaryMags.at(f) / -2.5));
-
-            if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
+            if (system.variance.at(obsFilt) >= 0)
             {
-                return 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
-                            // that no mass combinations would lead to a positive posterior density
-            }
-            else
-            {
-                const double magLower = -2.5 * log10 (diffLow);
-                const double magUpper = -2.5 * log10 (diffUp);
+                const double diffLow = exp10 (((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
+                    - exp10 ((primaryMags.at(f) / -2.5));
+                const double diffUp = exp10 (((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
+                    - exp10 ((primaryMags.at(f) / -2.5));
 
-                assert(!std::isnan(magLower)); // Even though we checked it above, we still check it here
-                                               // magUpper is allowed to be NaN, as it is checked below.
+                if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
+                {
+                    return 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
+                    // that no mass combinations would lead to a positive posterior density
+                }
+                else
+                {
+                    const double magLower = -2.5 * log10 (diffLow);
+                    const double magUpper = -2.5 * log10 (diffUp);
+
+                    assert(!std::isnan(magLower)); // Even though we checked it above, we still check it here
+                    // magUpper is allowed to be NaN, as it is checked below.
             
-                diffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
+                    diffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
+                }
             }
 
             ++obsFilt;
