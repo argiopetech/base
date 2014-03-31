@@ -406,20 +406,20 @@ class Application
     {}
 
     void run();
-    std::tuple<double, double, double> sampleMass(const Cluster&, const Model&, std::mt19937&, StellarSystem);
+    std::tuple<double, double, double> sampleMass(const Cluster&, const Model&, std::mt19937&, StellarSystem, double, double);
 };
 
 
-std::tuple<double, double, double> Application::sampleMass(const Cluster &clust, const Model &evoModels, std::mt19937 &gen, StellarSystem star)
+std::tuple<double, double, double> Application::sampleMass(const Cluster &clust, const Model &evoModels, std::mt19937 &gen, StellarSystem star, const double massStepSize, const double massRatioStepSize)
 {
-    constexpr int iters = 500;
-    constexpr int burnIters = iters / 5;
-    constexpr double scale = 25.0;
-    constexpr double massStepSize = 0.0025;
-//    constexpr double massRatioStepSize = 0.053;
-    constexpr double massRatioStepSize = 0.006;
+    constexpr int iters = 12000;
+    constexpr int burnIters = iters / 6;
+    constexpr double scale = 10.0;
+//     constexpr double massStepSize = 0.0025;
+//     constexpr double massRatioStepSize = 0.053;
+//     constexpr double massRatioStepSize = 0.006;
 
-    double acceptedPosterior = std::numeric_limits<double>::lowest();
+    double acceptedPosterior = -std::numeric_limits<double>::infinity();
 
     for (int iter = 0; iter < iters; ++iter)
     {
@@ -557,9 +557,11 @@ void Application::run()
         /************ sample WD masses for different parameters ************/
         mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
-        for (int i = 0; i < mc.stars.size(); ++i)
+        auto starSize = mc.stars.size();
+
+        for (decltype(starSize) i = 0; i < starSize; ++i)
         {
-            auto sampleTuple = sampleMass(mc.clust, evoModels, gen, mc.stars.at(i));
+            auto sampleTuple = sampleMass(mc.clust, evoModels, gen, mc.stars.at(i), dMass1, dMassRatio);
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (mc.clust.getM_wd_up() - 0.15);
