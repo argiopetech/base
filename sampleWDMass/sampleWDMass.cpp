@@ -465,7 +465,7 @@ int main (int argc, char *argv[])
     /*** now report sampled masses and parameters ***/
 
     // Open the file
-    string filename = settings.files.output + ".massSamples";
+    string filename = settings.files.output + ".wdMassSamples";
 
     std::ofstream massSampleFile;
     massSampleFile.open(filename);
