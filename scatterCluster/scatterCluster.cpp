@@ -83,11 +83,9 @@ int main (int argc, char *argv[])
 
     for (filterSet = 0; filterSet < 3; filterSet++)
     {
-        cout << filterSet << ' ' << aFilterName << ' ' << evoModels.filterSet->getFilterName(0) << endl;
         if (evoModels.filterSet->getFilterName(0) == aFilterName)
             break;
     }
-    cout << "filterSet = " << filterSet << endl;
 
     fgets (line, 1000, r_ptr);  // remove rest of header line
 
