@@ -13,12 +13,14 @@
 #include "Settings.hpp"
 #include "MsFilterSet.hpp"
 
+const int SCATTER_FILTS = 8;
+
 using std::vector;
 using std::cerr;
 using std::cout;
 using std::endl;
 
-static double mass1, mass2, phot[FILTS], exptime[FILTS], sigma[FILTS];
+static double mass1, mass2, phot[SCATTER_FILTS], exptime[SCATTER_FILTS], sigma[SCATTER_FILTS];
 static int stage1, stage2, starID;
 
 double signalToNoise (double mag, double exptime, int filt);
@@ -119,11 +121,11 @@ int main (int argc, char *argv[])
     //Output headers
     fprintf (w_ptr, "id ");
 
-    for (int filt = 0; filt < FILTS; filt++)
+    for (int filt = 0; filt < SCATTER_FILTS; filt++)
         if (exptime[filt] > EPS)
             fprintf (w_ptr, "%6s ", evoModels.filterSet->getFilterName (filt).c_str());
 
-    for (int filt = 0; filt < FILTS; filt++)
+    for (int filt = 0; filt < SCATTER_FILTS; filt++)
         if (exptime[filt] > EPS)
             fprintf (w_ptr, "sig%-5s ", evoModels.filterSet->getFilterName (filt).c_str());
 
@@ -257,7 +259,7 @@ double signalToNoise (double mag, double exptime, int filter)
 
     double s2n, logS2N;
 
-    if (filter >= FILTS || filter < 0)
+    if (filter >= SCATTER_FILTS || filter < 0)
     {
         cerr << "Filter (" << filter << ") out of range - exiting" << endl;
         exit (1);
@@ -281,14 +283,20 @@ int readLine (FILE * filePtr)
     int nr, filt;
 
     fscanf (filePtr, "%d %lf ", &starID, &mass1);
-    for (filt = 0; filt < FILTS; filt++)
-        fscanf (filePtr, "%*f ");
+
+    for (filt = 0; filt < SCATTER_FILTS; filt++)
+    {
+        fscanf (filePtr, "%*lf ");
+    }
+
     fscanf (filePtr, "%d %*f %*d %*f %*f %lf ", &stage1, &mass2);
-    for (filt = 0; filt < FILTS; filt++)
+    for (filt = 0; filt < SCATTER_FILTS; filt++)
         fscanf (filePtr, "%*f ");
     nr = fscanf (filePtr, "%d %*f %*d %*f %*f ", &stage2);
-    for (filt = 0; filt < FILTS; filt++)
+    for (filt = 0; filt < SCATTER_FILTS; filt++)
+    {
         nr = fscanf (filePtr, "%lf ", &phot[filt]);
+    }
 
     if (starID == EOF)
     {
@@ -329,7 +337,7 @@ int scatterPhot (double limitSigToNoise, std::mt19937 gen)
     int filt;
     double sigToNoise;
 
-    for (filt = (stage1 == BD ? 8 : 0); filt < (stage1 == BD ? FILTS : 8); filt++)
+    for (filt = (stage1 == BD ? 8 : 0); filt < (stage1 == BD ? SCATTER_FILTS : 8); filt++)
     {
         if (exptime[filt] < EPS)
             continue;
@@ -370,7 +378,7 @@ int outputScatter (FILE * w_ptr, int isFS, double clusterMemberPrior)
 
     //Fix outputs
     fprintf (w_ptr, "%6d ", starID);
-    for (filt = 0; filt < FILTS; filt++)
+    for (filt = 0; filt < SCATTER_FILTS; filt++)
         if (exptime[filt] > EPS)
             fprintf (w_ptr, "%6.3f ", phot[filt]);
     for (filt = 0; filt < 8; filt++)
@@ -383,7 +391,7 @@ int outputScatter (FILE * w_ptr, int isFS, double clusterMemberPrior)
                 fprintf(w_ptr,"%8.6f ",sigma[filt]);
         }
     }
-    for (filt = 8; filt < FILTS; filt++)
+    for (filt = 8; filt < SCATTER_FILTS; filt++)
     {
         if (exptime[filt] > EPS)
         {
