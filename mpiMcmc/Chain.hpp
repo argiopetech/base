@@ -54,7 +54,7 @@ class Chain : public McmcApplication
             }
             catch(InvalidCluster &e)
             {
-                logPostProp = std::numeric_limits<double>::infinity();
+                logPostProp = -std::numeric_limits<double>::infinity();
             }
 
             /* accept/reject */
