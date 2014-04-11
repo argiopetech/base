@@ -140,7 +140,7 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
             {
                 // log << "Age underflow in WD Model" << endl;
             }
-            else if (ageIter == m->carbonCurves[0].records.end())
+            else if (ageIter == c->records.end())
             {
                 // log << "Age overflow in WD Model" << endl;
                 ageIter -= 2;
@@ -149,6 +149,8 @@ pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, dou
             {
                 ageIter -= 1;
             }
+
+            assert(ageIter[0].logAge < ageIter[1].logAge);
 
             ageTeff.push_back(linearTransform<>(ageIter[0].logAge, ageIter[1].logAge, ageIter[0].logTeff, ageIter[1].logTeff, wdCoolLogAge).val);
 

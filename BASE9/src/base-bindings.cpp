@@ -117,12 +117,12 @@ void setClusterParameters(double age, double feh, double distMod, double av, dou
         const auto evoModels = evil::globals::getInstance().evoModels;
         auto &clust = evil::globals::getInstance().clust;
 
-        evil::globals::getInstance().clust.age = age;
-        evil::globals::getInstance().clust.feh = feh;
-        evil::globals::getInstance().clust.mod = distMod;
-        evil::globals::getInstance().clust.abs = av;
-        evil::globals::getInstance().clust.yyy = y;
-        evil::globals::getInstance().clust.carbonicity = carbonicity;
+        clust.age = age;
+        clust.feh = feh;
+        clust.mod = distMod;
+        clust.abs = av;
+        clust.yyy = y;
+        clust.carbonicity = carbonicity;
 
         clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
     }
