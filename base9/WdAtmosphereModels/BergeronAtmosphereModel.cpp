@@ -45,8 +45,7 @@ void BergeronAtmosphereModel::loadModel (std::string path, MsFilter filterSet)
 
     if (filterSet != MsFilter::UBVRIJHK && filterSet != MsFilter::SDSS)
     {
-        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Bergeron models.  Exiting..." << endl;
-        exit (1);
+        cerr << "\nFilter set " << static_cast<int>(filterSet) << " not available on Bergeron models.  Continue at your own risk..." << endl;
     }
 
     // Open the appropriate file for each mass
