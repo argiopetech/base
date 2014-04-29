@@ -64,10 +64,11 @@ class YaleMsModel : public MsRgbModel
 
     virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
 
-    virtual bool isSupported(FilterSetName);
+    virtual bool isSupported(FilterSetName) const;
 
   protected:
     virtual int numFilts() const { return N_YY_FILTS; }
+    virtual std::string getFileName (std::string) const;
 
   private:
     double modelZSolar = 0.0181;

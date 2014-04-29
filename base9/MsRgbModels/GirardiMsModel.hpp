@@ -24,10 +24,11 @@ class GirardiMsModel : public MsRgbModel
 
     virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
 
-    virtual bool isSupported(FilterSetName);
+    virtual bool isSupported(FilterSetName) const;
 
   protected:
     virtual int numFilts() const { return N_GIR_FILTS; }
+    virtual std::string getFileName (std::string) const;
 
   private:
     double modelZSolar = 0.019;

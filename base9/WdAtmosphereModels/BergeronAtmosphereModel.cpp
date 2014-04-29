@@ -22,7 +22,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-bool BergeronAtmosphereModel::isSupported(FilterSetName filterSet)
+bool BergeronAtmosphereModel::isSupported(FilterSetName filterSet) const
 {
     return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS);
 }

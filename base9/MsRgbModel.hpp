@@ -39,6 +39,8 @@ class MsRgbModel : virtual public StellarModel
   public:
     virtual ~MsRgbModel() {;}
 
+    virtual void loadModel(std::string, FilterSetName);
+
 /****************************************************************************************
  * Derive AGBt mass (actually the ZAMS mass for the appropriate AGBt star) for a given
  * metallicity, age, and helium abundance (if necessary).  Uses an array of pointers to functions.
@@ -46,7 +48,8 @@ class MsRgbModel : virtual public StellarModel
 
  * Array indices are defined in evolve.h
 ****************************************************************************************/
-    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double) = 0;
+    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
+    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
 
 /****************************************************************************************
 Perform interpolation via  calls to getGirardiMags() or similar.
@@ -64,9 +67,7 @@ mass and age.
 Distributed most of the code to the respective subroutines, leaving only those to be
 modified for different model sets.
 ****************************************************************************************/
-    virtual double wdPrecLogAge(double, double) = 0;
-
-    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const = 0;
+    virtual double wdPrecLogAge(double, double);
 
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }
@@ -75,10 +76,14 @@ modified for different model sets.
 
   protected:
     virtual int numFilts() const = 0;
+    virtual std::string getFileName (std::string) const = 0;
 
     std::pair<double, double> ageLimit;
 
     Isochrone isochrone;
     std::vector<struct FehCurve> fehCurves;
+
+  private:
+    std::vector<std::string> availableFilters;
 };
 #endif

@@ -18,16 +18,11 @@ class ChabMsModel : public MsRgbModel
     ChabMsModel() {;}
     virtual ~ChabMsModel() {;}
 
-    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
-    virtual double wdPrecLogAge(double, double);
-    virtual void loadModel(std::string, FilterSetName);
-
-    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
-
-    virtual bool isSupported(FilterSetName);
+    virtual bool isSupported(FilterSetName) const;
 
   protected:
     virtual int numFilts() const { return N_CHAB_FILTS; }
+    virtual std::string getFileName (std::string) const;
 };
 
 #endif

@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -9,8 +12,31 @@
 #include "MsRgbModel.hpp"
 
 using std::array;
+using std::cerr;
+using std::endl;
+using std::ifstream;
 using std::lower_bound;
+using std::string;
+using std::stringstream;
 using std::vector;
+
+void MsRgbModel::loadModel(string path, FilterSetName)
+{
+    ;
+}
+
+
+double MsRgbModel::deriveAgbTipMass(const std::vector<int>&, double, double, double)
+{
+    ;
+}
+
+
+Isochrone MsRgbModel::deriveIsochrone(const std::vector<int>&, double, double, double) const
+{
+    ;
+}
+
 
 array<double, FILTS> MsRgbModel::msRgbEvol (const vector<int> &filters, double zamsMass) const
 {
@@ -44,4 +70,10 @@ array<double, FILTS> MsRgbModel::msRgbEvol (const vector<int> &filters, double z
     }
 
     return mags;
+}
+
+
+double MsRgbModel::wdPrecLogAge(double, double)
+{
+    ;
 }

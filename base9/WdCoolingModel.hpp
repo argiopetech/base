@@ -84,7 +84,7 @@ class WdCoolingModel : public StellarModel
     virtual std::pair<double, double> wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass) const = 0;
 
     // WD Cooling models are FilterSet agnostic
-    virtual bool isSupported(FilterSetName) { return true; }
+    virtual bool isSupported(FilterSetName) const { return true; }
 
   protected:
     std::vector<struct wdCoolingCurve> wdCurves;

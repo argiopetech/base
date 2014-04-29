@@ -17,7 +17,7 @@ class BergeronAtmosphereModel : public WdAtmosphereModel
     virtual void loadModel (std::string path, FilterSetName filterSet);
     virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdMass, WdAtmosphere wdType) const;
 
-    virtual bool isSupported(FilterSetName);
+    virtual bool isSupported(FilterSetName) const;
 };
 
 #endif

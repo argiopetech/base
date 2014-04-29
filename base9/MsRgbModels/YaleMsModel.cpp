@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 #include <cmath>
@@ -73,7 +74,13 @@ static vector<string> getFileNames (const string path)
 }
 
 
-bool YaleMsModel::isSupported(FilterSetName filterSet)
+string YaleMsModel::getFileName (string) const
+{
+    throw std::logic_error("YY models do not support single-file loading");
+}
+
+
+bool YaleMsModel::isSupported(FilterSetName filterSet) const
 {
     return (filterSet == FilterSetName::UBVRIJHK);
 }

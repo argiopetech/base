@@ -2,8 +2,9 @@
 #include <array>
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
+#include <stdexcept>
 #include <vector>
 
 #include <cstdio>
@@ -54,7 +55,13 @@ static vector<string> getFileNames (string path, FilterSetName filterSet)
 }
 
 
-bool GirardiMsModel::isSupported(FilterSetName filterSet)
+string GirardiMsModel::getFileName (string) const
+{
+    throw std::logic_error("Girardi models do not support single-file loading");
+}
+
+
+bool GirardiMsModel::isSupported(FilterSetName filterSet) const
 {
     return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::ACS);
 }
