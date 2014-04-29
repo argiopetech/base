@@ -183,8 +183,9 @@ void YaleMsModel::loadModel (const string path, FilterSetName filterSet)
         } // EOF
 
 //        fileZ = log10(fileZ / modelZSolar);
-
-        fehCurves.emplace_back(fileFeH, isochrones); // Push the entire isochrone set into the model's FehCurve vector
+        vector<HeliumCurve> tVector;
+        tVector.emplace_back(0.0, isochrones);
+        fehCurves.emplace_back(fileFeH, tVector); // Push the entire isochrone set into the model's FehCurve vector
 
         fin.close();
     }
@@ -216,10 +217,10 @@ void YaleMsModel::loadModel (const string path, FilterSetName filterSet)
     fin.close();
 
     //Set the min and max age in this model set (for use in densities.c)
-    ageLimit.first = fehCurves.front().isochrones.front().logAge;
-    ageLimit.second = fehCurves.front().isochrones.back().logAge;
+    ageLimit.first = fehCurves.front().heliumCurves.front().isochrones.front().logAge;
+    ageLimit.second = fehCurves.front().heliumCurves.front().isochrones.back().logAge;
 
-    assert(ageLimit.second == fehCurves.back().isochrones.back().logAge);
+    assert(ageLimit.second == fehCurves.back().heliumCurves.back().isochrones.back().logAge);
 }
 
 
@@ -233,8 +234,8 @@ double YaleMsModel::deriveAgbTipMass (const vector<int> &filters, double newFeH,
 
 Isochrone YaleMsModel::deriveIsochrone (const vector<int> &filters, double newFeH, double, double newAge) const
 {
-    if ((newAge < fehCurves.front().isochrones.front().logAge)
-     || (newAge > fehCurves.back().isochrones.back().logAge)
+    if ((newAge < fehCurves.front().heliumCurves.front().isochrones.front().logAge)
+     || (newAge > fehCurves.back().heliumCurves.front().isochrones.back().logAge)
      || (newFeH < fehCurves.front().feh)
      || (newFeH > fehCurves.back().feh))
     {

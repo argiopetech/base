@@ -198,13 +198,15 @@ void GirardiMsModel::loadModel (string path, FilterSetName filterSet)
         }
 
         isochrones.emplace_back(logAge, eeps); // Push in the last age for this [Fe/H]
-        fehCurves.emplace_back(fileZ, isochrones); // Push the entire isochrone set into the model's FehCurve vector
+        vector<HeliumCurve> tVector;
+        tVector.emplace_back(0.0, isochrones);
+        fehCurves.emplace_back(fileZ, tVector); // Push the entire isochrone set into the model's FehCurve vector
 
         fin.close();
     }
 
-    ageLimit.first = fehCurves.front().isochrones.front().logAge;
-    ageLimit.second = fehCurves.front().isochrones.back().logAge;
+    ageLimit.first = fehCurves.front().heliumCurves.front().isochrones.front().logAge;
+    ageLimit.second = fehCurves.front().heliumCurves.front().isochrones.back().logAge;
 }
 
 
@@ -255,9 +257,9 @@ Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double new
     // Assure that the iAge is reasonable
     // Age gridding is identical between [Fe/H] grid points
     assert(iAge >= 0);
-    assert(fehIter->isochrones.size() > iAge);
-    assert(fehIter->isochrones.at(iAge).logAge     < newAge);
-    assert(fehIter->isochrones.at(iAge + 1).logAge >= newAge);
+    assert(fehIter->heliumCurves.front().isochrones.size() > iAge);
+    assert(fehIter->heliumCurves.front().isochrones.at(iAge).logAge     < newAge);
+    assert(fehIter->heliumCurves.front().isochrones.at(iAge + 1).logAge >= newAge);
 
     vector<Isochrone> interpIso;
 
@@ -265,7 +267,8 @@ Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double new
     for (int i = 0; i < 2; ++i)
     {
         // Shortcut iterator to replace the full path from fehIter
-        auto ageIter = fehIter[i].isochrones.begin() + iAge;
+        // There's only one Y value, so we're using .front()
+        auto ageIter = fehIter[i].heliumCurves.front().isochrones.begin() + iAge;
 
         assert(ageIter[0].eeps.front().mass == ageIter[1].eeps.front().mass);
 
@@ -370,20 +373,20 @@ double GirardiMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
         // The AGBt for the youngest isochrone in the given [Fe/H]
         // This should be the largest AGBt for that [Fe/H]
         // Possible if the cluster logAge is less than 7.8
-        if (zamsMass > fehIter[i].isochrones.front().agbTipMass())
+        if (zamsMass > fehIter[i].heliumCurves.front().isochrones.front().agbTipMass())
         {
-            wdPrecLogAge[i] = -2.7 * log10 (zamsMass / fehIter[i].isochrones.front().agbTipMass()) + fehIter[i].isochrones.front().logAge;
+            wdPrecLogAge[i] = -2.7 * log10 (zamsMass / fehIter[i].heliumCurves.front().isochrones.front().agbTipMass()) + fehIter[i].heliumCurves.front().isochrones.front().logAge;
         }
         else
         {
             // Search ages in reverse (since the agbTips decrease as age increases)
-            auto ageIter = lower_bound(fehIter[i].isochrones.rbegin(), fehIter[i].isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
+            auto ageIter = lower_bound(fehIter[i].heliumCurves.front().isochrones.rbegin(), fehIter[i].heliumCurves.front().isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
 
-            if (ageIter == fehIter[i].isochrones.rend())
+            if (ageIter == fehIter[i].heliumCurves.front().isochrones.rend())
             {
                 ageIter -= 2;
             }
-            else if (ageIter != fehIter[i].isochrones.rbegin())
+            else if (ageIter != fehIter[i].heliumCurves.front().isochrones.rbegin())
             {
                 ageIter -= 1;
             }

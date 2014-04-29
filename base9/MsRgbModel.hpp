@@ -13,10 +13,33 @@
 class MsRgbModel : virtual public StellarModel
 {
   protected:
+    struct HeliumCurve
+    {
+        HeliumCurve(double y, std::vector<Isochrone> isochrones)
+            : y(y), isochrones(isochrones)
+        {;}
+
+        ~HeliumCurve()
+        {;}
+
+        static bool compareY(const HeliumCurve &a, const double b)
+        {
+            return a.y < b;
+        }
+
+        bool operator<(const struct HeliumCurve &b) const
+        {
+            return y < b.y;
+        }
+
+        double y;
+        std::vector<Isochrone> isochrones;
+    };
+
     struct FehCurve
     {
-        FehCurve(double feh, std::vector<Isochrone> isochrones)
-            : feh(feh), isochrones(isochrones)
+        FehCurve(double feh, std::vector<HeliumCurve> heliumCurves)
+            : feh(feh), heliumCurves(heliumCurves)
         {;}
 
         ~FehCurve()
@@ -33,7 +56,7 @@ class MsRgbModel : virtual public StellarModel
         }
 
         double feh;
-        std::vector<Isochrone> isochrones;
+        std::vector<HeliumCurve> heliumCurves;
     };
 
   public:
