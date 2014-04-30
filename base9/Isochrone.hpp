@@ -1,15 +1,21 @@
 #ifndef ISOCHRONE_HPP
 #define ISOCHRONE_HPP
 
-#include <array>
 #include <limits>
 #include <vector>
 
 struct EvolutionaryPoint
 {
-    EvolutionaryPoint(int eep, double mass, std::array<double, FILTS> mags)
+    EvolutionaryPoint(int eep, double mass, std::vector<double> mags)
         : eep(eep), mass(mass), mags(mags)
     {;}
+
+    EvolutionaryPoint(int eep, double mass, std::array<double, FILTS> mags)
+        : eep(eep), mass(mass)
+    {
+        for (auto a : mags)
+            this->mags.push_back(a);
+    }
 
     ~EvolutionaryPoint()
     {;}
@@ -33,7 +39,7 @@ struct EvolutionaryPoint
     int eep;
     double mass;
 
-    std::array<double, FILTS> mags;
+    std::vector<double> mags;
 };
 
 struct Isochrone
@@ -53,6 +59,11 @@ struct Isochrone
     static bool compareAgbTip(const Isochrone &a, const double b)
     {
         return a.agbTipMass() < b;
+    }
+
+    static bool compareAge(const Isochrone &a, const double b)
+    {
+        return a.logAge < b;
     }
 
     bool operator<(const struct Isochrone &b) const

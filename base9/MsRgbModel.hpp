@@ -107,6 +107,9 @@ modified for different model sets.
     std::vector<struct FehCurve> fehCurves;
 
   private:
+    Isochrone deriveIsochrone_oneY(const std::vector<int>&, double, double) const;
+    Isochrone deriveIsochrone_manyY(const std::vector<int>&, double, double, double) const;
+
     std::vector<std::string> availableFilters;
 };
 #endif

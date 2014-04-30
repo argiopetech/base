@@ -210,18 +210,6 @@ void GirardiMsModel::loadModel (string path, FilterSetName filterSet)
 }
 
 
-/****************************************************************************************
-Derive AGBt mass (actually the ZAMS mass for the appropriate AGBt star) for a given
-cluster age, interpolating in isochrones as necessary.
-****************************************************************************************/
-double GirardiMsModel::deriveAgbTipMass (const vector<int> &filters, double newFeH, double ignored, double newAge)
-{
-    isochrone = deriveIsochrone(filters, newFeH, ignored, newAge);
-
-    return isochrone.agbTipMass();
-}
-
-
 Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double newFeH, double, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH

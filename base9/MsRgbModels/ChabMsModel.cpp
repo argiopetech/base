@@ -18,11 +18,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-static void initIso (struct cIsochrone *iso);
-static void getFileName (string path, int z, int y);
-static char tempFile[100];
-
-
 bool ChabMsModel::isSupported(FilterSetName filterSet) const
 {
     return (filterSet == FilterSetName::UBVRIJHK);
