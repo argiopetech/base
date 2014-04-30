@@ -120,6 +120,7 @@ void MsRgbModel::loadModel(string path, FilterSetName)
                             heliumCurves.clear();
                             isochrones.clear();
                             eeps.clear();
+                            haveFirstRecord = false;
                         }
                         else if (currentY != previousY)
                         {
@@ -134,7 +135,6 @@ void MsRgbModel::loadModel(string path, FilterSetName)
                             cerr << "Something changed that we don't support:\n\t" << line << endl;
                             exit(1);
                         }
-
                     }
 
                     // Save all the values for the next section header check
@@ -659,7 +659,6 @@ double MsRgbModel::wdPrecLogAge(double thisFeH, double zamsMass)
     {
         // The AGBt for the youngest isochrone in the given [Fe/H]
         // This should be the largest AGBt for that [Fe/H]
-        // Possible if the cluster logAge is less than 7.8
         if (zamsMass > fehIter[i].heliumCurves.front().isochrones.front().agbTipMass())
         {
             wdPrecLogAge[i] = -2.7 * log10 (zamsMass / fehIter[i].heliumCurves.front().isochrones.front().agbTipMass()) + fehIter[i].heliumCurves.front().isochrones.front().logAge;
