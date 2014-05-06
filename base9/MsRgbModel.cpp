@@ -639,9 +639,111 @@ array<double, FILTS> MsRgbModel::msRgbEvol (const vector<int> &filters, double z
 }
 
 
-double MsRgbModel::wdPrecLogAge(double thisFeH, double zamsMass)
+double MsRgbModel::wdPrecLogAge(double thisFeH, double zamsMass, double thisY) const
 {
-    cout << "Incomplete, add Y" << endl;
+    if (fehCurves.front().heliumCurves.size() == 1)
+        return wdPrecLogAge_oneY(thisFeH, zamsMass);
+    else
+        return wdPrecLogAge_manyY(thisFeH, zamsMass, thisY);
+}
+
+double MsRgbModel::wdPrecLogAge_manyY(double thisFeH, double zamsMass, double newY) const
+{
+    auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
+
+    if (fehIter == fehCurves.end())
+    {
+        fehIter -= 2;
+    }
+    else if (fehIter != fehCurves.begin())
+    {
+        fehIter -= 1;
+    }
+
+    int iY;
+
+    {
+        auto yIter = lower_bound(fehIter[0].heliumCurves.begin(), fehIter[0].heliumCurves.end(), newY, HeliumCurve::compareY);
+
+        if (yIter == fehIter[0].heliumCurves.end())
+        {
+            yIter -= 2;
+        }
+        else if (yIter != fehIter[0].heliumCurves.begin())
+        {
+            yIter -= 1;
+        }
+
+        // An index is more useful, as Y indexes should be identical across FeHCurves
+        iY = yIter - fehIter[0].heliumCurves.begin();
+    }
+
+    array<double, 2> wdPrecLogAge;
+
+    for (int i = 0; i < 2; ++i)
+    {
+        auto yIter = fehIter[i].heliumCurves.begin() + iY;
+
+        array<double, 2> tmpPrecLogAge;
+
+        for (int y = 0; y < 2; ++y)
+        {
+            // The AGBt for the youngest isochrone in the given [Fe/H]
+            // This should be the largest AGBt for that [Fe/H]
+            if (zamsMass > yIter[y].isochrones.front().agbTipMass())
+            {
+                tmpPrecLogAge[y] = -2.7 * log10 (zamsMass / yIter[y].isochrones.front().agbTipMass()) + yIter[y].isochrones.front().logAge;
+            }
+            else
+            {
+                // Search ages in reverse (since the agbTips decrease as age increases)
+                auto ageIter = lower_bound(yIter[y].isochrones.rbegin(), yIter[y].isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
+
+                if (ageIter == yIter[y].isochrones.rend())
+                {
+                    ageIter -= 2;
+                }
+                else if (ageIter != yIter[y].isochrones.rbegin())
+                {
+                    ageIter -= 1;
+                }
+
+                // Ensure that we found a reasonable value here
+                // This seems backward in the context of the reverse_iterator
+                // because the AGBt decreases as logAge increases.
+
+                // This was previously asserted, but it doesn't hold if
+                // we're looking for a zamsMass smaller than the minimum
+                // (which happens in simCluster)
+                // assert(ageIter[0].agbTipMass() <= zamsMass);
+                assert(ageIter[1].agbTipMass() > zamsMass);
+
+                tmpPrecLogAge[y] = linearTransform<TransformMethod::Interp>(ageIter[0].agbTipMass()
+                                                                          , ageIter[1].agbTipMass()
+                                                                          , ageIter[0].logAge
+                                                                          , ageIter[1].logAge
+                                                                          , zamsMass).val;
+
+                // This seems backwards because of the reverse_iterator
+                assert(ageIter[0].logAge >= tmpPrecLogAge[y]);
+                assert(ageIter[1].logAge <= tmpPrecLogAge[y]);
+            }
+        }
+
+        wdPrecLogAge[i] = linearTransform<TransformMethod::Interp>(yIter[0].y
+                                                                 , yIter[1].y
+                                                                 , tmpPrecLogAge[0]
+                                                                 , tmpPrecLogAge[1]
+                                                                 , newY).val;
+
+    }
+
+    // Linearly interpolate in FeH
+    return linearTransform<TransformMethod::Interp>(fehIter[0].feh, fehIter[1].feh, wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
+}
+
+double MsRgbModel::wdPrecLogAge_oneY(double thisFeH, double zamsMass) const
+{
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
 
     if (fehIter == fehCurves.end())

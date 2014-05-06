@@ -90,7 +90,7 @@ mass and age.
 Distributed most of the code to the respective subroutines, leaving only those to be
 modified for different model sets.
 ****************************************************************************************/
-    virtual double wdPrecLogAge(double, double);
+    virtual double wdPrecLogAge(double, double, double) const;
 
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }
@@ -109,6 +109,9 @@ modified for different model sets.
   private:
     Isochrone deriveIsochrone_oneY(const std::vector<int>&, double, double) const;
     Isochrone deriveIsochrone_manyY(const std::vector<int>&, double, double, double) const;
+
+    double wdPrecLogAge_oneY(double, double) const;
+    double wdPrecLogAge_manyY(double, double, double) const;
 
     std::vector<std::string> availableFilters;
 };

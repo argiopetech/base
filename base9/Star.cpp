@@ -65,7 +65,7 @@ array<double, FILTS> Star::wdEvol (const Cluster &clust, const Model &evoModels)
 {
     double thisWDMass = intlFinalMassReln (clust, evoModels, mass);
 
-    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
+    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass, clust.yyy);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
     auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (clust.age, clust.carbonicity, precLogAge, thisWDMass);
@@ -101,7 +101,7 @@ double Star::wdLogTeff(const Cluster &clust, const Model &evoModels) const
 {
     double thisWDMass = intlFinalMassReln (clust, evoModels, mass);
 
-    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
+    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass, clust.yyy);
 
     auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (clust.age, clust.carbonicity, precLogAge, thisWDMass);
 
@@ -111,7 +111,7 @@ double Star::wdLogTeff(const Cluster &clust, const Model &evoModels) const
 
 double Star::getLtau(const Cluster &clust, const Model &evoModels) const
 {
-    return evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass);
+    return evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass, clust.yyy);
 }
 
 double StellarSystem::getMassRatio() const
