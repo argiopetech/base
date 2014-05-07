@@ -222,10 +222,10 @@ Isochrone MsRgbModel::deriveIsochrone_oneY(const vector<int>& filters, double ne
      || (newFeH < fehCurves.front().feh)
      || (newFeH > fehCurves.back().feh))
     {
-        cerr << newAge << " >? " << ageLimit.first << endl;
-        cerr << newAge << " <? " << ageLimit.second << endl;
-        cerr << newFeH << " >? " << fehCurves.front().feh << endl;
-        cerr << newFeH << " <? " << fehCurves.back().feh << endl;
+        // cerr << newAge << " >? " << ageLimit.first << endl;
+        // cerr << newAge << " <? " << ageLimit.second << endl;
+        // cerr << newFeH << " >? " << fehCurves.front().feh << endl;
+        // cerr << newFeH << " <? " << fehCurves.back().feh << endl;
         throw InvalidCluster("Age or FeH out of bounds in MsRgbModel::deriveIsochrone");
     }
 
@@ -379,10 +379,10 @@ Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double n
      || (newFeH < fehCurves.front().feh)
      || (newFeH > fehCurves.back().feh))
     {
-        cerr << newAge << " >? " << ageLimit.first << endl;
-        cerr << newAge << " <? " << ageLimit.second << endl;
-        cerr << newFeH << " >? " << fehCurves.front().feh << endl;
-        cerr << newFeH << " <? " << fehCurves.back().feh << endl;
+        // cerr << newAge << " >? " << ageLimit.first << endl;
+        // cerr << newAge << " <? " << ageLimit.second << endl;
+        // cerr << newFeH << " >? " << fehCurves.front().feh << endl;
+        // cerr << newFeH << " <? " << fehCurves.back().feh << endl;
         throw InvalidCluster("Age or FeH out of bounds in MsRgbModel::deriveIsochrone");
     }
 
