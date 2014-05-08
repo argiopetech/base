@@ -229,7 +229,7 @@ Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double new
     // next lowest 0.05, subtracts the minimum age of the Girardi isochrones,
     // multiplies by the integral of the Girardi logAge step size, and rounds to
     // an integer (which conveniently ends up being the age index).
-    int iAge = (int) (rint ((roundAge - 7.8) * 20));
+    size_t iAge = (int) (rint ((roundAge - 7.8) * 20));
 
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), newFeH, FehCurve::compareFeh);
 
