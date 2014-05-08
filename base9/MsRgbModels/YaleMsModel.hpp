@@ -59,7 +59,7 @@ class YaleMsModel : public MsRgbModel
     virtual ~YaleMsModel() {;}
 
     virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
-    virtual double wdPrecLogAge(double, double);
+    virtual double wdPrecLogAge(double, double, double) const;
     virtual void loadModel(std::string, FilterSetName);
 
     virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;

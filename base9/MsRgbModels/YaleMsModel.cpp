@@ -454,7 +454,7 @@ Note that the appropriate AgbTurnoffMass mass and lifetime is not the ZAMS mass 
 the star currently at the AgbTurnoffMass, but rather refers to the properties of the potentially
 higher mass and younger AgbTurnoffMass star that was the WD precursor.
 *************************************************************************************/
-double YaleMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
+double YaleMsModel::wdPrecLogAge (double thisFeH, double zamsMass, double) const
 {
     if (zamsMass < 1.0)
     {
