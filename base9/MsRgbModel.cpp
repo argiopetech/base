@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Cluster.hpp"
+#include "Isochrone.hpp"
 #include "LinearTransform.hpp"
 #include "Matrix.hpp"
 #include "MsRgbModel.hpp"
@@ -21,6 +22,77 @@ using std::stringstream;
 using std::vector;
 
 const unsigned int maxIgnore = std::numeric_limits<char>::max();
+
+void MsRgbModel::restrictToFilters(const vector<string>& filters)
+{
+    vector<int> indices;
+
+    for (auto f : filters)
+    {
+        bool foundFilter = false;
+
+        for (size_t i = 0; i < availableFilters.size(); ++i)
+        {
+            if ( f == availableFilters.at(i) )
+            {
+                indices.push_back(i);
+
+                foundFilter = true;
+                break;
+            }
+        }
+
+        if ( ! foundFilter )
+        {
+            cout << "Couldn't find filter \"" << f << "\" in selected model set" << endl;
+            exit(-1);
+        }
+    }
+
+    for (size_t i = 0; i < indices.size(); ++i)
+    {
+        // Prepend the desired filter values to the beginning of the list...
+        availableFilters.insert(availableFilters.begin() + i, availableFilters.at(indices.at(i) + i));
+    }
+
+    // ...then erase the rest.
+    availableFilters.erase(availableFilters.begin() + indices.size(), availableFilters.end());
+    // And try to reduce the capacity() to what is actually needed
+    availableFilters.shrink_to_fit();
+
+    // We should now have the same number of filters in the available filter set as in the input vector.
+    assert(availableFilters.size() == filters.size());
+
+    // Having this as a seperate loop allows a size assertion without
+    // going over the data structure again. It also probably isn't bad
+    // for cache locality (not that it matters)
+    for (auto &fehs : fehCurves)
+    {
+        for (auto &ys : fehs.heliumCurves)
+        {
+            for (auto &is : ys.isochrones)
+            {
+                for (auto &eep : is.eeps)
+                {
+                    for (size_t i = 0; i < indices.size(); ++i)
+                    {
+                        // Prepend the desired filter values to the beginning of the list...
+                        eep.mags.insert(eep.mags.begin() + i, eep.mags.at(indices.at(i) + i));
+                    }
+
+                    // ...then erase the rest.
+                    eep.mags.erase(eep.mags.begin() + indices.size(), eep.mags.end());
+                    // And try to reduce the capacity() to what is actually needed
+                    eep.mags.shrink_to_fit();
+
+                    // At this point, eep.mags, availableFilters, and filters should all be the same size.
+                    assert(eep.mags.size() <= filters.size());
+                }
+            }
+        }
+    }
+}
+
 
 void MsRgbModel::loadModel(string path, FilterSetName)
 {

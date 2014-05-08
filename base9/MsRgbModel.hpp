@@ -90,6 +90,7 @@ Distributed most of the code to the respective subroutines, leaving only those t
 modified for different model sets.
 ****************************************************************************************/
     virtual double wdPrecLogAge(double, double, double) const;
+    void restrictToFilters(const std::vector<std::string>&);
 
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }
