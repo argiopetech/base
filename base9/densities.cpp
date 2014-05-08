@@ -1,4 +1,3 @@
-#include <array>
 #include <vector>
 
 #include <cassert>
@@ -15,7 +14,6 @@
 
 #include <iostream>
 
-using std::array;
 using std::vector;
 
 constexpr double sqr(double a)
@@ -89,7 +87,7 @@ double Cluster::logPrior (const Model &evoModels) const
     return prior;
 }
 
-static double scaledLogLike (const vector<int> &filters, const vector<double> &obsPhot, const vector<double> &variance, const array<double, FILTS> &mags, double varScale)
+static double scaledLogLike (const vector<int> &filters, const vector<double> &obsPhot, const vector<double> &variance, const vector<double> &mags, double varScale)
 {
     double likelihood = 0.0;
 
@@ -118,7 +116,7 @@ double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, con
         throw WDBoundsError("Bounds error in evolve.cpp");
     }
 
-    const array<double, FILTS> mags = deriveCombinedMags(clust, evoModels, filters);
+    const vector<double> mags = deriveCombinedMags(clust, evoModels, filters);
 
     double logPrior = clust.logPriorMass (primary.mass);
 

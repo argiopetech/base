@@ -139,8 +139,8 @@ void GirardiMsModel::loadModel (string path, FilterSetName filterSet)
 
                 stringstream in(line);
 
-                array<double, FILTS> mags;
-                mags.fill(99.999);
+                vector<double> mags;
+                mags.resize(FILTS, 99.999);
 
                 if (filterSet == FilterSetName::UBVRIJHK)
                 {                       // Girardi UBVRIJHK isocrhones
@@ -268,8 +268,8 @@ Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double new
 
         for (size_t e = 0; e < numEeps; ++e)
         {
-            array<double, FILTS> mags;
-            mags.fill(99.999);
+            vector<double> mags;
+            mags.resize(FILTS, 99.999);
 
             for (auto f : filters)
             {
@@ -308,8 +308,8 @@ Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double new
 
     for (size_t e = 0; e < numEeps; ++e)
     {
-        array<double, FILTS> mags;
-        mags.fill(99.999);
+        vector<double> mags;
+        mags.resize(FILTS, 99.999);
 
         for (auto f : filters)
         {
@@ -333,74 +333,4 @@ Isochrone GirardiMsModel::deriveIsochrone(const vector<int>& filters, double new
     assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
 
     return {interpIso.at(0).logAge, interpEeps};
-}
-
-/*************************************************************************************
-Determine WD precursor age by 2-D interpolating among the AGBt mass versus age values.
-Note that the appropriate AGBt mass and lifetime is not the ZAMS mass and lifetime of
-the star currently at the AGBt, but rather refers to the properties of the potentially
-higher mass and younger AGBt star that was the WD precursor.
-*************************************************************************************/
-double GirardiMsModel::wdPrecLogAge (double thisFeH, double zamsMass)
-{
-    auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
-
-    if (fehIter == fehCurves.end())
-    {
-        fehIter -= 2;
-    }
-    else if (fehIter != fehCurves.begin())
-    {
-        fehIter -= 1;
-    }
-
-    array<double, 2> wdPrecLogAge;
-
-    for (int i = 0; i < 2; ++i)
-    {
-        // The AGBt for the youngest isochrone in the given [Fe/H]
-        // This should be the largest AGBt for that [Fe/H]
-        // Possible if the cluster logAge is less than 7.8
-        if (zamsMass > fehIter[i].heliumCurves.front().isochrones.front().agbTipMass())
-        {
-            wdPrecLogAge[i] = -2.7 * log10 (zamsMass / fehIter[i].heliumCurves.front().isochrones.front().agbTipMass()) + fehIter[i].heliumCurves.front().isochrones.front().logAge;
-        }
-        else
-        {
-            // Search ages in reverse (since the agbTips decrease as age increases)
-            auto ageIter = lower_bound(fehIter[i].heliumCurves.front().isochrones.rbegin(), fehIter[i].heliumCurves.front().isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
-
-            if (ageIter == fehIter[i].heliumCurves.front().isochrones.rend())
-            {
-                ageIter -= 2;
-            }
-            else if (ageIter != fehIter[i].heliumCurves.front().isochrones.rbegin())
-            {
-                ageIter -= 1;
-            }
-
-            // Ensure that we found a reasonable value here
-            // This seems backward in the context of the reverse_iterator
-            // because the AGBt decreases as logAge increases.
-
-            // This was previously asserted, but it doesn't hold if
-            // we're looking for a zamsMass smaller than the minimum
-            // (which happens in simCluster)
-            // assert(ageIter[0].agbTipMass() <= zamsMass);
-            assert(ageIter[1].agbTipMass() > zamsMass);
-
-            wdPrecLogAge[i] = linearTransform<TransformMethod::Interp>(ageIter[0].agbTipMass()
-                                                                     , ageIter[1].agbTipMass()
-                                                                     , ageIter[0].logAge
-                                                                     , ageIter[1].logAge
-                                                                     , zamsMass).val;
-
-            // This seems backwards because of the reverse_iterator
-            assert(ageIter[0].logAge >= wdPrecLogAge[i]);
-            assert(ageIter[1].logAge <= wdPrecLogAge[i]);
-        }
-    }
-
-    // Linearly interpolate in FeH
-    return linearTransform<TransformMethod::Interp>(fehIter[0].feh, fehIter[1].feh, wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
 }

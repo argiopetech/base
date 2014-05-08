@@ -14,7 +14,7 @@ class InvalidAtmosphereModel : public WdAtmosphereModel, public InvalidModel
   public:
     virtual ~InvalidAtmosphereModel() {}
 
-    virtual std::array<double, FILTS> teffToMags  (double, double, WdAtmosphere) const
+    virtual std::vector<double> teffToMags  (double, double, WdAtmosphere) const
     {
         throw InvalidModelError("Called teffToMags() in invalid atmosphere model");
     }

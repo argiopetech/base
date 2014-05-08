@@ -138,9 +138,10 @@ void YaleMsModel::loadModel (const string path, FilterSetName filterSet)
 
                 stringstream in(line);
 
-                array<double, FILTS> mags;
-                array<double, 7> params;
-                mags.fill(99.999);
+                vector<double> mags;
+                mags.resize(FILTS);
+                vector<double> params;
+                mags.resize(7, 99.999);
 
                 in >> tempMass
                    >> ignore >> ignore >> ignore

@@ -336,7 +336,7 @@ int main (int argc, char *argv[])
         maxAge = 9.7;
     }
 
-    std::array<double, FILTS> photometry;
+    std::vector<double> photometry;
 
     i = 0;
     while (i < settings.simCluster.nFieldStars)

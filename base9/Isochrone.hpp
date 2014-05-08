@@ -10,13 +10,6 @@ struct EvolutionaryPoint
         : eep(eep), mass(mass), mags(mags)
     {;}
 
-    EvolutionaryPoint(int eep, double mass, std::array<double, FILTS> mags)
-        : eep(eep), mass(mass)
-    {
-        for (auto a : mags)
-            this->mags.push_back(a);
-    }
-
     ~EvolutionaryPoint()
     {;}
 

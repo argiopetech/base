@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -289,8 +288,8 @@ Isochrone MsRgbModel::deriveIsochrone_oneY(const vector<int>& filters, double ne
 
         for (size_t e = 0; e < numEeps; ++e)
         {
-            array<double, FILTS> mags;
-            mags.fill(99.999);
+            vector<double> mags;
+            mags.resize(FILTS);
 
             for (auto f : filters)
             {
@@ -340,8 +339,8 @@ Isochrone MsRgbModel::deriveIsochrone_oneY(const vector<int>& filters, double ne
 
     for (size_t e = 0; e < numEeps; ++e)
     {
-        array<double, FILTS> mags;
-        mags.fill(99.999);
+        vector<double> mags;
+        mags.resize(FILTS);
 
         for (auto f : filters)
         {
@@ -465,8 +464,8 @@ Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double n
 
             for (size_t e = 0; e < numEeps; ++e)
             {
-                array<double, FILTS> mags;
-                mags.fill(99.999);
+                vector<double> mags;
+                mags.resize(FILTS);
 
                 for (auto f : filters)
                 {
@@ -524,8 +523,8 @@ Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double n
 
         for (size_t e = 0; e < numEeps; ++e)
         {
-            array<double, FILTS> mags;
-            mags.fill(99.999);
+            vector<double> mags;
+            mags.resize(FILTS);
 
             for (auto f : filters)
             {
@@ -574,8 +573,8 @@ Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double n
 
     for (size_t e = 0; e < numEeps; ++e)
     {
-        array<double, FILTS> mags;
-        mags.fill(99.999);
+        vector<double> mags;
+        mags.resize(FILTS);
 
         for (auto f : filters)
         {
@@ -604,10 +603,10 @@ Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double n
 }
 
 
-array<double, FILTS> MsRgbModel::msRgbEvol (const vector<int> &filters, double zamsMass) const
+vector<double> MsRgbModel::msRgbEvol (const vector<int> &filters, double zamsMass) const
 {
-    array<double, FILTS> mags;
-    mags.fill(99.999);
+    vector<double> mags;
+    mags.resize(FILTS);
 
     auto m = lower_bound(isochrone.eeps.begin(), isochrone.eeps.end(), zamsMass, EvolutionaryPoint::compareMass);
 

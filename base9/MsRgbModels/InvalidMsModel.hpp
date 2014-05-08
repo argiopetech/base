@@ -19,7 +19,7 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
         throw InvalidModelError("Called deriveAgbTipMass() in invalid MainSequence model");
     }
 
-    virtual double wdPrecLogAge(double, double)
+    virtual double wdPrecLogAge(double, double, double)
     {
         throw InvalidModelError("Called wdPrecLogAge() in invalid MainSequence model");
     }

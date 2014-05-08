@@ -19,8 +19,6 @@ class GirardiMsModel : public MsRgbModel
 
     virtual void loadModel(std::string, FilterSetName);
 
-    virtual double wdPrecLogAge(double, double);
-
     virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
 
     virtual bool isSupported(FilterSetName) const;

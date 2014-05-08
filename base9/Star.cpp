@@ -1,4 +1,3 @@
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <sstream>
@@ -10,13 +9,12 @@
 #include "Model.hpp"
 #include "Star.hpp"
 
-using std::array;
 using std::ifstream;
 using std::string;
 using std::stringstream;
 using std::vector;
 
-array<double, FILTS> Star::getMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
+vector<double> Star::getMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
 {
     // Masses greater than 100Mo should never occur
     assert (mass <= 100.0);
@@ -30,8 +28,8 @@ array<double, FILTS> Star::getMags (const Cluster &clust, const Model &evoModels
             return wdEvol (clust, evoModels);
 
         default:   // For brown dwarfs, neutron stars, black hole remnants, and 0-mass secondaries
-            array<double, FILTS> mags;
-            mags.fill(99.999);
+            vector<double> mags;
+            mags.resize(FILTS, 99.999);
 
             return mags;
     }
@@ -61,7 +59,7 @@ StarStatus Star::getStatus(const Cluster &clust) const
     }
 }
 
-array<double, FILTS> Star::wdEvol (const Cluster &clust, const Model &evoModels) const
+vector<double> Star::wdEvol (const Cluster &clust, const Model &evoModels) const
 {
     double thisWDMass = intlFinalMassReln (clust, evoModels, mass);
 
@@ -175,7 +173,7 @@ void StellarSystem::readCMD(const string &s, int filters)
 }
 
 
-array<double, FILTS> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
 {
     auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
 
@@ -184,9 +182,9 @@ array<double, FILTS> StellarSystem::deriveCombinedMags (const Cluster &clust, co
     auto primaryMags = primary.getMags(clust, evoModels, filters);
     auto secondaryMags = secondary.getMags(clust, evoModels, filters);
 
-    array<double, FILTS> combinedMags;
+    vector<double> combinedMags;
 
-    combinedMags.fill(0.0);
+    combinedMags.resize(FILTS, 0.0);
 
     // can now derive combined mags
     if (secondaryMags.at(filters.front()) < 99.)

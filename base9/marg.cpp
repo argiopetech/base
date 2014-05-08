@@ -43,7 +43,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
     // Get the mags based on the primary's mass set by margEvolve
     // Also, go ahead and rename system.primary.mass to primaryMass for this function
-    array<double, FILTS> primaryMags = system.primary.getMags (clust, evoModels, filters);
+    vector<double> primaryMags = system.primary.getMags (clust, evoModels, filters);
     const double primaryMass = system.primary.mass;
 
     // Other useful constants

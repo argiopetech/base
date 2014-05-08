@@ -1,7 +1,6 @@
 #ifndef STAR_HPP
 #define STAR_HPP
 
-#include <array>
 #include <string>
 #include <vector>
 
@@ -23,8 +22,8 @@ class Star
     double wdLogTeff(const Cluster&, const Model&) const;
     double wdMassNow(const Cluster&, const Model&) const;
 
-    std::array<double, FILTS> getMags (const Cluster&, const Model&, const std::vector<int>&) const;
-    std::array<double, FILTS> wdEvol (const Cluster&, const Model&) const;
+    std::vector<double> getMags (const Cluster&, const Model&, const std::vector<int>&) const;
+    std::vector<double> wdEvol (const Cluster&, const Model&) const;
 
     // Variables
     WdAtmosphere wdType = WdAtmosphere::DA;
@@ -53,7 +52,7 @@ class StellarSystem
     double getMassRatio() const;
     double logPost (const Cluster &clust, const Model &evoModels, const std::vector<int> &filters) const;
 
-    std::array<double, FILTS> deriveCombinedMags (const Cluster&, const Model&, const std::vector<int>&) const;
+    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const std::vector<int>&) const;
 
     // Variables
     Star primary;

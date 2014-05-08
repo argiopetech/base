@@ -1,7 +1,6 @@
 #ifndef WDATMOS_HPP
 #define WDATMOS_HPP
 
-#include <array>
 #include <map>
 #include <string>
 #include <utility>
@@ -14,7 +13,7 @@ class WdAtmosphereModel : virtual public StellarModel
   protected:
     struct record
     {
-        record(double logTeff, std::array<double, FILTS> mags)
+        record(double logTeff, std::vector<double> mags)
             : logTeff(logTeff), mags(mags)
         {;}
 
@@ -29,7 +28,7 @@ class WdAtmosphereModel : virtual public StellarModel
 
         double logTeff;
 
-        std::array<double, FILTS> mags;
+        std::vector<double> mags;
     };
 
     struct AtmosCurve
@@ -51,7 +50,7 @@ class WdAtmosphereModel : virtual public StellarModel
   public:
     virtual ~WdAtmosphereModel() {}
 
-    virtual std::array<double, FILTS> teffToMags  (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
+    virtual std::vector<double> teffToMags (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
 
   protected:
     std::vector<AtmosCurve> hCurves;

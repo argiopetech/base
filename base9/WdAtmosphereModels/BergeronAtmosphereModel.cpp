@@ -45,8 +45,6 @@ void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterS
     string line, tempFile;
     double teff, ignore, mass;
 
-    array<double, FILTS> mags;
-
     assert(isSupported(filterSet));
 
     // Open the appropriate file for each mass
@@ -73,7 +71,8 @@ void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterS
         while (!fin.eof())
         {
             // Teff logg Mbol BC U B V R I J H K u g r i z y b-y u-b v-y V-I G-R U-V U-G B-V Age
-            mags.fill(0.0);
+            vector<double> mags;
+            mags.resize(FILTS, 0.0);
 
             getline(fin, line);
 
@@ -122,16 +121,16 @@ void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterS
     }
 }
 
-std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff, double wdMass, WdAtmosphere wdType) const
+std::vector<double> BergeronAtmosphereModel::teffToMags (double wdLogTeff, double wdMass, WdAtmosphere wdType) const
 {
     auto transformMags = [=](const std::vector<struct AtmosCurve> &curve)
         {
             Matrix<double, 2, BERG_NFILTS> logTeffMag;
-            array<double, FILTS> mags;
+            vector<double> mags;
 
-            mags.fill(0.0);
+            mags.resize(FILTS, 0.0);
 
-            std::vector<AtmosCurve>::const_iterator massIter;
+            vector<AtmosCurve>::const_iterator massIter;
 
             if (wdMass < 0.2) // Below the hard-coded bottom mass
             {
@@ -146,7 +145,7 @@ std::array<double, FILTS> BergeronAtmosphereModel::teffToMags (double wdLogTeff,
                 massIter = curve.cbegin() + (static_cast<int>(wdMass * 10) - 2);
             } 
 
-            std::array<std::vector<record>::const_iterator, 2> teffIter = {
+            array<vector<record>::const_iterator, 2> teffIter = {
                 lower_bound(massIter[0].record.begin(), massIter[0].record.end(), record(wdLogTeff, mags)),
                 lower_bound(massIter[1].record.begin(), massIter[1].record.end(), record(wdLogTeff, mags))
             };
