@@ -17,10 +17,6 @@ class GirardiMsModel : public MsRgbModel
     GirardiMsModel() {;}
     virtual ~GirardiMsModel() {;}
 
-    virtual void loadModel(std::string, FilterSetName);
-
-    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
-
     virtual bool isSupported(FilterSetName) const;
 
   protected:
