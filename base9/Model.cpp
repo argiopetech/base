@@ -7,7 +7,6 @@
 #include "MsRgbModels/DsedMsModel.hpp"
 #include "MsRgbModels/GirardiMsModel.hpp"
 #include "MsRgbModels/InvalidMsModel.hpp"
-#include "MsRgbModels/YaleMsModel.hpp"
 #include "WdCoolingModels/AlthausWdModel.hpp"
 #include "WdCoolingModels/MontgomeryWdModel.hpp"
 #include "WdCoolingModels/RenedoWdModel.hpp"
@@ -31,7 +30,8 @@ namespace internal
             case MsModel::CHABHELIUM:
                 return shared_ptr<ChabMsModel>(new ChabMsModel);
             case MsModel::YALE:
-                return shared_ptr<YaleMsModel>(new YaleMsModel);
+                cerr << "Yale models are not currently supported." << endl;
+                exit(0);
             case MsModel::DSED:
                 return shared_ptr<DsedMsModel>(new DsedMsModel);
             default:
