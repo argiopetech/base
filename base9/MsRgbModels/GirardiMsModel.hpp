@@ -6,10 +6,7 @@
 
 #include "../MsRgbModel.hpp"
 
-const int N_GIR_Z         = 8;    /* number of metallicities in Girardi isochrones */
-const int N_GIR_AGES      = 50;   /* number of ages in Girardi isochonres */
-const int N_GIR_FILTS     = 8;
-const int MAX_GIR_ENTRIES = 10000;        /* max Girardi entries for given Z */
+const int N_GIR_FILTS = 20;
 
 class GirardiMsModel : public MsRgbModel
 {
@@ -17,14 +14,15 @@ class GirardiMsModel : public MsRgbModel
     GirardiMsModel() {;}
     virtual ~GirardiMsModel() {;}
 
-    virtual bool isSupported(FilterSetName) const;
+    virtual bool isSupported(FilterSetName filterSet) const
+        { return filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::ACS; }
 
   protected:
-    virtual int numFilts() const { return N_GIR_FILTS; }
-    virtual std::string getFileName (std::string) const;
+    virtual int numFilts() const
+        { return N_GIR_FILTS; }
 
-  private:
-    double modelZSolar = 0.019;
+    virtual std::string getFileName (std::string path) const
+        { return path + "girardi/girardi.model"; }
 };
 
 #endif

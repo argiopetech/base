@@ -6,11 +6,7 @@
 
 #include "../MsRgbModel.hpp"
 
-const int N_CHAB_FILTS     = 8;
-const int N_CHAB_Z         = 4;    /* number of metallicities in Chaboyer-Dotter isochrones */
-const int N_CHAB_Y         = 5;    /* number of He abundances in Chaboyer-Dotter isochrones */
-const int N_CHAB_AGES      = 19;   /* number of ages in Chaboyer-Dotter isochonres */
-const int MAX_CHAB_ENTRIES = 280;
+const int N_CHAB_FILTS = 8;
 
 class ChabMsModel : public MsRgbModel
 {
@@ -18,11 +14,15 @@ class ChabMsModel : public MsRgbModel
     ChabMsModel() {;}
     virtual ~ChabMsModel() {;}
 
-    virtual bool isSupported(FilterSetName) const;
+    virtual bool isSupported(FilterSetName filterSet) const
+        { return filterSet == FilterSetName::UBVRIJHK; }
 
   protected:
-    virtual int numFilts() const { return N_CHAB_FILTS; }
-    virtual std::string getFileName (std::string) const;
+    virtual int numFilts() const
+        { return N_CHAB_FILTS; }
+
+    virtual std::string getFileName (std::string path) const
+        { return path + "chaboyer/chaboyer.model"; }
 };
 
 #endif
