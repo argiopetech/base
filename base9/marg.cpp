@@ -41,16 +41,18 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
     auto &isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
+    // Secondary mass to 0.0 to ensure we only look at the primary for the primaryMags.
+    system.secondary.mass = 0.0;
+
     // Get the mags based on the primary's mass set by margEvolve
     // Also, go ahead and rename system.primary.mass to primaryMass for this function
-    vector<double> primaryMags = system.primary.getMags (clust, evoModels, filters);
+    // We call deriveCombinedMags here rather than primary.getMags so that we get abs/distMod correction
+    // This keeps models which haven't been converted to absolute mags from breaking
+    vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels, filters);
     const double primaryMass = system.primary.mass;
 
     // Other useful constants
     const double logdMass = log (dMass); // This is a pre-optimzation so we only have to call log once (instead of nEntries times)
-
-    /* first try 0.0 massRatio */
-    system.secondary.mass = 0.0;
 
     double tmpLogPost = system.logPost (clust, evoModels, filters)
                       + logdMass
@@ -72,9 +74,9 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
             if (system.variance.at(obsFilt) >= 0)
             {
                 const double diffLow = exp10 (((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
-                    - exp10 ((primaryMags.at(f) / -2.5));
+                                     - exp10 ((primaryMags.at(f) / -2.5));
                 const double diffUp = exp10 (((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
-                    - exp10 ((primaryMags.at(f) / -2.5));
+                                    - exp10 ((primaryMags.at(f) / -2.5));
 
                 if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
                 {
