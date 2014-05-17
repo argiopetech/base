@@ -14,7 +14,7 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
 
     virtual void loadModel(std::string, FilterSetName) {throw InvalidModelError("Called deriveAgbTipMass() in invalid MainSequence model");}
 
-    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double)
+    virtual double deriveAgbTipMass(double, double, double)
     {
         throw InvalidModelError("Called deriveAgbTipMass() in invalid MainSequence model");
     }
@@ -24,12 +24,12 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
         throw InvalidModelError("Called wdPrecLogAge() in invalid MainSequence model");
     }
 
-    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const
+    virtual Isochrone deriveIsochrone(double, double, double) const
     {
         throw InvalidModelError("Called deriveIsochrone() in invalid MainSequence model");
     }
 
-    virtual std::vector<double> msRgbEvol(const std::vector<int>&, double) const
+    virtual std::vector<double> msRgbEvol(double) const
     {
         throw InvalidModelError("Called msRgbEvol() in invalid MainSequence model");
     }

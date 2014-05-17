@@ -87,19 +87,15 @@ double Cluster::logPrior (const Model &evoModels) const
     return prior;
 }
 
-static double scaledLogLike (const vector<int> &filters, const vector<double> &obsPhot, const vector<double> &variance, const vector<double> &mags, double varScale)
+static double scaledLogLike (const vector<double> &obsPhot, const vector<double> &variance, const vector<double> &mags, double varScale)
 {
     double likelihood = 0.0;
 
-    auto filtSize = filters.size();
-
-    for (decltype(filters.size()) i = 0; i < filtSize; ++i)
+    for (size_t f = 0; f < obsPhot.size(); ++f)
     {
-        if (variance.at(i) > 1e-9)
+        if (variance.at(f) > 1e-9)
         {
-            int f = filters.at(i);
-
-            likelihood -= 0.5 * (log (2 * M_PI * varScale * variance.at(i)) + (sqr (mags.at(f) - obsPhot.at(i)) / (varScale * variance.at(i))));
+            likelihood -= 0.5 * (log (2 * M_PI * varScale * variance.at(f)) + (sqr (mags.at(f) - obsPhot.at(f)) / (varScale * variance.at(f))));
         }
     }
 
@@ -108,7 +104,7 @@ static double scaledLogLike (const vector<int> &filters, const vector<double> &o
 
 
 // Calculates the posterior density for a stellar system
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels) const
 {
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (clust.AGBt_zmass < EPS)
@@ -116,11 +112,11 @@ double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, con
         throw WDBoundsError("Bounds error in evolve.cpp");
     }
 
-    const vector<double> mags = deriveCombinedMags(clust, evoModels, filters);
+    const vector<double> mags = deriveCombinedMags(clust, evoModels);
 
     double logPrior = clust.logPriorMass (primary.mass);
 
-    double likelihood = scaledLogLike (filters, obsPhot, variance, mags, clust.varScale);
+    double likelihood = scaledLogLike (obsPhot, variance, mags, clust.varScale);
 
     return (logPrior + likelihood);
 }

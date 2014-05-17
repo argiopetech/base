@@ -22,7 +22,7 @@ class Star
     double wdLogTeff(const Cluster&, const Model&) const;
     double wdMassNow(const Cluster&, const Model&) const;
 
-    std::vector<double> getMags (const Cluster&, const Model&, const std::vector<int>&) const;
+    std::vector<double> getMags (const Cluster&, const Model&) const;
     std::vector<double> wdEvol (const Cluster&, const Model&) const;
 
     // Variables
@@ -50,9 +50,9 @@ class StellarSystem
 
     void setMassRatio(double);
     double getMassRatio() const;
-    double logPost (const Cluster &clust, const Model &evoModels, const std::vector<int> &filters) const;
+    double logPost (const Cluster &clust, const Model &evoModels) const;
 
-    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const std::vector<int>&) const;
+    std::vector<double> deriveCombinedMags (const Cluster&, const Model&) const;
 
     // Variables
     Star primary;

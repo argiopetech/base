@@ -22,7 +22,7 @@ class MpiMcmcApplication
     Cluster propClustIndep (Cluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &, double scale);
     Cluster propClustCorrelated (Cluster, const struct ifmrMcmcControl&, const Matrix<double, NPARAMS, NPARAMS>&);
 
-    double logPostStep (Cluster &, double, const std::vector<int>&);
+    double logPostStep (Cluster &, double);
 
     void mainRun(std::function<Cluster(Cluster)> propose, std::function<double(Cluster&)> logPost, ofstream &fout, std::array<double, NPARAMS> priorVar, Cluster clust, int iters, int thin);
 
@@ -32,7 +32,7 @@ class MpiMcmcApplication
 
     double wdGridMass (int) const;
 
-    const Model evoModels;
+    Model evoModels;
     const Settings settings;
 
     std::mt19937 gen;

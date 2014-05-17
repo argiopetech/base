@@ -41,7 +41,7 @@ struct ifmrGridControl
     int iMag;
     int iStart;
     int modelSet;
-    array<double, FILTS> filterPriorMin, filterPriorMax;
+    vector<double> filterPriorMin, filterPriorMax;
     int numFilts;
     int nSamples;
     array<double, NPARAMS> start; /* starting points for grid evaluations */
@@ -66,12 +66,12 @@ struct clustPar
 
 typedef struct
 {
-    array<double, FILTS> obsPhot, variance;
+    vector<double> obsPhot, variance;
     double clustStarPriorDens;  /* cluster membership prior probability */
 } obsStar;
 
 /* declare global variables */
-array<double, FILTS> filterPriorMin, filterPriorMax;
+vector<double> filterPriorMin, filterPriorMax;
 
 /* Used in densities.c. */
 array<double, NPARAMS> priorMean, priorVar;

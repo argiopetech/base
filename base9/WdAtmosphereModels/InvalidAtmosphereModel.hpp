@@ -18,6 +18,8 @@ class InvalidAtmosphereModel : public WdAtmosphereModel, public InvalidModel
     {
         throw InvalidModelError("Called teffToMags() in invalid atmosphere model");
     }
+
+    virtual void restrictToFilters(const std::vector<std::string>&) {;}
 };
 
 #endif

@@ -1,5 +1,7 @@
 #include <iostream>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "constants.hpp"
 #include "Model.hpp"
@@ -18,6 +20,8 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::shared_ptr;
+using std::string;
+using std::vector;
 
 namespace internal
 {
@@ -38,23 +42,6 @@ namespace internal
                 std::cerr << "***Error: No models found for main sequence evolution model " << static_cast<int>(model) << ".***" << std::endl;
                 std::cerr << "[Exiting...]\n" << std::endl;
                 exit(1);
-        }
-    }
-
-    shared_ptr<FilterSet> createFilterSet(FilterSetName filter)
-    {
-        switch (filter)
-        {
-            case FilterSetName::UBVRIJHK:
-                return shared_ptr<UBVRIJHK>(new UBVRIJHK);
-            case FilterSetName::ACS:
-                return shared_ptr<ACS>(new ACS);
-            case FilterSetName::SDSS:
-                return shared_ptr<SDSS>(new SDSS);
-            default:
-                cerr << "***Error: No models found for filter set " << static_cast<int>(filter) << ".***" << endl;
-                cerr << "[Exiting...]" << endl;
-                exit (1);
         }
     }
 
@@ -96,7 +83,6 @@ const Model makeModel(const Settings &s)
     cout << "Reading models..." << std::flush;
 
     Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
-               , internal::createFilterSet(s.mainSequence.filterSet)
                , internal::createWdCoolingModel(s.whiteDwarf.wdModel)
                , internal::createWdAtmosphereModel(WdAtmosphereModelSet::BERGERON));
                  

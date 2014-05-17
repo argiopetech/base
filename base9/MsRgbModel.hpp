@@ -68,8 +68,8 @@ class MsRgbModel : virtual public StellarModel
 
  * Array indices are defined in evolve.h
 ****************************************************************************************/
-    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double) = 0;
-    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const = 0;
+    virtual double deriveAgbTipMass(double, double, double) = 0;
+    virtual Isochrone deriveIsochrone(double, double, double) const = 0;
 
 /****************************************************************************************
 Perform interpolation via  calls to getGirardiMags() or similar.
@@ -77,7 +77,7 @@ The former does 3-D interpolation of the Girardi isochrones.
 
 deriveAgbTipMass() needs to be called first
 ****************************************************************************************/
-    virtual std::vector<double> msRgbEvol (const std::vector<int>&, double) const = 0;
+    vitrual std::vector<double> msRgbEvol (double) const = 0;
 
 /****************************************************************************************
 Derive WD precursor age for a given metallicity, calling in turn wd_prec_g_lage to
@@ -94,6 +94,8 @@ modified for different model sets.
     virtual double getMaxAge() const { return ageLimit.second; }
 
     const Isochrone& getIsochrone() const { return isochrone; }
+
+    std::vector<std::string> getAvailableFilters() const { return availableFilters; }
 
   protected:
     virtual std::string getFileName (std::string) const = 0;

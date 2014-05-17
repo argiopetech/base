@@ -268,23 +268,24 @@ void GenericMsModel::loadModel(string path, FilterSetName)
 }
 
 
-double GenericMsModel::deriveAgbTipMass (const vector<int> &filters, double newFeH, double newY, double newAge)
+double GenericMsModel::deriveAgbTipMass (double newFeH, double newY, double newAge)
 {
-    isochrone = deriveIsochrone(filters, newFeH, newY, newAge);
+    isochrone = deriveIsochrone(newFeH, newY, newAge);
 
     return isochrone.agbTipMass();
 }
 
-Isochrone GenericMsModel::deriveIsochrone(const vector<int>& filters, double newFeH, double newY, double newAge) const
+
+Isochrone GenericMsModel::deriveIsochrone(double newFeH, double newY, double newAge) const
 {
     if (fehCurves.front().heliumCurves.size() == 1)
-        return deriveIsochrone_oneY(filters, newFeH, newAge);
+        return deriveIsochrone_oneY(newFeH, newAge);
     else
-        return deriveIsochrone_manyY(filters, newFeH, newY, newAge);
+        return deriveIsochrone_manyY(newFeH, newY, newAge);
 }
 
 
-Isochrone GenericMsModel::deriveIsochrone_oneY(const vector<int>& filters, double newFeH, double newAge) const
+Isochrone GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
@@ -361,15 +362,14 @@ Isochrone GenericMsModel::deriveIsochrone_oneY(const vector<int>& filters, doubl
         for (size_t e = 0; e < numEeps; ++e)
         {
             vector<double> mags;
-            mags.resize(FILTS);
 
-            for (auto f : filters)
+            for (size_t f = 0; f < ageIter[0].eeps.at(e + eepOffset[0]).mags.size(); ++f)
             {
-                mags[f] = linearTransform<>(ageIter[0].logAge
-                                          , ageIter[1].logAge
-                                          , ageIter[0].eeps.at(e + eepOffset[0]).mags.at(f)
-                                          , ageIter[1].eeps.at(e + eepOffset[1]).mags.at(f)
-                                          , newAge).val;
+                mags.push_back(linearTransform<>(ageIter[0].logAge
+                                               , ageIter[1].logAge
+                                               , ageIter[0].eeps.at(e + eepOffset[0]).mags.at(f)
+                                               , ageIter[1].eeps.at(e + eepOffset[1]).mags.at(f)
+                                               , newAge).val);
             }
 
             double newMass = linearTransform<>(ageIter[0].logAge
@@ -412,15 +412,14 @@ Isochrone GenericMsModel::deriveIsochrone_oneY(const vector<int>& filters, doubl
     for (size_t e = 0; e < numEeps; ++e)
     {
         vector<double> mags;
-        mags.resize(FILTS);
 
-        for (auto f : filters)
+        for (size_t f = 0; f < interpIso.at(0).eeps.at(e + eepOffset[0]).mags.size(); ++f)
         {
-            mags[f] = linearTransform<>(fehIter[0].feh
-                                      , fehIter[1].feh
-                                      , interpIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
-                                      , interpIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
-                                      , newFeH).val;
+            mags.push_back(linearTransform<>(fehIter[0].feh
+                                           , fehIter[1].feh
+                                           , interpIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
+                                           , interpIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
+                                           , newFeH).val);
         }
 
         double interpMass = linearTransform<>(fehIter[0].feh
@@ -441,7 +440,7 @@ Isochrone GenericMsModel::deriveIsochrone_oneY(const vector<int>& filters, doubl
 }
 
 
-Isochrone GenericMsModel::deriveIsochrone_manyY(const vector<int>& filters, double newFeH, double newY, double newAge) const
+Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
@@ -537,15 +536,14 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(const vector<int>& filters, doub
             for (size_t e = 0; e < numEeps; ++e)
             {
                 vector<double> mags;
-                mags.resize(FILTS);
 
-                for (auto f : filters)
+                for (size_t f = 0; f < ageIter[0].eeps.at(e + eepOffset[0]).mags.size(); ++f)
                 {
-                    mags[f] = linearTransform<>(ageIter[0].logAge
-                                              , ageIter[1].logAge
-                                              , ageIter[0].eeps.at(e + eepOffset[0]).mags.at(f)
-                                              , ageIter[1].eeps.at(e + eepOffset[1]).mags.at(f)
-                                              , newAge).val;
+                    mags.push_back(linearTransform<>(ageIter[0].logAge
+                                                   , ageIter[1].logAge
+                                                   , ageIter[0].eeps.at(e + eepOffset[0]).mags.at(f)
+                                                   , ageIter[1].eeps.at(e + eepOffset[1]).mags.at(f)
+                                                   , newAge).val);
                 }
 
                 double newMass = linearTransform<>(ageIter[0].logAge
@@ -596,15 +594,14 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(const vector<int>& filters, doub
         for (size_t e = 0; e < numEeps; ++e)
         {
             vector<double> mags;
-            mags.resize(FILTS);
 
-            for (auto f : filters)
+            for (size_t f = 0; f < tIso.at(0).eeps.at(e + eepOffset[0]).mags.size(); ++f)
             {
-                mags[f] = linearTransform<>(yIter[0].y
-                                          , yIter[1].y
-                                          , tIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
-                                          , tIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
-                                          , newY).val;
+                mags.push_back(linearTransform<>(yIter[0].y
+                                               , yIter[1].y
+                                               , tIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
+                                               , tIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
+                                               , newY).val);
             }
 
             double interpMass = linearTransform<>(yIter[0].y
@@ -646,15 +643,14 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(const vector<int>& filters, doub
     for (size_t e = 0; e < numEeps; ++e)
     {
         vector<double> mags;
-        mags.resize(FILTS);
 
-        for (auto f : filters)
+        for (size_t f = 0; f < interpIso.at(0).eeps.at(e + eepOffset[0]).mags.size(); ++f)
         {
-            mags[f] = linearTransform<>(fehIter[0].feh
-                                      , fehIter[1].feh
-                                      , interpIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
-                                      , interpIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
-                                      , newFeH).val;
+            mags.push_back(linearTransform<>(fehIter[0].feh
+                                           , fehIter[1].feh
+                                           , interpIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
+                                           , interpIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
+                                           , newFeH).val);
         }
 
         double interpMass = linearTransform<>(fehIter[0].feh
@@ -675,10 +671,9 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(const vector<int>& filters, doub
 }
 
 
-vector<double> GenericMsModel::msRgbEvol (const vector<int> &filters, double zamsMass) const
+vector<double> GenericMsModel::msRgbEvol (double zamsMass) const
 {
     vector<double> mags;
-    mags.resize(FILTS);
 
     auto m = lower_bound(isochrone.eeps.begin(), isochrone.eeps.end(), zamsMass, EvolutionaryPoint::compareMass);
 
@@ -689,15 +684,17 @@ vector<double> GenericMsModel::msRgbEvol (const vector<int> &filters, double zam
         m -= 1;
     }
 
-    for ( auto f : filters )
+    for ( size_t f = 0; f < m[0].mags.size(); ++f )
     {
         double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), zamsMass).val;
 
         if (std::fabs(mag) < EPS)
-            mags.at(f) = 999.99;
+            mags.push_back(999.99);
         else
-            mags.at(f) = mag;
+            mags.push_back(mag);
     }
+
+    assert(mags.size() == m[0].mags.size());
 
     return mags;
 }

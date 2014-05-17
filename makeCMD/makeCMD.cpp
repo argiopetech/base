@@ -29,17 +29,38 @@ class Application
     {}
 
     void run();
-    Isochrone interpolateIsochrone(const Cluster&, const vector<int>&);
+    Isochrone interpolateIsochrone(const Cluster&);
 
   private:
-    const Model evoModels;
+    Model evoModels;
     const Settings settings;
 };
 
 
 void Application::run()
 {
-    vector<int> filters = {0, 1, 2, 3, 4, 5, 6, 7};
+    vector<string> filters = evoModels.mainSequenceEvol->getAvailableFilters();
+
+    for (size_t f = 0; f < filters.size(); ++f)
+    {
+        try
+        {
+            cerr << filters.at(f) << endl;
+            Filters::absCoeffs.at(filters.at(f));
+        }
+        catch(std::out_of_range &e)
+        {
+            cerr << "Erasing " << f << endl;
+            filters.erase(filters.begin() + f);
+            f -= 1;
+        }
+    }
+
+    for (auto f : filters)
+        cerr << f << ' ';
+    cerr << endl;
+
+    evoModels.restrictFilters(filters);
 
     Cluster clust;
 
@@ -81,10 +102,10 @@ void Application::run()
     clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     // Set Cluster's AGBT_zmass based on the model's agbTipMass
-    clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);
+    clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);
 
     // Interpolate a new isochrone at 0.01M_0 steps
-    auto interpIsochrone = interpolateIsochrone(clust, filters);
+    auto interpIsochrone = interpolateIsochrone(clust);
 
     string filename = settings.files.output + ".cmd";
 
@@ -101,9 +122,9 @@ void Application::run()
     {
         fout << boost::format("%10s") % "Mass";
 
-        for (auto filter : filters)
+        for (auto f : filters)
         {
-            fout << boost::format(" %10s") % evoModels.filterSet->getFilterName(filter);
+            fout << boost::format(" %10s") % f;
         }
 
         fout << '\n';
@@ -113,9 +134,9 @@ void Application::run()
     {
         fout << boost::format("%10.6f") % eep.mass;
 
-        for (auto f : filters)
+        for (auto mag : eep.mags)
         {
-            fout << boost::format(" %10.6f") % eep.mags.at(f);
+            fout << boost::format(" %10.6f") % mag;
         }
 
         fout << '\n';
@@ -125,7 +146,7 @@ void Application::run()
 }
 
 
-Isochrone Application::interpolateIsochrone(const Cluster &clust, const vector<int> &filters)
+Isochrone Application::interpolateIsochrone(const Cluster &clust)
 {
     Isochrone isochrone = evoModels.mainSequenceEvol->getIsochrone();
 
@@ -140,7 +161,7 @@ Isochrone Application::interpolateIsochrone(const Cluster &clust, const vector<i
         Star star;
         star.mass = mass + steps * 0.01;
 
-        eeps.emplace_back(0, star.mass, star.getMags(clust, evoModels, filters)); // 0 eep. Doesn't matter here.
+        eeps.emplace_back(0, star.mass, star.getMags(clust, evoModels)); // 0 eep. Doesn't matter here.
     }
 
     return {clust.age, eeps};

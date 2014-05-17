@@ -41,13 +41,13 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
     mainClust.abs = settings.cluster.starting.Av;
-    mainClust.priorMean[ABS] = clust.abs = clust.priorMean[ABS] = fabs(s.cluster.Av);
+    mainClust.priorMean[ABS] = clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
     mainClust.age = mainClust.priorMean[AGE] = clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
-    if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
+    if (settings.whiteDwarf.wdModel == WdModel::MONTGOMERY)
     {
         mainClust.carbonicity = settings.cluster.starting.carbonicity;
         mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
@@ -59,7 +59,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
         ctrl.priorVar[CARBONICITY] = 0.0;
     }
 
-    if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
+    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
     {
         mainClust.yyy = settings.cluster.starting.Y;
         mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
@@ -150,13 +150,6 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
         exit (1);
     }
 
-    if (s.cluster.index < 0 || settings.cluster.index > FILTS)
-    {
-        cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
     ctrl.clusterFilename = settings.files.output + ".res";
 
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
@@ -168,29 +161,34 @@ int MpiMcmcApplication::run()
 {
     double fsLike;
 
-    std::vector<int> filters;
-
     array<double, NPARAMS> stepSize;
     std::copy(settings.mpiMcmc.stepSize.begin(), settings.mpiMcmc.stepSize.end(), stepSize.begin());
 
-    // Read photometry and calculate fsLike
     {
-        array<double, FILTS> filterPriorMin;
-        array<double, FILTS> filterPriorMax;
+        // Read photometry and calculate fsLike
+        vector<double> filterPriorMin;
+        vector<double> filterPriorMax;
 
-        /* Initialize filter prior mins and maxes */
-        filterPriorMin.fill(1000);
-        filterPriorMax.fill(-1000);
+        auto ret = readCmdData (ctrl, filterPriorMin, filterPriorMax, settings);
+        auto filterNames = ret.first;
+        systems = ret.second;
 
-        systems = readCmdData (ctrl, evoModels, filters, filterPriorMin, filterPriorMax, settings);
+        evoModels.restrictFilters(filterNames);
+
+        if (settings.cluster.index < 0 || settings.cluster.index > filterNames.size())
+        {
+            cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+            cerr << "[Exiting...]" << endl;
+            exit (1);
+        }
 
         if (systems.size() > 1)
         {
             double logFieldStarLikelihood = 0.0;
 
-            for (decltype(filters.size()) filt = 0; filt < filters.size(); filt++)
+            for (size_t filt = 0; filt < filterNames.size(); filt++)
             {
-                logFieldStarLikelihood -= log (filterPriorMax[filt] - filterPriorMin[filt]);
+                logFieldStarLikelihood -= log (filterPriorMax.at(filt) - filterPriorMin.at(filt));
             }
             fsLike = exp (logFieldStarLikelihood);
         }
@@ -217,7 +215,7 @@ int MpiMcmcApplication::run()
     cout << "Bayesian Analysis of Stellar Evolution" << endl;
 
     // Assuming fsLike doesn't change, this is the "global" logPost function
-    auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike, std::cref(filters));
+    auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);
 
     // Run Burnin
     std::ofstream burninFile(ctrl.clusterFilename + ".burnin");
@@ -462,14 +460,14 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
     return clust;
 }
 
-double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const vector<int> &filters)
+double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 {
     mutex logPostMutex;
     double logPostProp;
 
     logPostProp = propClust.logPrior (evoModels);
 
-    propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
+    propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
 
     /* loop over assigned stars */
     pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
@@ -490,7 +488,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
 
                 try
                 {
-                    tmpLogPost = wd.logPost(propClust, evoModels, filters);
+                    tmpLogPost = wd.logPost(propClust, evoModels);
                     tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
 
                     postClusterStar +=  exp (tmpLogPost);
@@ -507,7 +505,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike, const 
             try
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, systems.at(i), evoModels, filters);
+                postClusterStar = margEvolveWithBinary (propClust, systems.at(i), evoModels);
             }
             catch ( WDBoundsError &e )
             {

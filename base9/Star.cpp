@@ -9,12 +9,14 @@
 #include "Model.hpp"
 #include "Star.hpp"
 
+#include <iostream>
+
 using std::ifstream;
 using std::string;
 using std::stringstream;
 using std::vector;
 
-vector<double> Star::getMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
+vector<double> Star::getMags (const Cluster &clust, const Model &evoModels) const
 {
     // Masses greater than 100Mo should never occur
     assert (mass <= 100.0);
@@ -22,14 +24,14 @@ vector<double> Star::getMags (const Cluster &clust, const Model &evoModels, cons
     switch(getStatus(clust))
     {
         case MSRG: // for main seq or giant star
-            return evoModels.mainSequenceEvol->msRgbEvol(filters, mass);
+            return evoModels.mainSequenceEvol->msRgbEvol(mass);
 
         case WD:   // for white dwarf
             return wdEvol (clust, evoModels);
 
         default:   // For brown dwarfs, neutron stars, black hole remnants, and 0-mass secondaries
             vector<double> mags;
-            mags.resize(FILTS, 99.999);
+            mags.resize(evoModels.absCoeffs.size(), 99.999);
 
             return mags;
     }
@@ -173,44 +175,53 @@ void StellarSystem::readCMD(const string &s, int filters)
 }
 
 
-vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const vector<int> &filters) const
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels) const
 {
-    auto clusterAbs = evoModels.filterSet->calcAbsCoeffs();
+    auto primaryMags = primary.getMags(clust, evoModels);
+    auto secondaryMags = secondary.getMags(clust, evoModels);
 
-    assert(!filters.empty());
+    if (primaryMags.size() != secondaryMags.size())
+    {
+        std::cout << primaryMags.size() << ' ' << secondaryMags.size() << std::endl;
+        for (auto m : primaryMags)
+            std::cout << m << ' ';
+        std::cout << std::endl;
 
-    auto primaryMags = primary.getMags(clust, evoModels, filters);
-    auto secondaryMags = secondary.getMags(clust, evoModels, filters);
+        for (auto m : secondaryMags)
+            std::cout << m << ' ';
+        std::cout << std::endl;
+    }
+
+    assert(primaryMags.size() == secondaryMags.size());
+    assert(evoModels.absCoeffs.size() == primaryMags.size());
 
     vector<double> combinedMags;
 
-    combinedMags.resize(FILTS, 0.0);
-
     // can now derive combined mags
-    if (secondaryMags.at(filters.front()) < 99.)
+    if (secondaryMags.front() < 99.)
     {                           // if there is a secondary star
         double flux = 0.0;
 
-        for (auto f : filters)
+        for (size_t f = 0; f < primaryMags.size(); ++f)
         {
             flux = exp10((primaryMags.at(f) / -2.5));    // add up the fluxes of the primary
             flux += exp10((secondaryMags.at(f) / -2.5)); // and the secondary
-            combinedMags.at(f) = -2.5 * log10 (flux);    // (these 3 lines .at(used to?) take 5% of run time for N large)
+            combinedMags.push_back(-2.5 * log10 (flux));    // (these 3 lines .at(used to?) take 5% of run time for N large)
             // if primary mag = 99.999, then this works
         }
     }  // to make the combined mag = secondary mag
     else
     {
-        for (auto f : filters)
-            combinedMags.at(f) = primaryMags.at(f);
+        for (size_t f = 0; f < primaryMags.size(); ++f)
+            combinedMags.push_back(primaryMags.at(f));
     }
 
-    for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
-    {
-        int f = filters.at(i);
+    assert(combinedMags.size() == primaryMags.size());
 
+    for (size_t f = 0; f < combinedMags.size(); ++f)
+    {
         combinedMags.at(f) += clust.mod;
-        combinedMags.at(f) += (clusterAbs.at(f) - 1.0) * clust.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
+        combinedMags.at(f) += (evoModels.absCoeffs.at(f) - 1.0) * clust.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
     }
 
     return combinedMags;

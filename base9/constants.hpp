@@ -5,7 +5,6 @@
 
 const double EPSILON = 1.e-15;
 const double EPS     = 0.000001;
-const int FILTS      = 14;   // UBVRIJHK, respectively
 const int MAG_LIST   = 26;   // list length for mag vs. S/N
 const int MODEL_LIST = 118;  // age/Mv/V-I entries in WD model array
 

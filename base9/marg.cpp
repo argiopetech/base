@@ -14,7 +14,6 @@
 #include "densities.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
-#include "FilterSet.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;
@@ -24,7 +23,7 @@ using std::vector;
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
 //   2. margEvolveWithBinary passes the StellarSystem with primary.mass already set appropriately
 //   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
-static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, const vector<int> &filters)
+static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels)
 {
     // This struct is only used inside this function, so we don't want it escaping
     struct diffStruct
@@ -48,13 +47,13 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     // Also, go ahead and rename system.primary.mass to primaryMass for this function
     // We call deriveCombinedMags here rather than primary.getMags so that we get abs/distMod correction
     // This keeps models which haven't been converted to absolute mags from breaking
-    vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels, filters);
+    vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels);
     const double primaryMass = system.primary.mass;
 
     // Other useful constants
     const double logdMass = log (dMass); // This is a pre-optimzation so we only have to call log once (instead of nEntries times)
 
-    double tmpLogPost = system.logPost (clust, evoModels, filters)
+    double tmpLogPost = system.logPost (clust, evoModels)
                       + logdMass
                       + log (isochrone.eeps.at(0).mass / primaryMass);   // dMassRatio
     double post = exp (tmpLogPost);
@@ -66,36 +65,30 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
     // Pre-calculate diffLow and diffUp so they can be cached for the loop below
     // In its own block to contain obsFilt
+    for (size_t f = 0; f < system.obsPhot.size(); ++f)
     {
-        int obsFilt = 0; // Counts the number of filters we've gone through
-    
-        for (auto f : filters)
+        if (system.variance.at(f) >= 0)
         {
-            if (system.variance.at(obsFilt) >= 0)
+            const double diffLow = exp10 (((system.obsPhot.at(f) - nSD * sqrt (system.variance.at(f))) / -2.5))
+                                 - exp10 ((primaryMags.at(f) / -2.5));
+            const double diffUp = exp10 (((system.obsPhot.at(f) + nSD * sqrt (system.variance.at(f))) / -2.5))
+                                - exp10 ((primaryMags.at(f) / -2.5));
+
+            if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
             {
-                const double diffLow = exp10 (((system.obsPhot.at(obsFilt) - nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
-                                     - exp10 ((primaryMags.at(f) / -2.5));
-                const double diffUp = exp10 (((system.obsPhot.at(obsFilt) + nSD * sqrt (system.variance.at(obsFilt))) / -2.5))
-                                    - exp10 ((primaryMags.at(f) / -2.5));
-
-                if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
-                {
-                    return 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
-                    // that no mass combinations would lead to a positive posterior density
-                }
-                else
-                {
-                    const double magLower = -2.5 * log10 (diffLow);
-                    const double magUpper = -2.5 * log10 (diffUp);
-
-                    assert(!std::isnan(magLower)); // Even though we checked it above, we still check it here
-                    // magUpper is allowed to be NaN, as it is checked below.
-            
-                    diffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
-                }
+                return 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
+                // that no mass combinations would lead to a positive posterior density
             }
+            else
+            {
+                const double magLower = -2.5 * log10 (diffLow);
+                const double magUpper = -2.5 * log10 (diffUp);
 
-            ++obsFilt;
+                assert(!std::isnan(magLower)); // Even though we checked it above, we still check it here
+                // magUpper is allowed to be NaN, as it is checked below.
+
+                diffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
+            }
         }
     }
 
@@ -128,7 +121,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
             system.setMassRatio (isochrone.eeps.at(i).mass / primaryMass); // Set the massRatio (and therefore the secondary mass)
 
             // Calculate the posterior density for this system
-            tmpLogPost = system.logPost (clust, evoModels, filters)
+            tmpLogPost = system.logPost (clust, evoModels)
                        + logdMass
                        + log ((isochrone.eeps.at(i + 1).mass - isochrone.eeps.at(i).mass) / primaryMass);
 
@@ -141,7 +134,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const Model &evoModels, const vector<int> &filters)
+double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const Model &evoModels)
 {
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (clust.AGBt_zmass < EPS)
@@ -169,7 +162,7 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
         {
             system.primary.mass = isochrone.eeps.at(m).mass + (k * dMass);
 
-            post += calcPost (dMass, clust, system, evoModels, filters);
+            post += calcPost (dMass, clust, system, evoModels);
         }
     }
 

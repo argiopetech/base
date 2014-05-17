@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
+#include <utility>
 #include <vector>
 #include <stdexcept>
 
@@ -12,7 +13,7 @@
 
 #include "Star.hpp"
 #include "densities.hpp"
-#include "FilterSet.hpp"
+#include "Filters.hpp"
 #include "marg.hpp"
 #include "Model.hpp"
 #include "mpiMcmc.hpp"
@@ -36,11 +37,12 @@ using base::utility::ThreadPool;
 /*
  * Read data
  */
-vector<StellarSystem> readCmdData (struct ifmrMcmcControl &ctrl, const Model &evoModels, vector<int> &filters, std::array<double, FILTS> &filterPriorMin, std::array<double, FILTS> &filterPriorMax, const Settings &settings)
+std::pair<vector<string>, vector<StellarSystem>> readCmdData (struct ifmrMcmcControl &ctrl, std::vector<double> &filterPriorMin, std::vector<double> &filterPriorMax, const Settings &settings)
 {
     string line, pch;
 
     vector<StellarSystem> systems;
+    vector<string> filterNames;
 
     //Parse the header of the file to determine which filters are being used
     getline(ctrl.rData, line);  // Read in the header line
@@ -53,21 +55,14 @@ vector<StellarSystem> readCmdData (struct ifmrMcmcControl &ctrl, const Model &ev
     {
         header >> pch;
 
-        if (pch == "sig")
-            break;                      // and check to see if they are 'sig'.  If they are, there are no more filters
+        // Check to see if input starts with "sig".  If yes, there are no more filters
+        if (pch.compare(0, 3, "sig") == 0)
+            break;
 
-        for (int filt = 0; filt < FILTS; filt++)
-        {                               // Otherwise check to see what this filter's name is
-            if (pch == evoModels.filterSet->getFilterName(filt))
-            {
-                filters.push_back(filt);
-                const_cast<Model&>(evoModels).numFilts++;
-                break;
-            }
-        }
+        filterNames.push_back(pch);
     }
 
-    if (filters.empty())
+    if (filterNames.empty())
     {
         cerr << "Exiting due to empty filter set. Did you specify the correct filterSet?" << endl;
         exit(1);
@@ -77,11 +72,15 @@ vector<StellarSystem> readCmdData (struct ifmrMcmcControl &ctrl, const Model &ev
     // It also reads a best guess for the mass
     systems.clear();
 
+    /* Initialize filter prior mins and maxes */
+    filterPriorMin.resize(filterNames.size(), 1000);
+    filterPriorMax.resize(filterNames.size(), -1000);
+
     while (getline(ctrl.rData, line))
     {
-        systems.emplace_back(line, filters.size());
+        systems.emplace_back(line, filterNames.size());
 
-        for (decltype(filters.size()) i = 0; i < filters.size(); ++i)
+        for (size_t i = 0; i < filterNames.size(); ++i)
         {
             if (systems.back().obsPhot.at(i) < filterPriorMin.at(i))
             {
@@ -100,7 +99,7 @@ vector<StellarSystem> readCmdData (struct ifmrMcmcControl &ctrl, const Model &ev
         }
     }
 
-    return systems;
+    return std::make_pair(filterNames, systems);
 } /* readCmdData */
 
 

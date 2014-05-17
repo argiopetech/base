@@ -72,7 +72,6 @@ void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterS
         {
             // Teff logg Mbol BC U B V R I J H K u g r i z y b-y u-b v-y V-I G-R U-V U-G B-V Age
             vector<double> mags;
-            mags.resize(FILTS, 0.0);
 
             getline(fin, line);
 
@@ -85,17 +84,11 @@ void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterS
                     in >> teff
                        >> ignore >> ignore >> ignore;
 
-                    for (int f = 0; f < 8; ++f) // Read the first 8 filters
+                    for (int f = 0; f < 13; ++f) // Read all filters
                     {
-                        in >> mags[f];
-                    }
-
-                    if (filterSet == FilterSetName::SDSS) // iff we are using the ugrizJHK models
-                    {
-                        for (int f = 0; f < 5; ++f)
-                        {
-                            in >> mags[f]; // Read ugriz without overwriting JHK
-                        }
+                        double tmp;
+                        in >> tmp;
+                        mags.push_back(tmp);
                     }
 
                     // As long as we didn't run out of file somewhere in the middle, this doesn't trigger.
@@ -125,10 +118,8 @@ std::vector<double> BergeronAtmosphereModel::teffToMags (double wdLogTeff, doubl
 {
     auto transformMags = [=](const std::vector<struct AtmosCurve> &curve)
         {
-            Matrix<double, 2, BERG_NFILTS> logTeffMag;
+            MVatrix<double, 2> logTeffMag;
             vector<double> mags;
-
-            mags.resize(FILTS, 0.0);
 
             vector<AtmosCurve>::const_iterator massIter;
 
@@ -167,16 +158,16 @@ std::vector<double> BergeronAtmosphereModel::teffToMags (double wdLogTeff, doubl
             //Interpolate in logTeff
             for (int i = 0; i < 2; i++)
             {
-                for (int f = 0; f < BERG_NFILTS; ++f)
+                for (size_t f = 0; f < teffIter[i][0].mags.size(); ++f)
                 {
-                    logTeffMag[i][f] = linearTransform<>(teffIter[i][0].logTeff, teffIter[i][1].logTeff, teffIter[i][0].mags[f], teffIter[i][1].mags[f], wdLogTeff).val;
+                    logTeffMag[i].push_back(linearTransform<>(teffIter[i][0].logTeff, teffIter[i][1].logTeff, teffIter[i][0].mags[f], teffIter[i][1].mags[f], wdLogTeff).val);
                 }
             }
 
             //Interpolate in mass
-            for (int f = 0; f < BERG_NFILTS; ++f)
+            for (int f = 0; f < logTeffMag[0].size(); ++f)
             {
-                mags[f] = linearTransform<>(massIter[0].mass, massIter[1].mass, logTeffMag[0][f], logTeffMag[1][f], wdMass).val;
+                mags.push_back(linearTransform<>(massIter[0].mass, massIter[1].mass, logTeffMag[0][f], logTeffMag[1][f], wdMass).val);
             }
 
             return mags;

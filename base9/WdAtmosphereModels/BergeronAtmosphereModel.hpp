@@ -12,6 +12,11 @@
 class BergeronAtmosphereModel : public WdAtmosphereModel
 {
   public:
+    BergeronAtmosphereModel()
+    {
+        availableFilters = {"U", "B", "V", "R", "I", "J", "H", "K", "u", "g", "r", "i", "z"};
+    }
+
     virtual ~BergeronAtmosphereModel() {}
 
     virtual void loadModel (std::string path, FilterSetName filterSet);
