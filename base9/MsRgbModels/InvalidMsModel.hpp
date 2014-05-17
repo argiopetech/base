@@ -12,7 +12,8 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
     InvalidMsModel() {;}
     virtual ~InvalidMsModel() {;}
 
-    virtual void loadModel(std::string, FilterSetName) {throw InvalidModelError("Called deriveAgbTipMass() in invalid MainSequence model");}
+    virtual void loadModel(std::string, FilterSetName) {;}
+    virtual void restrictToFilters(const std::vector<std::string>&) {;}
 
     virtual double deriveAgbTipMass(double, double, double)
     {
@@ -32,11 +33,6 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
     virtual std::vector<double> msRgbEvol(double) const
     {
         throw InvalidModelError("Called msRgbEvol() in invalid MainSequence model");
-    }
-
-    virtual void restrictToFilters(const std::vector<std::string>&)
-    {
-        throw InvalidModelError("Called restrictToFilters() in invalid MainSequence model");
     }
 
     virtual double getMinAge() const
