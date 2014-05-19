@@ -32,7 +32,7 @@ void WdAtmosphereModel::restrictToFilters(const vector<string>& filters)
 
         if ( ! foundFilter )
         {
-            cout << "Couldn't find filter \"" << f << "\" in selected model set" << endl;
+            cout << "Couldn't find filter \"" << f << "\" in selected model set (WdAtmosphere)" << endl;
             exit(-1);
         }
     }

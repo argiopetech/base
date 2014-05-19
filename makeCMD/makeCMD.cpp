@@ -52,7 +52,9 @@ void Application::run()
         {
             cerr << "Erasing " << f << endl;
             filters.erase(filters.begin() + f);
-            f -= 1;
+
+            if (f > 0)
+                f -= 1;
         }
     }
 
@@ -60,7 +62,7 @@ void Application::run()
         cerr << f << ' ';
     cerr << endl;
 
-    evoModels.restrictFilters(filters);
+    evoModels.mainSequenceEvol->restrictToFilters(filters);
 
     Cluster clust;
 

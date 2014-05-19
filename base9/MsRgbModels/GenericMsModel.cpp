@@ -44,7 +44,7 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
 
         if ( ! foundFilter )
         {
-            cout << "Couldn't find filter \"" << f << "\" in selected model set" << endl;
+            cout << "Couldn't find filter \"" << f << "\" in selected model set (MsModel)" << endl;
             exit(-1);
         }
     }
