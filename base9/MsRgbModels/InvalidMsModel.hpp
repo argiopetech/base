@@ -39,6 +39,16 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
         throw InvalidModelError("Called restrictToFilters() in invalid MainSequence model");
     }
 
+    virtual double getMinAge() const
+    {
+        throw InvalidModelError("Called getMinAge() in invalid MainSequence model");
+    }
+
+    virtual double getMaxAge() const
+    {
+        throw InvalidModelError("Called getMaxAge() in invalid MainSequence model");
+    }
+
   protected:
     virtual std::string getFileName (std::string) const
     {

@@ -90,8 +90,8 @@ modified for different model sets.
     virtual double wdPrecLogAge(double, double, double) const = 0;
     virtual void restrictToFilters(const std::vector<std::string>&) = 0;
 
-    double getMinAge() const { return ageLimit.first; }
-    double getMaxAge() const { return ageLimit.second; }
+    virtual double getMinAge() const { return ageLimit.first; }
+    virtual double getMaxAge() const { return ageLimit.second; }
 
     const Isochrone& getIsochrone() const { return isochrone; }
 
