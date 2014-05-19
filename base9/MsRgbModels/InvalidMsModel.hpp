@@ -40,11 +40,6 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
     }
 
   protected:
-    virtual int numFilts() const
-    {
-        throw InvalidModelError("Called numFilts() in invalid MainSequence model");
-    }
-
     virtual std::string getFileName (std::string) const
     {
         throw InvalidModelError("Called getFileName() in invalid MainSequence model");

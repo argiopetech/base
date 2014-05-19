@@ -691,19 +691,12 @@ vector<double> GenericMsModel::msRgbEvol (const vector<int> &filters, double zam
 
     for ( auto f : filters )
     {
-        if (f < numFilts()) // Do we not like the IFMR models here?
-        {
-            double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), zamsMass).val;
+        double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), zamsMass).val;
 
-            if (std::fabs(mag) < EPS)
-                mags.at(f) = 999.99;
-            else
-                mags.at(f) = mag;
-        }
+        if (std::fabs(mag) < EPS)
+            mags.at(f) = 999.99;
         else
-        {
-            throw std::logic_error("Asked for a filter outside the MSRGB range");
-        }
+            mags.at(f) = mag;
     }
 
     return mags;

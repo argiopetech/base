@@ -96,7 +96,6 @@ modified for different model sets.
     const Isochrone& getIsochrone() const { return isochrone; }
 
   protected:
-    virtual int numFilts() const = 0;
     virtual std::string getFileName (std::string) const = 0;
 
     std::pair<double, double> ageLimit;

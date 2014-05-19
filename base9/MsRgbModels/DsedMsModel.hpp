@@ -6,8 +6,6 @@
 
 #include "GenericMsModel.hpp"
 
-const int N_DSED_FILTS = 13;
-
 class DsedMsModel : public GenericMsModel
 {
   public:
@@ -18,9 +16,6 @@ class DsedMsModel : public GenericMsModel
         { return  filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS; }
 
   protected:
-    virtual int numFilts() const
-        { return N_DSED_FILTS; }
-
     virtual std::string getFileName (std::string path) const
         { return path + "dsed/dsed_old.model"; }
 };

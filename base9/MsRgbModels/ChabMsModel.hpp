@@ -6,8 +6,6 @@
 
 #include "GenericMsModel.hpp"
 
-const int N_CHAB_FILTS = 8;
-
 class ChabMsModel : public GenericMsModel
 {
   public:
@@ -18,9 +16,6 @@ class ChabMsModel : public GenericMsModel
         { return filterSet == FilterSetName::UBVRIJHK; }
 
   protected:
-    virtual int numFilts() const
-        { return N_CHAB_FILTS; }
-
     virtual std::string getFileName (std::string path) const
         { return path + "chaboyer/chaboyer.model"; }
 };
