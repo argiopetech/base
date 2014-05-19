@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
     }
     catch (exception &e)
     {
-        cerr << e.what() << endl;
+        cerr << "\n\n" << e.what() << endl;
         return -1;
     }
 }
