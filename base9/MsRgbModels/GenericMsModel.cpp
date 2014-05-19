@@ -10,7 +10,7 @@
 #include "Isochrone.hpp"
 #include "LinearTransform.hpp"
 #include "Matrix.hpp"
-#include "MsRgbModel.hpp"
+#include "GenericMsModel.hpp"
 
 using std::array;
 using std::cerr;
@@ -23,7 +23,7 @@ using std::vector;
 
 const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
-void MsRgbModel::restrictToFilters(const vector<string>& filters)
+void GenericMsModel::restrictToFilters(const vector<string>& filters)
 {
     vector<int> indices;
 
@@ -94,7 +94,7 @@ void MsRgbModel::restrictToFilters(const vector<string>& filters)
 }
 
 
-void MsRgbModel::loadModel(string path, FilterSetName)
+void GenericMsModel::loadModel(string path, FilterSetName)
 {
     ifstream fin;
 
@@ -268,14 +268,14 @@ void MsRgbModel::loadModel(string path, FilterSetName)
 }
 
 
-double MsRgbModel::deriveAgbTipMass (const vector<int> &filters, double newFeH, double newY, double newAge)
+double GenericMsModel::deriveAgbTipMass (const vector<int> &filters, double newFeH, double newY, double newAge)
 {
     isochrone = deriveIsochrone(filters, newFeH, newY, newAge);
 
     return isochrone.agbTipMass();
 }
 
-Isochrone MsRgbModel::deriveIsochrone(const vector<int>& filters, double newFeH, double newY, double newAge) const
+Isochrone GenericMsModel::deriveIsochrone(const vector<int>& filters, double newFeH, double newY, double newAge) const
 {
     if (fehCurves.front().heliumCurves.size() == 1)
         return deriveIsochrone_oneY(filters, newFeH, newAge);
@@ -284,7 +284,7 @@ Isochrone MsRgbModel::deriveIsochrone(const vector<int>& filters, double newFeH,
 }
 
 
-Isochrone MsRgbModel::deriveIsochrone_oneY(const vector<int>& filters, double newFeH, double newAge) const
+Isochrone GenericMsModel::deriveIsochrone_oneY(const vector<int>& filters, double newFeH, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
@@ -297,7 +297,7 @@ Isochrone MsRgbModel::deriveIsochrone_oneY(const vector<int>& filters, double ne
         // cerr << newAge << " <? " << ageLimit.second << endl;
         // cerr << newFeH << " >? " << fehCurves.front().feh << endl;
         // cerr << newFeH << " <? " << fehCurves.back().feh << endl;
-        throw InvalidCluster("Age or FeH out of bounds in MsRgbModel::deriveIsochrone");
+        throw InvalidCluster("Age or FeH out of bounds in GenericMsModel::deriveIsochrone");
     }
 
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), newFeH, FehCurve::compareFeh);
@@ -441,7 +441,7 @@ Isochrone MsRgbModel::deriveIsochrone_oneY(const vector<int>& filters, double ne
 }
 
 
-Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double newFeH, double newY, double newAge) const
+Isochrone GenericMsModel::deriveIsochrone_manyY(const vector<int>& filters, double newFeH, double newY, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
@@ -454,7 +454,7 @@ Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double n
         // cerr << newAge << " <? " << ageLimit.second << endl;
         // cerr << newFeH << " >? " << fehCurves.front().feh << endl;
         // cerr << newFeH << " <? " << fehCurves.back().feh << endl;
-        throw InvalidCluster("Age or FeH out of bounds in MsRgbModel::deriveIsochrone");
+        throw InvalidCluster("Age or FeH out of bounds in GenericMsModel::deriveIsochrone");
     }
 
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), newFeH, FehCurve::compareFeh);
@@ -675,7 +675,7 @@ Isochrone MsRgbModel::deriveIsochrone_manyY(const vector<int>& filters, double n
 }
 
 
-vector<double> MsRgbModel::msRgbEvol (const vector<int> &filters, double zamsMass) const
+vector<double> GenericMsModel::msRgbEvol (const vector<int> &filters, double zamsMass) const
 {
     vector<double> mags;
     mags.resize(FILTS);
@@ -710,7 +710,7 @@ vector<double> MsRgbModel::msRgbEvol (const vector<int> &filters, double zamsMas
 }
 
 
-double MsRgbModel::wdPrecLogAge(double thisFeH, double zamsMass, double thisY) const
+double GenericMsModel::wdPrecLogAge(double thisFeH, double zamsMass, double thisY) const
 {
     if (fehCurves.front().heliumCurves.size() == 1)
         return wdPrecLogAge_oneY(thisFeH, zamsMass);
@@ -718,7 +718,7 @@ double MsRgbModel::wdPrecLogAge(double thisFeH, double zamsMass, double thisY) c
         return wdPrecLogAge_manyY(thisFeH, zamsMass, thisY);
 }
 
-double MsRgbModel::wdPrecLogAge_manyY(double thisFeH, double zamsMass, double newY) const
+double GenericMsModel::wdPrecLogAge_manyY(double thisFeH, double zamsMass, double newY) const
 {
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
 
@@ -813,7 +813,7 @@ double MsRgbModel::wdPrecLogAge_manyY(double thisFeH, double zamsMass, double ne
     return linearTransform<TransformMethod::Interp>(fehIter[0].feh, fehIter[1].feh, wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
 }
 
-double MsRgbModel::wdPrecLogAge_oneY(double thisFeH, double zamsMass) const
+double GenericMsModel::wdPrecLogAge_oneY(double thisFeH, double zamsMass) const
 {
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
 

@@ -4,11 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "../MsRgbModel.hpp"
+#include "GenericMsModel.hpp"
 
 const int N_GIR_FILTS = 20;
 
-class GirardiMsModel : public MsRgbModel
+class GirardiMsModel : public GenericMsModel
 {
   public:
     GirardiMsModel() {;}

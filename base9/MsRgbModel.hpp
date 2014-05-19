@@ -61,8 +61,6 @@ class MsRgbModel : virtual public StellarModel
   public:
     virtual ~MsRgbModel() {;}
 
-    virtual void loadModel(std::string, FilterSetName);
-
 /****************************************************************************************
  * Derive AGBt mass (actually the ZAMS mass for the appropriate AGBt star) for a given
  * metallicity, age, and helium abundance (if necessary).  Uses an array of pointers to functions.
@@ -70,8 +68,8 @@ class MsRgbModel : virtual public StellarModel
 
  * Array indices are defined in evolve.h
 ****************************************************************************************/
-    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double);
-    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const;
+    virtual double deriveAgbTipMass(const std::vector<int>&, double, double, double) = 0;
+    virtual Isochrone deriveIsochrone(const std::vector<int>&, double, double, double) const = 0;
 
 /****************************************************************************************
 Perform interpolation via  calls to getGirardiMags() or similar.
@@ -79,7 +77,7 @@ The former does 3-D interpolation of the Girardi isochrones.
 
 deriveAgbTipMass() needs to be called first
 ****************************************************************************************/
-    std::vector<double> msRgbEvol (const std::vector<int>&, double) const;
+    virtual std::vector<double> msRgbEvol (const std::vector<int>&, double) const = 0;
 
 /****************************************************************************************
 Derive WD precursor age for a given metallicity, calling in turn wd_prec_g_lage to
@@ -89,8 +87,8 @@ mass and age.
 Distributed most of the code to the respective subroutines, leaving only those to be
 modified for different model sets.
 ****************************************************************************************/
-    virtual double wdPrecLogAge(double, double, double) const;
-    void restrictToFilters(const std::vector<std::string>&);
+    virtual double wdPrecLogAge(double, double, double) const = 0;
+    virtual void restrictToFilters(const std::vector<std::string>&) = 0;
 
     double getMinAge() const { return ageLimit.first; }
     double getMaxAge() const { return ageLimit.second; }
@@ -105,14 +103,5 @@ modified for different model sets.
 
     Isochrone isochrone;
     std::vector<struct FehCurve> fehCurves;
-
-  private:
-    Isochrone deriveIsochrone_oneY(const std::vector<int>&, double, double) const;
-    Isochrone deriveIsochrone_manyY(const std::vector<int>&, double, double, double) const;
-
-    double wdPrecLogAge_oneY(double, double) const;
-    double wdPrecLogAge_manyY(double, double, double) const;
-
-    std::vector<std::string> availableFilters;
 };
 #endif

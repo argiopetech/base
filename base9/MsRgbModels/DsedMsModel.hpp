@@ -4,11 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "../MsRgbModel.hpp"
+#include "GenericMsModel.hpp"
 
 const int N_DSED_FILTS = 13;
 
-class DsedMsModel : public MsRgbModel
+class DsedMsModel : public GenericMsModel
 {
   public:
     DsedMsModel() {;}

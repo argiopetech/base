@@ -4,11 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "../MsRgbModel.hpp"
+#include "GenericMsModel.hpp"
 
 const int N_CHAB_FILTS = 8;
 
-class ChabMsModel : public MsRgbModel
+class ChabMsModel : public GenericMsModel
 {
   public:
     ChabMsModel() {;}
