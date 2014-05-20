@@ -1,3 +1,4 @@
+#include <cmath>
 #include <random>
 
 #include "samplers.hpp"
@@ -10,7 +11,7 @@ double sampleT (std::mt19937 &gen, double var, double nu)
     {
         double s = sqrt (nu / (var * (nu - 2)));
 
-        double logp = log (s) + gamma(nu) - 3.5 * log (1 + pow (s * (x - mean), 2) / nu);
+        double logp = log (s) + std::tgamma(nu) - 3.5 * log (1 + pow (s * (x - mean), 2) / nu);
 
         return logp;
     };
