@@ -180,18 +180,6 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     auto primaryMags = primary.getMags(clust, evoModels);
     auto secondaryMags = secondary.getMags(clust, evoModels);
 
-    if (primaryMags.size() != secondaryMags.size())
-    {
-        std::cout << primaryMags.size() << ' ' << secondaryMags.size() << std::endl;
-        for (auto m : primaryMags)
-            std::cout << m << ' ';
-        std::cout << std::endl;
-
-        for (auto m : secondaryMags)
-            std::cout << m << ' ';
-        std::cout << std::endl;
-    }
-
     assert(primaryMags.size() == secondaryMags.size());
     assert(evoModels.absCoeffs.size() == primaryMags.size());
 
