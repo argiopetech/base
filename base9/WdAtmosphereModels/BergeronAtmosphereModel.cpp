@@ -165,7 +165,7 @@ std::vector<double> BergeronAtmosphereModel::teffToMags (double wdLogTeff, doubl
             }
 
             //Interpolate in mass
-            for (int f = 0; f < logTeffMag[0].size(); ++f)
+            for (size_t f = 0; f < logTeffMag[0].size(); ++f)
             {
                 mags.push_back(linearTransform<>(massIter[0].mass, massIter[1].mass, logTeffMag[0][f], logTeffMag[1][f], wdMass).val);
             }
