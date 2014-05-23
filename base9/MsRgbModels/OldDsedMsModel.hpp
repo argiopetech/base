@@ -1,16 +1,16 @@
-#ifndef GDSEDMAG_H
-#define GDSEDMAG_H
+#ifndef OLDDSEDMSMODEL_HPP
+#define OLDDSEDMSMODEL_HPP
 
 #include <string>
 #include <vector>
 
 #include "GenericMsModel.hpp"
 
-class DsedMsModel : public GenericMsModel
+class OldDsedMsModel : public GenericMsModel
 {
   public:
-    DsedMsModel() {;}
-    virtual ~DsedMsModel() {;}
+    OldDsedMsModel() {;}
+    virtual ~OldDsedMsModel() {;}
 
     virtual bool isSupported(FilterSetName filterSet) const
         { return  filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS; }

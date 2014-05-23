@@ -24,7 +24,7 @@ enum class FilterSetName {UBVRIJHK, ACS, SDSS, UVIS};
 
 // Define model sets
 //Main sequence evolution
-enum class MsModel {GIRARDI, CHABHELIUM, YALE, DSED};
+enum class MsModel {GIRARDI = 0, CHABHELIUM = 1, YALE = 2, OLD_DSED = 3, NEW_DSED = 4};
 
 //IFMR
 const int WEIDEMANN  = 0;

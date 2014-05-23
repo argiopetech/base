@@ -6,7 +6,8 @@
 #include "constants.hpp"
 #include "Model.hpp"
 #include "MsRgbModels/ChabMsModel.hpp"
-#include "MsRgbModels/DsedMsModel.hpp"
+#include "MsRgbModels/OldDsedMsModel.hpp"
+#include "MsRgbModels/NewDsedMsModel.hpp"
 #include "MsRgbModels/GirardiMsModel.hpp"
 #include "MsRgbModels/InvalidMsModel.hpp"
 #include "WdCoolingModels/AlthausWdModel.hpp"
@@ -36,8 +37,10 @@ namespace internal
             case MsModel::YALE:
                 cerr << "Yale models are not currently supported." << endl;
                 exit(0);
-            case MsModel::DSED:
-                return shared_ptr<DsedMsModel>(new DsedMsModel);
+            case MsModel::OLD_DSED:
+                return shared_ptr<OldDsedMsModel>(new OldDsedMsModel);
+            case MsModel::NEW_DSED:
+                return shared_ptr<NewDsedMsModel>(new NewDsedMsModel);
             default:
                 std::cerr << "***Error: No models found for main sequence evolution model " << static_cast<int>(model) << ".***" << std::endl;
                 std::cerr << "[Exiting...]\n" << std::endl;
