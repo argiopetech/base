@@ -34,10 +34,9 @@ using std::istringstream;
 
 using base::utility::ThreadPool;
 
-/*
- * Read data
- */
-std::pair<vector<string>, vector<StellarSystem>> readCmdData (struct ifmrMcmcControl &ctrl, std::vector<double> &filterPriorMin, std::vector<double> &filterPriorMax, const Settings &settings)
+// Assumptions:
+//   filterPriorMin and filterPriorMax will be cleared and overwritten.
+std::pair<vector<string>, vector<StellarSystem>> readCmdData (ifstream &fin, std::vector<double> &filterPriorMin, std::vector<double> &filterPriorMax, const Settings &settings)
 {
     string line, pch;
 
@@ -45,7 +44,7 @@ std::pair<vector<string>, vector<StellarSystem>> readCmdData (struct ifmrMcmcCon
     vector<string> filterNames;
 
     //Parse the header of the file to determine which filters are being used
-    getline(ctrl.rData, line);  // Read in the header line
+    getline(fin, line);  // Read in the header line
 
     istringstream header(line); // Ignore the first token (which is "id")
 
@@ -73,10 +72,13 @@ std::pair<vector<string>, vector<StellarSystem>> readCmdData (struct ifmrMcmcCon
     systems.clear();
 
     /* Initialize filter prior mins and maxes */
+    filterPriorMin.clear();
     filterPriorMin.resize(filterNames.size(), 1000);
+
+    filterPriorMax.clear();
     filterPriorMax.resize(filterNames.size(), -1000);
 
-    while (getline(ctrl.rData, line))
+    while (getline(fin, line))
     {
         systems.emplace_back(line, filterNames.size());
 

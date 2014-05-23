@@ -138,18 +138,6 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     ctrl.nIter = settings.mpiMcmc.maxIter;
     ctrl.thin = settings.mpiMcmc.thin;
 
-    /* open files for reading (data) and writing */
-    string filename;
-
-    filename = settings.files.phot;
-    ctrl.rData.open(filename);
-    if (!ctrl.rData)
-    {
-        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
     ctrl.clusterFilename = settings.files.output + ".res";
 
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
@@ -169,7 +157,19 @@ int MpiMcmcApplication::run()
         vector<double> filterPriorMin;
         vector<double> filterPriorMax;
 
-        auto ret = readCmdData (ctrl, filterPriorMin, filterPriorMax, settings);
+        // open files for reading (data) and writing
+        // rData implcitly relies on going out of scope to close the photometry file
+        // This is awful, but pretty (since this code is, at time of writing, in restricted, anonymous scope
+        std::ifstream rData(settings.files.phot);
+
+        if (!rData)
+        {
+            cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+            cerr << "[Exiting...]" << endl;
+            exit (-1);
+        }
+
+        auto ret = readCmdData (rData, filterPriorMin, filterPriorMax, settings);
         auto filterNames = ret.first;
         systems = ret.second;
 

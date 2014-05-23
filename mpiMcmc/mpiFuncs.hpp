@@ -10,6 +10,6 @@
 #include "mpiMcmc.hpp"
 
 void printHeader (std::ofstream &, const std::array<double, NPARAMS> &);
-std::pair<std::vector<std::string>, std::vector<StellarSystem>> readCmdData (struct ifmrMcmcControl &ctrl, std::vector<double>&, std::vector<double>&, const Settings&);
+std::pair<std::vector<std::string>, std::vector<StellarSystem>> readCmdData (std::ifstream&, std::vector<double>&, std::vector<double>&, const Settings&);
 
 #endif
