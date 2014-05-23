@@ -38,11 +38,9 @@ struct ifmrGridControl
     array<double, NPARAMS> priorMean, priorVar;
     double minMag;
     double maxMag;
-    int iMag;
     int iStart;
     int modelSet;
     vector<double> filterPriorMin, filterPriorMax;
-    int numFilts;
     int nSamples;
     array<double, NPARAMS> start; /* starting points for grid evaluations */
     array<double, NPARAMS> end;   /* end points for grid evaluations */
@@ -70,22 +68,14 @@ typedef struct
     double clustStarPriorDens;  /* cluster membership prior probability */
 } obsStar;
 
-/* declare global variables */
-vector<double> filterPriorMin, filterPriorMax;
-
 /* Used in densities.c. */
 array<double, NPARAMS> priorMean, priorVar;
-
-/* Used by a bunch of different functions. */
-vector<int> filters;
 
 /*
  * read control parameters from input stream
  */
 static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridControl *ctrl, Settings &s)
 {
-    ctrl->numFilts = 0;
-
     if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
     {
         ctrl->priorMean.at(CARBONICITY) = mc->clust.carbonicity = mc->clust.priorMean.at(CARBONICITY) = s.cluster.carbonicity;
@@ -173,102 +163,10 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     ctrl->minMag = s.cluster.minMag;
     ctrl->maxMag = s.cluster.maxMag;
-    ctrl->iMag = s.cluster.index;
-    if (ctrl->iMag < 0 || ctrl->iMag > FILTS)
-    {
-        cerr << "***Error: " << ctrl->iMag << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
-        cerr << ".at(Exiting...)" << endl;
-        exit (1);
-    }
 
     ctrl->iStart = 0;
-
-    /* Initialize filter prior mins and maxes */
-    int j;
-
-    for (j = 0; j < FILTS; j++)
-    {
-        ctrl->filterPriorMin.at(j) = 1000;
-        ctrl->filterPriorMax.at(j) = -1000;
-    }
 } // initIfmrGridControl
 
-void readCmdData (Chain &mc, struct ifmrGridControl &ctrl, const Model &evoModels, const Settings &s)
-{
-    string line, pch;
-
-    std::ifstream rData;
-    rData.open(s.files.phot);
-    if (!rData)
-    {
-        cerr << "***Error: Photometry file " << s.files.phot << " was not found.***" << endl;
-        cerr << ".at(Exiting...)" << endl;
-        exit (1);
-    }
-
-    //Parse the header of the file to determine which filters are being used
-    getline(rData, line);  // Read in the header line
-
-    istringstream header(line); // Ignore the first token (which is "id")
-
-    header >> pch;
-
-    while (!header.eof())
-    {
-        header >> pch;
-
-        if (pch == "sig")
-            break;                      // and check to see if they are 'sig'.  If they are, there are no more filters
-
-        for (int filt = 0; filt < FILTS; filt++)
-        {                               // Otherwise check to see what this filter's name is
-            if (pch == evoModels.filterSet->getFilterName(filt))
-            {
-                ctrl.numFilts++;
-                filters.push_back(filt);
-                const_cast<Model&>(evoModels).numFilts++;
-                break;
-            }
-        }
-    }
-
-    // This loop reads in photometry data
-    // It also reads a best guess for the mass
-    mc.stars.clear();
-
-    while (!rData.eof())
-    {
-        getline(rData, line);
-
-        if (rData.eof())
-            break;
-
-        mc.stars.emplace_back(line, ctrl.numFilts);
-
-        for (int i = 0; i < ctrl.numFilts; i++)
-        {
-            if (mc.stars.back().obsPhot.at(i) < ctrl.filterPriorMin.at(i))
-            {
-                ctrl.filterPriorMin.at(i) = mc.stars.back().obsPhot.at(i);
-            }
-
-            if (mc.stars.back().obsPhot.at(i) > ctrl.filterPriorMax.at(i))
-            {
-                ctrl.filterPriorMax.at(i) = mc.stars.back().obsPhot.at(i);
-            }
-
-            filterPriorMin.at(i) = ctrl.filterPriorMin.at(i);
-            filterPriorMax.at(i) = ctrl.filterPriorMax.at(i);
-        }
-
-        if (!(mc.stars.back().observedStatus == WD || (mc.stars.back().obsPhot.at(ctrl.iMag) >= ctrl.minMag && mc.stars.back().obsPhot.at(ctrl.iMag) <= ctrl.maxMag)))
-        {
-            mc.stars.pop_back();
-        }
-    }
-
-    rData.close();
-} /* readCmdData */
 
 /*
  * Read sampled params
@@ -435,7 +333,7 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
 
             try
             {
-                auto proposedPosterior = propStar.logPost(clust, evoModels, filters);
+                auto proposedPosterior = propStar.logPost(clust, evoModels);
 
                 if (acceptP(gen, acceptedPosterior, proposedPosterior))
                 {
@@ -488,21 +386,46 @@ void Application::run()
 
     initIfmrGridControl (&mc, evoModels, &ctrl, settings);
 
-    readCmdData (mc, ctrl, evoModels, settings);
+    {
+        // Read photometry and calculate fsLike
+        vector<double> filterPriorMin;
+        vector<double> filterPriorMax;
 
-    evoModels.numFilts = ctrl.numFilts;
+        std::ifstream rData(settings.files.phot);
+
+        if (!rData)
+        {
+            cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
+        }
+
+        auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
+        auto filterNames = ret.first;
+        mc.stars = ret.second;
+
+        evoModels.restrictFilters(filterNames);
+
+        if (settings.cluster.index < 0 || settings.cluster.index > filterNames.size())
+        {
+            cerr << "*** Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0 through " << filterNames.size() - 1 << " ***"<< endl;
+            cerr << "(Exiting...)" << endl;
+            exit (1);
+        }
+
+        double logFieldStarLikelihood = 0.0;
+
+        for (size_t filt = 0; filt < filterNames.size(); filt++)
+        {
+            logFieldStarLikelihood -= log (filterPriorMax.at(filt) - filterPriorMin.at(filt));
+        }
+
+        fsLike = exp (logFieldStarLikelihood);
+    }
 
     initChain (&mc, &ctrl);
 
     mc.clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
-
-    double logFieldStarLikelihood = 0.0;
-
-    for (int filt = 0; filt < ctrl.numFilts; filt++)
-    {
-        logFieldStarLikelihood -= log (ctrl.filterPriorMax.at(filt) - ctrl.filterPriorMin.at(filt));
-    }
-    fsLike = exp (logFieldStarLikelihood);
 
     readSampledParams (&ctrl, sampledPars, evoModels, settings);
     cout << "sampledPars.at(0).age = " << sampledPars.at(0).age << endl;
@@ -555,7 +478,7 @@ void Application::run()
         }
 
         /************ sample WD masses for different parameters ************/
-        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, mc.clust.feh, mc.clust.yyy, mc.clust.age);
+        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(mc.clust.feh, mc.clust.yyy, mc.clust.age);
 
         auto starSize = mc.stars.size();
 
