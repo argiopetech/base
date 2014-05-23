@@ -1,5 +1,11 @@
-#include "MpiMcmcApplication.hpp"
 #include <stdexcept>
+
+#include "MpiMcmcApplication.hpp"
+
+using std::cerr;
+using std::endl;
+using std::exception;
+
 int main (int argc, char *argv[])
 {
     Settings settings;

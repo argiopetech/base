@@ -1,15 +1,17 @@
 #ifndef UTILITY_HPP
 #define UTILITY_HPP
 
-#include <iostream>
-using namespace std;
-
 #include <cassert>
 #include <condition_variable>
 #include <functional>
 #include <mutex>
 #include <queue>
 #include <thread>
+
+#include <fstream>
+
+#include "Settings.hpp"
+#include "Star.hpp"
 
 namespace base
 {
@@ -30,7 +32,7 @@ namespace base
                 std::mutex m;
                 std::condition_variable cv;
 
-                unique_ptr<std::thread> localThread;
+                std::unique_ptr<std::thread> localThread;
 
                 bool joinable = false;
                 bool terminate = false;
@@ -39,7 +41,7 @@ namespace base
                 WorkerThread()
                     : workQueue()
                 {
-                    localThread = unique_ptr<std::thread>(new std::thread([this]()
+                    localThread = std::unique_ptr<std::thread>(new std::thread([this]()
                                       {
                                           for(;;)
                                           {
@@ -118,6 +120,21 @@ namespace base
 
             void parallelFor(const unsigned int size, std::function<void(const unsigned int)> func);
         };
+
+        std::pair<std::vector<std::string>, std::vector<StellarSystem>> readPhotometry (std::ifstream &fin, std::vector<double> &filterPriorMin, std::vector<double> &filterPriorMax, const Settings &settings);
+
+        class InvalidPhotometry : public std::runtime_error
+        {
+            // using std::domain_error::domain_error;
+
+          public:
+            explicit InvalidPhotometry (const std::string& what_arg)
+                : std::runtime_error(what_arg) {}
+
+            explicit InvalidPhotometry (const char* what_arg)
+                : std::runtime_error(what_arg) {}
+        };
+
     }
 }
 

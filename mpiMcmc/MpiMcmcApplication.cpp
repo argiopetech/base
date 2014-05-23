@@ -25,6 +25,10 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::flush;
+using std::function;
+using std::mutex;
+using std::vector;
+
 using namespace std::placeholders;
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s)
@@ -169,7 +173,7 @@ int MpiMcmcApplication::run()
             exit (-1);
         }
 
-        auto ret = readCmdData (rData, filterPriorMin, filterPriorMax, settings);
+        auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
         auto filterNames = ret.first;
         systems = ret.second;
 

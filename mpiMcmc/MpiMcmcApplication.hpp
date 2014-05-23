@@ -7,8 +7,6 @@
 #include "Settings.hpp"
 #include "Utility.hpp"
 
-using std::hash;
-
 class MpiMcmcApplication
 {
   public:
@@ -24,7 +22,7 @@ class MpiMcmcApplication
 
     double logPostStep (Cluster &, double);
 
-    void mainRun(std::function<Cluster(Cluster)> propose, std::function<double(Cluster&)> logPost, ofstream &fout, std::array<double, NPARAMS> priorVar, Cluster clust, int iters, int thin);
+    void mainRun(std::function<Cluster(Cluster)> propose, std::function<double(Cluster&)> logPost, std::ofstream &fout, std::array<double, NPARAMS> priorVar, Cluster clust, int iters, int thin);
 
 
   private:
@@ -39,7 +37,7 @@ class MpiMcmcApplication
 
     Cluster clust;
     Cluster mainClust;
-    vector<StellarSystem> systems;
+    std::vector<StellarSystem> systems;
 
     base::utility::ThreadPool pool;
 
