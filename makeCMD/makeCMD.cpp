@@ -45,22 +45,16 @@ void Application::run()
     {
         try
         {
-            cerr << filters.at(f) << endl;
             Filters::absCoeffs.at(filters.at(f));
         }
         catch(std::out_of_range &e)
         {
-            cerr << "Erasing " << f << endl;
             filters.erase(filters.begin() + f);
 
             if (f > 0)
                 f -= 1;
         }
     }
-
-    for (auto f : filters)
-        cerr << f << ' ';
-    cerr << endl;
 
     evoModels.mainSequenceEvol->restrictToFilters(filters);
 
