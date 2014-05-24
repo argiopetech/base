@@ -54,6 +54,8 @@ class WdAtmosphereModel : virtual public StellarModel
 
     virtual void restrictToFilters(const std::vector<std::string>&);
 
+    std::vector<std::string> getAvailableFilters() const { return availableFilters; }
+
   protected:
     std::vector<AtmosCurve> hCurves;
     std::vector<AtmosCurve> heCurves;

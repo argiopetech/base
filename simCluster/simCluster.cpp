@@ -1,6 +1,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <string>
 #include <random>
 
 #include <cstdio>
@@ -13,7 +14,7 @@
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
-#include "FilterSet.hpp"
+#include "Filters.hpp"
 
 #include "WhiteDwarf.hpp"
 
@@ -22,16 +23,11 @@ using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::string;
 
 // Used by other methods in simCluster
 static int nMSRG = 0, nWD = 0, nNSBH = 0;       //, nDa=0, nDb=0;
 static double wdMassTotal = 0.0, MSRGMassTotal = 0.0;
-
-double filterPriorMin[FILTS];
-double filterPriorMax[FILTS];
-
-// Used by a bunch of different functions.
-vector<int> filters;
 
 // For random # generator (mt19937ar.c)
 unsigned long seed = 0;
@@ -62,12 +58,44 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    const Model evoModels = makeModel(settings);
+    Model evoModels = makeModel(settings);
 
-    for (int filt = 0; filt < 8; filt++)
-        filters.push_back(filt); // Calculate all of U-K
+    vector<string> filters;
 
-//    theCluster.nStars = settings.simCluster.nStars;
+    {
+        vector<string> msFilters = evoModels.mainSequenceEvol->getAvailableFilters();
+        vector<string> wdFilters = evoModels.WDAtmosphere->getAvailableFilters();
+
+        for ( auto m : msFilters )
+        {
+            for ( auto w : wdFilters )
+            {
+                if (m == w)
+                {
+                    filters.push_back(m);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (size_t f = 0; f < filters.size(); ++f)
+    {
+        try
+        {
+            Filters::absCoeffs.at(filters.at(f));
+        }
+        catch(std::out_of_range &e)
+        {
+            filters.erase(filters.begin() + f);
+
+            if (f > 0)
+                f -= 1;
+        }
+    }
+
+    evoModels.restrictFilters(filters);
+
     theCluster.setM_wd_up(settings.whiteDwarf.M_wd_up);
     fractionBinary = settings.simCluster.percentBinary;
     fractionDB = settings.simCluster.percentDB;
@@ -77,8 +105,6 @@ int main (int argc, char *argv[])
     theCluster.feh = settings.cluster.Fe_H;
     theCluster.yyy = settings.cluster.Y;
     theCluster.carbonicity = settings.cluster.carbonicity;
-//    nFieldStars = settings.simCluster.nFieldStars;
-//    nBrownDwarfs = settings.simCluster.nBrownDwarfs;
 
     fractionBinary /= 100.;     // input as percentages, use as fractions
     fractionDB /= 100.;
@@ -95,7 +121,7 @@ int main (int argc, char *argv[])
 
     if (settings.mainSequence.msRgbModel == MsModel::YALE)
         minMass = 0.4;
-    if (settings.mainSequence.msRgbModel == MsModel::DSED)
+    if (settings.mainSequence.msRgbModel == MsModel::OLD_DSED)
         minMass = 0.25;
 
     strcpy (w_file, settings.files.output.c_str());
@@ -114,14 +140,18 @@ int main (int argc, char *argv[])
     //Output headers
     fprintf (w_ptr, "id  mass1 ");
     for (auto f : filters)
+        fprintf (w_ptr, "%s1 ", f.c_str());
 
-        fprintf (w_ptr, "%s1 ", evoModels.filterSet->getFilterName(f).c_str());
     fprintf (w_ptr, "stage1 wdM1 wdType1 wdLogTeff1 ltau1 mass2 ");
+
     for (auto f : filters)
-        fprintf (w_ptr, "%s2 ", evoModels.filterSet->getFilterName(f).c_str());
+        fprintf (w_ptr, "%s2 ", f.c_str());
+
     fprintf (w_ptr, "stage2 wdM2 wdType2 wdLogTeff2 ltau2 ");
+
     for (auto f : filters)
-        fprintf (w_ptr, "%s ", evoModels.filterSet->getFilterName(f).c_str());
+        fprintf (w_ptr, "%s ", f.c_str());
+
     fprintf (w_ptr, "\n");
 
     minV = 1000.0;
@@ -132,7 +162,7 @@ int main (int argc, char *argv[])
     ////////////////////////////////
     // derive masses, mags, and summary stats
 
-    theCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, theCluster.feh, theCluster.yyy, theCluster.age);    // determine AGBt ZAMS mass, to find evol state
+    theCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(theCluster.feh, theCluster.yyy, theCluster.age);    // determine AGBt ZAMS mass, to find evol state
 
     std::normal_distribution<double> normDist(1, 0.5);
 
@@ -148,12 +178,13 @@ int main (int argc, char *argv[])
 
         fprintf (w_ptr, "%4d %7.3f ", i + 1, theStar.primary.mass); // output primary star data
 
-        auto photometry = theStar.primary.getMags(theCluster, evoModels, filters);
+        auto photometry = theStar.primary.getMags(theCluster, evoModels);
 
-        for (auto f : filters)
+        for (size_t f = 0; f < filters.size(); ++f)
         {
                 fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);
         }
+
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.getStatus(theCluster), (theStar.primary.getStatus(theCluster) == WD ? theStar.primary.wdMassNow(theCluster, evoModels) : 0.0), 0, theStar.primary.wdLogTeff(theCluster, evoModels), theStar.primary.getLtau(theCluster, evoModels));
 
         tempU = theStar.primary.mass;              // save so we can output the total photometry below
@@ -178,10 +209,10 @@ int main (int argc, char *argv[])
 
 
         // Evolve secondary star by itself
-        photometry = theStar.primary.getMags(theCluster, evoModels, filters);
+        photometry = theStar.primary.getMags(theCluster, evoModels);
 
         fprintf (w_ptr, "%7.3f ", theStar.primary.mass);    // output secondary star data
-        for (auto f : filters)
+        for (size_t f = 0; f < filters.size(); ++f)
         {
                 fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);
         }
@@ -195,7 +226,7 @@ int main (int argc, char *argv[])
         theStar.primary.mass = tempU;
 
 
-        photometry = theStar.deriveCombinedMags(theCluster, evoModels, filters);
+        photometry = theStar.deriveCombinedMags(theCluster, evoModels);
 
         switch (theStar.primary.getStatus(theCluster))
         {
@@ -227,7 +258,7 @@ int main (int argc, char *argv[])
                 break;
         }
 
-        for (auto f : filters)
+        for (size_t f = 0; f < filters.size(); ++f)
             fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);  // output photometry for whole system
         fprintf (w_ptr, "\n");
 
@@ -321,7 +352,7 @@ int main (int argc, char *argv[])
         }
     }
 
-    if ((settings.mainSequence.msRgbModel == MsModel::DSED) || (settings.mainSequence.msRgbModel == MsModel::YALE))
+    if ((settings.mainSequence.msRgbModel == MsModel::OLD_DSED) || (settings.mainSequence.msRgbModel == MsModel::YALE))
     {
         minFeH = -2.5;
         maxFeH = 0.56;
@@ -357,9 +388,9 @@ int main (int argc, char *argv[])
             // there are more stars behind than in front
             theCluster.mod = tempMod - 12.0 + log10 (exp10 ((pow (pow (26.0, 3.0) * std::generate_canonical<double, 53>(gen), 1.0 / 3.0))));
 
-            theCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, theCluster.feh, theCluster.yyy, theCluster.age);    // determine AGBt ZAMS mass, to find evol state
+            theCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(theCluster.feh, theCluster.yyy, theCluster.age);    // determine AGBt ZAMS mass, to find evol state
 
-            photometry = theStar.deriveCombinedMags(theCluster, evoModels, filters);
+            photometry = theStar.deriveCombinedMags(theCluster, evoModels);
 
         } while (photometry[2] < minV || photometry[2] > maxV || photometry[1] - photometry[2] < -0.5 || photometry[1] - photometry[2] > 1.7);
 
@@ -371,7 +402,7 @@ int main (int argc, char *argv[])
         for (auto f [[gnu::unused]] : filters)
             fprintf (w_ptr, "%6.3f ", 99.999);
         fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.secondary.getStatus(theCluster), 0.0, 0, theStar.secondary.wdLogTeff(theCluster, evoModels), theStar.secondary.getLtau(theCluster, evoModels));
-        for (auto f : filters)
+        for (size_t f = 0; f < filters.size(); ++f)
             fprintf (w_ptr, "%9.6f ", photometry[f]);
         fprintf (w_ptr, "\n");
 
