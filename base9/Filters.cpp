@@ -44,6 +44,10 @@ const unordered_map<string, double> Filters::absCoeffs =
         { "H", 0.190 },
         { "K", 0.114 },
 
+        // New DSED 'K'
+        { "Ks", 0.114 },
+        { "Kp", 0.114 },
+
         // SDSS Filters
         { "u", 5.155 / 3.1 }, // Stoughton et al. (2002, AJ, 123, 485)
         { "g", 3.793 / 3.1 }, // Table 22, which gives Afilter/E(B-V )
