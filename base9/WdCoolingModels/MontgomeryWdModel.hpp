@@ -10,7 +10,7 @@
 class MontgomeryWdModel : public WdCoolingModel
 {
   public:
-    virtual void loadModel (std::string path, FilterSetName);
+    virtual void loadModel (std::string path);
     virtual std::pair<double, double> wdMassToTeffAndRadius (double logAge, double x_carbon, double wdPrecLogAge, double wdMass) const;
 };
 #endif

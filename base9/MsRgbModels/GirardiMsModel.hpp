@@ -12,9 +12,6 @@ class GirardiMsModel : public GenericMsModel
     GirardiMsModel() {;}
     virtual ~GirardiMsModel() {;}
 
-    virtual bool isSupported(FilterSetName filterSet) const
-        { return filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::ACS; }
-
   protected:
     virtual std::string getFileName (std::string path) const
         { return path + "girardi/girardi.model"; }

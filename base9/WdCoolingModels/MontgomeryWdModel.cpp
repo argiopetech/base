@@ -26,7 +26,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-void MontgomeryWdModel::loadModel(string path, FilterSetName)
+void MontgomeryWdModel::loadModel(string path)
 {
     string tempFile, line;
     double newAge, newTeff, newMass, newRadius;

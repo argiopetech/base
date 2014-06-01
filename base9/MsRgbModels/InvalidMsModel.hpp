@@ -12,7 +12,7 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
     InvalidMsModel() {;}
     virtual ~InvalidMsModel() {;}
 
-    virtual void loadModel(std::string, FilterSetName) {;}
+    virtual void loadModel(std::string) {;}
     virtual void restrictToFilters(const std::vector<std::string>&) {;}
 
     virtual double deriveAgbTipMass(double, double, double)

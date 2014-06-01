@@ -19,9 +19,6 @@ const double R_sun   = 6.96342e10;
 
 const int NPARAMS            = 9;
 
-// Filter sets
-enum class FilterSetName {UBVRIJHK, ACS, SDSS, UVIS};
-
 // Define model sets
 //Main sequence evolution
 enum class MsModel {GIRARDI = 0, CHABHELIUM = 1, YALE = 2, OLD_DSED = 3, NEW_DSED = 4};

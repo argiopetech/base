@@ -12,9 +12,6 @@ class OldDsedMsModel : public GenericMsModel
     OldDsedMsModel() {;}
     virtual ~OldDsedMsModel() {;}
 
-    virtual bool isSupported(FilterSetName filterSet) const
-        { return  filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS; }
-
   protected:
     virtual std::string getFileName (std::string path) const
         { return path + "dsed/dsed_old.model"; }

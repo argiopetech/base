@@ -10,6 +10,6 @@
 class WoodWdModel : public CarbonlessWdModel
 {
   public:
-    virtual void loadModel (std::string path, FilterSetName);
+    virtual void loadModel (std::string path);
 };
 #endif

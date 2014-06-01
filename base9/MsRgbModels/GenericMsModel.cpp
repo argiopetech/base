@@ -95,7 +95,7 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
 }
 
 
-void GenericMsModel::loadModel(string path, FilterSetName)
+void GenericMsModel::loadModel(string path)
 {
     ifstream fin;
 

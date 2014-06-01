@@ -22,11 +22,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-bool BergeronAtmosphereModel::isSupported(FilterSetName filterSet) const
-{
-    return (filterSet == FilterSetName::UBVRIJHK || filterSet == FilterSetName::SDSS);
-}
-void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterSet)
+void BergeronAtmosphereModel::loadModel (std::string path)
 {
     static std::string files[] = {
         {"Table_Mass_0.2"},
@@ -44,8 +40,6 @@ void BergeronAtmosphereModel::loadModel (std::string path, FilterSetName filterS
     ifstream fin;
     string line, tempFile;
     double teff, ignore, mass;
-
-    assert(isSupported(filterSet));
 
     // Open the appropriate file for each mass
     for (auto f : files)

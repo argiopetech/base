@@ -57,7 +57,6 @@ void Settings::fromYaml (const string yamlFile)
     Node scatterConfNode = getNode (configNode, "scatterCluster");
     Node sampleMassNode = getNode (configNode, "sampleMass");
 
-    mainSequence.filterSet = static_cast<FilterSetName>(getOrDie<int>(mainSequenceNode, "filterSet"));
     mainSequence.msRgbModel = static_cast<MsModel>(getOrDie<int>(mainSequenceNode, "msRgbModel"));
 
     whiteDwarf.ifmr = getOrDie<int>(whiteDwarfNode, "ifmr");
@@ -163,7 +162,6 @@ void Settings::fromCLI (int argc, char **argv)
         {"verbose", no_argument, &(verbose), 1},
 
         // These all have to be parsed
-        {"filterSet", required_argument, 0, 0xFF},
         {"msRgbModel", required_argument, 0, 0xFE},
         {"ifmr", required_argument, 0, 0xFD},
         {"wdModel", required_argument, 0, 0xFC},
@@ -230,11 +228,6 @@ void Settings::fromCLI (int argc, char **argv)
                     cout << " with arg " << optarg;
 
                 cout << endl;
-                break;
-
-            case 0xFF:
-                istringstream (string (optarg)) >> i;
-                mainSequence.filterSet = static_cast<FilterSetName>(i);
                 break;
 
             case 0xFE:
@@ -483,7 +476,6 @@ static void printUsage ()
     cerr << "\t--help\t\t\tPrints help" << endl;
     cerr << "\t--version\t\tPrints version string" << endl << endl;
     cerr << "\t--config\t\tYAML configuration file" << endl << endl;
-    cerr << "\t--filterSet\t\t0 = UBVRIJHK\n\t\t\t\t1 = ACS\n\t\t\t\t2 = SDSS + JHK" << endl << endl;
     cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = Old (jc2mass) DSED\n\t\t\t\t4 = New DSED" << endl << endl;
     cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable" << endl << endl;
     cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery" << endl << endl;

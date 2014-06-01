@@ -29,7 +29,7 @@ struct althausModel
     const double mass;
 };
 
-void AlthausWdModel::loadModel(string path, FilterSetName)
+void AlthausWdModel::loadModel(string path)
 {
     static struct althausModel althaus[] = {
         {"T045_1E4.Z0", false, 0.45},

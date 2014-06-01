@@ -9,17 +9,13 @@
 class StellarModel
 {
   public:
-    virtual void loadModel (std::string path, FilterSetName filterSet) = 0;
-
-    virtual bool isSupported (FilterSetName) const = 0;
+    virtual void loadModel (std::string path) = 0;
 };
 
 
 class InvalidModel : virtual public StellarModel
 {
-    virtual void loadModel(std::string, FilterSetName) {;}
-
-    virtual bool isSupported(FilterSetName) const { return false; }
+    virtual void loadModel(std::string) {;}
 };
 
 

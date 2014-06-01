@@ -12,7 +12,7 @@ class GenericMsModel : public MsRgbModel
   public:
     virtual ~GenericMsModel() {;}
 
-    virtual void loadModel(std::string, FilterSetName);
+    virtual void loadModel(std::string);
 
     virtual double deriveAgbTipMass(double, double, double);
     virtual Isochrone deriveIsochrone(double, double, double) const;

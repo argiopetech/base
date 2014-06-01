@@ -20,7 +20,6 @@ class Settings
 
     struct MainSequenceSettings
     {
-        FilterSetName filterSet;
         MsModel msRgbModel;
     };
 
