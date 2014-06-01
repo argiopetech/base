@@ -36,7 +36,7 @@ using base::utility::ThreadPool;
 
 void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 {
-    const array<string, NPARAMS> paramNames = { "     logAge",
+    const array<string, NPARAMS> paramNames = {  "    logAge",
                                                 "          Y",
                                                 "        FeH",
                                                 "    modulus",
@@ -50,8 +50,8 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
     {
         if (priors.at(p) > EPSILON || p == MOD || p == FEH || p == ABS)
         {
-            file << paramNames.at(p) << ' ';
+            file << paramNames.at(p);
         }
     }
-    file << "logPost" << endl;
+    file << "     logPost" << endl;
 }

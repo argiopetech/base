@@ -24,7 +24,7 @@ class Chain : public McmcApplication
 
     ofstream &fout;
 
-    double logPostCurr = std::numeric_limits<double>::lowest();
+    double logPostCurr = -std::numeric_limits<double>::infinity();
 
   public:
     Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, Cluster clust, ofstream &fout)
