@@ -10,6 +10,7 @@
 #include "Isochrone.hpp"
 #include "LinearTransform.hpp"
 #include "Matrix.hpp"
+#include "MsRgbModel.hpp"
 #include "GenericMsModel.hpp"
 
 using std::array;
@@ -699,17 +700,60 @@ vector<double> GenericMsModel::msRgbEvol (double zamsMass) const
     return mags;
 }
 
-
-double GenericMsModel::wdPrecLogAge(double thisFeH, double zamsMass, double thisY) const
+double GenericMsModel::wdPrecLogAge(double thisFeH, double zamsMass, double newY) const
 {
-    if (fehCurves.front().heliumCurves.size() == 1)
-        return wdPrecLogAge_oneY(thisFeH, zamsMass);
-    else
-        return wdPrecLogAge_manyY(thisFeH, zamsMass, thisY);
-}
+    // The guts of the wePrecLogAge function
+    // This is implemented internally to avoid namespace pollution and explicit passing of zamsMass
+    auto interpY = [=](const vector<HeliumCurve>::const_iterator& yIter)
+    {
+        double wdPrecLogAge;
 
-double GenericMsModel::wdPrecLogAge_manyY(double thisFeH, double zamsMass, double newY) const
-{
+        // The AGBt for the youngest isochrone in the given [Fe/H]
+        // This should be the largest AGBt for that [Fe/H]
+        if (zamsMass > yIter->isochrones.front().agbTipMass())
+        {
+            wdPrecLogAge = -2.7 * log10 (zamsMass / yIter->isochrones.front().agbTipMass()) + yIter->isochrones.front().logAge;
+        }
+        else
+        {
+            // Search ages in reverse (since the agbTips decrease as age increases)
+            auto ageIter = lower_bound(yIter->isochrones.rbegin(), yIter->isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
+
+            if (ageIter == yIter->isochrones.rend())
+            {
+                ageIter -= 2;
+            }
+            else if (ageIter != yIter->isochrones.rbegin())
+            {
+                ageIter -= 1;
+            }
+
+            // Ensure that we found a reasonable value here
+            // This seems backward in the context of the reverse_iterator
+            // because the AGBt decreases as logAge increases.
+
+            // This was previously asserted, but it doesn't hold if
+            // we're looking for a zamsMass smaller than the minimum
+            // (which happens in simCluster)
+            // assert(ageIter[0].agbTipMass() <= zamsMass);
+            assert(ageIter[1].agbTipMass() > zamsMass);
+
+            wdPrecLogAge = linearTransform<TransformMethod::Interp>(ageIter[0].agbTipMass()
+                                                                  , ageIter[1].agbTipMass()
+                                                                  , ageIter[0].logAge
+                                                                  , ageIter[1].logAge
+                                                                  , zamsMass).val;
+
+            // This seems backwards because of the reverse_iterator
+            assert(ageIter[0].logAge >= wdPrecLogAge);
+            assert(ageIter[1].logAge <= wdPrecLogAge);
+        }
+
+        return wdPrecLogAge;
+    };
+
+    bool oneY = false;
+
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
 
     if (fehIter == fehCurves.end())
@@ -723,7 +767,20 @@ double GenericMsModel::wdPrecLogAge_manyY(double thisFeH, double zamsMass, doubl
 
     int iY;
 
+    // If either of the [Fe/H] values has only one Y, we degrade to only running on the first value
+    // This is the case in Girardi, Old DSED, and the positive [Fe/H] values of New DSED (at time of writing)
+    // Alternatively, we search for a reasonable Y value to interpolate from.
+    if ( fehIter[0].heliumCurves.size() == 1
+      || fehIter[1].heliumCurves.size() == 1 )
     {
+        iY = 0;
+        oneY = true;
+    }
+    else
+    {
+        // Currently, if neither [Fe/H] has one Y value, they both have the same number of Y values
+        assert (fehIter[0].heliumCurves.size() == fehIter[1].heliumCurves.size());
+
         auto yIter = lower_bound(fehIter[0].heliumCurves.begin(), fehIter[0].heliumCurves.end(), newY, HeliumCurve::compareY);
 
         if (yIter == fehIter[0].heliumCurves.end())
@@ -745,120 +802,26 @@ double GenericMsModel::wdPrecLogAge_manyY(double thisFeH, double zamsMass, doubl
     {
         auto yIter = fehIter[i].heliumCurves.begin() + iY;
 
-        array<double, 2> tmpPrecLogAge;
-
-        for (int y = 0; y < 2; ++y)
+        // If we're in the one Y condition from above, this is a simple loop interpolating in [Fe/H]
+        // Otherwise, we have to interpolate in Y at both [Fe/H] values
+        if (oneY)
         {
-            // The AGBt for the youngest isochrone in the given [Fe/H]
-            // This should be the largest AGBt for that [Fe/H]
-            if (zamsMass > yIter[y].isochrones.front().agbTipMass())
-            {
-                tmpPrecLogAge[y] = -2.7 * log10 (zamsMass / yIter[y].isochrones.front().agbTipMass()) + yIter[y].isochrones.front().logAge;
-            }
-            else
-            {
-                // Search ages in reverse (since the agbTips decrease as age increases)
-                auto ageIter = lower_bound(yIter[y].isochrones.rbegin(), yIter[y].isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
-
-                if (ageIter == yIter[y].isochrones.rend())
-                {
-                    ageIter -= 2;
-                }
-                else if (ageIter != yIter[y].isochrones.rbegin())
-                {
-                    ageIter -= 1;
-                }
-
-                // Ensure that we found a reasonable value here
-                // This seems backward in the context of the reverse_iterator
-                // because the AGBt decreases as logAge increases.
-
-                // This was previously asserted, but it doesn't hold if
-                // we're looking for a zamsMass smaller than the minimum
-                // (which happens in simCluster)
-                // assert(ageIter[0].agbTipMass() <= zamsMass);
-                assert(ageIter[1].agbTipMass() > zamsMass);
-
-                tmpPrecLogAge[y] = linearTransform<TransformMethod::Interp>(ageIter[0].agbTipMass()
-                                                                          , ageIter[1].agbTipMass()
-                                                                          , ageIter[0].logAge
-                                                                          , ageIter[1].logAge
-                                                                          , zamsMass).val;
-
-                // This seems backwards because of the reverse_iterator
-                assert(ageIter[0].logAge >= tmpPrecLogAge[y]);
-                assert(ageIter[1].logAge <= tmpPrecLogAge[y]);
-            }
-        }
-
-        wdPrecLogAge[i] = linearTransform<TransformMethod::Interp>(yIter[0].y
-                                                                 , yIter[1].y
-                                                                 , tmpPrecLogAge[0]
-                                                                 , tmpPrecLogAge[1]
-                                                                 , newY).val;
-
-    }
-
-    // Linearly interpolate in FeH
-    return linearTransform<TransformMethod::Interp>(fehIter[0].feh, fehIter[1].feh, wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
-}
-
-double GenericMsModel::wdPrecLogAge_oneY(double thisFeH, double zamsMass) const
-{
-    auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), thisFeH, FehCurve::compareFeh);
-
-    if (fehIter == fehCurves.end())
-    {
-        fehIter -= 2;
-    }
-    else if (fehIter != fehCurves.begin())
-    {
-        fehIter -= 1;
-    }
-
-    array<double, 2> wdPrecLogAge;
-
-    for (int i = 0; i < 2; ++i)
-    {
-        // The AGBt for the youngest isochrone in the given [Fe/H]
-        // This should be the largest AGBt for that [Fe/H]
-        if (zamsMass > fehIter[i].heliumCurves.front().isochrones.front().agbTipMass())
-        {
-            wdPrecLogAge[i] = -2.7 * log10 (zamsMass / fehIter[i].heliumCurves.front().isochrones.front().agbTipMass()) + fehIter[i].heliumCurves.front().isochrones.front().logAge;
+            wdPrecLogAge[i] = interpY(yIter);
         }
         else
         {
-            // Search ages in reverse (since the agbTips decrease as age increases)
-            auto ageIter = lower_bound(fehIter[i].heliumCurves.front().isochrones.rbegin(), fehIter[i].heliumCurves.front().isochrones.rend(), zamsMass, Isochrone::compareAgbTip);
+            array<double, 2> tmpPrecLogAge;
 
-            if (ageIter == fehIter[i].heliumCurves.front().isochrones.rend())
+            for (int y = 0; y < 2; ++y)
             {
-                ageIter -= 2;
-            }
-            else if (ageIter != fehIter[i].heliumCurves.front().isochrones.rbegin())
-            {
-                ageIter -= 1;
+                tmpPrecLogAge[y] = interpY(yIter + y);
             }
 
-            // Ensure that we found a reasonable value here
-            // This seems backward in the context of the reverse_iterator
-            // because the AGBt decreases as logAge increases.
-
-            // This was previously asserted, but it doesn't hold if
-            // we're looking for a zamsMass smaller than the minimum
-            // (which happens in simCluster)
-            // assert(ageIter[0].agbTipMass() <= zamsMass);
-            assert(ageIter[1].agbTipMass() > zamsMass);
-
-            wdPrecLogAge[i] = linearTransform<TransformMethod::Interp>(ageIter[0].agbTipMass()
-                                                                     , ageIter[1].agbTipMass()
-                                                                     , ageIter[0].logAge
-                                                                     , ageIter[1].logAge
-                                                                     , zamsMass).val;
-
-            // This seems backwards because of the reverse_iterator
-            assert(ageIter[0].logAge >= wdPrecLogAge[i]);
-            assert(ageIter[1].logAge <= wdPrecLogAge[i]);
+            wdPrecLogAge[i] = linearTransform<TransformMethod::Interp>(yIter[0].y
+                                                                     , yIter[1].y
+                                                                     , tmpPrecLogAge[0]
+                                                                     , tmpPrecLogAge[1]
+                                                                     , newY).val;
         }
     }
 

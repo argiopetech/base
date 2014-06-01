@@ -25,8 +25,5 @@ class GenericMsModel : public MsRgbModel
   private:
     Isochrone deriveIsochrone_oneY(double, double) const;
     Isochrone deriveIsochrone_manyY(double, double, double) const;
-
-    double wdPrecLogAge_oneY(double, double) const;
-    double wdPrecLogAge_manyY(double, double, double) const;
 };
 #endif
