@@ -339,7 +339,6 @@ Isochrone GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) con
 
     vector<Isochrone> interpIso;
 
-    // Interpolate between two ages in two FeHs.
     for (int i = 0; i < 2; ++i)
     {
         // Shortcut iterator
@@ -468,31 +467,50 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, doub
         fehIter -= 1;
     }
 
+    bool oneY = false;
+
     int iY;
     int iAge;
 
+    // Much like wdPrecLogAge, we want to handle the one-Y case properly (with a single function)
+    if ( fehIter[0].heliumCurves.size() == 1
+      || fehIter[1].heliumCurves.size() == 1 )
     {
-        auto yIter = lower_bound(fehIter[0].heliumCurves.begin(), fehIter[0].heliumCurves.end(), newY, HeliumCurve::compareY);
+        return deriveIsochrone_oneY( newFeH, newAge );
 
-        if (yIter == fehIter[0].heliumCurves.end())
+        // Technically unneeded till the two deriveIsochrone functions are combined
+        oneY = true;
+        iY = 0;
+    }
+    else
+    {
+        // This should hold true for all current models which do not trigger the size() == 1 conditional
+        assert(fehIter[0].heliumCurves.size() == fehIter[1].heliumCurves.size());
+
+        auto yIter = lower_bound(fehIter->heliumCurves.begin(), fehIter->heliumCurves.end(), newY, HeliumCurve::compareY);
+
+        if (yIter == fehIter->heliumCurves.end())
         {
             yIter -= 2;
         }
-        else if (yIter != fehIter[0].heliumCurves.begin())
+        else if (yIter != fehIter->heliumCurves.begin())
         {
             yIter -= 1;
         }
 
         // An index is more useful, as Y indexes should be identical across FeHCurves
-        iY = yIter - fehIter[0].heliumCurves.begin();
+        iY = yIter - fehIter->heliumCurves.begin();
+    }
 
-        auto ageIter = lower_bound(yIter[0].isochrones.begin(), yIter[0].isochrones.end(), newAge, Isochrone::compareAge);
+    {
+        auto yIter = fehIter->heliumCurves.begin() + iY;
+        auto ageIter = lower_bound(yIter->isochrones.begin(), yIter->isochrones.end(), newAge, Isochrone::compareAge);
 
-        if (ageIter == yIter[0].isochrones.end())
+        if (ageIter == yIter->isochrones.end())
         {
             ageIter -= 2;
         }
-        else if (ageIter != yIter[0].isochrones.begin())
+        else if (ageIter != yIter->isochrones.begin())
         {
             ageIter -= 1;
         }
@@ -503,12 +521,11 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, doub
         assert(ageIter[1].logAge >= newAge);
 
         // An age index is more useful, as age indexes should be identical across HeliumCurves
-        iAge = ageIter - yIter[0].isochrones.begin();
+        iAge = ageIter - yIter->isochrones.begin();
     }
 
     vector<Isochrone> interpIso;
 
-    // Interpolate between two ages in two FeHs.
     for (int i = 0; i < 2; ++i)
     {
         vector<Isochrone> tIso;
