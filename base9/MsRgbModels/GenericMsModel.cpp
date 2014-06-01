@@ -434,7 +434,9 @@ Isochrone GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) con
         interpEeps.emplace_back(interpIso.at(0).eeps.at(e + eepOffset[0]).eep, interpMass, mags);
     }
 
-    assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
+    // This is important, but it takes O(n) time in debug, which is highly un-cool.
+    // This should also be checked in marg.cpp when calling calcPost.
+    // assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
 
     return {interpIso.at(0).logAge, interpEeps};
 }
@@ -683,7 +685,7 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, doub
         interpEeps.emplace_back(interpIso.at(0).eeps.at(e + eepOffset[0]).eep, interpMass, mags);
     }
 
-    assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
+    // assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
 
     return {interpIso.at(0).logAge, interpEeps};
 }
