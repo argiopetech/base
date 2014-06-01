@@ -672,34 +672,6 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, doub
 }
 
 
-vector<double> GenericMsModel::msRgbEvol (double zamsMass) const
-{
-    vector<double> mags;
-
-    auto m = lower_bound(isochrone.eeps.begin(), isochrone.eeps.end(), zamsMass, EvolutionaryPoint::compareMass);
-
-    if (m == isochrone.eeps.end()) {
-        m -= 2;
-    }
-    else if (m != isochrone.eeps.begin()) {
-        m -= 1;
-    }
-
-    for ( size_t f = 0; f < m[0].mags.size(); ++f )
-    {
-        double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), zamsMass).val;
-
-        if (std::fabs(mag) < EPS)
-            mags.push_back(999.99);
-        else
-            mags.push_back(mag);
-    }
-
-    assert(mags.size() == m[0].mags.size());
-
-    return mags;
-}
-
 double GenericMsModel::wdPrecLogAge(double thisFeH, double zamsMass, double newY) const
 {
     // The guts of the wePrecLogAge function
@@ -827,4 +799,33 @@ double GenericMsModel::wdPrecLogAge(double thisFeH, double zamsMass, double newY
 
     // Linearly interpolate in FeH
     return linearTransform<TransformMethod::Interp>(fehIter[0].feh, fehIter[1].feh, wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
+}
+
+
+vector<double> GenericMsModel::msRgbEvol (double zamsMass) const
+{
+    vector<double> mags;
+
+    auto m = lower_bound(isochrone.eeps.begin(), isochrone.eeps.end(), zamsMass, EvolutionaryPoint::compareMass);
+
+    if (m == isochrone.eeps.end()) {
+        m -= 2;
+    }
+    else if (m != isochrone.eeps.begin()) {
+        m -= 1;
+    }
+
+    for ( size_t f = 0; f < m[0].mags.size(); ++f )
+    {
+        double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), zamsMass).val;
+
+        if (std::fabs(mag) < EPS)
+            mags.push_back(999.99);
+        else
+            mags.push_back(mag);
+    }
+
+    assert(mags.size() == m[0].mags.size());
+
+    return mags;
 }
