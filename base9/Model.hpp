@@ -1,14 +1,19 @@
 #ifndef MODEL_HPP
 #define MODEL_HPP
 
+#include <iostream>
 #include <memory>
 
 #include "Filters.hpp"
 #include "MsRgbModel.hpp"
+#include "MsRgbModels/InvalidMsModel.hpp"
 #include "Settings.hpp"
 #include "WdCoolingModel.hpp"
 #include "WdAtmosphereModel.hpp"
+#include "WdAtmosphereModels/InvalidAtmosphereModel.hpp"
 
+using std::cout;
+using std::endl;
 using std::shared_ptr;
 
 /*** Define a structure model that houses information about the evolution model ***/
@@ -22,8 +27,26 @@ class Model
     void restrictFilters(const std::vector<std::string> &filters)
     {
         absCoeffs = Filters::calcAbsCoeffs(filters);
-        mainSequenceEvol->restrictToFilters(filters);
-        WDAtmosphere->restrictToFilters(filters);
+
+        try
+        {
+            mainSequenceEvol->restrictToFilters(filters);
+        }
+        catch (InvalidModelError &e)
+        {
+            cout << "Couldn't find filter \"" << e.what() << "\" in selected MSRGB model" << endl;
+            mainSequenceEvol.reset(new InvalidMsModel());
+        }
+
+        try
+        {
+            WDAtmosphere->restrictToFilters(filters);
+        }
+        catch (InvalidModelError &e)
+        {
+            cout << "Couldn't find filter \"" << e.what() << "\" in selected WD Atmosphere model" << endl;
+            WDAtmosphere.reset(new InvalidAtmosphereModel());
+        }
     }
 
     shared_ptr<MsRgbModel> mainSequenceEvol;

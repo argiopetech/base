@@ -9,13 +9,11 @@
 #include "MsRgbModels/OldDsedMsModel.hpp"
 #include "MsRgbModels/NewDsedMsModel.hpp"
 #include "MsRgbModels/GirardiMsModel.hpp"
-#include "MsRgbModels/InvalidMsModel.hpp"
 #include "WdCoolingModels/AlthausWdModel.hpp"
 #include "WdCoolingModels/MontgomeryWdModel.hpp"
 #include "WdCoolingModels/RenedoWdModel.hpp"
 #include "WdCoolingModels/WoodWdModel.hpp"
 #include "WdAtmosphereModels/BergeronAtmosphereModel.hpp"
-#include "WdAtmosphereModels/InvalidAtmosphereModel.hpp"
 
 using std::cout;
 using std::cerr;

@@ -92,6 +92,9 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
         }
     }
 
+    // This only happens if you have all variances negative for a star
+    assert (!diffs.empty());
+
     // Evaluate the posterior at all reasonable points in the isochrone
     for (decltype(isochrone.eeps.size()) i = 0; i < isochrone.eeps.size() - 1; ++i)
     {

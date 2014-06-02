@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -6,8 +5,6 @@
 
 #include "WdAtmosphereModel.hpp"
 
-using std::cout;
-using std::endl;
 using std::string;
 using std::vector;
 
@@ -32,8 +29,7 @@ void WdAtmosphereModel::restrictToFilters(const vector<string>& filters)
 
         if ( ! foundFilter )
         {
-            cout << "Couldn't find filter \"" << f << "\" in selected model set (WdAtmosphere)" << endl;
-            exit(-1);
+            throw InvalidModelError(f);
         }
     }
 

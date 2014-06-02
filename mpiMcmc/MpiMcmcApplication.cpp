@@ -51,29 +51,13 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     mainClust.age = mainClust.priorMean[AGE] = clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
-    if (settings.whiteDwarf.wdModel == WdModel::MONTGOMERY)
-    {
-        mainClust.carbonicity = settings.cluster.starting.carbonicity;
-        mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
-        ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
-    }
-    else
-    {
-        mainClust.carbonicity = mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = 0.0;
-        ctrl.priorVar[CARBONICITY] = 0.0;
-    }
+    mainClust.carbonicity = settings.cluster.starting.carbonicity;
+    mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+    ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
 
-    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
-    {
-        mainClust.yyy = settings.cluster.starting.Y;
-        mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
-        ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
-    }
-    else
-    {
-        mainClust.yyy = mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = 0.0;
-        ctrl.priorVar[YYY] = 0.0;
-    }
+    mainClust.yyy = settings.cluster.starting.Y;
+    mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
+    ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
 
 
     if (evoModels.IFMR <= 3)
@@ -151,6 +135,8 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
 int MpiMcmcApplication::run()
 {
+    cout << "Bayesian Analysis of Stellar Evolution" << endl;
+
     double fsLike;
 
     array<double, NPARAMS> stepSize;
@@ -215,8 +201,6 @@ int MpiMcmcApplication::run()
         }
     }
     // end initChain
-
-    cout << "Bayesian Analysis of Stellar Evolution" << endl;
 
     // Assuming fsLike doesn't change, this is the "global" logPost function
     auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);
