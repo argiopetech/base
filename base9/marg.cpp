@@ -47,7 +47,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     // Also, go ahead and rename system.primary.mass to primaryMass for this function
     // We call deriveCombinedMags here rather than primary.getMags so that we get abs/distMod correction
     // This keeps models which haven't been converted to absolute mags from breaking
-    vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels);
+    const vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels);
     const double primaryMass = system.primary.mass;
 
     // Other useful constants
