@@ -200,6 +200,7 @@ void GenericMsModel::loadModel(string path)
                             // Clear everything except heliumCurves
                             isochrones.clear();
                             eeps.clear();
+                            haveFirstRecord = false;
                         }
                         else // Something changed that we don't support
                         {
