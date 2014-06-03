@@ -72,23 +72,8 @@ void Application::run()
 
 
     // FilterSet-conditional parameters
-    if (settings.whiteDwarf.wdModel == WdModel::MONTGOMERY)
-    {
-        clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
-    }
-    else
-    {
-        clust.carbonicity = clust.priorMean[CARBONICITY] = 0.0;
-    }
-
-    if (settings.mainSequence.msRgbModel == MsModel::CHABHELIUM)
-    {
-        clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
-    }
-    else
-    {
-        clust.yyy = clust.priorMean[YYY] = 0.0;
-    }
+    clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+    clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
 
     if (evoModels.IFMR <= 10)
         clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
