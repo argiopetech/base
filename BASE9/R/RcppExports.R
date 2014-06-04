@@ -5,16 +5,16 @@ listFilters <- function() {
     .Call('BASE9_listFilters', PACKAGE = 'BASE9')
 }
 
-initBase <- function(modelDir, msFilter, msModel, wdModel, ifmr) {
-    invisible(.Call('BASE9_initBase', PACKAGE = 'BASE9', modelDir, msFilter, msModel, wdModel, ifmr))
+initBase <- function(modelDir, msModel, wdModel, ifmr) {
+    invisible(.Call('BASE9_initBase', PACKAGE = 'BASE9', modelDir, msModel, wdModel, ifmr))
 }
 
 setClusterParameters <- function(age, feh, distMod, av, y, carbonicity) {
     invisible(.Call('BASE9_setClusterParameters', PACKAGE = 'BASE9', age, feh, distMod, av, y, carbonicity))
 }
 
-changeModels <- function(msFilter, msModel, wdModel, ifmr) {
-    invisible(.Call('BASE9_changeModels', PACKAGE = 'BASE9', msFilter, msModel, wdModel, ifmr))
+changeModels <- function(msModel, wdModel, ifmr) {
+    invisible(.Call('BASE9_changeModels', PACKAGE = 'BASE9', msModel, wdModel, ifmr))
 }
 
 setIFMRParameters <- function(intercept, slope, quadCoef) {

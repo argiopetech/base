@@ -20,17 +20,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // initBase
-void initBase(std::string modelDir, int msFilter, int msModel, int wdModel, int ifmr);
-RcppExport SEXP BASE9_initBase(SEXP modelDirSEXP, SEXP msFilterSEXP, SEXP msModelSEXP, SEXP wdModelSEXP, SEXP ifmrSEXP) {
+void initBase(std::string modelDir, int msModel, int wdModel, int ifmr);
+RcppExport SEXP BASE9_initBase(SEXP modelDirSEXP, SEXP msModelSEXP, SEXP wdModelSEXP, SEXP ifmrSEXP) {
 BEGIN_RCPP
     {
         Rcpp::RNGScope __rngScope;
         Rcpp::traits::input_parameter< std::string >::type modelDir(modelDirSEXP );
-        Rcpp::traits::input_parameter< int >::type msFilter(msFilterSEXP );
         Rcpp::traits::input_parameter< int >::type msModel(msModelSEXP );
         Rcpp::traits::input_parameter< int >::type wdModel(wdModelSEXP );
         Rcpp::traits::input_parameter< int >::type ifmr(ifmrSEXP );
-        initBase(modelDir, msFilter, msModel, wdModel, ifmr);
+        initBase(modelDir, msModel, wdModel, ifmr);
     }
     return R_NilValue;
 END_RCPP
@@ -53,16 +52,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // changeModels
-void changeModels(int msFilter, int msModel, int wdModel, int ifmr);
-RcppExport SEXP BASE9_changeModels(SEXP msFilterSEXP, SEXP msModelSEXP, SEXP wdModelSEXP, SEXP ifmrSEXP) {
+void changeModels(int msModel, int wdModel, int ifmr);
+RcppExport SEXP BASE9_changeModels(SEXP msModelSEXP, SEXP wdModelSEXP, SEXP ifmrSEXP) {
 BEGIN_RCPP
     {
         Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< int >::type msFilter(msFilterSEXP );
         Rcpp::traits::input_parameter< int >::type msModel(msModelSEXP );
         Rcpp::traits::input_parameter< int >::type wdModel(wdModelSEXP );
         Rcpp::traits::input_parameter< int >::type ifmr(ifmrSEXP );
-        changeModels(msFilter, msModel, wdModel, ifmr);
+        changeModels(msModel, wdModel, ifmr);
     }
     return R_NilValue;
 END_RCPP

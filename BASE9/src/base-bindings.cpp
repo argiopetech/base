@@ -64,7 +64,7 @@ namespace evil {
 
             evoModels.restrictFilters(filters);
 
-            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+//            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
         }
         globals(const globals&) = delete;
         globals(const globals&&) = delete;
@@ -113,7 +113,7 @@ std::vector<std::string> listFilters()
 
 
 // [[Rcpp::export]]
-void initBase(std::string modelDir, int msFilter, int msModel, int wdModel, int ifmr)
+void initBase(std::string modelDir, int msModel, int wdModel, int ifmr)
 {
     evil::s.files.models = modelDir;
 
@@ -168,7 +168,7 @@ void setClusterParameters(double age, double feh, double distMod, double av, dou
 }
 
 // [[Rcpp::export]]
-void changeModels(int msFilter, int msModel, int wdModel, int ifmr)
+void changeModels(int msModel, int wdModel, int ifmr)
 {
     if (isInitialized())
     {
