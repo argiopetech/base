@@ -1,5 +1,4 @@
 #include <Rcpp.h>
-#include <array>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -31,7 +30,41 @@ namespace evil {
             for (auto &a : clust.mean)
                 a = std::numeric_limits<double>::max();
 
-            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+            std::vector<std::string> msFilters = evoModels.mainSequenceEvol->getAvailableFilters();
+            std::vector<std::string> wdFilters = evoModels.WDAtmosphere->getAvailableFilters();
+
+            {
+                for ( auto m : msFilters )
+                {
+                    for ( auto w : wdFilters )
+                    {
+                        if (m == w)
+                        {
+                            filters.push_back(m);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            for (size_t f = 0; f < filters.size(); ++f)
+            {
+                try
+                {
+                    Filters::absCoeffs.at(filters.at(f));
+                }
+                catch(std::out_of_range &e)
+                {
+                    filters.erase(filters.begin() + f);
+
+                    if (f > 0)
+                        f -= 1;
+                }
+            }
+
+            evoModels.restrictFilters(filters);
+
+            clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
         }
         globals(const globals&) = delete;
         globals(const globals&&) = delete;
@@ -40,7 +73,7 @@ namespace evil {
       public:
         Cluster clust;
         Model evoModels;
-        std::vector<int> filters = {0, 1, 2, 3, 4, 5, 6, 7};
+        std::vector<std::string> filters;
 
         static globals& getInstance()
         {
@@ -71,12 +104,19 @@ bool isInitialized()
     }
 }
 
+
+// [[Rcpp::export]]
+std::vector<std::string> listFilters()
+{
+    return evil::globals::getInstance().filters;
+}
+
+
 // [[Rcpp::export]]
 void initBase(std::string modelDir, int msFilter, int msModel, int wdModel, int ifmr)
 {
     evil::s.files.models = modelDir;
 
-    evil::s.mainSequence.filterSet = static_cast<FilterSetName>(msFilter);
     evil::s.mainSequence.msRgbModel = static_cast<MsModel>(msModel);
 
     evil::s.whiteDwarf.ifmr = ifmr;
@@ -113,7 +153,6 @@ void setClusterParameters(double age, double feh, double distMod, double av, dou
 {
     if (isInitialized())
     {
-        const auto filters = evil::globals::getInstance().filters;
         const auto evoModels = evil::globals::getInstance().evoModels;
         auto &clust = evil::globals::getInstance().clust;
 
@@ -124,7 +163,7 @@ void setClusterParameters(double age, double feh, double distMod, double av, dou
         clust.yyy = y;
         clust.carbonicity = carbonicity;
 
-        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
     }
 }
 
@@ -133,20 +172,18 @@ void changeModels(int msFilter, int msModel, int wdModel, int ifmr)
 {
     if (isInitialized())
     {
-        evil::s.mainSequence.filterSet = static_cast<FilterSetName>(msFilter);
         evil::s.mainSequence.msRgbModel = static_cast<MsModel>(msModel);
 
         evil::s.whiteDwarf.ifmr = ifmr;
         evil::s.whiteDwarf.wdModel = static_cast<WdModel>(wdModel);
         evil::s.whiteDwarf.M_wd_up = 8.0;
 
-        const auto filters = evil::globals::getInstance().filters;
         const auto evoModels = evil::globals::getInstance().evoModels;
         auto &clust = evil::globals::getInstance().clust;
 
         evil::globals::getInstance().reloadModels();
 
-        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(filters, clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
     }
 }
 
@@ -164,27 +201,15 @@ void setIFMRParameters(double intercept, double slope, double quadCoef)
 
 
 // [[Rcpp::export]]
-std::array<double, 8> evolve (double mass1, double mass2)
+std::vector<double> evolve (double mass1, double mass2)
 {
     if (isInitialized())
     {
-        std::array<double, 8> returnMags;
-        Matrix<double, 2, 14> mags;
-        std::array<double, 14> combinedMags;
-
         double flux;
         StellarSystem system;
         system.primary.mass = mass1;
         system.secondary.mass = mass2;
 
-        for (auto &mag : mags)
-        {
-            mag.fill(0.0);
-        }
-
-        combinedMags.fill(0.0);
-
-        const auto filters = evil::globals::getInstance().filters;
         const auto evoModels = evil::globals::getInstance().evoModels;
         const auto clust = evil::globals::getInstance().clust;
 
@@ -194,14 +219,7 @@ std::array<double, 8> evolve (double mass1, double mass2)
             throw Rcpp::exception("Bounds error in evolve");
         }
 
-        combinedMags = system.deriveCombinedMags (clust, evoModels, filters);
-
-        for (auto f : filters)
-        {
-            returnMags[f] = combinedMags[f];
-        }
-
-        return returnMags;
+        return system.deriveCombinedMags(clust, evoModels);
     }
     else
     {
