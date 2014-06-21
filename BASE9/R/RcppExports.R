@@ -5,6 +5,10 @@ listFilters <- function() {
     .Call('BASE9_listFilters', PACKAGE = 'BASE9')
 }
 
+getAGBt_zmass <- function() {
+    .Call('BASE9_getAGBt_zmass', PACKAGE = 'BASE9')
+}
+
 initBase <- function(modelDir, msModel, wdModel, ifmr) {
     invisible(.Call('BASE9_initBase', PACKAGE = 'BASE9', modelDir, msModel, wdModel, ifmr))
 }

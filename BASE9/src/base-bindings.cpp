@@ -113,6 +113,13 @@ std::vector<std::string> listFilters()
 
 
 // [[Rcpp::export]]
+double getAGBt_zmass()
+{
+    return evil::globals::getInstance().clust.AGBt_zmass;
+}
+
+
+// [[Rcpp::export]]
 void initBase(std::string modelDir, int msModel, int wdModel, int ifmr)
 {
     evil::s.files.models = modelDir;

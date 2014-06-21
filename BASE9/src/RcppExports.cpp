@@ -19,6 +19,20 @@ BEGIN_RCPP
     return __sexp_result;
 END_RCPP
 }
+// getAGBt_zmass
+double getAGBt_zmass();
+RcppExport SEXP BASE9_getAGBt_zmass() {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        double __result = getAGBt_zmass();
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
 // initBase
 void initBase(std::string modelDir, int msModel, int wdModel, int ifmr);
 RcppExport SEXP BASE9_initBase(SEXP modelDirSEXP, SEXP msModelSEXP, SEXP wdModelSEXP, SEXP ifmrSEXP) {
