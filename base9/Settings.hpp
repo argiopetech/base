@@ -13,6 +13,8 @@ class Settings
     void fromYaml (const std::string);
     void fromCLI (int, char **);
 
+    bool noBinaries;
+
     uint32_t seed;
     unsigned int threads = std::numeric_limits<int>::max();
 

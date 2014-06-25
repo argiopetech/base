@@ -148,6 +148,7 @@ void Settings::fromYaml (const string yamlFile)
 
 void Settings::fromCLI (int argc, char **argv)
 {
+    int i_noBinaries;
     char **t_argv = new char*[argc];
 
     for (int i = 0; i<argc; i++)
@@ -160,6 +161,7 @@ void Settings::fromCLI (int argc, char **argv)
     static struct option long_options[] = {
         // Thie one just sets a flag outright
         {"verbose", no_argument, &(verbose), 1},
+        {"noBinaries", no_argument, &(i_noBinaries), 1},
 
         // These all have to be parsed
         {"msRgbModel", required_argument, 0, 0xFE},
@@ -416,6 +418,8 @@ void Settings::fromCLI (int argc, char **argv)
         delete[] t_argv[i];
     }
     delete[] t_argv;
+
+    noBinaries = i_noBinaries;
 
     // Print any remaining command line arguments (not options). This is mainly for debugging purposes.
     if (optind < argc)

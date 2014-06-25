@@ -23,7 +23,7 @@ using std::vector;
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
 //   2. margEvolveWithBinary passes the StellarSystem with primary.mass already set appropriately
 //   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
-static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels)
+static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, bool noBinaries)
 {
     // This struct is only used inside this function, so we don't want it escaping
     struct diffStruct
@@ -53,9 +53,17 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     // Other useful constants
     const double logdMass = log (dMass); // This is a pre-optimzation so we only have to call log once (instead of nEntries times)
 
-    double tmpLogPost = system.logPost (clust, evoModels)
-                      + logdMass
-                      + log (isochrone.eeps.at(0).mass / primaryMass);   // dMassRatio
+    double tmpLogPost = system.logPost (clust, evoModels) + logdMass;
+
+    if (noBinaries)
+    {
+        return exp (tmpLogPost);
+    }
+    else
+    {
+        tmpLogPost += log (isochrone.eeps.at(0).mass / primaryMass);   // dMassRatio
+    }
+
     double post = exp (tmpLogPost);
 
     /**** now see if any binary companions are OK ****/
@@ -137,7 +145,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const Model &evoModels)
+double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const Model &evoModels, bool noBinaries)
 {
     // AGBt_zmass never set because age and/or metallicity out of range of models.
     if (clust.AGBt_zmass < EPS)
@@ -165,7 +173,7 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
         {
             system.primary.mass = isochrone.eeps.at(m).mass + (k * dMass);
 
-            post += calcPost (dMass, clust, system, evoModels);
+            post += calcPost (dMass, clust, system, evoModels, noBinaries);
         }
     }
 
