@@ -265,8 +265,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
 
 int main (int argc, char *argv[])
 {
-    int nWDs = 0;
-
     Chain mc;
     struct ifmrGridControl ctrl;
 
@@ -343,11 +341,6 @@ int main (int argc, char *argv[])
     }
 
     mc.clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
-
-    auto numStars = mc.stars.size();
-
-    vector<int> starStatus;
-    starStatus.resize(numStars);
 
     initChain (&mc, &ctrl);
 
@@ -509,7 +502,7 @@ int main (int argc, char *argv[])
             massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrQuadCoef;
         }
 
-        for (int j = 0; j < nWDs; j++)
+        for (size_t j = 0; j < mc.stars.size(); j++)
         {
             massSampleFile << boost::format("%10.6f") % wdMass.at(j);
             membershipFile << boost::format("%10.6f") % clusMemPost.at(j);
