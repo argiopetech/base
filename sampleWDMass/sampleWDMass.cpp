@@ -181,6 +181,13 @@ static void readSampledParams (struct ifmrGridControl *ctrl, vector<clustPar> &s
     std::ifstream parsFile;
     parsFile.open(settings.files.output + ".res");
 
+    if (!parsFile)
+    {
+        cerr << "*** Error: " << settings.files.output << ".res not found." << endl;
+        cerr << "(Exiting...)" << endl;
+        exit (1);
+    }
+
     getline(parsFile, line); // Eat the header
 
     while (!parsFile.eof())
