@@ -162,8 +162,10 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
     {
         double dIsoMass = isochrone.eeps.at(m + 1).mass - isochrone.eeps.at(m).mass;
 
-        /* why would dIsoMass ever be negative??? BUG in interpolation code??? */
-        assert (dIsoMass >= 0.0);
+        // In the event that we have an invalid range, skip that range
+        // This generally occurs only at very high EEPs, where the masses are close together
+        if (dIsoMass < 0.0)
+            continue;
 
         double dMass = dIsoMass / isoIncrem;
 
