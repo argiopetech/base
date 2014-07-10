@@ -5,4 +5,4 @@
 
 #include "Model.hpp"
 
-double margEvolveWithBinary (const Cluster &, StellarSystem, const Model&, bool);
+double margEvolveWithBinary (const Cluster &, StellarSystem, const Model&, const Isochrone&, bool);

@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,6 +17,7 @@ using std::cerr;
 using std::endl;
 using std::ofstream;
 using std::string;
+using std::unique_ptr;
 using std::vector;
 
 class Application
@@ -29,7 +31,7 @@ class Application
     {}
 
     void run();
-    Isochrone interpolateIsochrone(const Cluster&);
+    Isochrone interpolateIsochrone(const Cluster&, const Isochrone&);
 
   private:
     Model evoModels;
@@ -83,10 +85,10 @@ void Application::run()
     clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     // Set Cluster's AGBT_zmass based on the model's agbTipMass
-    clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);
+    unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(clust.feh, clust.yyy, clust.age));
 
     // Interpolate a new isochrone at 0.01M_0 steps
-    auto interpIsochrone = interpolateIsochrone(clust);
+    auto interpIsochrone = interpolateIsochrone(clust, *isochrone);
 
     string filename = settings.files.output + ".cmd";
 
@@ -127,10 +129,8 @@ void Application::run()
 }
 
 
-Isochrone Application::interpolateIsochrone(const Cluster &clust)
+Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochrone &isochrone)
 {
-    Isochrone isochrone = evoModels.mainSequenceEvol->getIsochrone();
-
     vector<EvolutionaryPoint> eeps;;
 
     double mass = isochrone.eeps.front().mass;
@@ -142,7 +142,7 @@ Isochrone Application::interpolateIsochrone(const Cluster &clust)
         Star star;
         star.mass = mass + steps * 0.01;
 
-        eeps.emplace_back(0, star.mass, star.getMags(clust, evoModels)); // 0 eep. Doesn't matter here.
+        eeps.emplace_back(0, star.mass, star.getMags(clust, evoModels, isochrone)); // 0 eep. Doesn't matter here.
     }
 
     return {clust.age, eeps};

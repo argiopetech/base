@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <tuple>
 #include <utility>
@@ -31,6 +32,7 @@ using std::cerr;
 using std::cout;
 using std::endl;
 using std::flush;
+using std::unique_ptr;
 
 struct ifmrGridControl
 {
@@ -304,11 +306,11 @@ class Application
     {}
 
     void run();
-    std::tuple<double, double, double> sampleMass(const Cluster&, const Model&, std::mt19937&, StellarSystem, double, double);
+    std::tuple<double, double, double> sampleMass(const Cluster&, const Model&, const Isochrone&, std::mt19937&, StellarSystem, double, double);
 };
 
 
-std::tuple<double, double, double> Application::sampleMass(const Cluster &clust, const Model &evoModels, std::mt19937 &gen, StellarSystem star, const double massStepSize, const double massRatioStepSize)
+std::tuple<double, double, double> Application::sampleMass(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, std::mt19937 &gen, StellarSystem star, const double massStepSize, const double massRatioStepSize)
 {
     constexpr int iters = 12000;
     constexpr int burnIters = iters / 6;
@@ -333,7 +335,7 @@ std::tuple<double, double, double> Application::sampleMass(const Cluster &clust,
 
             try
             {
-                auto proposedPosterior = propStar.logPost(clust, evoModels);
+                auto proposedPosterior = propStar.logPost(clust, evoModels, isochrone);
 
                 if (acceptP(gen, acceptedPosterior, proposedPosterior))
                 {
@@ -478,13 +480,13 @@ void Application::run()
         }
 
         /************ sample WD masses for different parameters ************/
-        mc.clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(mc.clust.feh, mc.clust.yyy, mc.clust.age);
+        unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(mc.clust.feh, mc.clust.yyy, mc.clust.age));
 
         auto starSize = mc.stars.size();
 
         for (decltype(starSize) i = 0; i < starSize; ++i)
         {
-            auto sampleTuple = sampleMass(mc.clust, evoModels, gen, mc.stars.at(i), dMass1, dMassRatio);
+            auto sampleTuple = sampleMass(mc.clust, evoModels, *isochrone, gen, mc.stars.at(i), dMass1, dMassRatio);
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (mc.clust.getM_wd_up() - 0.15);

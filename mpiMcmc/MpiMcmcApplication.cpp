@@ -27,6 +27,7 @@ using std::endl;
 using std::flush;
 using std::function;
 using std::mutex;
+using std::shared_ptr;
 using std::vector;
 
 using namespace std::placeholders;
@@ -455,7 +456,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 
     logPostProp = propClust.logPrior (evoModels);
 
-    propClust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(propClust.feh, propClust.yyy, propClust.age);    // determine AGBt ZAMS mass, to find evol state
+    shared_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(propClust.feh, propClust.yyy, propClust.age));
 
     /* loop over assigned stars */
     pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
@@ -476,7 +477,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 
                 try
                 {
-                    tmpLogPost = wd.logPost(propClust, evoModels);
+                    tmpLogPost = wd.logPost(propClust, evoModels, *isochrone);
                     tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
 
                     postClusterStar +=  exp (tmpLogPost);
@@ -493,7 +494,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
             try
             {
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, systems.at(i), evoModels, settings.noBinaries);
+                postClusterStar = margEvolveWithBinary (propClust, systems.at(i), evoModels, *isochrone, settings.noBinaries);
             }
             catch ( WDBoundsError &e )
             {

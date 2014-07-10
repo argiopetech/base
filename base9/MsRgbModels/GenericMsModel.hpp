@@ -14,16 +14,13 @@ class GenericMsModel : public MsRgbModel
 
     virtual void loadModel(std::string);
 
-    virtual double deriveAgbTipMass(double, double, double);
-    virtual Isochrone deriveIsochrone(double, double, double) const;
-
-    virtual std::vector<double> msRgbEvol (double) const;
+    virtual Isochrone* deriveIsochrone(double, double, double) const;
 
     virtual double wdPrecLogAge(double, double, double) const;
     virtual void restrictToFilters(const std::vector<std::string>&);
 
   private:
-    Isochrone deriveIsochrone_oneY(double, double) const;
-    Isochrone deriveIsochrone_manyY(double, double, double) const;
+    Isochrone* deriveIsochrone_oneY(double, double) const;
+    Isochrone* deriveIsochrone_manyY(double, double, double) const;
 };
 #endif

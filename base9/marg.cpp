@@ -23,7 +23,7 @@ using std::vector;
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
 //   2. margEvolveWithBinary passes the StellarSystem with primary.mass already set appropriately
 //   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
-static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, bool noBinaries)
+static double calcPost (const double dMass, const Cluster &clust, StellarSystem &system, const Model &evoModels, const Isochrone &isochrone, bool noBinaries)
 {
     // This struct is only used inside this function, so we don't want it escaping
     struct diffStruct
@@ -38,8 +38,6 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
         const double magUpper;
     };
 
-    auto &isochrone = evoModels.mainSequenceEvol->getIsochrone();
-
     // Secondary mass to 0.0 to ensure we only look at the primary for the primaryMags.
     system.secondary.mass = 0.0;
 
@@ -47,13 +45,13 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     // Also, go ahead and rename system.primary.mass to primaryMass for this function
     // We call deriveCombinedMags here rather than primary.getMags so that we get abs/distMod correction
     // This keeps models which haven't been converted to absolute mags from breaking
-    const vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels);
+    const vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels, isochrone);
     const double primaryMass = system.primary.mass;
 
     // Other useful constants
     const double logdMass = log (dMass); // This is a pre-optimzation so we only have to call log once (instead of nEntries times)
 
-    double tmpLogPost = system.logPost (clust, evoModels) + logdMass;
+    double tmpLogPost = system.logPost (clust, evoModels, isochrone) + logdMass;
 
     if (noBinaries)
     {
@@ -132,7 +130,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
             system.setMassRatio (isochrone.eeps.at(i).mass / primaryMass); // Set the massRatio (and therefore the secondary mass)
 
             // Calculate the posterior density for this system
-            tmpLogPost = system.logPost (clust, evoModels)
+            tmpLogPost = system.logPost (clust, evoModels, isochrone)
                        + logdMass
                        + log ((isochrone.eeps.at(i + 1).mass - isochrone.eeps.at(i).mass) / primaryMass);
 
@@ -145,10 +143,13 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
 
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const Model &evoModels, bool noBinaries)
+double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const Model &evoModels, const Isochrone &isochrone, bool noBinaries)
 {
+    assert(isochrone.eeps.size() >= 2);
+
     // AGBt_zmass never set because age and/or metallicity out of range of models.
-    if (clust.AGBt_zmass < EPS)
+    // With the current code, I'm not certain this should ever happen...
+    if (isochrone.agbTipMass() < EPS)
     {
         throw WDBoundsError("Bounds error in marg.cpp");
     }
@@ -156,9 +157,6 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
     const int isoIncrem = 80;    /* ok for YY models? */
 
     double post = 0.0;
-
-    auto &isochrone = evoModels.mainSequenceEvol->getIsochrone();
-    assert(isochrone.eeps.size() >= 2);
 
     for (decltype(isochrone.eeps.size()) m = 0; m < isochrone.eeps.size() - 1; m++)
     {
@@ -173,7 +171,7 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
         {
             system.primary.mass = isochrone.eeps.at(m).mass + (k * dMass);
 
-            post += calcPost (dMass, clust, system, evoModels, noBinaries);
+            post += calcPost (dMass, clust, system, evoModels, isochrone, noBinaries);
         }
     }
 

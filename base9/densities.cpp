@@ -104,15 +104,9 @@ static double scaledLogLike (const vector<double> &obsPhot, const vector<double>
 
 
 // Calculates the posterior density for a stellar system
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels) const
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
 {
-    // AGBt_zmass never set because age and/or metallicity out of range of models.
-    if (clust.AGBt_zmass < EPS)
-    {
-        throw WDBoundsError("Bounds error in evolve.cpp");
-    }
-
-    const vector<double> mags = deriveCombinedMags(clust, evoModels);
+    const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone);
 
     double logPrior = clust.logPriorMass (primary.mass);
 
