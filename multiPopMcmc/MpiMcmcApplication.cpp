@@ -491,8 +491,16 @@ double MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
 
     logPostProp = propClust.clustA.logPrior (evoModels);
 
-    shared_ptr<Isochrone> isochroneA(evoModels.mainSequenceEvol->deriveIsochrone(propClust.clustA.feh, propClust.clustA.yyy, propClust.clustA.age));
-    shared_ptr<Isochrone> isochroneB(evoModels.mainSequenceEvol->deriveIsochrone(propClust.clustB.feh, propClust.clustB.yyy, propClust.clustB.age));
+    array<Isochrone*, 2> isochrone;
+    array<Cluster*, 2> cluster = { &propClust.clustA, &propClust.clustB };
+
+    pool.parallelFor(2, [=,&isochrone](int i)
+    {
+        isochrone[i] = evoModels.mainSequenceEvol->deriveIsochrone(cluster[i]->feh, cluster[i]->yyy, cluster[i]->age);
+    });
+
+    shared_ptr<Isochrone> isochroneA(isochrone.at(0));
+    shared_ptr<Isochrone> isochroneB(isochrone.at(1));
 
     /* loop over assigned stars */
     pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
