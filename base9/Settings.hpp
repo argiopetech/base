@@ -59,7 +59,7 @@ class Settings
     struct ScatterClusterSettings
     {
         int relevantFilt;
-        std::array<double, 14> exposures;
+        YAML::Node exposures;
         double brightLimit;
         double faintLimit;
         double limitS2N;

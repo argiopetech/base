@@ -45,8 +45,9 @@ void Settings::fromYaml (const string yamlFile)
     Node mainSequenceNode = getNode (generalNode, "main_sequence");
     Node whiteDwarfNode = getNode (generalNode, "white_dwarfs");
     Node clusterNode = getNode (generalNode, "cluster");
-    Node priorsNode = getNode (clusterNode, "priors");
-    Node sigmasNode = getNode (clusterNode, "sigmas");
+    Node newPriorNode = getNode(clusterNode, "priors");
+    Node priorsNode = getNode (newPriorNode, "means");
+    Node sigmasNode = getNode (newPriorNode, "sigmas");
     Node startingNode = getNode (clusterNode, "starting");
     Node mpiConfNode = getNode (configNode, "mpiMcmc");
     Node mpiAdaptiveNode = getNode(mpiConfNode, "adaptive");
@@ -83,7 +84,7 @@ void Settings::fromYaml (const string yamlFile)
     cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
     cluster.starting.carbonicity = getOrDie<double>(startingNode, "carbonicity");
 
-    cluster.logClusAge = getOrDie<double>(clusterNode, "logClusAge");
+    cluster.logClusAge = getOrDie<double>(startingNode, "logClusAge");
 
     cluster.minMag = getOrDie<double>(clusterNode, "minMag");
     cluster.maxMag = getOrDie<double>(clusterNode, "maxMag");
@@ -130,8 +131,7 @@ void Settings::fromYaml (const string yamlFile)
     sampleMass.deltaMass = getOrDie<double>(sampleMassNode, "deltaMass");
     sampleMass.deltaMassRatio = getOrDie<double>(sampleMassNode, "deltaMassRatio");
 
-    auto temp = getOrDie<vector<double>>(scatterConfNode, "exposures");
-    std::copy(temp.begin(), temp.end(), scatterCluster.exposures.begin());
+    scatterCluster.exposures = getNode (scatterConfNode, "exposures");
 
     seed = getOrDie<uint32_t>(generalNode, "seed");
     verbose = getOrDie<int>(generalNode, "verbose");
