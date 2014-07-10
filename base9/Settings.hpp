@@ -48,6 +48,18 @@ class Settings
         std::array<double, NPARAMS> stepSize;
     };
 
+    struct MultiPopMcmcSettings
+    {
+        double YA_start;
+        double YB_start;
+
+        double YA_lo;
+        double YA_hi;
+        double YB_hi;
+
+        double lambdaStep;
+    };
+
     struct SimClusterSettings
     {
         int nStars;
@@ -111,6 +123,7 @@ class Settings
     struct MainSequenceSettings mainSequence;
     struct WhiteDwarfSettings whiteDwarf;
     struct MpiMcmcSettings mpiMcmc;
+    struct MultiPopMcmcSettings multiPopMcmc;
     struct ClusterSettings cluster;
     struct SimClusterSettings simCluster;
     struct ScatterClusterSettings scatterCluster;

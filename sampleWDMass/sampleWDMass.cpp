@@ -1,6 +1,7 @@
 #include <array>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <vector>
 
@@ -23,6 +24,7 @@ using std::cerr;
 using std::cout;
 using std::endl;
 using std::flush;
+using std::unique_ptr;
 
 const int N_AGE = 30;
 const int N_FEH = 1;
@@ -422,7 +424,7 @@ int main (int argc, char *argv[])
         double wdPostSum, maxWDLogPost, mass1;
         double postClusterStar;
 
-        internalCluster.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(internalCluster.feh, internalCluster.yyy, internalCluster.age);
+        unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(internalCluster.feh, internalCluster.yyy, internalCluster.age));
 
         for (auto star : mc.stars)
         {
@@ -440,7 +442,7 @@ int main (int argc, char *argv[])
 
                     try
                     {
-                        wdLogPost.at(im) = star.logPost (internalCluster, evoModels);
+                        wdLogPost.at(im) = star.logPost (internalCluster, evoModels, *isochrone);
                         postClusterStar += exp (wdLogPost.at(im));
                     }
                     catch ( WDBoundsError &e )

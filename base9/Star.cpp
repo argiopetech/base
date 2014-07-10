@@ -1,30 +1,60 @@
+#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "Cluster.hpp"
 #include "ifmr.hpp"
+#include "LinearTransform.hpp"
 #include "Model.hpp"
 #include "Star.hpp"
-
-#include <iostream>
 
 using std::ifstream;
 using std::string;
 using std::stringstream;
 using std::vector;
 
-vector<double> Star::getMags (const Cluster &clust, const Model &evoModels) const
+vector<double> Star::msRgbEvol (const Isochrone &isochrone) const
+{
+    vector<double> mags;
+
+    auto m = lower_bound(isochrone.eeps.begin(), isochrone.eeps.end(), mass, EvolutionaryPoint::compareMass);
+
+    if (m == isochrone.eeps.end()) {
+        m -= 2;
+    }
+    else if (m != isochrone.eeps.begin()) {
+        m -= 1;
+    }
+
+    for ( size_t f = 0; f < m[0].mags.size(); ++f )
+    {
+        double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), mass).val;
+
+        if (std::fabs(mag) < EPS)
+            mags.push_back(999.99);
+        else
+            mags.push_back(mag);
+    }
+
+    assert(mags.size() == m[0].mags.size());
+
+    return mags;
+}
+
+
+vector<double> Star::getMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
 {
     // Masses greater than 100Mo should never occur
     assert (mass <= 100.0);
 
-    switch(getStatus(clust))
+    switch(getStatus(clust, isochrone))
     {
         case MSRG: // for main seq or giant star
-            return evoModels.mainSequenceEvol->msRgbEvol(mass);
+            return msRgbEvol(isochrone);
 
         case WD:   // for white dwarf
             return wdEvol (clust, evoModels);
@@ -37,13 +67,13 @@ vector<double> Star::getMags (const Cluster &clust, const Model &evoModels) cons
     }
 }
 
-StarStatus Star::getStatus(const Cluster &clust) const
+StarStatus Star::getStatus(const Cluster &clust, const Isochrone &isochrone) const
 {
     if (mass <= 0.0001)
     {                           // for non-existent secondaries
         return DNE;
     }
-    else if (mass <= clust.AGBt_zmass)
+    else if (mass <= isochrone.agbTipMass())
     {                           // for main seq or giant star
         return MSRG;
     }
@@ -80,9 +110,9 @@ vector<double> Star::wdEvol (const Cluster &clust, const Model &evoModels) const
 
 
 // Returns actual current mass (i.e. not zams_mass)
-double Star::wdMassNow(const Cluster &clust, const Model &evoModels) const
+double Star::wdMassNow(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
 {
-    if (mass <= clust.AGBt_zmass)
+    if (mass <= isochrone.agbTipMass())
     {                           // for main seq or giant star
         return mass;
     }
@@ -175,10 +205,10 @@ void StellarSystem::readCMD(const string &s, int filters)
 }
 
 
-vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels) const
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
 {
-    auto primaryMags = primary.getMags(clust, evoModels);
-    auto secondaryMags = secondary.getMags(clust, evoModels);
+    auto primaryMags = primary.getMags(clust, evoModels, isochrone);
+    auto secondaryMags = secondary.getMags(clust, evoModels, isochrone);
 
     assert(primaryMags.size() == secondaryMags.size());
     assert(evoModels.absCoeffs.size() == primaryMags.size());

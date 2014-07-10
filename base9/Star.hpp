@@ -16,14 +16,16 @@ class Star
     ~Star() {;}
 
     // Functions
-    StarStatus getStatus(const Cluster&) const;
+    StarStatus getStatus(const Cluster&, const Isochrone&) const;
 
     double getLtau(const Cluster&, const Model&) const;
     double wdLogTeff(const Cluster&, const Model&) const;
-    double wdMassNow(const Cluster&, const Model&) const;
+    double wdMassNow(const Cluster&, const Model&, const Isochrone&) const;
 
-    std::vector<double> getMags (const Cluster&, const Model&) const;
+    std::vector<double> getMags (const Cluster&, const Model&, const Isochrone&) const;
     std::vector<double> wdEvol (const Cluster&, const Model&) const;
+    std::vector<double> msRgbEvol (const Isochrone&) const;
+
 
     // Variables
     WdAtmosphere wdType = WdAtmosphere::DA;
@@ -50,9 +52,9 @@ class StellarSystem
 
     void setMassRatio(double);
     double getMassRatio() const;
-    double logPost (const Cluster &clust, const Model &evoModels) const;
+    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&) const;
 
-    std::vector<double> deriveCombinedMags (const Cluster&, const Model&) const;
+    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&) const;
 
     // Variables
     Star primary;

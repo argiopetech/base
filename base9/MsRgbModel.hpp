@@ -68,16 +68,7 @@ class MsRgbModel : virtual public StellarModel
 
  * Array indices are defined in evolve.h
 ****************************************************************************************/
-    virtual double deriveAgbTipMass(double, double, double) = 0;
-    virtual Isochrone deriveIsochrone(double, double, double) const = 0;
-
-/****************************************************************************************
-Perform interpolation via  calls to getGirardiMags() or similar.
-The former does 3-D interpolation of the Girardi isochrones.
-
-deriveAgbTipMass() needs to be called first
-****************************************************************************************/
-    virtual std::vector<double> msRgbEvol (double) const = 0;
+    virtual Isochrone* deriveIsochrone(double, double, double) const = 0;
 
 /****************************************************************************************
 Derive WD precursor age for a given metallicity, calling in turn wd_prec_g_lage to
@@ -93,8 +84,6 @@ modified for different model sets.
     virtual double getMinAge() const { return ageLimit.first; }
     virtual double getMaxAge() const { return ageLimit.second; }
 
-    const Isochrone& getIsochrone() const { return isochrone; }
-
     std::vector<std::string> getAvailableFilters() const { return availableFilters; }
 
   protected:
@@ -103,7 +92,6 @@ modified for different model sets.
     std::pair<double, double> ageLimit;
     std::vector<std::string> availableFilters;
 
-    Isochrone isochrone;
     std::vector<struct FehCurve> fehCurves;
 };
 #endif

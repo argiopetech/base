@@ -52,6 +52,7 @@ void Settings::fromYaml (const string yamlFile)
     Node mpiConfNode = getNode (configNode, "mpiMcmc");
     Node mpiAdaptiveNode = getNode(mpiConfNode, "adaptive");
     Node mpiStepNode = getNode (mpiConfNode, "stepSizes");
+    Node multiPopConfNode = getNode (configNode, "multiPopMcmc");
     Node cmdConfNode = getNode (configNode, "makeCMD");
     Node simConfNode = getNode (configNode, "simCluster");
     Node isoConfNode = getNode (configNode, "makeIsochrone");
@@ -116,6 +117,15 @@ void Settings::fromYaml (const string yamlFile)
     mpiMcmc.stepSize[IFMR_INTERCEPT] = getOrDie<double>(mpiStepNode, "ifmrIntercept");
     mpiMcmc.stepSize[IFMR_SLOPE] = getOrDie<double>(mpiStepNode, "ifmrSlope");
     mpiMcmc.stepSize[IFMR_QUADCOEF] = getOrDie<double>(mpiStepNode, "ifmrQuadCoef");
+
+    multiPopMcmc.YA_start = getOrDie<double>(multiPopConfNode, "YA_start");
+    multiPopMcmc.YB_start = getOrDie<double>(multiPopConfNode, "YB_start");
+
+    multiPopMcmc.YA_lo = getOrDie<double>(multiPopConfNode, "YA_lo");
+    multiPopMcmc.YA_hi = getOrDie<double>(multiPopConfNode, "YA_hi");
+    multiPopMcmc.YB_hi = getOrDie<double>(multiPopConfNode, "YB_hi");
+
+    multiPopMcmc.lambdaStep = getOrDie<double>(multiPopConfNode, "lambdaStep");
 
     simCluster.nStars = getOrDie<int>(simConfNode, "nStars");
     simCluster.percentBinary = getOrDie<int>(simConfNode, "percentBinary");

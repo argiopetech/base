@@ -14,6 +14,8 @@ class Cluster
         setM_wd_up(8.0);
     }
 
+    ~Cluster() = default;
+
     void setParam(int, double);
     double getParam(int) const;
 
@@ -29,8 +31,6 @@ class Cluster
     std::array<double, NPARAMS> priorMean;
     std::array<double, NPARAMS> mean;
 
-    int photometrySet;
-    double AGBt_zmass = 0.0;
     double varScale = 1.0;
 
     double age = 0.0;

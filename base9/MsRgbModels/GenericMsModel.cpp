@@ -269,15 +269,7 @@ void GenericMsModel::loadModel(string path)
 }
 
 
-double GenericMsModel::deriveAgbTipMass (double newFeH, double newY, double newAge)
-{
-    isochrone = deriveIsochrone(newFeH, newY, newAge);
-
-    return isochrone.agbTipMass();
-}
-
-
-Isochrone GenericMsModel::deriveIsochrone(double newFeH, double newY, double newAge) const
+Isochrone* GenericMsModel::deriveIsochrone(double newFeH, double newY, double newAge) const
 {
     if (fehCurves.front().heliumCurves.size() == 1)
         return deriveIsochrone_oneY(newFeH, newAge);
@@ -286,7 +278,7 @@ Isochrone GenericMsModel::deriveIsochrone(double newFeH, double newY, double new
 }
 
 
-Isochrone GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) const
+Isochrone* GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
@@ -384,14 +376,7 @@ Isochrone GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) con
             interpEeps.emplace_back(ageIter[0].eeps.at(e + eepOffset[0]).eep, newMass, mags);
         }
 
-
-        double interpAge = linearTransform<>(fehIter[0].feh
-                                           , fehIter[1].feh
-                                           , ageIter[0].logAge
-                                           , ageIter[1].logAge
-                                           , newFeH).val;
-
-        interpIso.emplace_back(interpAge, interpEeps);
+        interpIso.emplace_back(newAge, interpEeps);
     }
 
     // Now, interpolate between the two derived isochrones using FeH
@@ -438,11 +423,11 @@ Isochrone GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) con
     // This should also be checked in marg.cpp when calling calcPost.
     // assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
 
-    return {interpIso.at(0).logAge, interpEeps};
+    return (new Isochrone(interpIso.at(0).logAge, interpEeps)) ;
 }
 
 
-Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, double newAge) const
+Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, double newAge) const
 {
     // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
@@ -578,19 +563,7 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, doub
                 interpEeps.emplace_back(ageIter[0].eeps.at(e + eepOffset[0]).eep, newMass, mags);
             }
 
-            double interpAge = linearTransform<>(yIter[0].y
-                                               , yIter[1].y
-                                               , ageIter[0].logAge
-                                               , ageIter[1].logAge
-                                               , newY).val;
-
-            // These won't necessarily be true if extrapolation is allowed (which it
-            // is), but should be be true due to the age and FeH checks at the
-            // beginning of this function
-            assert(ageIter[0].logAge <= interpAge);
-            assert(ageIter[1].logAge >= interpAge);
-
-            tIso.emplace_back(interpAge, interpEeps);
+            tIso.emplace_back(newAge, interpEeps);
         }
 
         assert(tIso.size() == 2);
@@ -636,13 +609,7 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, doub
             interpEeps.emplace_back(tIso.at(0).eeps.at(e).eep, interpMass, mags);
         }
 
-        double interpAge = linearTransform<>(fehIter[0].feh
-                                           , fehIter[1].feh
-                                           , tIso[0].logAge
-                                           , tIso[1].logAge
-                                           , newFeH).val;
-
-        interpIso.emplace_back(interpAge, interpEeps);
+        interpIso.emplace_back(newAge, interpEeps);
     }
 
     // Now, interpolate between the two derived isochrones using FeH
@@ -686,8 +653,7 @@ Isochrone GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, doub
     }
 
     // assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
-
-    return {interpIso.at(0).logAge, interpEeps};
+    return (new Isochrone(interpIso.at(0).logAge, interpEeps));
 }
 
 
@@ -818,33 +784,4 @@ double GenericMsModel::wdPrecLogAge(double thisFeH, double zamsMass, double newY
 
     // Linearly interpolate in FeH
     return linearTransform<TransformMethod::Interp>(fehIter[0].feh, fehIter[1].feh, wdPrecLogAge[0], wdPrecLogAge[1], thisFeH).val;
-}
-
-
-vector<double> GenericMsModel::msRgbEvol (double zamsMass) const
-{
-    vector<double> mags;
-
-    auto m = lower_bound(isochrone.eeps.begin(), isochrone.eeps.end(), zamsMass, EvolutionaryPoint::compareMass);
-
-    if (m == isochrone.eeps.end()) {
-        m -= 2;
-    }
-    else if (m != isochrone.eeps.begin()) {
-        m -= 1;
-    }
-
-    for ( size_t f = 0; f < m[0].mags.size(); ++f )
-    {
-        double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), zamsMass).val;
-
-        if (std::fabs(mag) < EPS)
-            mags.push_back(999.99);
-        else
-            mags.push_back(mag);
-    }
-
-    assert(mags.size() == m[0].mags.size());
-
-    return mags;
 }

@@ -32,65 +32,72 @@ using std::vector;
 
 using namespace std::placeholders;
 
+void ensurePriors(const Settings &s, const DualPopCluster &clust)
+{
+    // Clust A carbonicity
+    if (clust.clustA.carbonicity < 0.0)
+        throw InvalidCluster("Low carbonicity, Clust A");
+    else if (clust.clustA.carbonicity > 1.0)
+        throw InvalidCluster("High carbonicity, Clust A");
+
+    // Clust B carbonicity
+    else if (clust.clustB.carbonicity < 0.0)
+        throw InvalidCluster("Low carbonicity, Clust B");
+    else if (clust.clustB.carbonicity > 1.0)
+        throw InvalidCluster("High carbonicity, Clust B");
+
+    // Clust A Y
+    else if (clust.clustA.yyy < s.multiPopMcmc.YA_lo)
+        throw InvalidCluster("Low Y, Clust A");
+    else if (clust.clustA.yyy > s.multiPopMcmc.YA_hi)
+        throw InvalidCluster("High Y, Clust A");
+
+    // Clust B Y
+    else if (clust.clustB.yyy < clust.clustA.yyy)
+        throw InvalidCluster("Low Y, Clust B");
+    else if (clust.clustB.yyy > s.multiPopMcmc.YB_hi)
+        throw InvalidCluster("High Y, Clust B");
+
+    // Lambda
+    else if (clust.lambda < 0.0)
+        throw InvalidCluster("Low Lambda");
+    else if (clust.lambda > 1.0)
+        throw InvalidCluster("High Lambda");
+}
+
 MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     : evoModels(makeModel(s)), settings(s), gen(uint32_t(s.seed * uint32_t(2654435761))), pool(s.threads) // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
 {
     ctrl.priorVar.fill(0);
 
-    mainClust.feh = settings.cluster.starting.Fe_H;
-    mainClust.priorMean[FEH] = clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
+    mainClust.clustA.feh = settings.cluster.starting.Fe_H;
+    mainClust.clustA.priorMean[FEH] = clust.clustA.feh = clust.clustA.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    mainClust.mod = settings.cluster.starting.distMod;
-    mainClust.priorMean[MOD] = clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
+    mainClust.clustA.mod = settings.cluster.starting.distMod;
+    mainClust.clustA.priorMean[MOD] = clust.clustA.mod = clust.clustA.priorMean[MOD] = settings.cluster.distMod;
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    mainClust.abs = settings.cluster.starting.Av;
-    mainClust.priorMean[ABS] = clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
+    mainClust.clustA.abs = settings.cluster.starting.Av;
+    mainClust.clustA.priorMean[ABS] = clust.clustA.abs = clust.clustA.priorMean[ABS] = fabs(settings.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    mainClust.age = mainClust.priorMean[AGE] = clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
+    mainClust.clustA.age = mainClust.clustA.priorMean[AGE] = clust.clustA.age = clust.clustA.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
-    mainClust.carbonicity = settings.cluster.starting.carbonicity;
-    mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+    mainClust.clustA.carbonicity = settings.cluster.starting.carbonicity;
+    mainClust.clustA.priorMean[CARBONICITY] = clust.clustA.carbonicity = clust.clustA.priorMean[CARBONICITY] = settings.cluster.carbonicity;
     ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
 
-    mainClust.yyy = settings.cluster.starting.Y;
-    mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
-    ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
+    mainClust.clustA.yyy = settings.cluster.starting.Y;
+    mainClust.clustA.priorMean[YYY] = clust.clustA.yyy = clust.clustA.priorMean[YYY] = settings.cluster.Y;
+    ctrl.priorVar[YYY] = 0.0;
 
 
-    if (evoModels.IFMR <= 3)
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 0.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
-    }
-    else if (evoModels.IFMR <= 8)
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 1.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 0.0;
-    }
-    else
-    {
-        ctrl.priorVar[IFMR_SLOPE] = 1.0;
-        ctrl.priorVar[IFMR_INTERCEPT] = 1.0;
-        ctrl.priorVar[IFMR_QUADCOEF] = 1.0;
-    }
+    // No IFMR code
 
-    /* set starting values for IFMR parameters */
-    mainClust.ifmrSlope = mainClust.priorMean[IFMR_SLOPE] =clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
-    mainClust.ifmrIntercept = mainClust.priorMean[IFMR_INTERCEPT] = clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
-
-    if (evoModels.IFMR <= 10)
-        mainClust.ifmrQuadCoef = mainClust.priorMean[IFMR_QUADCOEF] = clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
-    else
-        mainClust.ifmrQuadCoef = mainClust.priorMean[IFMR_QUADCOEF] = clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
-
-    clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
-    mainClust.setM_wd_up(settings.whiteDwarf.M_wd_up);
+    clust.clustA.setM_wd_up(settings.whiteDwarf.M_wd_up);
+    mainClust.clustA.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     for (auto &var : ctrl.priorVar)
     {
@@ -104,6 +111,17 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
         }
     }
 
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.clustA.priorVar.begin());
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mainClust.clustA.priorVar.begin());
+
+    clust.clustB = clust.clustA;
+    mainClust.clustB = mainClust.clustA;
+
+    // Multi-pop Y values
+    clust.clustA.yyy = settings.multiPopMcmc.YA_start;
+    clust.clustB.yyy = settings.multiPopMcmc.YB_start;
+    clust.lambda     = 0.5;
+
     /* read burnIter and nIter */
     {
         ctrl.burnIter = settings.mpiMcmc.burnIter;
@@ -111,7 +129,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
         for (int p = 0; p < NPARAMS; p++)
         {
-            if (ctrl.priorVar.at(p) > EPSILON)
+            if (ctrl.priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
             {
                 nParamsUsed++;
             }
@@ -128,20 +146,18 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     ctrl.thin = settings.mpiMcmc.thin;
 
     ctrl.clusterFilename = settings.files.output + ".res";
-
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mainClust.priorVar.begin());
 }
 
 
 int MpiMcmcApplication::run()
 {
-    cout << "Bayesian Analysis of Stellar Evolution" << endl;
+    cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
 
     double fsLike;
 
     array<double, NPARAMS> stepSize;
     std::copy(settings.mpiMcmc.stepSize.begin(), settings.mpiMcmc.stepSize.end(), stepSize.begin());
+    stepSize.at(LAMBDA) = settings.multiPopMcmc.lambdaStep;
 
     {
         // Read photometry and calculate fsLike
@@ -217,7 +233,8 @@ int MpiMcmcApplication::run()
 
     printHeader (burninFile, ctrl.priorVar);
 
-    Chain burninChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, burninFile);
+    Chain<DualPopCluster> burninChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, burninFile);
+    std::function<void(const DualPopCluster&)> checkPriors = std::bind(&ensurePriors, std::cref(settings), _1);
 
     try
     {
@@ -229,7 +246,7 @@ int MpiMcmcApplication::run()
             cout << "\nRunning Stage 1 burnin..." << flush;
 
             auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
-            burninChain.run(proposalFunc, logPostFunc, settings.mpiMcmc.adaptiveBigSteps);
+            burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.mpiMcmc.adaptiveBigSteps);
 
             cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
         }
@@ -252,21 +269,21 @@ int MpiMcmcApplication::run()
             // Reset the Chain for the next stage of the adaptive burnin
             burninChain.reset();
 
-            std::function<Cluster(Cluster)> proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 5);
+            std::function<DualPopCluster(DualPopCluster)> proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 5);
 
             if (settings.mpiMcmc.bigStepBurnin)
             {
                 // Run big steps for the entire trial
-                burninChain.run(proposalFunc, logPostFunc, trialIter);
+                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter);
             }
             else
             {
                 // Run big steps for half the trial
-                burninChain.run(proposalFunc, logPostFunc, trialIter / 2);
+                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
 
                 // Then run smaller (but not the smallest) steps for the second half
                 proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
-                burninChain.run(proposalFunc, logPostFunc, trialIter / 2);
+                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
             }
 
             double acceptanceRatio = burninChain.acceptanceRatio();
@@ -301,7 +318,7 @@ int MpiMcmcApplication::run()
 
         cout << "\nRunning Stage 3 burnin... " << flush;
 
-        burninChain.run(proposalFunc, logPostFunc, settings.mpiMcmc.stage3Iter);
+        burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.mpiMcmc.stage3Iter);
 
         cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
 
@@ -328,9 +345,9 @@ int MpiMcmcApplication::run()
 
         auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
 
-        Chain mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, mainClust, resultFile);
+        Chain<DualPopCluster> mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, mainClust, resultFile);
 
-        mainChain.run(proposalFunc, logPostFunc, ctrl.nIter, ctrl.thin);
+        mainChain.run(proposalFunc, logPostFunc, checkPriors, ctrl.nIter, ctrl.thin);
 
         cout << "\nAcceptance ratio: " << mainChain.acceptanceRatio() << endl;
 
@@ -385,37 +402,44 @@ void MpiMcmcApplication::scaleStepSizes (array<double, NPARAMS> &stepSize, doubl
 
     for (int p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar.at(p) > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
         {
             stepSize.at(p) *= scaleFactor(acceptanceRatio);
         }
     }
 }
 
-Cluster MpiMcmcApplication::propClustBigSteps (Cluster clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize)
+
+DualPopCluster MpiMcmcApplication::propClustBigSteps (DualPopCluster clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize)
 {
     return propClustIndep(clust, ctrl, stepSize, 25.0);
 }
 
-Cluster MpiMcmcApplication::propClustIndep (Cluster clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize, double scale)
+DualPopCluster MpiMcmcApplication::propClustIndep (DualPopCluster clust, struct ifmrMcmcControl const &ctrl, array<double, NPARAMS> const &stepSize, double scale)
 {
     /* DOF defined in densities.h */
     int p;
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar.at(p) > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON && p != YYA && p != YYB && p != LAMBDA)
         {
-            clust.setParam(p, clust.getParam(p) + sampleT (gen, scale * stepSize.at(p) * stepSize.at(p)));
+            clust.clustA.setParam(p, clust.clustA.getParam(p) + sampleT (gen, scale * stepSize.at(p) * stepSize.at(p)));
+            clust.clustB.setParam(p, clust.clustA.getParam(p));
         }
     }
+
+    clust.clustA.yyy += sampleT (gen, scale * stepSize.at(YYY) * stepSize.at(YYY));
+    clust.clustB.yyy += sampleT (gen, scale * stepSize.at(YYY) * stepSize.at(YYY));
+
+    clust.lambda += sampleT (gen, scale * stepSize.at(LAMBDA) * stepSize.at(LAMBDA));
 
     return clust;
 }
 
-Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcControl const &ctrl, Matrix<double, NPARAMS, NPARAMS> const &propMatrix)
+DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, struct ifmrMcmcControl const &ctrl, Matrix<double, NPARAMS, NPARAMS> const &propMatrix)
 {
-    /* DOF defined in densities.h */
+    // DOF defined in densities.hpp
     array<double, NPARAMS> indepProps;
     array<double, NPARAMS> corrProps;
 
@@ -426,37 +450,57 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
 
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar.at(p) > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
         {
             indepProps.at(p) = sampleT (gen, 1.0);
         }
     }
     for (p = 0; p < NPARAMS; p++)
     {
-        if (ctrl.priorVar.at(p) > EPSILON)
+        if (ctrl.priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
         {
             for (k = 0; k <= p; k++)
             {                           /* propMatrix is lower diagonal */
-                if (ctrl.priorVar.at(k) > EPSILON)
+                if (ctrl.priorVar.at(k) > EPSILON || k == YYA || k == YYB || k == LAMBDA)
                 {
                     corrProps.at(p) += propMatrix.at(p).at(k) * indepProps.at(k);
                 }
             }
-            clust.setParam(p, clust.getParam(p) + corrProps.at(p));
+
+            if (k == YYA)
+                clust.clustA.yyy += corrProps.at(p);
+            else if (k == YYB)
+                clust.clustB.yyy += corrProps.at(p);
+            else if (k == LAMBDA)
+                clust.lambda += corrProps.at(p);
+            else
+            {
+                clust.clustA.setParam(p, clust.clustA.getParam(p) + corrProps.at(p));
+                clust.clustB.setParam(p, clust.clustA.getParam(p));
+            }
         }
     }
 
     return clust;
 }
 
-double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
+double MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
 {
     mutex logPostMutex;
     double logPostProp;
 
-    logPostProp = propClust.logPrior (evoModels);
+    logPostProp = propClust.clustA.logPrior (evoModels);
 
-    shared_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(propClust.feh, propClust.yyy, propClust.age));
+    array<Isochrone*, 2> isochrone;
+    array<Cluster*, 2> cluster = { &propClust.clustA, &propClust.clustB };
+
+    pool.parallelFor(2, [=,&isochrone](int i)
+    {
+        isochrone[i] = evoModels.mainSequenceEvol->deriveIsochrone(cluster[i]->feh, cluster[i]->yyy, cluster[i]->age);
+    });
+
+    shared_ptr<Isochrone> isochroneA(isochrone.at(0));
+    shared_ptr<Isochrone> isochroneB(isochrone.at(1));
 
     /* loop over assigned stars */
     pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
@@ -466,35 +510,39 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
         /* loop over all (mass1, mass ratio) pairs */
         if (systems.at(i).observedStatus == WD)
         {
-            postClusterStar = 0.0;
+            throw std::logic_error("WDs not supported in multiPopMcmc");
 
-            for (int j = 0; j < N_WD_MASS1; j++)
-            {
-                double tmpLogPost;
-                StellarSystem wd(systems.at(i));
-                wd.primary.mass = wdGridMass(j);
-                wd.setMassRatio(0.0);
+            // postClusterStar = 0.0;
 
-                try
-                {
-                    tmpLogPost = wd.logPost(propClust, evoModels, *isochrone);
-                    tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
+            // for (int j = 0; j < N_WD_MASS1; j++)
+            // {
+            //     double tmpLogPost;
+            //     StellarSystem wd(systems.at(i));
+            //     wd.primary.mass = wdGridMass(j);
+            //     wd.setMassRatio(0.0);
 
-                    postClusterStar +=  exp (tmpLogPost);
-                }
-                catch ( WDBoundsError &e )
-                {
-                    if (settings.verbose)
-                        cerr << e.what() << endl;
-                }
-            }
+            //     try
+            //     {
+            //         tmpLogPost = wd.logPost(propClust, evoModels, *isochrone);
+            //         tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
+
+            //         postClusterStar +=  exp (tmpLogPost);
+            //     }
+            //     catch ( WDBoundsError &e )
+            //     {
+            //         if (settings.verbose)
+            //             cerr << e.what() << endl;
+            //     }
+            // }
         }
         else
         {
             try
             {
+                double lambda = propClust.lambda;
                 /* marginalize over isochrone */
-                postClusterStar = margEvolveWithBinary (propClust, systems.at(i), evoModels, *isochrone, settings.noBinaries);
+                postClusterStar = lambda       * margEvolveWithBinary (propClust.clustA, systems.at(i), evoModels, *isochroneA, settings.noBinaries)
+                                + (1 - lambda) * margEvolveWithBinary (propClust.clustB, systems.at(i), evoModels, *isochroneB, settings.noBinaries);
             }
             catch ( WDBoundsError &e )
             {
