@@ -48,19 +48,6 @@ class Cluster
     double M_wd_up;
 };
 
-/*
-class MultiPopCluster : public Cluster
-{
-    MultiPopCluster() = default;
-    ~MultiPopCluster() = default;
-
-    double lambda;
-
-    double Ya;
-    double Yb;
-};
-*/
-
 class InvalidCluster : public std::range_error
 {
   public:

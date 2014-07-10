@@ -20,6 +20,7 @@
 #include "samplers.hpp"
 #include "Utility.hpp"
 #include "WhiteDwarf.hpp"
+#include "MpiMcmcApplication.hpp"
 
 using std::array;
 using std::mutex;
@@ -42,16 +43,17 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
                                                 "    modulus",
                                                 " absorption",
                                                 "carbonicity",
-                                                "  IFMRconst",
-                                                "    IFMRlin",
+                                                "         YB",
+                                                "     Lambda",
                                                 "   IFMRquad"};
 
     for (int p = 0; p < NPARAMS; p++)
     {
-        if (priors.at(p) > EPSILON || p == MOD || p == FEH || p == ABS)
+        if ((priors.at(p) > EPSILON || p == MOD || p == FEH || p == ABS) && !(p == YYA || p == YYB || p == LAMBDA))
         {
             file << paramNames.at(p);
         }
     }
+    file << paramNames.at(YYA) << paramNames.at(YYB) << paramNames.at(LAMBDA);
     file << "     logPost" << endl;
 }

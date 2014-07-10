@@ -91,6 +91,16 @@ mpiMcmc:
         ifmrSlope:      0.008
         ifmrQuadCoef:   0.008
 
+multiPopMcmc:
+    YA_start:           0.2467
+    YB_start:           0.33
+
+    YA_lo:              0.20
+    YA_hi:              0.30
+    YB_hi:              0.40
+
+    lambdaStep:         0.001
+
 sampleWDMass:
     # No sampleWDMass-specific settings yet
 

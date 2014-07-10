@@ -8,26 +8,28 @@
 #include "Cluster.hpp"
 #include "Matrix.hpp"
 #include "McmcApplication.hpp"
+#include "MpiMcmcApplication.hpp"
 
 using std::ofstream;
 using std::cout;
 using std::endl;
 using std::cerr;
 
+template <class T>
 class Chain : public McmcApplication
 {
   private:
     MVatrix<double, NPARAMS> params;
     std::array<double, NPARAMS> priorVar;
 
-    Cluster clust;
+    T clust;
 
     ofstream &fout;
 
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
   public:
-    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, Cluster clust, ofstream &fout)
+    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ofstream &fout)
         : McmcApplication(seed), priorVar(priorVar), clust(clust), fout(fout)
     {}
 
@@ -41,7 +43,7 @@ class Chain : public McmcApplication
         }
     }
 
-    void run(std::function<Cluster(Cluster)> propose, std::function<double(Cluster&)> logPost, int iters, int thin = 1)
+    void run(std::function<T(T)> propose, std::function<double(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
         {
@@ -50,6 +52,7 @@ class Chain : public McmcApplication
 
             try
             {
+                checkPriors(propClust);
                 logPostProp = logPost (propClust);
             }
             catch(InvalidCluster &e)
@@ -67,9 +70,15 @@ class Chain : public McmcApplication
             /* save draws to estimate covariance matrix for more efficient Metropolis */
             for (int p = 0; p < NPARAMS; p++)
             {
-                if (priorVar[p] > EPSILON)
+                if (p == YYA)
+                    params.at(p).push_back(clust.clustA.yyy);
+                else if (p == YYB)
+                    params.at(p).push_back(clust.clustB.yyy);
+                else if (p == LAMBDA)
+                    params.at(p).push_back(clust.lambda);
+                else if (priorVar[p] > EPSILON)
                 {
-                    params.at(p).push_back(clust.getParam(p));
+                    params.at(p).push_back(clust.clustA.getParam(p));
                 }
             }
 
@@ -79,9 +88,15 @@ class Chain : public McmcApplication
                 {
                     if (priorVar.at(p) > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        fout << boost::format("%10.6f ") % clust.getParam(p);
+                        fout << boost::format("%10.6f ") % clust.clustA.getParam(p);
                     }
                 }
+
+                fout << boost::format("%10.6f ") % clust.clustA.yyy
+                     << boost::format("%10.6f ") % clust.clustB.yyy
+                     << boost::format("%10.6f ") % clust.lambda;
+
+
                 fout << boost::format("%10.6f") % logPostCurr << endl;
             }
         }
@@ -96,7 +111,7 @@ class Chain : public McmcApplication
 
         for (int p = 0; p < NPARAMS; p++)
         {
-            if (priorVar.at(p) > EPSILON)
+            if (priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
             {
                 nParamsUsed++;
             }
@@ -112,12 +127,12 @@ class Chain : public McmcApplication
 
         for (int i = 0; i < NPARAMS; i++)
         {
-            if (priorVar.at(i) > EPSILON)
+            if (priorVar.at(i) > EPSILON || i == YYA || i == YYB || i == LAMBDA)
             {
                 k = 0;
                 for (int j = 0; j < NPARAMS; j++)
                 {
-                    if (priorVar.at(j) > EPSILON)
+                    if (priorVar.at(j) > EPSILON || j == YYA || j == YYB || j == LAMBDA)
                     {
                         cov = gsl_stats_covariance (params.at(i).data(), 1, params.at(j).data(), 1, params.at(i).size());
                         gsl_matrix_set (covMat, h, k, cov * cholScale * cholScale); /* for numerical stability? */
@@ -156,12 +171,12 @@ class Chain : public McmcApplication
         h = 0;
         for (int i = 0; i < NPARAMS; i++)
         {
-            if (priorVar.at(i) > EPSILON)
+            if (priorVar.at(i) > EPSILON || i == YYA || i == YYB || i == LAMBDA)
             {
                 k = 0;
                 for (int j = 0; j < NPARAMS; j++)
                 {
-                    if (priorVar.at(j) > EPSILON)
+                    if (priorVar.at(j) > EPSILON || j == YYA || j == YYB || j == LAMBDA)
                     {
                         if (j <= i)
                         {
@@ -192,7 +207,7 @@ class Chain : public McmcApplication
         return propMatrix;
     }
 
-    Cluster getCluster() const { return clust; };
+    T getCluster() const { return clust; };
 };
 
 #endif

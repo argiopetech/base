@@ -1,3 +1,6 @@
+#ifndef MPIMCMCAPPLICATION_HPP
+#define MPIMCMCAPPLICATION_HPP
+
 #include <functional>
 #include <random>
 
@@ -6,6 +9,18 @@
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Utility.hpp"
+
+const int YYA = YYY;
+const int YYB = IFMR_INTERCEPT;
+const int LAMBDA = IFMR_SLOPE;
+
+struct DualPopCluster
+{
+    Cluster clustA;
+    Cluster clustB;
+
+    double lambda;
+};
 
 class MpiMcmcApplication
 {
@@ -16,13 +31,13 @@ class MpiMcmcApplication
 
     virtual int run();
 
-    Cluster propClustBigSteps (Cluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &);
-    Cluster propClustIndep (Cluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &, double scale);
-    Cluster propClustCorrelated (Cluster, const struct ifmrMcmcControl&, const Matrix<double, NPARAMS, NPARAMS>&);
+    DualPopCluster propClustBigSteps (DualPopCluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &);
+    DualPopCluster propClustIndep (DualPopCluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &, double scale);
+    DualPopCluster propClustCorrelated (DualPopCluster, const struct ifmrMcmcControl&, const Matrix<double, NPARAMS, NPARAMS>&);
 
-    double logPostStep (Cluster &, double);
+    double logPostStep (DualPopCluster &, double);
 
-    void mainRun(std::function<Cluster(Cluster)> propose, std::function<double(Cluster&)> logPost, std::ofstream &fout, std::array<double, NPARAMS> priorVar, Cluster clust, int iters, int thin);
+    void mainRun(std::function<DualPopCluster(DualPopCluster)> propose, std::function<double(DualPopCluster&)> logPost, std::ofstream &fout, std::array<double, NPARAMS> priorVar, DualPopCluster clust, int iters, int thin);
 
 
   private:
@@ -35,11 +50,13 @@ class MpiMcmcApplication
 
     std::mt19937 gen;
 
-    Cluster clust;
-    Cluster mainClust;
+    DualPopCluster clust;
+    DualPopCluster mainClust;
     std::vector<StellarSystem> systems;
 
     base::utility::ThreadPool pool;
 
     struct ifmrMcmcControl ctrl;
 };
+
+#endif
