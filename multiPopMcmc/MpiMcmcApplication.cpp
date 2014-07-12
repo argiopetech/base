@@ -292,7 +292,7 @@ int MpiMcmcApplication::run()
             {
                 if (acceptedOne)
                 {
-                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter << ")" << endl;
+                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.mpiMcmc.adaptiveBigSteps << ")" << endl;
                     break;
                 }
                 else
@@ -439,43 +439,31 @@ DualPopCluster MpiMcmcApplication::propClustIndep (DualPopCluster clust, struct 
 
 DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, struct ifmrMcmcControl const &ctrl, Matrix<double, NPARAMS, NPARAMS> const &propMatrix)
 {
-    // DOF defined in densities.hpp
-    array<double, NPARAMS> indepProps;
-    array<double, NPARAMS> corrProps;
-
-    indepProps.fill(0.0);
-    corrProps.fill(0.0);
-
-    int p, k;
-
-    for (p = 0; p < NPARAMS; p++)
+    for (int p = 0; p < NPARAMS; p++)
     {
         if (ctrl.priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
         {
-            indepProps.at(p) = sampleT (gen, 1.0);
-        }
-    }
-    for (p = 0; p < NPARAMS; p++)
-    {
-        if (ctrl.priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
-        {
-            for (k = 0; k <= p; k++)
+            double corrProps = 0;
+
+            for (int k = 0; k <= p; k++)
             {                           /* propMatrix is lower diagonal */
                 if (ctrl.priorVar.at(k) > EPSILON || k == YYA || k == YYB || k == LAMBDA)
                 {
-                    corrProps.at(p) += propMatrix.at(p).at(k) * indepProps.at(k);
+                    corrProps += propMatrix.at(p).at(k) * sampleT (gen, 1.0);
                 }
             }
 
-            if (k == YYA)
-                clust.clustA.yyy += corrProps.at(p);
-            else if (k == YYB)
-                clust.clustB.yyy += corrProps.at(p);
-            else if (k == LAMBDA)
-                clust.lambda += corrProps.at(p);
+            if (p == YYA)
+                clust.clustA.yyy += corrProps;
+            else if (p == YYB)
+                clust.clustB.yyy += corrProps;
+            else if (p == LAMBDA)
+                clust.lambda += corrProps;
             else
             {
-                clust.clustA.setParam(p, clust.clustA.getParam(p) + corrProps.at(p));
+                // Set the value in clustA
+                clust.clustA.setParam(p, clust.clustA.getParam(p) + corrProps);
+                // Then copy the value from clustA to clustB
                 clust.clustB.setParam(p, clust.clustA.getParam(p));
             }
         }
