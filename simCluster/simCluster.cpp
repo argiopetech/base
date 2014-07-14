@@ -140,21 +140,16 @@ int main (int argc, char *argv[])
     std::mt19937 gen(seed * uint32_t(2654435761));  // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
 
     //Output headers
-    fprintf (w_ptr, "id  mass1 ");
-    for (auto f : filters)
-        fprintf (w_ptr, "%s1 ", f.c_str());
-
-    fprintf (w_ptr, "stage1 wdM1 wdType1 wdLogTeff1 ltau1 mass2 ");
+    // Star     U       B       V      sigU    sigB    sigV    mass1 massRatio stage Cmprior useDBI
+    fprintf (w_ptr, "%4s ", "id");
 
     for (auto f : filters)
-        fprintf (w_ptr, "%s2 ", f.c_str());
-
-    fprintf (w_ptr, "stage2 wdM2 wdType2 wdLogTeff2 ltau2 ");
+        fprintf (w_ptr, "%6s ", f.c_str());
 
     for (auto f : filters)
-        fprintf (w_ptr, "%s ", f.c_str());
+        fprintf (w_ptr, "%6s ", ("sig" + f).c_str());
 
-    fprintf (w_ptr, "\n");
+    fprintf(w_ptr, "%7s %9s %5s %7s %6s\n", "mass1", "massRatio", "stage", "Cmprior", "useDBI");
 
     minV = 1000.0;
     maxV = -1000.0;
@@ -176,59 +171,41 @@ int main (int argc, char *argv[])
         } while (theStar.primary.mass < minMass);
         nStars++;                       // keep track of the number of stars created
         massTotal += theStar.primary.mass;
-        theStar.setMassRatio(0.0);
 
-        fprintf (w_ptr, "%4d %7.3f ", i + 1, theStar.primary.mass); // output primary star data
-
-        auto photometry = theStar.primary.getMags(theCluster, evoModels, *isochrone);
-
-        for (size_t f = 0; f < filters.size(); ++f)
-        {
-                fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);
-        }
-
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.getStatus(theCluster, *isochrone), (theStar.primary.getStatus(theCluster, *isochrone) == WD ? theStar.primary.wdMassNow(theCluster, evoModels, *isochrone) : 0.0), 0, theStar.primary.wdLogTeff(theCluster, evoModels), theStar.primary.getLtau(theCluster, evoModels));
-
-        tempU = theStar.primary.mass;              // save so we can output the total photometry below
         if (theStar.primary.getStatus(theCluster, *isochrone) != NSBH && theStar.primary.getStatus(theCluster, *isochrone) != WD)
         {
             if (std::generate_canonical<double, 53>(gen) < fractionBinary)
             {                           // create binaries among appropriate fraction
+                double secondaryMass;
                 do
                 {
-                    theStar.setMassRatio(normDist(gen));
-                } while (theStar.getMassRatio() < 0 || theStar.getMassRatio() > 1);
-                theStar.primary.mass = tempU * theStar.getMassRatio();
+                    secondaryMass = normDist(gen);
+                } while (secondaryMass < 0 || secondaryMass > 1);
+
+                theStar.setMassRatio(secondaryMass);
+
                 nStars++;
-                massTotal += theStar.primary.mass;
-                theStar.setMassRatio(0.0);
+                massTotal += theStar.secondary.mass;
             }
             else
-                theStar.primary.mass = 0.0;
+                theStar.secondary.mass = 0.0;
         }
         else
-            theStar.primary.mass = 0.0;
+            theStar.secondary.mass = 0.0;
 
+        fprintf (w_ptr, "%4d ", i + 1); // output primary star data
 
         // Evolve secondary star by itself
-        photometry = theStar.primary.getMags(theCluster, evoModels, *isochrone);
+        auto photometry = theStar.deriveCombinedMags(theCluster, evoModels, *isochrone);
 
-        fprintf (w_ptr, "%7.3f ", theStar.primary.mass);    // output secondary star data
         for (size_t f = 0; f < filters.size(); ++f)
-        {
-                fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);
-        }
-        // !! FIX ME !!
-        // Should this really be the primary if we're outputting secondary star data?
-        // There's no reason this can't use the secondary properly, now that a
-        //   StellarSystem and a Star are seperate concepts.
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.getStatus(theCluster, *isochrone), (theStar.primary.getStatus(theCluster, *isochrone) == WD ? theStar.primary.wdMassNow(theCluster, evoModels, *isochrone) : 0.0), 0, theStar.primary.wdLogTeff(theCluster, evoModels), theStar.primary.getLtau(theCluster, evoModels));
+            fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);  // output photometry for whole system
 
-        theStar.secondary.mass = theStar.primary.mass;
-        theStar.primary.mass = tempU;
+        for (size_t f = 0; f < filters.size(); ++f)
+            fprintf (w_ptr, "%6.3f ", 0.0);  // output (blank) sigmas
 
+        fprintf (w_ptr, "%7.3f %9.3f %5d %7.3f %6d", theStar.primary.mass, theStar.getMassRatio(), theStar.primary.getStatus(theCluster, *isochrone), 0.999, 1);    // output secondary star data
 
-        photometry = theStar.deriveCombinedMags(theCluster, evoModels, *isochrone);
 
         switch (theStar.primary.getStatus(theCluster, *isochrone))
         {
@@ -260,8 +237,7 @@ int main (int argc, char *argv[])
                 break;
         }
 
-        for (size_t f = 0; f < filters.size(); ++f)
-            fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);  // output photometry for whole system
+
         fprintf (w_ptr, "\n");
 
         // Update min and max
