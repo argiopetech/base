@@ -118,9 +118,9 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     mainClust.clustB = mainClust.clustA;
 
     // Multi-pop Y values
-    clust.clustA.yyy = settings.multiPopMcmc.YA_start;
-    clust.clustB.yyy = settings.multiPopMcmc.YB_start;
-    clust.lambda     = 0.5;
+    mainClust.clustA.yyy = clust.clustA.yyy = settings.multiPopMcmc.YA_start;
+    mainClust.clustB.yyy = clust.clustB.yyy = settings.multiPopMcmc.YB_start;
+    mainClust.lambda     = clust.lambda     = 0.5;
 
     /* read burnIter and nIter */
     {
