@@ -30,7 +30,7 @@ const double loglog10 = log (log (10));
 double Cluster::logPriorMass (double primaryMass) const
 // Compute log prior density
 {
-    assert (primaryMass > 0.1 && primaryMass <= M_wd_up);
+    assert (primaryMass <= M_wd_up);
 
     double log_m1 = log10 (primaryMass);
     double logPrior = getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / sqr (mf_sigma) - log (primaryMass) - loglog10;
