@@ -95,9 +95,18 @@ namespace base
                     }
                 }
 
-                if (!(systems.back().observedStatus == WD || (systems.back().obsPhot.at(settings.cluster.index) >= settings.cluster.minMag && systems.back().obsPhot.at(settings.cluster.index) <= settings.cluster.maxMag)))
+                try
                 {
-                    systems.pop_back();
+                    if (!(systems.back().observedStatus == WD
+                       ||   (systems.back().obsPhot.at(settings.cluster.index) >= settings.cluster.minMag
+                          && systems.back().obsPhot.at(settings.cluster.index) <= settings.cluster.maxMag)))
+                    {
+                        systems.pop_back();
+                    }
+                }
+                catch (std::out_of_range &e)
+                {
+                    throw std::out_of_range(string(e.what()) + " while loading photometry. Check your filter index.");
                 }
             }
 

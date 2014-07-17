@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
     }
     catch (exception &e)
     {
-        cerr << "\n\n" << e.what() << endl;
+        cerr << "\nException: " << e.what() << endl;
         return -1;
     }
 }

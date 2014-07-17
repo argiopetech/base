@@ -45,7 +45,7 @@ general:
 
         minMag:         0.0   # these variables can be used to read a subset of the photometry
         maxMag:         30.0
-        index:          2     # with 0 being the first filter in the dataset
+        index:          0     # with 0 being the first filter in the dataset
 
 makeIsochrone:
     # No makeIsochrone-specific settings yet
