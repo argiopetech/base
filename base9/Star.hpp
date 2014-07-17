@@ -26,7 +26,6 @@ class Star
     std::vector<double> wdEvol (const Cluster&, const Model&) const;
     std::vector<double> msRgbEvol (const Isochrone&) const;
 
-
     // Variables
     WdAtmosphere wdType = WdAtmosphere::DA;
 

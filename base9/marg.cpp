@@ -41,11 +41,8 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     // Secondary mass to 0.0 to ensure we only look at the primary for the primaryMags.
     system.secondary.mass = 0.0;
 
-    // Get the mags based on the primary's mass set by margEvolve
-    // Also, go ahead and rename system.primary.mass to primaryMass for this function
-    // We call deriveCombinedMags here rather than primary.getMags so that we get abs/distMod correction
-    // This keeps models which haven't been converted to absolute mags from breaking
-    const vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels, isochrone);
+    // Rename system.primary.mass to primaryMass for this function
+    // We used to call deriveCombinedMags here, but it's a waste for noBinaries runs
     const double primaryMass = system.primary.mass;
 
     // Other useful constants
@@ -59,7 +56,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     }
     else
     {
-        tmpLogPost += log (isochrone.eeps.at(0).mass / primaryMass);   // dMassRatio
+        tmpLogPost += log (isochrone.eeps[0].mass / primaryMass);   // dMassRatio
     }
 
     double post = exp (tmpLogPost);
@@ -70,30 +67,43 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     vector<diffStruct> diffs; // Keeps track of diffStructs for every filter
 
     // Pre-calculate diffLow and diffUp so they can be cached for the loop below
-    // In its own block to contain obsFilt
-    for (size_t f = 0; f < system.obsPhot.size(); ++f)
+    // In its own block to contain obsFilt and obsSize
     {
-        if (system.variance.at(f) >= 0)
+        // Get the mags based on the primary's mass set by margEvolve
+        // We call deriveCombinedMags here rather than primary.getMags so that we get abs/distMod correction
+        // This keeps models which haven't been converted to absolute mags from breaking
+        const vector<double> primaryMags = system.deriveCombinedMags (clust, evoModels, isochrone);
+
+        auto obsSize = system.obsPhot.size();
+        diffs.reserve(obsSize);
+
+        for (size_t f = 0; f < obsSize; ++f)
         {
-            const double diffLow = exp10 (((system.obsPhot.at(f) - nSD * sqrt (system.variance.at(f))) / -2.5))
-                                 - exp10 ((primaryMags.at(f) / -2.5));
-            const double diffUp = exp10 (((system.obsPhot.at(f) + nSD * sqrt (system.variance.at(f))) / -2.5))
-                                - exp10 ((primaryMags.at(f) / -2.5));
-
-            if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
+            if (system.variance[f] >= 0)
             {
-                return 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
-                // that no mass combinations would lead to a positive posterior density
-            }
-            else
-            {
-                const double magLower = -2.5 * log10 (diffLow);
-                const double magUpper = -2.5 * log10 (diffUp);
+                // Optimizations(?)
+                double obsPhot = system.obsPhot[f];               // Reduces array dereference penalty
+                double nSDTerm = nSD * sqrt (system.variance[f]); // Array dereference + multiplication and sqrt call
+                double expTerm = exp10 ((primaryMags[f] / -2.5)); // Similar to nSDTerm
 
-                assert(!std::isnan(magLower)); // Even though we checked it above, we still check it here
-                // magUpper is allowed to be NaN, as it is checked below.
+                const double diffLow = exp10 (((obsPhot - nSDTerm) / -2.5)) - expTerm;
+                const double diffUp  = exp10 (((obsPhot + nSDTerm) / -2.5)) - expTerm;
 
-                diffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
+                if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
+                {
+                    return 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
+                    // that no mass combinations would lead to a positive posterior density
+                }
+                else
+                {
+                    const double magLower = -2.5 * log10 (diffLow);
+                    const double magUpper = -2.5 * log10 (diffUp);
+
+                    assert(!std::isnan(magLower)); // Even though we checked it above, we still check it here
+                    // magUpper is allowed to be NaN, as it is checked below.
+
+                    diffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
+                }
             }
         }
     }
@@ -102,39 +112,48 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
     assert (!diffs.empty());
 
     // Evaluate the posterior at all reasonable points in the isochrone
-    for (decltype(isochrone.eeps.size()) i = 0; i < isochrone.eeps.size() - 1; ++i)
     {
-        // All filters should be acceptable if we are to evaluate at a grid point
-        // okMass starts out true, and gets set false if any filter is not acceptable
-        bool okMass = true;
+        auto isoSize = isochrone.eeps.size();
 
-        // For all the diffSets (i.e., every filter)
-        for (auto diff : diffs)
+        for (size_t i = 0; i < isoSize - 1; ++i)
         {
-            // The isochrone mag should be between magLower and magUpper
-            // and the isochrone mass should be less than primaryMass
-            //
-            // Exception: If magUpper is NaN (i.e., it was < 0 as diffUp above), consider it irrelevant
-            if ( ! (isochrone.eeps.at(i).mags.at(diff.filter) >= diff.magLower
-                && (isochrone.eeps.at(i).mags.at(diff.filter) <= diff.magUpper || std::isnan(diff.magUpper))
-                &&  isochrone.eeps.at(i).mass <= primaryMass))
+            // More optimization. Keeps us from dereferencing this array ~4 times.
+            double isoMass = isochrone.eeps[i].mass;
+
+            // All filters should be acceptable if we are to evaluate at a grid point
+            // okMass starts out true, and gets set false if any filter is not acceptable
+            bool okMass = true;
+
+            // For all the diffSets (i.e., every filter)
+            for (auto diff : diffs)
             {
-                okMass = false; // If it isn't, that isn't OK
-                break;          // And break out of the loop to avoid further calculation (pre-optimization)
+                // The isochrone mag should be between magLower and magUpper
+                // and the isochrone mass should be less than primaryMass
+                //
+                // Exception: If magUpper is NaN (i.e., it was < 0 as diffUp above), consider it irrelevant
+                double mag = isochrone.eeps[i].mags[diff.filter];
+
+                if ( ! (mag >= diff.magLower
+                        && (mag <= diff.magUpper || std::isnan(diff.magUpper))
+                        &&  isoMass <= primaryMass))
+                {
+                    okMass = false; // If it isn't, that isn't OK
+                    break;          // And break out of the loop to avoid further calculation (pre-optimization)
+                }
             }
-        }
 
-        // Now, only if we left the above loop without triggering the condition, calculate the posterior density for the system
-        if (okMass)
-        {
-            system.setMassRatio (isochrone.eeps.at(i).mass / primaryMass); // Set the massRatio (and therefore the secondary mass)
+            // Now, only if we left the above loop without triggering the condition, calculate the posterior density for the system
+            if (okMass)
+            {
+                system.setMassRatio (isoMass / primaryMass); // Set the massRatio (and therefore the secondary mass)
 
-            // Calculate the posterior density for this system
-            tmpLogPost = system.logPost (clust, evoModels, isochrone)
-                       + logdMass
-                       + log ((isochrone.eeps.at(i + 1).mass - isochrone.eeps.at(i).mass) / primaryMass);
+                // Calculate the posterior density for this system
+                tmpLogPost = system.logPost (clust, evoModels, isochrone)
+                    + logdMass
+                    + log ((isochrone.eeps[i + 1].mass - isoMass) / primaryMass);
 
-            post += exp (tmpLogPost); // And add it to the running total
+                post += exp (tmpLogPost); // And add it to the running total
+            }
         }
     }
 
@@ -158,22 +177,26 @@ double margEvolveWithBinary (const Cluster &clust, StellarSystem system, const M
 
     double post = 0.0;
 
-    for (decltype(isochrone.eeps.size()) m = 0; m < isochrone.eeps.size() - 1; m++)
     {
-        double dIsoMass = isochrone.eeps.at(m + 1).mass - isochrone.eeps.at(m).mass;
+        auto isoSize = isochrone.eeps.size();
 
-        // In the event that we have an invalid range, skip that range
-        // This generally occurs only at very high EEPs, where the masses are close together
-        if (dIsoMass < 0.0)
-            continue;
-
-        double dMass = dIsoMass / isoIncrem;
-
-        for (auto k = 0; k < isoIncrem; k += 1)
+        for (size_t m = 0; m < isoSize - 1; m++)
         {
-            system.primary.mass = isochrone.eeps.at(m).mass + (k * dMass);
+            double dIsoMass = isochrone.eeps[m + 1].mass - isochrone.eeps[m].mass;
 
-            post += calcPost (dMass, clust, system, evoModels, isochrone, noBinaries);
+            // In the event that we have an invalid range, skip that range
+            // This generally occurs only at very high EEPs, where the masses are close together
+            if (dIsoMass < 0.0)
+                continue;
+
+            double dMass = dIsoMass / isoIncrem;
+
+            for (auto k = 0; k < isoIncrem; k += 1)
+            {
+                system.primary.mass = isochrone.eeps[m].mass + (k * dMass);
+
+                post += calcPost (dMass, clust, system, evoModels, isochrone, noBinaries);
+            }
         }
     }
 

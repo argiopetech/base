@@ -21,23 +21,31 @@ vector<double> Star::msRgbEvol (const Isochrone &isochrone) const
 {
     vector<double> mags;
 
-    auto m = lower_bound(isochrone.eeps.begin(), isochrone.eeps.end(), mass, EvolutionaryPoint::compareMass);
+    auto isoBegin = isochrone.eeps.cbegin();
+    auto isoEnd   = isochrone.eeps.cend();
 
-    if (m == isochrone.eeps.end()) {
+    auto m = lower_bound(isoBegin, isoEnd, mass, EvolutionaryPoint::compareMass);
+
+    if (m == isoEnd) {
         m -= 2;
     }
-    else if (m != isochrone.eeps.begin()) {
+    else if (m != isoBegin) {
         m -= 1;
     }
 
-    for ( size_t f = 0; f < m[0].mags.size(); ++f )
     {
-        double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags.at(f), m[1].mags.at(f), mass).val;
+        auto magsSize = m[0].mags.size();
+        mags.reserve(magsSize);
 
-        if (std::fabs(mag) < EPS)
-            mags.push_back(999.99);
-        else
-            mags.push_back(mag);
+        for ( size_t f = 0; f < magsSize; ++f )
+        {
+            double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags[f], m[1].mags[f], mass).val;
+
+            if (std::fabs(mag) < EPS)
+                mags.push_back(999.99);
+            else
+                mags.push_back(mag);
+        }
     }
 
     assert(mags.size() == m[0].mags.size());
@@ -215,31 +223,32 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
 
     vector<double> combinedMags;
 
+    auto nPrimaryMags = primaryMags.size(); // Avoid calling vector::size a lot
+
     // can now derive combined mags
     if (secondaryMags.front() < 99.)
     {                           // if there is a secondary star
         double flux = 0.0;
 
-        for (size_t f = 0; f < primaryMags.size(); ++f)
+        combinedMags.reserve(nPrimaryMags);
+
+        for (size_t f = 0; f < nPrimaryMags; ++f)
         {
-            flux = exp10((primaryMags.at(f) / -2.5));    // add up the fluxes of the primary
-            flux += exp10((secondaryMags.at(f) / -2.5)); // and the secondary
-            combinedMags.push_back(-2.5 * log10 (flux));    // (these 3 lines .at(used to?) take 5% of run time for N large)
+            flux = exp10((primaryMags[f] / -2.5));    // add up the fluxes of the primary
+            flux += exp10((secondaryMags[f] / -2.5)); // and the secondary
+            combinedMags.push_back(-2.5 * log10 (flux));    // (these 3 lines (used to?) take 5% of run time for N large)
             // if primary mag = 99.999, then this works
         }
     }  // to make the combined mag = secondary mag
     else
     {
-        for (size_t f = 0; f < primaryMags.size(); ++f)
-            combinedMags.push_back(primaryMags.at(f));
+        combinedMags = std::move(primaryMags); // Don't reuse primaryMags after this
     }
 
-    assert(combinedMags.size() == primaryMags.size());
-
-    for (size_t f = 0; f < combinedMags.size(); ++f)
+    for (size_t f = 0; f < nPrimaryMags; ++f)
     {
-        combinedMags.at(f) += clust.mod;
-        combinedMags.at(f) += (evoModels.absCoeffs.at(f) - 1.0) * clust.abs;       // add A_.at(u-k) (standard defn of modulus already includes Av)
+        combinedMags[f] += clust.mod;
+        combinedMags[f] += (evoModels.absCoeffs[f] - 1.0) * clust.abs;       // add A_[u-k] (standard defn of modulus already includes Av)
     }
 
     return combinedMags;

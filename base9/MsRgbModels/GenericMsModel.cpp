@@ -34,7 +34,7 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
 
         for (size_t i = 0; i < availableFilters.size(); ++i)
         {
-            if ( f == availableFilters.at(i) )
+            if ( f == availableFilters[i] )
             {
                 indices.push_back(i);
 
@@ -52,7 +52,7 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
     for (size_t i = 0; i < indices.size(); ++i)
     {
         // Prepend the desired filter values to the beginning of the list...
-        availableFilters.insert(availableFilters.begin() + i, availableFilters.at(indices.at(i) + i));
+        availableFilters.insert(availableFilters.begin() + i, availableFilters[indices[i] + i]);
     }
 
     // ...then erase the rest.
@@ -77,7 +77,7 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
                     for (size_t i = 0; i < indices.size(); ++i)
                     {
                         // Prepend the desired filter values to the beginning of the list...
-                        eep.mags.insert(eep.mags.begin() + i, eep.mags.at(indices.at(i) + i));
+                        eep.mags.insert(eep.mags.begin() + i, eep.mags[indices[i] + i]);
                     }
 
                     // ...then erase the rest.
@@ -133,11 +133,11 @@ void GenericMsModel::loadModel(string path)
         // Ignore comments (lines starting with '#')
         // The line should never be empty, but we segfault
         //   if it is (and we don't check), so it's better to check.
-        if (!line.empty() && (line.at(0) != '#'))
+        if (!line.empty() && (line[0] != '#'))
         {
             stringstream in(line);
 
-            if (line.at(0) == '%') // It's a command line
+            if (line[0] == '%') // It's a command line
             {
                 // Push the previous age
                 if (haveFirstRecord)
@@ -147,7 +147,7 @@ void GenericMsModel::loadModel(string path)
                 }
 
                 // A few choices...
-                if (line.at(1) == 'f') // The once-per-file filter list
+                if (line[1] == 'f') // The once-per-file filter list
                 {
                     string s;
                     in >> s; // Eat the command string "%f"
@@ -163,7 +163,7 @@ void GenericMsModel::loadModel(string path)
                         // This keeps us from getting a duplicate string at the end of the vector.
                     }
                 }
-                else if (line.at(1) == 's') // The section headers
+                else if (line[1] == 's') // The section headers
                 {
                     // %s [Fe/H]= 0.000000    [alpha/Fe]=0.000000    l/Hp=1.938000    Y=0.270000
                     in.ignore(maxIgnore, '='); // Kill everything up to the [Fe/H] value
@@ -215,7 +215,7 @@ void GenericMsModel::loadModel(string path)
                     previousMixLen = currentMixLen;
                     previousY = currentY;
                 }
-                else if (line.at(1) == 'a') // The age headers
+                else if (line[1] == 'a') // The age headers
                 {
                     in.ignore(maxIgnore, '='); // Kill everything up to the logAge value
                     in >> logAge;
@@ -355,25 +355,25 @@ Isochrone* GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) co
         {
             vector<double> mags;
 
-            for (size_t f = 0; f < ageIter[0].eeps.at(e + eepOffset[0]).mags.size(); ++f)
+            for (size_t f = 0; f < ageIter[0].eeps[e + eepOffset[0]].mags.size(); ++f)
             {
                 mags.push_back(linearTransform<>(ageIter[0].logAge
                                                , ageIter[1].logAge
-                                               , ageIter[0].eeps.at(e + eepOffset[0]).mags.at(f)
-                                               , ageIter[1].eeps.at(e + eepOffset[1]).mags.at(f)
+                                               , ageIter[0].eeps[e + eepOffset[0]].mags[f]
+                                               , ageIter[1].eeps[e + eepOffset[1]].mags[f]
                                                , newAge).val);
             }
 
             double newMass = linearTransform<>(ageIter[0].logAge
                                              , ageIter[1].logAge
-                                             , ageIter[0].eeps.at(e + eepOffset[0]).mass
-                                             , ageIter[1].eeps.at(e + eepOffset[1]).mass
+                                             , ageIter[0].eeps[e + eepOffset[0]].mass
+                                             , ageIter[1].eeps[e + eepOffset[1]].mass
                                              , newAge).val;
 
             // Make sure the EEPs are the same
-            assert(ageIter[0].eeps.at(e + eepOffset[0]).eep == ageIter[1].eeps.at(e + eepOffset[1]).eep);
+            assert(ageIter[0].eeps[e + eepOffset[0]].eep == ageIter[1].eeps[e + eepOffset[1]].eep);
 
-            interpEeps.emplace_back(ageIter[0].eeps.at(e + eepOffset[0]).eep, newMass, mags);
+            interpEeps.emplace_back(ageIter[0].eeps[e + eepOffset[0]].eep, newMass, mags);
         }
 
         interpIso.emplace_back(newAge, interpEeps);
@@ -398,32 +398,32 @@ Isochrone* GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) co
     {
         vector<double> mags;
 
-        for (size_t f = 0; f < interpIso.at(0).eeps.at(e + eepOffset[0]).mags.size(); ++f)
+        for (size_t f = 0; f < interpIso[0].eeps[e + eepOffset[0]].mags.size(); ++f)
         {
             mags.push_back(linearTransform<>(fehIter[0].feh
                                            , fehIter[1].feh
-                                           , interpIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
-                                           , interpIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
+                                           , interpIso[0].eeps[e + eepOffset[0]].mags[f]
+                                           , interpIso[1].eeps[e + eepOffset[1]].mags[f]
                                            , newFeH).val);
         }
 
         double interpMass = linearTransform<>(fehIter[0].feh
                                             , fehIter[1].feh
-                                            , interpIso.at(0).eeps.at(e + eepOffset[0]).mass
-                                            , interpIso.at(1).eeps.at(e + eepOffset[1]).mass
+                                            , interpIso[0].eeps[e + eepOffset[0]].mass
+                                            , interpIso[1].eeps[e + eepOffset[1]].mass
                                             , newFeH).val;
 
         // Make sure the EEPs are the same
-        assert(interpIso[0].eeps.at(e + eepOffset[0]).eep == interpIso[1].eeps.at(e + eepOffset[1]).eep);
+        assert(interpIso[0].eeps[e + eepOffset[0]].eep == interpIso[1].eeps[e + eepOffset[1]].eep);
 
-        interpEeps.emplace_back(interpIso.at(0).eeps.at(e + eepOffset[0]).eep, interpMass, mags);
+        interpEeps.emplace_back(interpIso[0].eeps[e + eepOffset[0]].eep, interpMass, mags);
     }
 
     // This is important, but it takes O(n) time in debug, which is highly un-cool.
     // This should also be checked in marg.cpp when calling calcPost.
     // assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
 
-    return (new Isochrone(interpIso.at(0).logAge, interpEeps)) ;
+    return (new Isochrone(interpIso[0].logAge, interpEeps)) ;
 }
 
 
@@ -542,25 +542,25 @@ Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, dou
             {
                 vector<double> mags;
 
-                for (size_t f = 0; f < ageIter[0].eeps.at(e + eepOffset[0]).mags.size(); ++f)
+                for (size_t f = 0; f < ageIter[0].eeps[e + eepOffset[0]].mags.size(); ++f)
                 {
                     mags.push_back(linearTransform<>(ageIter[0].logAge
                                                    , ageIter[1].logAge
-                                                   , ageIter[0].eeps.at(e + eepOffset[0]).mags.at(f)
-                                                   , ageIter[1].eeps.at(e + eepOffset[1]).mags.at(f)
+                                                   , ageIter[0].eeps[e + eepOffset[0]].mags[f]
+                                                   , ageIter[1].eeps[e + eepOffset[1]].mags[f]
                                                    , newAge).val);
                 }
 
                 double newMass = linearTransform<>(ageIter[0].logAge
                                                  , ageIter[1].logAge
-                                                 , ageIter[0].eeps.at(e + eepOffset[0]).mass
-                                                 , ageIter[1].eeps.at(e + eepOffset[1]).mass
+                                                 , ageIter[0].eeps[e + eepOffset[0]].mass
+                                                 , ageIter[1].eeps[e + eepOffset[1]].mass
                                                  , newAge).val;
 
                 // Make sure the EEPs are the same
-                assert(ageIter[0].eeps.at(e + eepOffset[0]).eep == ageIter[1].eeps.at(e + eepOffset[1]).eep);
+                assert(ageIter[0].eeps[e + eepOffset[0]].eep == ageIter[1].eeps[e + eepOffset[1]].eep);
 
-                interpEeps.emplace_back(ageIter[0].eeps.at(e + eepOffset[0]).eep, newMass, mags);
+                interpEeps.emplace_back(ageIter[0].eeps[e + eepOffset[0]].eep, newMass, mags);
             }
 
             tIso.emplace_back(newAge, interpEeps);
@@ -588,25 +588,25 @@ Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, dou
         {
             vector<double> mags;
 
-            for (size_t f = 0; f < tIso.at(0).eeps.at(e + eepOffset[0]).mags.size(); ++f)
+            for (size_t f = 0; f < tIso[0].eeps[e + eepOffset[0]].mags.size(); ++f)
             {
                 mags.push_back(linearTransform<>(yIter[0].y
                                                , yIter[1].y
-                                               , tIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
-                                               , tIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
+                                               , tIso[0].eeps[e + eepOffset[0]].mags[f]
+                                               , tIso[1].eeps[e + eepOffset[1]].mags[f]
                                                , newY).val);
             }
 
             double interpMass = linearTransform<>(yIter[0].y
                                                 , yIter[1].y
-                                                , tIso.at(0).eeps.at(e + eepOffset[0]).mass
-                                                , tIso.at(1).eeps.at(e + eepOffset[1]).mass
+                                                , tIso[0].eeps[e + eepOffset[0]].mass
+                                                , tIso[1].eeps[e + eepOffset[1]].mass
                                                 , newY).val;
 
             // Make sure the EEPs are the same
-            assert(tIso[0].eeps.at(e + eepOffset[0]).eep == tIso[1].eeps.at(e + eepOffset[1]).eep);
+            assert(tIso[0].eeps[e + eepOffset[0]].eep == tIso[1].eeps[e + eepOffset[1]].eep);
 
-            interpEeps.emplace_back(tIso.at(0).eeps.at(e).eep, interpMass, mags);
+            interpEeps.emplace_back(tIso[0].eeps[e].eep, interpMass, mags);
         }
 
         interpIso.emplace_back(newAge, interpEeps);
@@ -631,29 +631,29 @@ Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, dou
     {
         vector<double> mags;
 
-        for (size_t f = 0; f < interpIso.at(0).eeps.at(e + eepOffset[0]).mags.size(); ++f)
+        for (size_t f = 0; f < interpIso[0].eeps[e + eepOffset[0]].mags.size(); ++f)
         {
             mags.push_back(linearTransform<>(fehIter[0].feh
                                            , fehIter[1].feh
-                                           , interpIso.at(0).eeps.at(e + eepOffset[0]).mags.at(f)
-                                           , interpIso.at(1).eeps.at(e + eepOffset[1]).mags.at(f)
+                                           , interpIso[0].eeps[e + eepOffset[0]].mags[f]
+                                           , interpIso[1].eeps[e + eepOffset[1]].mags[f]
                                            , newFeH).val);
         }
 
         double interpMass = linearTransform<>(fehIter[0].feh
                                             , fehIter[1].feh
-                                            , interpIso.at(0).eeps.at(e + eepOffset[0]).mass
-                                            , interpIso.at(1).eeps.at(e + eepOffset[1]).mass
+                                            , interpIso[0].eeps[e + eepOffset[0]].mass
+                                            , interpIso[1].eeps[e + eepOffset[1]].mass
                                             , newFeH).val;
 
         // Make sure the EEPs are the same
-        assert(interpIso[0].eeps.at(e + eepOffset[0]).eep == interpIso[1].eeps.at(e + eepOffset[1]).eep);
+        assert(interpIso[0].eeps[e + eepOffset[0]].eep == interpIso[1].eeps[e + eepOffset[1]].eep);
 
-        interpEeps.emplace_back(interpIso.at(0).eeps.at(e + eepOffset[0]).eep, interpMass, mags);
+        interpEeps.emplace_back(interpIso[0].eeps[e + eepOffset[0]].eep, interpMass, mags);
     }
 
     // assert(std::is_sorted(interpEeps.begin(), interpEeps.end()));
-    return (new Isochrone(interpIso.at(0).logAge, interpEeps));
+    return (new Isochrone(interpIso[0].logAge, interpEeps));
 }
 
 

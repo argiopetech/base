@@ -75,14 +75,14 @@ double Cluster::logPrior (const Model &evoModels) const
     double prior = 0.0;
     //DS: with a uniform prior on carbonicity, the above won't change since log(1) = 0.
 
-    if (priorVar.at(FEH) > EPSILON)
-        prior += (-0.5) * sqr (feh - priorMean.at(FEH)) / priorVar.at(FEH);
-    if (priorVar.at(MOD) > EPSILON)
-        prior += (-0.5) * sqr (mod - priorMean.at(MOD)) / priorVar.at(MOD);
-    if (priorVar.at(ABS) > EPSILON)
-        prior += (-0.5) * sqr (abs - priorMean.at(ABS)) / priorVar.at(ABS);
-    if (priorVar.at(YYY) > EPSILON)
-        prior += (-0.5) * sqr (yyy - priorMean.at(YYY)) / priorVar.at(YYY);
+    if (priorVar[FEH] > EPSILON)
+        prior += (-0.5) * sqr (feh - priorMean[FEH]) / priorVar[FEH];
+    if (priorVar[MOD] > EPSILON)
+        prior += (-0.5) * sqr (mod - priorMean[MOD]) / priorVar[MOD];
+    if (priorVar[ABS] > EPSILON)
+        prior += (-0.5) * sqr (abs - priorMean[ABS]) / priorVar[ABS];
+    if (priorVar[YYY] > EPSILON)
+        prior += (-0.5) * sqr (yyy - priorMean[YYY]) / priorVar[YYY];
 
     return prior;
 }
@@ -93,9 +93,9 @@ static double scaledLogLike (const vector<double> &obsPhot, const vector<double>
 
     for (size_t f = 0; f < obsPhot.size(); ++f)
     {
-        if (variance.at(f) > 1e-9)
+        if (variance[f] > 1e-9)
         {
-            likelihood -= 0.5 * (log (2 * M_PI * varScale * variance.at(f)) + (sqr (mags.at(f) - obsPhot.at(f)) / (varScale * variance.at(f))));
+            likelihood -= 0.5 * (log (2 * M_PI * varScale * variance[f]) + (sqr (mags[f] - obsPhot[f]) / (varScale * variance[f])));
         }
     }
 
