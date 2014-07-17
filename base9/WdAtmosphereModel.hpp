@@ -52,7 +52,7 @@ class WdAtmosphereModel : virtual public StellarModel
 
     virtual std::vector<double> teffToMags (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
 
-    virtual void restrictToFilters(const std::vector<std::string>&);
+    virtual void restrictToFilters(const std::vector<std::string>&) = 0;
 
     std::vector<std::string> getAvailableFilters() const { return availableFilters; }
 

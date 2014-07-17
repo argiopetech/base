@@ -14,6 +14,8 @@ class InvalidAtmosphereModel : public WdAtmosphereModel, public InvalidModel
   public:
     virtual ~InvalidAtmosphereModel() {}
 
+    virtual void loadModel(std::string) {;}
+
     virtual std::vector<double> teffToMags  (double, double, WdAtmosphere) const
     {
         throw InvalidModelError("Called teffToMags() in invalid atmosphere model");
