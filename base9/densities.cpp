@@ -109,7 +109,7 @@ static double scaledLogLike (const vector<double> &obsPhot, const vector<double>
 
 
 // Calculates the posterior density for a stellar system
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone)
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
 {
     const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone);
 
