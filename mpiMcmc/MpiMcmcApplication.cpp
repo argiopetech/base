@@ -275,7 +275,8 @@ int MpiMcmcApplication::run()
             {
                 if (acceptedOne)
                 {
-                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter << ")" << endl;
+                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.mpiMcmc.adaptiveBigSteps << ")" << endl;
+
                     break;
                 }
                 else
