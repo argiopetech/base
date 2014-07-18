@@ -455,65 +455,67 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
 
 double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 {
-    mutex logPostMutex;
-    double logPostProp;
+    // mutex logPostMutex;
+    // double logPostProp;
 
-    logPostProp = propClust.logPrior (evoModels);
+    double logPostProp = propClust.logPrior (evoModels);
 
     shared_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(propClust.feh, propClust.yyy, propClust.age));
 
     /* loop over assigned stars */
 //    pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
     auto sSize = systems.size();
+    // for (size_t i = 0; i < sSize; ++i)
+    // {
+    vector<double> postClusterStar;
+
+    /* loop over all (mass1, mass ratio) pairs */
+    // if (systems.at(i).observedStatus == WD)
+    // {
+    //     postClusterStar = 0.0;
+
+    //     for (int j = 0; j < N_WD_MASS1; j++)
+    //     {
+    //         double tmpLogPost;
+    //         StellarSystem wd(systems.at(i));
+    //         wd.primary.mass = wdGridMass(j);
+    //         wd.setMassRatio(0.0);
+
+    //         try
+    //         {
+    //             tmpLogPost = wd.logPost(propClust, evoModels, *isochrone);
+    //             tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
+
+    //             postClusterStar +=  exp (tmpLogPost);
+    //         }
+    //         catch ( WDBoundsError &e )
+    //         {
+    //             if (settings.verbose)
+    //                 cerr << e.what() << endl;
+    //         }
+    //     }
+    // }
+    // else
+    // {
+    try
+    {
+        /* marginalize over isochrone */
+        postClusterStar = margEvolveWithBinary (propClust, systems, evoModels, *isochrone, settings.noBinaries);
+    }
+    catch ( WDBoundsError &e )
+    {
+        if (settings.verbose)
+            cerr << e.what() << endl;
+    }
+    // }
+
     for (size_t i = 0; i < sSize; ++i)
     {
-        double postClusterStar = 0.0;
-
-        /* loop over all (mass1, mass ratio) pairs */
-        // if (systems.at(i).observedStatus == WD)
-        // {
-        //     postClusterStar = 0.0;
-
-        //     for (int j = 0; j < N_WD_MASS1; j++)
-        //     {
-        //         double tmpLogPost;
-        //         StellarSystem wd(systems.at(i));
-        //         wd.primary.mass = wdGridMass(j);
-        //         wd.setMassRatio(0.0);
-
-        //         try
-        //         {
-        //             tmpLogPost = wd.logPost(propClust, evoModels, *isochrone);
-        //             tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
-
-        //             postClusterStar +=  exp (tmpLogPost);
-        //         }
-        //         catch ( WDBoundsError &e )
-        //         {
-        //             if (settings.verbose)
-        //                 cerr << e.what() << endl;
-        //         }
-        //     }
-        // }
-        // else
-        // {
-        try
-        {
-            /* marginalize over isochrone */
-            postClusterStar = margEvolveWithBinary (propClust, systems.at(i), evoModels, *isochrone, settings.noBinaries);
-        }
-        catch ( WDBoundsError &e )
-        {
-            if (settings.verbose)
-                cerr << e.what() << endl;
-        }
-        // }
-
-        postClusterStar *= systems.at(i).clustStarPriorDens;
+        postClusterStar[i] *= systems.at(i).clustStarPriorDens;
 
         /* marginalize over field star status */
-        std::lock_guard<mutex> lk(logPostMutex);
-        logPostProp += log ((1.0 - systems.at(i).clustStarPriorDens) * fsLike + postClusterStar);
+        // std::lock_guard<mutex> lk(logPostMutex);
+        logPostProp += log ((1.0 - systems.at(i).clustStarPriorDens) * fsLike + postClusterStar[i]);
     }//);
 
     return logPostProp;
