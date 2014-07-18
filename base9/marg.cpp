@@ -120,6 +120,9 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
             // More optimization. Keeps us from dereferencing this array ~4 times.
             double isoMass = isochrone.eeps[i].mass;
 
+            if (isoMass > primaryMass)
+                break;
+
             // All filters should be acceptable if we are to evaluate at a grid point
             // okMass starts out true, and gets set false if any filter is not acceptable
             bool okMass = true;
@@ -134,8 +137,7 @@ static double calcPost (const double dMass, const Cluster &clust, StellarSystem 
                 double mag = isochrone.eeps[i].mags[diff.filter];
 
                 if ( ! (mag >= diff.magLower
-                        && (mag <= diff.magUpper || std::isnan(diff.magUpper))
-                        &&  isoMass <= primaryMass))
+                    && (mag <= diff.magUpper || std::isnan(diff.magUpper))))
                 {
                     okMass = false; // If it isn't, that isn't OK
                     break;          // And break out of the loop to avoid further calculation (pre-optimization)
