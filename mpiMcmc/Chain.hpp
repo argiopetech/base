@@ -45,6 +45,9 @@ class Chain : public McmcApplication
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
         {
+            if (iteration == 10)
+                exit(0);
+
             double logPostProp = 0.0;
             auto propClust = propose (clust);
 
