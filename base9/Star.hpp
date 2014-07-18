@@ -51,9 +51,9 @@ class StellarSystem
 
     void setMassRatio(double);
     double getMassRatio() const;
-    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&) const;
+    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&);
 
-    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&) const;
+    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&);
 
     // Variables
     Star primary;
@@ -68,6 +68,11 @@ class StellarSystem
 
     double clustStarPriorDens = 0.0;    // prior probability that the star is a cluster star
     double clustStarProposalDens = 0.0; // proposal density for steps to the cluster star model
+
+  private:
+    double lastPrimary = std::numeric_limits<double>::quiet_NaN();
+
+    std::vector<double> lastPrimaryMags;
 };
 
 

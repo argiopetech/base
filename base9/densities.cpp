@@ -91,11 +91,16 @@ static double scaledLogLike (const vector<double> &obsPhot, const vector<double>
 {
     double likelihood = 0.0;
 
-    for (size_t f = 0; f < obsPhot.size(); ++f)
+    auto obsSize = obsPhot.size();
+
+    for (size_t f = 0; f < obsSize; ++f)
     {
-        if (variance[f] > 1e-9)
+        auto varF = variance[f];
+
+        if (varF > 1e-9)
         {
-            likelihood -= 0.5 * (log (2 * M_PI * varScale * variance[f]) + (sqr (mags[f] - obsPhot[f]) / (varScale * variance[f])));
+            varF *= varScale;
+            likelihood -= 0.5 * (log (2 * M_PI * varF) + (sqr (mags[f] - obsPhot[f]) / varF));
         }
     }
 
@@ -104,7 +109,7 @@ static double scaledLogLike (const vector<double> &obsPhot, const vector<double>
 
 
 // Calculates the posterior density for a stellar system
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone)
 {
     const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone);
 

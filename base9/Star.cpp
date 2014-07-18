@@ -68,10 +68,7 @@ vector<double> Star::getMags (const Cluster &clust, const Model &evoModels, cons
             return wdEvol (clust, evoModels);
 
         default:   // For brown dwarfs, neutron stars, black hole remnants, and 0-mass secondaries
-            vector<double> mags;
-            mags.resize(evoModels.absCoeffs.size(), 99.999);
-
-            return mags;
+            return vector<double>(evoModels.absCoeffs.size(), 99.999);
     }
 }
 
@@ -213,17 +210,22 @@ void StellarSystem::readCMD(const string &s, int filters)
 }
 
 
-vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone)
 {
-    auto primaryMags = primary.getMags(clust, evoModels, isochrone);
+    if (primary.mass != lastPrimary)
+    {
+        lastPrimary     = primary.mass;
+        lastPrimaryMags = primary.getMags(clust, evoModels, isochrone);
+    }
+
     auto secondaryMags = secondary.getMags(clust, evoModels, isochrone);
 
-    assert(primaryMags.size() == secondaryMags.size());
-    assert(evoModels.absCoeffs.size() == primaryMags.size());
+    assert(lastPrimaryMags.size() == secondaryMags.size());
+    assert(evoModels.absCoeffs.size() == lastPrimaryMags.size());
 
     vector<double> combinedMags;
 
-    auto nPrimaryMags = primaryMags.size(); // Avoid calling vector::size a lot
+    auto nPrimaryMags = lastPrimaryMags.size(); // Avoid calling vector::size a lot
 
     // can now derive combined mags
     if (secondaryMags.front() < 99.)
@@ -234,7 +236,7 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
 
         for (size_t f = 0; f < nPrimaryMags; ++f)
         {
-            flux = exp10((primaryMags[f] / -2.5));    // add up the fluxes of the primary
+            flux = exp10((lastPrimaryMags[f] / -2.5));    // add up the fluxes of the primary
             flux += exp10((secondaryMags[f] / -2.5)); // and the secondary
             combinedMags.push_back(-2.5 * log10 (flux));    // (these 3 lines (used to?) take 5% of run time for N large)
             // if primary mag = 99.999, then this works
@@ -242,7 +244,7 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     }  // to make the combined mag = secondary mag
     else
     {
-        combinedMags = std::move(primaryMags); // Don't reuse primaryMags after this
+        combinedMags = lastPrimaryMags;
     }
 
     for (size_t f = 0; f < nPrimaryMags; ++f)

@@ -36,8 +36,8 @@ unsigned long seed = 0;
 
 int main (int argc, char *argv[])
 {
-    int i, nStars, cmpnt;//, nBrownDwarfs;
-    double fractionBinary, tempU, massTotal, fractionDB, tempMod, minV, maxV, minMass = 0.15;
+    int i, nStars;//, nBrownDwarfs;
+    double fractionBinary, massTotal, fractionDB, tempMod, minV, maxV, minMass = 0.15;
     char w_file[100];
     FILE *w_ptr;
     Cluster theCluster;
