@@ -52,8 +52,10 @@ class StellarSystem
     void setMassRatio(double);
     double getMassRatio() const;
     double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&) const;
+    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&, const std::vector<double>&, const std::vector<double>&) const;
 
     std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&) const;
+    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&, const std::vector<double>&, const std::vector<double>&) const;
 
     // Variables
     Star primary;

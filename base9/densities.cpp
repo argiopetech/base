@@ -119,3 +119,15 @@ double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, con
 
     return (logPrior + likelihood);
 }
+
+
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, const vector<double> &primaryMags, const vector<double> &secondaryMags) const
+{
+    const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
+
+    double logPrior = clust.logPriorMass (primary.mass);
+
+    double likelihood = scaledLogLike (obsPhot, variance, mags, clust.varScale);
+
+    return (logPrior + likelihood);
+}

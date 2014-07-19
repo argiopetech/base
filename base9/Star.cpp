@@ -215,6 +215,11 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     auto primaryMags = primary.getMags(clust, evoModels, isochrone);
     auto secondaryMags = secondary.getMags(clust, evoModels, isochrone);
 
+    return deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
+}
+
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, const vector<double> &primaryMags, const vector<double> &secondaryMags) const
+{
     assert(primaryMags.size() == secondaryMags.size());
     assert(evoModels.absCoeffs.size() == primaryMags.size());
 
@@ -239,7 +244,7 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     }  // to make the combined mag = secondary mag
     else
     {
-        combinedMags = std::move(primaryMags);
+        combinedMags = primaryMags;
     }
 
     for (size_t f = 0; f < nPrimaryMags; ++f)
