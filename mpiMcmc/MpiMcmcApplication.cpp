@@ -515,7 +515,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 
         /* marginalize over field star status */
         // std::lock_guard<mutex> lk(logPostMutex);
-        logPostProp += log ((1.0 - systems.at(i).clustStarPriorDens) * fsLike + postClusterStar[i]);
+        logPostProp += __builtin_log ((1.0 - systems.at(i).clustStarPriorDens) * fsLike + postClusterStar[i]);
     }//);
 
     return logPostProp;

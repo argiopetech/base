@@ -26,14 +26,15 @@ static_assert(M_PI < 3.15, "M_PI is defined and less than 3.15");
 
 const double mf_sigma = 0.67729, mf_mu = -1.02;
 const double loglog10 = log (log (10));
+const double TWO_M_PI = 2 * M_PI;
 
 double Cluster::logPriorMass (double primaryMass) const
 // Compute log prior density
 {
     assert (primaryMass <= M_wd_up);
 
-    double log_m1 = log10 (primaryMass);
-    double logPrior = getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / sqr (mf_sigma) - log (primaryMass) - loglog10;
+    double log_m1 = __builtin_log10 (primaryMass);
+    double logPrior = getLogMassNorm() + -0.5 * sqr (log_m1 - mf_mu) / sqr (mf_sigma) - __builtin_log (primaryMass) - loglog10;
 
     return logPrior;
 }
@@ -97,10 +98,10 @@ static double scaledLogLike (const vector<double> &obsPhot, const vector<double>
     {
         auto varF = variance[f];
 
-        if (varF > 1e-9)
+        if (varF > EPS)
         {
             varF *= varScale;
-            likelihood -= 0.5 * (log (2 * M_PI * varF) + (sqr (mags[f] - obsPhot[f]) / varF));
+            likelihood -= 0.5 * (__builtin_log (TWO_M_PI * varF) + (sqr (mags[f] - obsPhot[f]) / varF));
         }
     }
 
@@ -121,12 +122,18 @@ double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, con
 }
 
 
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, const vector<double> &primaryMags, const vector<double> &secondaryMags) const
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, double logPrior, const vector<double> &primaryMags, const vector<double> &secondaryMags) const
 {
     const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
 
-    double logPrior = clust.logPriorMass (primary.mass);
+    double likelihood = scaledLogLike (obsPhot, variance, mags, clust.varScale);
 
+    return (logPrior + likelihood);
+}
+
+
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, double logPrior, const vector<double> &mags) const
+{
     double likelihood = scaledLogLike (obsPhot, variance, mags, clust.varScale);
 
     return (logPrior + likelihood);

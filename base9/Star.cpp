@@ -218,7 +218,7 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     return deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
 }
 
-vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, const vector<double> &primaryMags, const vector<double> &secondaryMags) const
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, const vector<double> &primaryMags, const vector<double> &secondaryMags)
 {
     assert(primaryMags.size() == secondaryMags.size());
     assert(evoModels.absCoeffs.size() == primaryMags.size());
@@ -238,7 +238,7 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
         {
             flux = exp10((primaryMags[f] / -2.5));    // add up the fluxes of the primary
             flux += exp10((secondaryMags[f] / -2.5)); // and the secondary
-            combinedMags.push_back(-2.5 * log10 (flux));    // (these 3 lines (used to?) take 5% of run time for N large)
+            combinedMags.push_back(-2.5 * __builtin_log10 (flux));    // (these 3 lines (used to?) take 5% of run time for N large)
             // if primary mag = 99.999, then this works
         }
     }  // to make the combined mag = secondary mag
