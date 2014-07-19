@@ -96,6 +96,7 @@ static vector<double> calcPost (const double dMass, const Cluster &clust, vector
                 {
                      post[s] = 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
                     // that no mass combinations would lead to a positive posterior density
+                     singleDiffs.clear();
                      break;
                 }
                 else
@@ -116,20 +117,21 @@ static vector<double> calcPost (const double dMass, const Cluster &clust, vector
 
 
     // Evaluate the posterior at all reasonable points in the isochrone
+    for (size_t s = 0; s < systems.size(); ++s)
     {
-        auto isoSize = isochrone.eeps.size();
-
-        for (size_t i = 0; i < isoSize - 1; ++i)
+        if (!diffs[s].empty())
         {
-            // More optimization. Keeps us from dereferencing this array ~4 times.
-            double isoMass = isochrone.eeps[i].mass;
+            StellarSystem &system = systems[s];
 
-            if (isoMass > primaryMass)
-                break;
+            auto isoSize = isochrone.eeps.size();
 
-            for (size_t s = 0; s < systems.size(); ++s)
+            for (size_t i = 0; i < isoSize - 1; ++i)
             {
-                StellarSystem &system = systems[s];
+                // More optimization. Keeps us from dereferencing this array ~4 times.
+                double isoMass = isochrone.eeps[i].mass;
+
+                if (isoMass > primaryMass)
+                    break;
 
                 // All filters should be acceptable if we are to evaluate at a grid point
                 // okMass starts out true, and gets set false if any filter is not acceptable
@@ -145,7 +147,7 @@ static vector<double> calcPost (const double dMass, const Cluster &clust, vector
                     double mag = isochrone.eeps[i].mags[diff.filter];
 
                     if ( ! (mag >= diff.magLower
-                            && (mag <= diff.magUpper || std::isnan(diff.magUpper))))
+                        && (mag <= diff.magUpper || std::isnan(diff.magUpper))))
                     {
                         okMass = false; // If it isn't, that isn't OK
                         break;          // And break out of the loop to avoid further calculation (pre-optimization)
