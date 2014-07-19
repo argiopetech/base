@@ -23,7 +23,7 @@ using std::vector;
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
 //   2. margEvolveWithBinary passes the StellarSystem with primary.mass already set appropriately
 //   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
-static vector<double> calcPost (const double dMass, const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, bool noBinaries)
+static void calcPost (const double dMass, const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, vector<double> &post, bool noBinaries)
 {
     // This struct is only used inside this function, so we don't want it escaping
     struct diffStruct
@@ -45,24 +45,11 @@ static vector<double> calcPost (const double dMass, const Cluster &clust, vector
     // We used to call deriveCombinedMags here, but it's a waste for noBinaries runs
     const double primaryMass = systems.front().primary.mass;
 
-    vector<double> post;
-    post.reserve(systems.size());
-
-    // Secondary mass to 0.0 to ensure we only look at the primary for the primaryMags.
-    for ( auto &system : systems )
-    {
-        system.secondary.mass = 0.0;
-
-        double tmpLogPost = system.logPost (clust, evoModels, isochrone) + logdMass
-                          + log (isochrone.eeps[0].mass / primaryMass);   // dMassRatio
-
-        post.push_back(exp (tmpLogPost));
-    }
-
     // Get the mags based on the primary's mass set by margEvolve
     // We call deriveCombinedMags here rather than primary.getMags so that we get abs/distMod correction
     // This keeps models which haven't been converted to absolute mags from breaking
-    const vector<double> primaryMags = systems.front().deriveCombinedMags (clust, evoModels, isochrone);
+    systems.front().secondary.mass = 0.0;
+    const auto combinedMags = systems.front().deriveCombinedMags (clust, evoModels, isochrone);
 
     /**** now see if any binary companions are OK ****/
     const double nSD = 3.0;           // num of st dev from obs that will contribute to likelihood
@@ -87,17 +74,17 @@ static vector<double> calcPost (const double dMass, const Cluster &clust, vector
                 // Optimizations(?)
                 double obsPhot = system.obsPhot[f];               // Reduces array dereference penalty
                 double nSDTerm = nSD * sqrt (system.variance[f]); // Array dereference + multiplication and sqrt call
-                double expTerm = exp10 ((primaryMags[f] / -2.5)); // Similar to nSDTerm
+                double expTerm = exp10 ((combinedMags[f] / -2.5)); // Similar to nSDTerm
 
                 const double diffLow = exp10 (((obsPhot - nSDTerm) / -2.5)) - expTerm;
                 const double diffUp  = exp10 (((obsPhot + nSDTerm) / -2.5)) - expTerm;
 
                 if (diffLow <= 0.0 || diffLow == diffUp) // log(-x) == NaN
                 {
-                     post[s] = 0.0; // Instead of returning post (a half-finished calculation), return 0 to signify
+                    // Instead of returning post (a half-finished calculation), return 0 to signify
                     // that no mass combinations would lead to a positive posterior density
-                     singleDiffs.clear();
-                     break;
+                    singleDiffs.clear();
+                    break;
                 }
                 else
                 {
@@ -110,6 +97,17 @@ static vector<double> calcPost (const double dMass, const Cluster &clust, vector
                     singleDiffs.emplace_back(f, magLower, magUpper); // Make a diffStruct and stick it in diffs
                 }
             }
+        }
+
+        // Secondary mass to 0.0 to ensure we only look at the primary for the combinedMags.
+        system.secondary.mass = 0.0;
+
+        if ( ! singleDiffs.empty() )
+        {
+            double tmpLogPost = system.logPost (clust, evoModels, isochrone) + logdMass
+                              + log (isochrone.eeps[0].mass / primaryMass);   // dMassRatio
+
+            post[s] += exp (tmpLogPost);
         }
 
         diffs.push_back(singleDiffs);
@@ -169,8 +167,6 @@ static vector<double> calcPost (const double dMass, const Cluster &clust, vector
             }
         }
     }
-
-    return post;
 }
 
 
@@ -211,16 +207,7 @@ vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem>
                     system.primary.mass = isochrone.eeps[m].mass + (k * dMass);
                 }
 
-                auto calcPosts = calcPost (dMass, clust, systems, evoModels, isochrone, noBinaries);
-
-                assert(calcPosts.size() == post.size());
-
-                auto nPosts = calcPosts.size();
-
-                for (size_t i = 0; i < nPosts; ++i)
-                {
-                    post[i] += calcPosts[i];
-                }
+                calcPost (dMass, clust, systems, evoModels, isochrone, post, noBinaries);
             }
         }
     }
