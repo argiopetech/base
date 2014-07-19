@@ -14,10 +14,13 @@
 #include "densities.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
+#include "Utility.hpp"
 #include "WhiteDwarf.hpp"
 
 using std::array;
+using std::mutex;
 using std::vector;
+using base::utility::ThreadPool;
 
 // ASSUMPTIONS
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
@@ -200,18 +203,19 @@ static void calcPost (const double dMass, const Cluster &clust, vector<StellarSy
     }
 }
 
-vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, vector<StellarSystem> &systems)
+vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, ThreadPool &pool, vector<StellarSystem> &systems)
 {
+     mutex logPostMutex;
     const int isoIncrem = 80;    /* ok for YY models? */
 
-    Star s;
-
-    vector<double> primaryMags, combinedMags;
     vector<double> secondaryMags;
 
-    s.mass = 0.0;
+    {
+        Star s;
+        s.mass = 0.0;
 
-    secondaryMags = s.getMags(clust, evoModels, isochrone);
+        secondaryMags = s.getMags(clust, evoModels, isochrone);
+    }
 
     vector<double> post(systems.size(), 0.0);
 
@@ -219,36 +223,44 @@ vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels
         auto isoSize  = isochrone.eeps.size();
         auto nSystems = systems.size();
 
-        for (size_t m = 0; m < isoSize - 1; ++m)
+        pool.parallelFor(isoSize - 1, [=,&post, &isochrone, &evoModels, &clust, &secondaryMags, &logPostMutex](int m)
         {
             double dIsoMass = isochrone.eeps[m + 1].mass - isochrone.eeps[m].mass;
 
             // In the event that we have an invalid range, skip that range
             // This generally occurs only at very high EEPs, where the masses are close together
-            if (dIsoMass < 0.0)
-                continue;
-
-            double dMass    = dIsoMass / isoIncrem;
-            double logdMass = __builtin_log (dMass);
-
-            double cMass = isochrone.eeps[m].mass;
-
-            for (auto k = 0; k < isoIncrem; ++k)
+            if (dIsoMass > 0.0)
             {
-                const double primaryMass = cMass + (k * dMass);
-                const double logPrior    = clust.logPriorMass (primaryMass);
+                Star s;
+                vector<double> primaryMags, combinedMags, threadPost(nSystems, 0.0);
 
-                s.mass       = primaryMass;
-                primaryMags  = s.getMags(clust, evoModels, isochrone);
-                combinedMags = StellarSystem::deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
+                double dMass    = dIsoMass / isoIncrem;
+                double logdMass = __builtin_log (dMass);
+
+                double cMass = isochrone.eeps[m].mass;
+
+                for (auto k = 0; k < isoIncrem; ++k)
+                {
+                    const double primaryMass = cMass + (k * dMass);
+                    const double logPrior    = clust.logPriorMass (primaryMass);
+
+                    s.mass       = primaryMass;
+                    primaryMags  = s.getMags(clust, evoModels, isochrone);
+                    combinedMags = StellarSystem::deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
+
+                    for (size_t s = 0; s < nSystems; ++s)
+                    {
+
+                        threadPost[s] +=__builtin_exp(systems[s].logPost (clust, evoModels, isochrone, logPrior, combinedMags) + logdMass);
+                    }
+                }
+
+                std::lock_guard<mutex> lk(logPostMutex);
 
                 for (size_t s = 0; s < nSystems; ++s)
-                {
-
-                    post[s] += __builtin_exp(systems[s].logPost (clust, evoModels, isochrone, logPrior, combinedMags) + logdMass);
-                }
+                    post[s] += threadPost[s];
             }
-        }
+        });
     }
 
     for (auto &p : post)
@@ -264,10 +276,10 @@ vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels
 
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, bool noBinaries)
+vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, ThreadPool &pool,  bool noBinaries)
 {
     if (noBinaries)
-        return margEvolveNoBinaries(clust, evoModels, isochrone, systems);
+        return margEvolveNoBinaries(clust, evoModels, isochrone, pool, systems);
 
     assert(isochrone.eeps.size() >= 2);
 
