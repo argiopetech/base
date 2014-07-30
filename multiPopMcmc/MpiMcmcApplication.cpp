@@ -27,7 +27,7 @@ using std::endl;
 using std::flush;
 using std::function;
 using std::mutex;
-using std::shared_ptr;
+using std::unique_ptr;
 using std::vector;
 
 using namespace std::placeholders;
@@ -178,7 +178,14 @@ int MpiMcmcApplication::run()
 
         auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
         auto filterNames = ret.first;
-        systems = ret.second;
+
+        for (auto r : ret.second)
+        {
+            if (r.observedStatus == StarStatus::MSRG)
+                systems.push_back(r);
+            else if (r.observedStatus == StarStatus::WD)
+                cerr << "Found unsupported WD in photometry... Continuing anyway." << endl;
+        }
 
         evoModels.restrictFilters(filterNames);
 
@@ -210,11 +217,6 @@ int MpiMcmcApplication::run()
         for (auto system : systems)
         {
             system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
-
-            if (system.observedStatus == WD)
-            {
-                system.setMassRatio(0.0);
-            }
         }
     }
     // end initChain
@@ -239,7 +241,8 @@ int MpiMcmcApplication::run()
     try
     {
         int adaptiveBurnIter = 0;
-        bool acceptedOne = false;
+        bool acceptedOne = false;  // Keeps track of whether we have two accepted trials in a ros
+        bool acceptedOnce = false; // Keeps track of whether we have ever accepted a trial
 
         // Stage 1 burnin
         {
@@ -249,6 +252,8 @@ int MpiMcmcApplication::run()
             burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.mpiMcmc.adaptiveBigSteps);
 
             cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
+
+            burninChain.reset(); // Reset the chain to forget this part of the burnin.
         }
 
         cout << "\nRunning Stage 2 (adaptive) burnin..." << endl;
@@ -266,8 +271,8 @@ int MpiMcmcApplication::run()
             // If the step sizes aren't converging on an acceptable acceptance ratio, this can kick us out of the burnin
             adaptiveBurnIter += trialIter;
 
-            // Reset the Chain for the next stage of the adaptive burnin
-            burninChain.reset();
+            // Reset the ratio to determine step scaling for this trial
+            burninChain.resetRatio();
 
             std::function<DualPopCluster(DualPopCluster)> proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 5);
 
@@ -276,12 +281,17 @@ int MpiMcmcApplication::run()
                 // Run big steps for the entire trial
                 burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter);
             }
+            else if (acceptedOnce)
+            {
+                proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
+                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
+            }
             else
             {
                 // Run big steps for half the trial
                 burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
 
-                // Then run smaller (but not the smallest) steps for the second half
+                // Then run smaller steps for the second half
                 proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
                 burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
             }
@@ -290,9 +300,12 @@ int MpiMcmcApplication::run()
 
             if (acceptanceRatio <= 0.4 && acceptanceRatio >= 0.2)
             {
+                acceptedOnce = true;
+
                 if (acceptedOne)
                 {
                     cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.mpiMcmc.adaptiveBigSteps << ")" << endl;
+
                     break;
                 }
                 else
@@ -309,18 +322,6 @@ int MpiMcmcApplication::run()
                 scaleStepSizes(stepSize, burninChain.acceptanceRatio()); // Adjust step sizes
             }
         } while (adaptiveBurnIter < ctrl.burnIter);
-
-        // Stage 3 burnin
-        // Make sure and pull the covariance matrix before resetting the burninChain
-        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
-
-        burninChain.reset();
-
-        cout << "\nRunning Stage 3 burnin... " << flush;
-
-        burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.mpiMcmc.stage3Iter);
-
-        cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
 
         burninFile.close();
     }
@@ -343,13 +344,28 @@ int MpiMcmcApplication::run()
     {
         printHeader (resultFile, ctrl.priorVar);
 
-        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
+        Chain<DualPopCluster> mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, burninChain.getCluster(), resultFile);
 
-        Chain<DualPopCluster> mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, mainClust, resultFile);
+        {
+            // Make sure and pull the covariance matrix before resetting the burninChain
+            auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
 
-        mainChain.run(proposalFunc, logPostFunc, checkPriors, ctrl.nIter, ctrl.thin);
+            cout << "\nStarting adaptive run... " << flush;
 
-        cout << "\nAcceptance ratio: " << mainChain.acceptanceRatio() << endl;
+            mainChain.run(proposalFunc, logPostFunc, checkPriors, settings.mpiMcmc.stage3Iter);
+            cout << " Preliminary acceptanceRatio = " << mainChain.acceptanceRatio() << endl;
+        }
+
+        // Begin main run
+        // Main run proceeds in increments of 1, adapting the covariance matrix after every increment
+        for (auto iters = 0; iters < ctrl.nIter; ++iters)
+        {
+            auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), mainChain.makeCholeskyDecomp());
+
+            mainChain.run(proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
+        }
+
+        cout << "\nFinal acceptance ratio: " << mainChain.acceptanceRatio() << endl;
 
         resultFile.close();
     }
@@ -439,17 +455,24 @@ DualPopCluster MpiMcmcApplication::propClustIndep (DualPopCluster clust, struct 
 
 DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, struct ifmrMcmcControl const &ctrl, Matrix<double, NPARAMS, NPARAMS> const &propMatrix)
 {
-    for (int p = 0; p < NPARAMS; p++)
+    array<double, NPARAMS> tDraws;
+    
+    for (auto &d : tDraws)
+    {
+        d = sampleT (gen, 1.0);
+    }
+
+    for (int p = 0; p < NPARAMS; ++p)
     {
         if (ctrl.priorVar.at(p) > EPSILON || p == YYA || p == YYB || p == LAMBDA)
         {
             double corrProps = 0;
 
-            for (int k = 0; k <= p; k++)
+            for (int k = 0; k <= p; ++k)
             {                           /* propMatrix is lower diagonal */
                 if (ctrl.priorVar.at(k) > EPSILON || k == YYA || k == YYB || k == LAMBDA)
                 {
-                    corrProps += propMatrix.at(p).at(k) * sampleT (gen, 1.0);
+                    corrProps += propMatrix.at(p).at(k) * tDraws[k];
                 }
             }
 
@@ -474,80 +497,54 @@ DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, st
 
 double MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
 {
-    mutex logPostMutex;
-    double logPostProp;
+    double logPostProp = propClust.clustA.logPrior (evoModels);
 
-    logPostProp = propClust.clustA.logPrior (evoModels);
-
-    array<Isochrone*, 2> isochrone;
+    array<unique_ptr<Isochrone>, 2> isochrone;
     array<Cluster*, 2> cluster = { &propClust.clustA, &propClust.clustB };
 
     pool.parallelFor(2, [=,&isochrone](int i)
     {
-        isochrone[i] = evoModels.mainSequenceEvol->deriveIsochrone(cluster[i]->feh, cluster[i]->yyy, cluster[i]->age);
+        isochrone[i].reset(evoModels.mainSequenceEvol->deriveIsochrone(cluster[i]->feh, cluster[i]->yyy, cluster[i]->age));
     });
 
-    shared_ptr<Isochrone> isochroneA(isochrone.at(0));
-    shared_ptr<Isochrone> isochroneB(isochrone.at(1));
+    auto sSize = systems.size();
 
-    /* loop over assigned stars */
-    pool.parallelFor(systems.size(), [=,&logPostMutex,&logPostProp](int i)
+    const double lambdaA = propClust.lambda;
+    const double lambdaB = (1 - lambdaA);
+
+    /* marginalize over isochrone */
+    auto postA = margEvolveWithBinary (propClust.clustA, systems, evoModels, *isochrone.at(0), pool, settings.noBinaries);
+    auto postB = margEvolveWithBinary (propClust.clustB, systems, evoModels, *isochrone.at(1), pool, settings.noBinaries);
+
+    for (size_t i = 0; i < sSize; ++i)
     {
-        double postClusterStar = 0.0;
-
-        /* loop over all (mass1, mass ratio) pairs */
-        if (systems.at(i).observedStatus == WD)
+        // Give both A and B a chance to be the only contributor for this star.
+        if (postA[i] > 0.0)
         {
-            throw std::logic_error("WDs not supported in multiPopMcmc");
-
-            // postClusterStar = 0.0;
-
-            // for (int j = 0; j < N_WD_MASS1; j++)
-            // {
-            //     double tmpLogPost;
-            //     StellarSystem wd(systems.at(i));
-            //     wd.primary.mass = wdGridMass(j);
-            //     wd.setMassRatio(0.0);
-
-            //     try
-            //     {
-            //         tmpLogPost = wd.logPost(propClust, evoModels, *isochrone);
-            //         tmpLogPost += log ((propClust.getM_wd_up() - MIN_MASS1) / (double) N_WD_MASS1);
-
-            //         postClusterStar +=  exp (tmpLogPost);
-            //     }
-            //     catch ( WDBoundsError &e )
-            //     {
-            //         if (settings.verbose)
-            //             cerr << e.what() << endl;
-            //     }
-            // }
+            postA[i] *= lambdaA;
         }
         else
         {
-            try
-            {
-                double lambda = propClust.lambda;
-                /* marginalize over isochrone */
-                postClusterStar = lambda       * margEvolveWithBinary (propClust.clustA, systems.at(i), evoModels, *isochroneA, settings.noBinaries)
-                                + (1 - lambda) * margEvolveWithBinary (propClust.clustB, systems.at(i), evoModels, *isochroneB, settings.noBinaries);
-            }
-            catch ( WDBoundsError &e )
-            {
-                if (settings.verbose)
-                    cerr << e.what() << endl;
-            }
+            postA[i] = 0.0;
         }
 
-        postClusterStar *= systems.at(i).clustStarPriorDens;
+        // Independent of above
+        if (postB[i] > 0.0)
+        {
+            postA[i] += lambdaB * postB[i];
+        }
+
+        // It's also possible that it comes out zero and we waste our time doing this multiplication
+        // But it's faster to do it than to check for zero.
+        postA[i] *= systems[i].clustStarPriorDens;
 
         /* marginalize over field star status */
-        std::lock_guard<mutex> lk(logPostMutex);
-        logPostProp += log ((1.0 - systems.at(i).clustStarPriorDens) * fsLike + postClusterStar);
-    });
+        logPostProp += __builtin_log ((1.0 - systems[i].clustStarPriorDens) * fsLike + postA[i]);
+    }
 
     return logPostProp;
 }
+
 
 double MpiMcmcApplication::wdGridMass (int point) const
 {

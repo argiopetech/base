@@ -149,16 +149,29 @@ class Chain : public McmcApplication
             }
         }
 
-        cout << endl;
+        // for (int k = 0; k < params.at(0).size(); ++k)
+        // {
+        //     for (int i = 0; i < NPARAMS; i++)
+        //     {
+        //         if (priorVar.at(i) > EPSILON || i == YYA || i == YYB || i == LAMBDA)
+        //         {
+        //             cout << boost::format("%10.6f") % params.at(i).at(k) << " ";
+        //         }
+        //     }
 
-        for (int i = 0; i < nParamsUsed; i++)
-        {
-            for (int j = 0; j < nParamsUsed; j++)
-            {
-                cout << boost::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
-            }
-            cout << endl;
-        }
+        //     cout << '\n';
+        // }
+
+        // cout << endl;
+
+        // for (int i = 0; i < nParamsUsed; i++)
+        // {
+        //     for (int j = 0; j < nParamsUsed; j++)
+        //     {
+        //         cout << boost::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
+        //     }
+        //     cout << endl;
+        // }
 
         /* Cholesky decomposition */
         gsl_linalg_cholesky_decomp (covMat);
@@ -166,7 +179,7 @@ class Chain : public McmcApplication
         /* compute proposal matrix from Cholesky factor */
 
         /* Gelman, Roberts, Gilks scale */
-        double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
+        double GRGscale = 2.38 / sqrt(nParamsUsed);
 
         h = 0;
         for (int i = 0; i < NPARAMS; i++)

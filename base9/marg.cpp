@@ -205,7 +205,7 @@ static void calcPost (const double dMass, const Cluster &clust, vector<StellarSy
 
 vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, ThreadPool &pool, vector<StellarSystem> &systems)
 {
-     mutex logPostMutex;
+    mutex logPostMutex;
     const int isoIncrem = 80;    /* ok for YY models? */
 
     vector<double> secondaryMags;
@@ -220,8 +220,9 @@ vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels
     vector<double> post(systems.size(), 0.0);
 
     {
-        auto isoSize  = isochrone.eeps.size();
-        auto nSystems = systems.size();
+        auto agbTipMass = isochrone.agbTipMass();
+        auto isoSize    = isochrone.eeps.size();
+        auto nSystems   = systems.size();
 
         pool.parallelFor(isoSize - 1, [=,&post, &isochrone, &evoModels, &clust, &secondaryMags, &logPostMutex](int m)
         {
@@ -241,7 +242,18 @@ vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels
 
                 for (auto k = 0; k < isoIncrem; ++k)
                 {
-                    const double primaryMass = cMass + (k * dMass);
+                    double primaryMass = cMass + (k * dMass);
+
+                    if (primaryMass > agbTipMass)
+                    {
+                        primaryMass = agbTipMass;
+
+                        // Kludgey way of exiting the for loop
+                        // Only works if we don't use K below here
+                        // Ensures we don't add the agbTip likelihood more than once
+                        k = isoIncrem;
+                    }
+
                     const double logPrior    = clust.logPriorMass (primaryMass);
 
                     s.mass       = primaryMass;
@@ -250,8 +262,7 @@ vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels
 
                     for (size_t s = 0; s < nSystems; ++s)
                     {
-
-                        threadPost[s] +=__builtin_exp(systems[s].logPost (clust, evoModels, isochrone, logPrior, combinedMags) + logdMass);
+                        threadPost[s] += __builtin_exp(systems[s].logPost (clust, evoModels, isochrone, logPrior, combinedMags) + logdMass);
                     }
                 }
 
@@ -261,14 +272,6 @@ vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels
                     post[s] += threadPost[s];
             }
         });
-    }
-
-    for (auto &p : post)
-    {
-        if (p < 0.0)
-        {
-            p = 0.0;
-        }
     }
 
     return post;
@@ -325,14 +328,6 @@ vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem>
 
                 calcPost (dMass, clust, systems, evoModels, isochrone, post, secondaryMags);
             }
-        }
-    }
-
-    for (auto &p : post)
-    {
-        if (p < 0.0)
-        {
-            p = 0.0;
         }
     }
 

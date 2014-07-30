@@ -37,7 +37,8 @@ class MpiMcmcApplication
 
     Cluster clust;
     Cluster mainClust;
-    std::vector<StellarSystem> systems;
+    std::vector<StellarSystem> msSystems;
+    std::vector<StellarSystem> wdSystems;
 
     base::utility::ThreadPool pool;
 

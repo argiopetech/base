@@ -21,10 +21,12 @@ vector<double> Star::msRgbEvol (const Isochrone &isochrone) const
 {
     vector<double> mags;
 
+    const auto starMass = mass;
+
     auto isoBegin = isochrone.eeps.cbegin();
     auto isoEnd   = isochrone.eeps.cend();
 
-    auto m = lower_bound(isoBegin, isoEnd, mass, EvolutionaryPoint::compareMass);
+    auto m = lower_bound(isoBegin, isoEnd, starMass, EvolutionaryPoint::compareMass);
 
     if (m == isoEnd) {
         m -= 2;
@@ -39,7 +41,7 @@ vector<double> Star::msRgbEvol (const Isochrone &isochrone) const
 
         for ( size_t f = 0; f < magsSize; ++f )
         {
-            double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags[f], m[1].mags[f], mass).val;
+            double mag = linearTransform<>(m[0].mass, m[1].mass, m[0].mags[f], m[1].mags[f], starMass).val;
 
             if (std::fabs(mag) < EPS)
                 mags.push_back(999.99);
@@ -98,9 +100,10 @@ StarStatus Star::getStatus(const Cluster &clust, const Isochrone &isochrone) con
 
 vector<double> Star::wdEvol (const Cluster &clust, const Model &evoModels) const
 {
-    double thisWDMass = intlFinalMassReln (clust, evoModels, mass);
+    double starMass   = mass; // Cache to avoid a cache miss
+    double thisWDMass = intlFinalMassReln (clust, evoModels, starMass);
 
-    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, mass, clust.yyy);
+    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(clust.feh, starMass, clust.yyy);
 
     //get temperature from WD cooling models (returns 0.0 if there is an error(or does it??))
     auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (clust.age, clust.carbonicity, precLogAge, thisWDMass);

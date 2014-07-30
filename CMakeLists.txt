@@ -112,7 +112,7 @@ add_subdirectory(base9)
 
 # Applications
 add_subdirectory(mpiMcmc)
-#add_subdirectory(multiPopMcmc)
+add_subdirectory(multiPopMcmc)
 add_subdirectory(makeCMD)
 #add_subdirectory(makeIsochrone)
 add_subdirectory(sampleMass)

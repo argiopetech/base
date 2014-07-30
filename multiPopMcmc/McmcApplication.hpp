@@ -24,15 +24,15 @@ class McmcApplication
 
     double acceptanceRatio() const { return double(accepted) / (accepted + rejected); }
 
-  protected:
-    // Decides whether to accept a proposed cluster property
-    bool acceptClustMarg (const double logPostCurr, const double logPostProp);
-
     void resetRatio()
     {
         accepted = 0;
         rejected = 0;
     }
+
+  protected:
+    // Decides whether to accept a proposed cluster property
+    bool acceptClustMarg (const double logPostCurr, const double logPostProp);
 
     std::mt19937 gen;
 

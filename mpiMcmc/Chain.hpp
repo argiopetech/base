@@ -14,20 +14,21 @@ using std::cout;
 using std::endl;
 using std::cerr;
 
+template <class T>
 class Chain : public McmcApplication
 {
   private:
     MVatrix<double, NPARAMS> params;
     std::array<double, NPARAMS> priorVar;
 
-    Cluster clust;
+    T clust;
 
     ofstream &fout;
 
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
   public:
-    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, Cluster clust, ofstream &fout)
+    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ofstream &fout)
         : McmcApplication(seed), priorVar(priorVar), clust(clust), fout(fout)
     {}
 
@@ -41,18 +42,16 @@ class Chain : public McmcApplication
         }
     }
 
-    void run(std::function<Cluster(Cluster)> propose, std::function<double(Cluster&)> logPost, int iters, int thin = 1)
+    void run(std::function<T(T)> propose, std::function<double(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
         {
-            if (iteration == 10)
-                exit(0);
-
             double logPostProp = 0.0;
             auto propClust = propose (clust);
 
             try
             {
+                checkPriors(propClust);
                 logPostProp = logPost (propClust);
             }
             catch(InvalidCluster &e)
@@ -137,16 +136,29 @@ class Chain : public McmcApplication
             }
         }
 
-        cout << endl;
+        // for (int k = 0; k < params.at(0).size(); ++k)
+        // {
+        //     for (int i = 0; i < NPARAMS; i++)
+        //     {
+        //         if (priorVar.at(i) > EPSILON || i == YYA || i == YYB || i == LAMBDA)
+        //         {
+        //             cout << boost::format("%10.6f") % params.at(i).at(k) << " ";
+        //         }
+        //     }
 
-        for (int i = 0; i < nParamsUsed; i++)
-        {
-            for (int j = 0; j < nParamsUsed; j++)
-            {
-                cout << boost::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
-            }
-            cout << endl;
-        }
+        //     cout << '\n';
+        // }
+
+        // cout << endl;
+
+        // for (int i = 0; i < nParamsUsed; i++)
+        // {
+        //     for (int j = 0; j < nParamsUsed; j++)
+        //     {
+        //         cout << boost::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
+        //     }
+        //     cout << endl;
+        // }
 
         /* Cholesky decomposition */
         gsl_linalg_cholesky_decomp (covMat);
@@ -154,7 +166,7 @@ class Chain : public McmcApplication
         /* compute proposal matrix from Cholesky factor */
 
         /* Gelman, Roberts, Gilks scale */
-        double GRGscale = 0.97;     /* = 2.38 / sqrt(6) */
+        double GRGscale = 2.38 / sqrt(nParamsUsed);
 
         h = 0;
         for (int i = 0; i < NPARAMS; i++)
@@ -195,7 +207,7 @@ class Chain : public McmcApplication
         return propMatrix;
     }
 
-    Cluster getCluster() const { return clust; };
+    T getCluster() const { return clust; };
 };
 
 #endif
