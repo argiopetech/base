@@ -132,7 +132,7 @@ double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, con
 }
 
 
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, double logPrior, const vector<double> &mags) const
+double StellarSystem::logPost (const Cluster &clust, const Model &, const Isochrone &, double logPrior, const vector<double> &mags) const
 {
     double likelihood = scaledLogLike (obsPhot, variance, mags, clust.varScale);
 
