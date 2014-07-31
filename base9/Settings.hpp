@@ -3,6 +3,7 @@
 
 #include <array>
 #include <string>
+#include <map>
 
 #include "constants.hpp"
 #include "yaml-cpp/yaml.h"
@@ -71,7 +72,7 @@ class Settings
     struct ScatterClusterSettings
     {
         int relevantFilt;
-        YAML::Node exposures;
+        std::map<std::string, double> exposures;
         double brightLimit;
         double faintLimit;
         double limitS2N;

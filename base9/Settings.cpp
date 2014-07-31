@@ -1,6 +1,6 @@
-#include <array>
 #include <string>
 #include <iostream>
+#include <map>
 #include <vector>
 
 #include <cstdio>
@@ -18,7 +18,7 @@ using std::endl;
 using std::istringstream;
 using std::string;
 using std::vector;
-using std::array;
+using std::map;
 using YAML::Node;
 using YAML::LoadFile;
 
@@ -141,7 +141,11 @@ void Settings::fromYaml (const string yamlFile)
     sampleMass.deltaMass = getOrDie<double>(sampleMassNode, "deltaMass");
     sampleMass.deltaMassRatio = getOrDie<double>(sampleMassNode, "deltaMassRatio");
 
-    scatterCluster.exposures = getNode (scatterConfNode, "exposures");
+    {
+        auto tNode = getNode(scatterConfNode, "exposures");
+        getOrDie<double>(tNode, "U");
+        scatterCluster.exposures = tNode.as<map<string, double>>();
+    }
 
     seed = getOrDie<uint32_t>(generalNode, "seed");
     verbose = getOrDie<int>(generalNode, "verbose");
