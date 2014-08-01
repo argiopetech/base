@@ -51,7 +51,7 @@ makeIsochrone:
     # No makeIsochrone-specific settings yet
 
 scatterCluster:
-     brightLimit:       0     # apparant mags, can remove bright stars, e.g. RGB
+     brightLimit:       -10   # apparant mags, can remove bright stars, e.g. RGB
      faintLimit:        30    # apparant mags, can remove faint stars, e.g. faint MS and WDs
      relevantFilt:      0     # 0=bluest band available
      limitS2N:          1     # use to remove objects with overly low signal-to-noise

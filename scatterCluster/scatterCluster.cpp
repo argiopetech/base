@@ -149,8 +149,33 @@ int main (int argc, char *argv[])
         filters = ret.first;
 
         for (auto s : ret.second)
+        {
             if (meetsMagCutoff(settings, s) && meetsStageCutoff(s))
-                systems.push_back(s);
+            {
+                bool okay = true;
+
+                for (size_t f = 0; f < filters.size(); ++f)
+                {
+                    auto filter = filters.at(f);
+                    auto s2n    = signalToNoise (s.obsPhot.at(f),
+                                                 getExposureTime(settings, filter),
+                                                 filter);
+
+                    if (s2n < settings.scatterCluster.limitS2N)
+                    {   // large photometric errors can lock mcmc during burnin
+                        // Negative variances are ignored by mpiMcmc
+                        // There's special code to check for negatives when we output stars (conversion to sigma)
+                        okay = false;
+                        break;
+                    }
+                }
+
+                if (okay)
+                {
+                    systems.push_back(s);
+                }
+            }
+        }
 
         if (systems.empty())
         {
@@ -170,24 +195,15 @@ int main (int argc, char *argv[])
                                          getExposureTime(settings, filter),
                                          filter);
 
-            if (s2n < settings.scatterCluster.limitS2N)
-            {   // large photometric errors can lock mcmc during burnin
-                // Negative variances are ignored by mpiMcmc
-                // There's special code to check for negatives when we output stars (conversion to sigma)
-                s.variance.at(f) = -1;
-            }
-            else
-            {
-                auto sigma  = 1 / s2n;
+            auto sigma  = 1 / s2n;
 
-                if (sigma < 0.01)
-                    sigma = 0.01;
+            if (sigma < 0.01)
+                sigma = 0.01;
 
-                s.variance.at(f) = sigma * sigma;
+            s.variance.at(f) = sigma * sigma;
 
-                std::normal_distribution<double> normDist(0., sigma);
-                s.obsPhot.at(f) += normDist(gen);
-            }
+            std::normal_distribution<double> normDist(0., sigma);
+            s.obsPhot.at(f) += normDist(gen);
         }
     }
 
