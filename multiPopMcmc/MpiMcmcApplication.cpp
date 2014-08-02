@@ -145,7 +145,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     ctrl.nIter = settings.mpiMcmc.maxIter;
     ctrl.thin = settings.mpiMcmc.thin;
 
-    ctrl.clusterFilename = settings.files.output + ".res";
+    ctrl.clusterFilename = settings.files.output + '_' + std::to_string(settings.seed) + ".res";
 }
 
 
@@ -185,6 +185,14 @@ int MpiMcmcApplication::run()
                 systems.push_back(r);
             else if (r.observedStatus == StarStatus::WD)
                 cerr << "Found unsupported WD in photometry... Continuing anyway." << endl;
+            else
+                cerr << "Found unsupported star in photometry, type '" << r.observedStatus << "'... Continuing anyway." << endl;
+        }
+
+        if ( systems.empty() )
+        {
+            cerr << "No stars loaded... Exiting." << endl;
+            exit(-1);
         }
 
         evoModels.restrictFilters(filterNames);
@@ -220,6 +228,8 @@ int MpiMcmcApplication::run()
         }
     }
     // end initChain
+
+    cout << "FSlike: " << fsLike << endl;
 
     // Assuming fsLike doesn't change, this is the "global" logPost function
     auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);
