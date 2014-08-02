@@ -102,12 +102,6 @@ void Settings::fromYaml (const string yamlFile)
     if (mpiMcmc.trialIter <= 0)
         exitWith("mpiMcmc:adaptive:trialIter must be greater than 0");
 
-    if (mpiMcmc.adaptiveBigSteps > mpiMcmc.trialIter)
-        cerr << "(bigStepIter > trialIter): Are you sure this is what you want?" << endl;
-
-    if (mpiMcmc.trialIter > mpiMcmc.burnIter)
-        exitWith("trialIter must be greater than burnIter (may cause invalide covariance matrix)");
-
     mpiMcmc.stepSize[AGE] = getOrDie<double>(mpiStepNode, "age");
     mpiMcmc.stepSize[FEH] = getOrDie<double>(mpiStepNode, "Fe_H");
     mpiMcmc.stepSize[MOD] = getOrDie<double>(mpiStepNode, "distMod");
