@@ -98,7 +98,7 @@ bool meetsMagCutoff (const Settings &settings, const StellarSystem &s)
 
 bool meetsStageCutoff (const StellarSystem &s)
 {
-    if (s.observedStatus == NSBH || s.observedStatus == NSBH)
+    if (s.observedStatus == NSBH || s.observedStatus == DNE)
         return false;
     else if (s.observedStatus == WD && s.secondary.mass > 0.0)
         return false;                       // TEMPORARY KLUDGE -- ignore binaries of MS/RG + WDs and WD + WD
