@@ -1,3 +1,6 @@
+#ifndef MPIMCMCAPPLICATION_HPP
+#define MPIMCMCAPPLICATION_HPP
+
 #include <functional>
 #include <random>
 
@@ -40,7 +43,16 @@ class MpiMcmcApplication
     std::vector<StellarSystem> msSystems;
     std::vector<StellarSystem> wdSystems;
 
+    double* sysVars = nullptr;
+    double* sysVar2 = nullptr;
+    double* sysObs  = nullptr;
+
+    size_t howManyFilts = 0;
+    size_t howManyFiltsAligned = 0;
+
     base::utility::ThreadPool pool;
 
     struct ifmrMcmcControl ctrl;
 };
+
+#endif

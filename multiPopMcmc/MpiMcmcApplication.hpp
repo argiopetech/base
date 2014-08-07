@@ -54,6 +54,12 @@ class MpiMcmcApplication
     DualPopCluster mainClust;
     std::vector<StellarSystem> systems;
 
+    double* sysVars = nullptr;
+    double* sysVar2 = nullptr;
+    double* sysObs  = nullptr;
+
+    size_t howManyFilts = 0;
+    size_t howManyFiltsAligned = 0;
     base::utility::ThreadPool pool;
 
     struct ifmrMcmcControl ctrl;

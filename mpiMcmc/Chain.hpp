@@ -2,14 +2,14 @@
 #define CHAIN_HPP
 
 #include <array>
-#include <fstream>
+#include <ostream>
 #include <iostream>
 
 #include "Cluster.hpp"
 #include "Matrix.hpp"
 #include "McmcApplication.hpp"
 
-using std::ofstream;
+using std::ostream;
 using std::cout;
 using std::endl;
 using std::cerr;
@@ -23,12 +23,12 @@ class Chain : public McmcApplication
 
     T clust;
 
-    ofstream &fout;
+    ostream &fout;
 
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
   public:
-    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ofstream &fout)
+    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ostream &fout)
         : McmcApplication(seed), priorVar(priorVar), clust(clust), fout(fout)
     {}
 

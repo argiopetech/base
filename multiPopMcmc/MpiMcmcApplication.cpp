@@ -32,6 +32,8 @@ using std::vector;
 
 using namespace std::placeholders;
 
+const double TWO_M_PI = 2 * M_PI;
+
 void ensurePriors(const Settings &s, const DualPopCluster &clust)
 {
     // Clust A carbonicity
@@ -220,6 +222,54 @@ int MpiMcmcApplication::run()
         }
     }
 
+    // Initialize SSE memory for noBinaries
+    // THIS LEAKS MEMORY LIKE A SIEVE DUE TO FORGETTING TALLOC
+    // But it's okay if we only call it once (until it gets moved to the constructor)
+    {
+        using aligned_m128 = std::aligned_storage<16, 16>::type;
+
+        // howManyFilts has to be a multiple of two to make the SSE code happy
+        // Add 1 and round down.
+               howManyFiltsAligned = ((systems.front().obsPhot.size() + 1) & ~0x1);
+               howManyFilts        = systems.front().obsPhot.size();
+        size_t howManyWeNeed       = systems.size() * howManyFiltsAligned;
+        size_t howManyWeAlloc      = howManyWeNeed / 2;
+
+        aligned_m128* talloc = new aligned_m128[howManyWeAlloc];
+        sysVars = new(talloc) double[howManyWeNeed];
+
+        talloc  = new aligned_m128[howManyWeAlloc];
+        sysVar2 = new(talloc) double[howManyWeNeed];
+
+        talloc = new aligned_m128[howManyWeAlloc];
+        sysObs = new(talloc) double[howManyWeNeed];
+
+        int i = 0;
+
+        for (auto s : systems)
+        {
+            for (size_t k = 0; k < howManyFiltsAligned; ++k, ++i)
+            {
+                if ((k < s.variance.size()) && (s.variance.at(k) > EPS))
+                {
+                    sysVars[i] = s.variance.at(k) * clust.clustA.varScale;
+                    sysVar2[i] = __builtin_log (TWO_M_PI * sysVars[i]);
+
+                    // Removes a division from the noBinaries loop which turns a 14 cycle loop into a 3.8 cycle loop
+                    sysVars[i] = 1 / sysVars[i];
+
+                    sysObs [i] = s.obsPhot.at(k);
+                }
+                else
+                {
+                    sysVars[i] = 0.0;
+                    sysVar2[i] = 0.0;
+
+                    sysObs [i] = 0.0;
+                }
+            }
+        }
+    }
     // Begin initChain
     {
         for (auto system : systems)
@@ -342,7 +392,7 @@ int MpiMcmcApplication::run()
     }
 
     // Main run
-    ofstream resultFile(ctrl.clusterFilename);
+    std::ofstream resultFile(ctrl.clusterFilename);
     if (!resultFile)
     {
         cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
@@ -466,7 +516,7 @@ DualPopCluster MpiMcmcApplication::propClustIndep (DualPopCluster clust, struct 
 DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, struct ifmrMcmcControl const &ctrl, Matrix<double, NPARAMS, NPARAMS> const &propMatrix)
 {
     array<double, NPARAMS> tDraws;
-    
+
     for (auto &d : tDraws)
     {
         d = sampleT (gen, 1.0);
@@ -523,8 +573,19 @@ double MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
     const double lambdaB = (1 - lambdaA);
 
     /* marginalize over isochrone */
-    auto postA = margEvolveWithBinary (propClust.clustA, systems, evoModels, *isochrone.at(0), pool, settings.noBinaries);
-    auto postB = margEvolveWithBinary (propClust.clustB, systems, evoModels, *isochrone.at(1), pool, settings.noBinaries);
+    vector<double> postA, postB;
+
+    if (settings.noBinaries)
+    {
+        postA = margEvolveNoBinaries (propClust.clustA, evoModels, *isochrone.at(0), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts);
+        postB = margEvolveNoBinaries (propClust.clustB, evoModels, *isochrone.at(1), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts);
+    }
+    else
+    {
+        postA = margEvolveWithBinary (propClust.clustA, systems, evoModels, *isochrone.at(0), pool);
+        postB = margEvolveWithBinary (propClust.clustB, systems, evoModels, *isochrone.at(1), pool);
+    }
+
 
     for (size_t i = 0; i < sSize; ++i)
     {

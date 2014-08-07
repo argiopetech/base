@@ -20,7 +20,7 @@ double sampleT (std::mt19937 &gen, double var, double nu)
     double u = 0.0;
     double y = 0.0;
 
-    double peak = exp (logTDens (0, 0));
+    double peak = __builtin_exp (logTDens (0, 0));
 
     do
     {

@@ -221,7 +221,7 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     return deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
 }
 
-vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, const vector<double> &primaryMags, const vector<double> &secondaryMags)
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone&, const vector<double> &primaryMags, const vector<double> &secondaryMags)
 {
     assert(primaryMags.size() == secondaryMags.size());
     assert(evoModels.absCoeffs.size() == primaryMags.size());
