@@ -75,6 +75,8 @@ namespace evil {
         Model evoModels;
         std::vector<std::string> filters;
 
+        std::unique_ptr<Isochrone> isochrone;
+
         static globals& getInstance()
         {
             static globals instance;
@@ -115,7 +117,7 @@ std::vector<std::string> listFilters()
 // [[Rcpp::export]]
 double getAGBt_zmass()
 {
-    return evil::globals::getInstance().clust.AGBt_zmass;
+    return evil::globals::getInstance().isochrone->agbTipMass();
 }
 
 
@@ -162,6 +164,7 @@ void setClusterParameters(double age, double feh, double distMod, double av, dou
     {
         const auto evoModels = evil::globals::getInstance().evoModels;
         auto &clust = evil::globals::getInstance().clust;
+        auto &isochrone = evil::globals::getInstance().isochrone;
 
         clust.age = age;
         clust.feh = feh;
@@ -170,7 +173,7 @@ void setClusterParameters(double age, double feh, double distMod, double av, dou
         clust.yyy = y;
         clust.carbonicity = carbonicity;
 
-        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+        isochrone.reset(evoModels.mainSequenceEvol->deriveIsochrone(clust.feh, clust.yyy, clust.age));
     }
 }
 
@@ -187,10 +190,11 @@ void changeModels(int msModel, int wdModel, int ifmr)
 
         const auto evoModels = evil::globals::getInstance().evoModels;
         auto &clust = evil::globals::getInstance().clust;
+        auto &isochrone = evil::globals::getInstance().isochrone;
 
         evil::globals::getInstance().reloadModels();
 
-        clust.AGBt_zmass = evoModels.mainSequenceEvol->deriveAgbTipMass(clust.feh, clust.yyy, clust.age);    // determine AGBt ZAMS mass, to find evol state
+        isochrone.reset(evoModels.mainSequenceEvol->deriveIsochrone(clust.feh, clust.yyy, clust.age));
     }
 }
 
@@ -219,14 +223,15 @@ std::vector<double> evolve (double mass1, double mass2)
 
         const auto evoModels = evil::globals::getInstance().evoModels;
         const auto clust = evil::globals::getInstance().clust;
+        auto &isochrone = evil::globals::getInstance().isochrone;
 
         // AGBt_zmass never set because age and/or metallicity out of range of models.
-        if (clust.AGBt_zmass < EPS)
+        if (isochrone->agbTipMass() < EPS)
         {
             throw Rcpp::exception("Bounds error in evolve");
         }
 
-        return system.deriveCombinedMags(clust, evoModels);
+        return system.deriveCombinedMags(clust, evoModels, *isochrone);
     }
     else
     {
