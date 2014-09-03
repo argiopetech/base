@@ -23,8 +23,8 @@ check_function_exists (pow HAS_POW)
 # Set project verion #
 ######################
 set (Base9_VERSION_MAJOR 9)
-set (Base9_VERSION_MINOR 3)
-set (Base9_VERSION_PATCH 4)
+set (Base9_VERSION_MINOR 4)
+set (Base9_VERSION_PATCH 0)
 
 option (USE_TESTS "Enable testing" OFF) 
 
