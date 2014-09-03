@@ -23,6 +23,12 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
+    if (settings.seed == std::numeric_limits<uint32_t>::max())
+    {
+        srand(std::time(0));
+        settings.seed = rand();
+    }
+
     MpiMcmcApplication master(settings);
 
     try

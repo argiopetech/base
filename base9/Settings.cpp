@@ -141,7 +141,6 @@ void Settings::fromYaml (const string yamlFile)
         scatterCluster.exposures = tNode.as<map<string, double>>();
     }
 
-    seed = getOrDie<uint32_t>(generalNode, "seed");
     verbose = getOrDie<int>(generalNode, "verbose");
 
     // When we switch to C++11, we can change these to std::string and remove most of the cruft
