@@ -121,7 +121,7 @@ add_subdirectory(yaml-cpp)
 add_subdirectory(base9)
 
 # Applications
-add_subdirectory(mpiMcmc)
+add_subdirectory(singlePopMcmc)
 add_subdirectory(multiPopMcmc)
 add_subdirectory(makeCMD)
 #add_subdirectory(makeIsochrone)
