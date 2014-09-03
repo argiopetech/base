@@ -21,7 +21,6 @@
 
 #include <emmintrin.h> // SSE2 (_pd, _m128d)
 #include <pmmintrin.h> // SSE3 (hadd)
-#include <iacaMarks.h>
 
 extern "C" {
 #include <sleef/sleefsimd.h> // xexp
