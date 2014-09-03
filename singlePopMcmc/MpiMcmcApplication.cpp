@@ -222,21 +222,25 @@ int MpiMcmcApplication::run()
     {
         using aligned_m128 = std::aligned_storage<16, 16>::type;
 
-        // howManyFilts has to be a multiple of two to make the SSE code happy
-        // Add 1 and round down.
-               howManyFiltsAligned = ((msSystems.front().obsPhot.size() + 1) & ~0x1);
-               howManyFilts        = msSystems.front().obsPhot.size();
-        size_t howManyWeNeed       = msSystems.size() * howManyFiltsAligned;
-        size_t howManyWeAlloc      = howManyWeNeed / 2;
+        if (! msSystems.empty())
+        {
+            // howManyFilts has to be a multiple of two to make the SSE code happy
+            // Add 1 and round down.
+                   howManyFiltsAligned = ((msSystems.front().obsPhot.size() + 1) & ~0x1);
+                   howManyFilts        = msSystems.front().obsPhot.size();
+            size_t howManyWeNeed       = msSystems.size() * howManyFiltsAligned;
+            size_t howManyWeAlloc      = howManyWeNeed / 2;
 
-        aligned_m128* talloc = new aligned_m128[howManyWeAlloc];
-        sysVars = new(talloc) double[howManyWeNeed];
+            aligned_m128* talloc = new aligned_m128[howManyWeAlloc];
+            sysVars = new(talloc) double[howManyWeNeed];
 
-        talloc  = new aligned_m128[howManyWeAlloc];
-        sysVar2 = new(talloc) double[howManyWeNeed];
+            talloc  = new aligned_m128[howManyWeAlloc];
+            sysVar2 = new(talloc) double[howManyWeNeed];
 
-        talloc = new aligned_m128[howManyWeAlloc];
-        sysObs = new(talloc) double[howManyWeNeed];
+            talloc = new aligned_m128[howManyWeAlloc];
+            sysObs = new(talloc) double[howManyWeNeed];
+
+        }
 
         int i = 0;
 
@@ -302,7 +306,7 @@ int MpiMcmcApplication::run()
 
     try
     {
-        int adaptiveBurnIter = 0;
+        int  adaptiveBurnIter = 0;
         bool acceptedOne = false;  // Keeps track of whether we have two accepted trials in a ros
         bool acceptedOnce = false; // Keeps track of whether we have ever accepted a trial
 
@@ -560,6 +564,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 
         const auto m_wd_up = propClust.getM_wd_up();
         const auto wdSize  = wdSystems.size();
+        const auto wdMassPrior = __builtin_log ((m_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
         for (int j = 0; j < N_WD_MASS1; ++j)
         {
@@ -575,7 +580,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
                 double tmpLogPost;
 
                 tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, combinedMags);
-                tmpLogPost += __builtin_log ((m_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
+                tmpLogPost += wdMassPrior;
 
                 post[i] += __builtin_exp(tmpLogPost);
             }
@@ -619,7 +624,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
                 post[i] = 0.0;
             }
 
-            /* marginalize over field star status */
+            // marginalize over field star status
             logPostProp += __builtin_log ((1.0 - msSystems[i].clustStarPriorDens) * fsLike + post[i]);
         }
     }
