@@ -10,16 +10,3 @@ set_target_properties(base9 PROPERTIES POSITION_INDEPENDENT_CODE true)
 
 install(TARGETS base9
         DESTINATION lib)
-
-if (USE_TESTS)
-  add_executable(base9_tests
-    tests/base9_unittest.cpp
-  )
- 
-  target_link_libraries(base9_tests gtest gtest_main base9)
-
-  add_test(
-    NAME base9_tests
-    COMMAND base9_tests --gtest_color=yes
-  )
-endif()

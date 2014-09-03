@@ -10,17 +10,3 @@ target_link_libraries(mpiMcmc base9 m ${GSL_LOC} ${GSLCBLAS_LOC} yaml-cpp)
 
 install(TARGETS mpiMcmc
         DESTINATION bin)
-
-if (USE_TESTS)
-  add_executable(mpiMcmc_tests
-    tests/mpiFuncs_unittest.cpp
-    mpiFuncs.cpp
-  )
-
-  target_link_libraries(mpiMcmc_tests gtest gtest_main base9)
-
-  add_test(
-    NAME mpiMcmc_tests
-    COMMAND mpiMcmc_tests --gtest_color=yes
-  )
-endif()
