@@ -511,7 +511,7 @@ int main (int argc, char *argv[])
             massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrQuadCoef;
         }
 
-        for (size_t j = 0; j < mc.stars.size(); j++)
+        for (size_t j = 0; j < wdMass.size(); j++)
         {
             massSampleFile << boost::format("%10.6f") % wdMass.at(j);
             membershipFile << boost::format("%10.6f") % clusMemPost.at(j);
