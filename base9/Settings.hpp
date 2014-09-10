@@ -33,7 +33,7 @@ class Settings
         double M_wd_up;
     };
 
-    struct MpiMcmcSettings
+    struct SinglePopMcmcSettings
     {
         int burnIter;
         int maxIter;
@@ -123,7 +123,7 @@ class Settings
     struct Files files;
     struct MainSequenceSettings mainSequence;
     struct WhiteDwarfSettings whiteDwarf;
-    struct MpiMcmcSettings mpiMcmc;
+    struct SinglePopMcmcSettings singlePopMcmc;
     struct MultiPopMcmcSettings multiPopMcmc;
     struct ClusterSettings cluster;
     struct SimClusterSettings simCluster;

@@ -49,9 +49,9 @@ void Settings::fromYaml (const string yamlFile)
     Node priorsNode = getNode (newPriorNode, "means");
     Node sigmasNode = getNode (newPriorNode, "sigmas");
     Node startingNode = getNode (clusterNode, "starting");
-    Node mpiConfNode = getNode (configNode, "mpiMcmc");
-    Node mpiAdaptiveNode = getNode(mpiConfNode, "adaptive");
-    Node mpiStepNode = getNode (mpiConfNode, "stepSizes");
+    Node singlePopConfNode = getNode (configNode, "singlePopMcmc");
+    Node mpiAdaptiveNode = getNode(singlePopConfNode, "adaptive");
+    Node mpiStepNode = getNode (singlePopConfNode, "stepSizes");
     Node multiPopConfNode = getNode (configNode, "multiPopMcmc");
     Node cmdConfNode = getNode (configNode, "makeCMD");
     Node simConfNode = getNode (configNode, "simCluster");
@@ -81,7 +81,9 @@ void Settings::fromYaml (const string yamlFile)
     cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
     cluster.starting.Y = getOrDie<double>(startingNode, "Y");
 
-    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
+// We want to keep this around for the case where carbonicity changes
+// to something other than a uniform prior.
+//    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
     cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
     cluster.starting.carbonicity = getOrDie<double>(startingNode, "carbonicity");
 
@@ -91,26 +93,26 @@ void Settings::fromYaml (const string yamlFile)
     cluster.maxMag = getOrDie<double>(clusterNode, "maxMag");
     cluster.index = getOrDie<int>(clusterNode, "index");
 
-    mpiMcmc.burnIter = getOrDie<int>(mpiConfNode, "stage2IterMax");
-    mpiMcmc.stage3Iter = getOrDie<int>(mpiConfNode, "stage3Iter");
-    mpiMcmc.maxIter = getOrDie<int>(mpiConfNode, "runIter");
-    mpiMcmc.thin = getOrDie<int>(mpiConfNode, "thin");
+    singlePopMcmc.burnIter = getOrDie<int>(singlePopConfNode, "stage2IterMax");
+    singlePopMcmc.stage3Iter = getOrDie<int>(singlePopConfNode, "stage3Iter");
+    singlePopMcmc.maxIter = getOrDie<int>(singlePopConfNode, "runIter");
+    singlePopMcmc.thin = getOrDie<int>(singlePopConfNode, "thin");
 
-    mpiMcmc.adaptiveBigSteps = getOrDie<int>(mpiAdaptiveNode, "bigStepIter");
-    mpiMcmc.trialIter = getOrDie<int>(mpiAdaptiveNode, "trialIter");
+    singlePopMcmc.adaptiveBigSteps = getOrDie<int>(mpiAdaptiveNode, "bigStepIter");
+    singlePopMcmc.trialIter = getOrDie<int>(mpiAdaptiveNode, "trialIter");
 
-    if (mpiMcmc.trialIter <= 0)
-        exitWith("mpiMcmc:adaptive:trialIter must be greater than 0");
+    if (singlePopMcmc.trialIter <= 0)
+        exitWith("singlePopMcmc:adaptive:trialIter must be greater than 0");
 
-    mpiMcmc.stepSize[AGE] = getOrDie<double>(mpiStepNode, "age");
-    mpiMcmc.stepSize[FEH] = getOrDie<double>(mpiStepNode, "Fe_H");
-    mpiMcmc.stepSize[MOD] = getOrDie<double>(mpiStepNode, "distMod");
-    mpiMcmc.stepSize[ABS] = getOrDie<double>(mpiStepNode, "Av");
-    mpiMcmc.stepSize[YYY] = getOrDie<double>(mpiStepNode, "Y");
-    mpiMcmc.stepSize[CARBONICITY] = getOrDie<double>(mpiStepNode, "carbonicity");
-    mpiMcmc.stepSize[IFMR_INTERCEPT] = getOrDie<double>(mpiStepNode, "ifmrIntercept");
-    mpiMcmc.stepSize[IFMR_SLOPE] = getOrDie<double>(mpiStepNode, "ifmrSlope");
-    mpiMcmc.stepSize[IFMR_QUADCOEF] = getOrDie<double>(mpiStepNode, "ifmrQuadCoef");
+    singlePopMcmc.stepSize[AGE] = getOrDie<double>(mpiStepNode, "age");
+    singlePopMcmc.stepSize[FEH] = getOrDie<double>(mpiStepNode, "Fe_H");
+    singlePopMcmc.stepSize[MOD] = getOrDie<double>(mpiStepNode, "distMod");
+    singlePopMcmc.stepSize[ABS] = getOrDie<double>(mpiStepNode, "Av");
+    singlePopMcmc.stepSize[YYY] = getOrDie<double>(mpiStepNode, "Y");
+    singlePopMcmc.stepSize[CARBONICITY] = getOrDie<double>(mpiStepNode, "carbonicity");
+    singlePopMcmc.stepSize[IFMR_INTERCEPT] = getOrDie<double>(mpiStepNode, "ifmrIntercept");
+    singlePopMcmc.stepSize[IFMR_SLOPE] = getOrDie<double>(mpiStepNode, "ifmrSlope");
+    singlePopMcmc.stepSize[IFMR_QUADCOEF] = getOrDie<double>(mpiStepNode, "ifmrQuadCoef");
 
     multiPopMcmc.YA_start = getOrDie<double>(multiPopConfNode, "YA_start");
     multiPopMcmc.YB_start = getOrDie<double>(multiPopConfNode, "YB_start");
@@ -314,15 +316,15 @@ void Settings::fromCLI (int argc, char **argv)
                 break;
 
             case 0xEC:
-                istringstream (string (optarg)) >> mpiMcmc.burnIter;
+                istringstream (string (optarg)) >> singlePopMcmc.burnIter;
                 break;
 
             case 0xEB:
-                istringstream (string (optarg)) >> mpiMcmc.maxIter;
+                istringstream (string (optarg)) >> singlePopMcmc.maxIter;
                 break;
 
             case 0xEA:
-                istringstream (string (optarg)) >> mpiMcmc.thin;
+                istringstream (string (optarg)) >> singlePopMcmc.thin;
                 break;
 
             case 0xE9:
@@ -390,7 +392,7 @@ void Settings::fromCLI (int argc, char **argv)
                 exit (EXIT_SUCCESS);
 
             case 0xCF:
-                mpiMcmc.bigStepBurnin = true;
+                singlePopMcmc.bigStepBurnin = true;
                 break;
 
             case 0xCE:

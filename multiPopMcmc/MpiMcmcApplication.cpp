@@ -126,7 +126,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     /* read burnIter and nIter */
     {
-        ctrl.burnIter = settings.mpiMcmc.burnIter;
+        ctrl.burnIter = settings.singlePopMcmc.burnIter;
         int nParamsUsed = 0;
 
         for (int p = 0; p < NPARAMS; p++)
@@ -144,8 +144,8 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
         }
     }
 
-    ctrl.nIter = settings.mpiMcmc.maxIter;
-    ctrl.thin = settings.mpiMcmc.thin;
+    ctrl.nIter = settings.singlePopMcmc.maxIter;
+    ctrl.thin = settings.singlePopMcmc.thin;
 
     ctrl.clusterFilename = settings.files.output + '_' + std::to_string(settings.seed) + ".res";
 }
@@ -158,7 +158,7 @@ int MpiMcmcApplication::run()
     double fsLike;
 
     array<double, NPARAMS> stepSize;
-    std::copy(settings.mpiMcmc.stepSize.begin(), settings.mpiMcmc.stepSize.end(), stepSize.begin());
+    std::copy(settings.singlePopMcmc.stepSize.begin(), settings.singlePopMcmc.stepSize.end(), stepSize.begin());
     stepSize.at(LAMBDA) = settings.multiPopMcmc.lambdaStep;
 
     {
@@ -310,7 +310,7 @@ int MpiMcmcApplication::run()
             cout << "\nRunning Stage 1 burnin..." << flush;
 
             auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
-            burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.mpiMcmc.adaptiveBigSteps);
+            burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
 
             cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
 
@@ -326,7 +326,7 @@ int MpiMcmcApplication::run()
         do
         {
             // Convenience variable
-            const int trialIter = settings.mpiMcmc.trialIter;
+            const int trialIter = settings.singlePopMcmc.trialIter;
 
             // Increment the number of iterations we've gone through
             // If the step sizes aren't converging on an acceptable acceptance ratio, this can kick us out of the burnin
@@ -337,7 +337,7 @@ int MpiMcmcApplication::run()
 
             std::function<DualPopCluster(DualPopCluster)> proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 5);
 
-            if (settings.mpiMcmc.bigStepBurnin)
+            if (settings.singlePopMcmc.bigStepBurnin)
             {
                 // Run big steps for the entire trial
                 burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter);
@@ -365,7 +365,7 @@ int MpiMcmcApplication::run()
 
                 if (acceptedOne)
                 {
-                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.mpiMcmc.adaptiveBigSteps << ")" << endl;
+                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.singlePopMcmc.adaptiveBigSteps << ")" << endl;
 
                     break;
                 }
@@ -413,7 +413,7 @@ int MpiMcmcApplication::run()
 
             cout << "\nStarting adaptive run... " << flush;
 
-            mainChain.run(proposalFunc, logPostFunc, checkPriors, settings.mpiMcmc.stage3Iter);
+            mainChain.run(proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
             cout << " Preliminary acceptanceRatio = " << mainChain.acceptanceRatio() << endl;
         }
 
