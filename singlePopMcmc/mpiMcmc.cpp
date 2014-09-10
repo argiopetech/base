@@ -29,6 +29,8 @@ int main (int argc, char *argv[])
     {
         srand(std::time(0));
         settings.seed = rand();
+
+        cout << "Seed: " << settings.seed << endl;
     }
 
     MpiMcmcApplication master(settings);

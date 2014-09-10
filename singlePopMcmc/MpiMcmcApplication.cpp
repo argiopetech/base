@@ -138,7 +138,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     ctrl.nIter = settings.singlePopMcmc.maxIter;
     ctrl.thin = settings.singlePopMcmc.thin;
 
-    ctrl.clusterFilename = settings.files.output + '_' + std::to_string(settings.seed) + ".res";
+    ctrl.clusterFilename = settings.files.output + ".res";
 
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mainClust.priorVar.begin());
@@ -284,8 +284,6 @@ int MpiMcmcApplication::run()
         }
     }
     // end initChain
-
-    cout << "Seed:   " << settings.seed << endl;
 
     // Assuming fsLike doesn't change, this is the "global" logPost function
     auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);

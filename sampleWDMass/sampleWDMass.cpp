@@ -293,6 +293,14 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
+    if (settings.seed == std::numeric_limits<uint32_t>::max())
+    {
+        srand(std::time(0));
+        settings.seed = rand();
+
+        cout << "Seed: " << settings.seed << endl;
+    }
+
     std::mt19937 gen(settings.seed * uint32_t(2654435761)); // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
     {
         const int warmupIter = 10000;
