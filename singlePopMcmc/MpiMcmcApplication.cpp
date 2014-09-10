@@ -286,7 +286,6 @@ int MpiMcmcApplication::run()
     // end initChain
 
     cout << "Seed:   " << settings.seed << endl;
-    cout << "FSlike: " << fsLike << endl;
 
     // Assuming fsLike doesn't change, this is the "global" logPost function
     auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);
