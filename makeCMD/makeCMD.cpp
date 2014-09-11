@@ -131,18 +131,21 @@ void Application::run()
 
 Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochrone &isochrone)
 {
-    vector<EvolutionaryPoint> eeps;;
+    vector<EvolutionaryPoint> eeps;
 
-    double mass = isochrone.eeps.front().mass;
-    double delta = isochrone.agbTipMass() - mass;
-    double deltaSteps = delta / 0.01;
-
-    for ( int steps = 0; steps < deltaSteps; ++steps )
+    for ( size_t e = 0; e < isochrone.eeps.size() - 1; ++e)
     {
-        Star star;
-        star.mass = mass + steps * 0.01;
+        double mass = isochrone.eeps.at(e).mass;
+        double delta = isochrone.eeps.at(e + 1).mass - mass;
+        double deltaSteps = delta / 80;
 
-        eeps.emplace_back(0, star.mass, star.getMags(clust, evoModels, isochrone)); // 0 eep. Doesn't matter here.
+        for ( int steps = 0; steps < 80; ++steps )
+        {
+            Star star;
+            star.mass = mass + deltaSteps * steps;
+
+            eeps.emplace_back(e, star.mass, star.getMags(clust, evoModels, isochrone)); // 0 eep. Doesn't matter here.
+        }
     }
 
     return {clust.age, eeps};
