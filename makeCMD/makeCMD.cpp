@@ -58,7 +58,7 @@ void Application::run()
         }
     }
 
-    evoModels.mainSequenceEvol->restrictToFilters(filters);
+    evoModels.restrictFilters(filters);
 
     Cluster clust;
 
@@ -141,10 +141,11 @@ Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochron
 
         for ( int steps = 0; steps < 80; ++steps )
         {
-            Star star;
-            star.mass = mass + deltaSteps * steps;
+            StellarSystem star;
+            star.primary.mass   = mass + deltaSteps * steps;
+            star.secondary.mass = 0.0;
 
-            eeps.emplace_back(e, star.mass, star.getMags(clust, evoModels, isochrone)); // 0 eep. Doesn't matter here.
+            eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone));
         }
     }
 
