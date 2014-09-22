@@ -5,13 +5,15 @@
 if [[ ! $MULTICPUS ]]; then
     unamestr=`uname`
     if [[ "$unamestr" == 'Linux' ]]; then
-        MULTICPUS="-j`grep -c ^processor /proc/cpuinfo`"
+        MULTICPUS=`grep -c ^processor /proc/cpuinfo`
     elif [[ "$unamestr" == 'Darwin' ]]; then
-        MULTICPUS="-j`sysctl -n hw.ncpu`"
+        NCPUS=`sysctl -n hw.ncpu`
         export CC=`which clang`
         export CXX=`which clang++`
+    else
+        NCPUS=1
     fi
-fi;
+fi
 
 BASE=`dirname ${0}`
 
@@ -33,7 +35,7 @@ cp cmake/yaml-cpp-CMakeLists.txt yaml-cpp/CMakeLists.txt
 
 pushd ./BUILD
 cmake -DCMAKE_BUILD_TYPE="RELWITHDEBINFO" -DCMAKE_INSTALL_PREFIX='.' ..
-make $MULTICPUS
+make -j${MULTICPUS}
 
 if [[ $? == 0 && ! $NO_INSTALL ]]; then
     make install
