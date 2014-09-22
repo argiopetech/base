@@ -530,6 +530,9 @@ static void printUsage ()
     cerr <<   "===========" << endl;
     cerr << "\t--threads\t\tSpecify the number of local threads to run with" << endl;
     cerr << "\t--bigStepBurnin\t\tRun the burnin only using the \"propClustBigSteps\" algorithm" << endl;
+    cerr << "\n9.4.0 flags" << endl;
+    cerr <<   "===========" << endl;
+    cerr << "\t--noBinaries\t\tTurns off integration over secondary mass" << endl;
     cerr << endl;
 }
 
