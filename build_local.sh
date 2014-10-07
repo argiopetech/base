@@ -1,3 +1,5 @@
 #!/bin/sh
 
-PREFIX='.' sh ./build.sh
+BASE=`dirname "${0}"`
+
+PREFIX='.' sh ${BASE}/build.sh
