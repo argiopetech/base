@@ -4,9 +4,9 @@
 # This is not portable
 if [ ! "$NCPUS" ]; then
     unamestr=`uname`
-    if [ "$unamestr" == 'Linux' ]; then
+    if [ "$unamestr" = 'Linux' ]; then
         NCPUS=`grep -c ^processor /proc/cpuinfo`
-    elif [ "$unamestr" == 'Darwin' ] || [ "$unamestr" == 'FreeBSD' ]; then
+    elif [ "$unamestr" = 'Darwin' ] || [ "$unamestr" = 'FreeBSD' ]; then
         NCPUS=`sysctl -n hw.ncpu`
     else
         NCPUS=1
@@ -36,7 +36,7 @@ cd ./BUILD
 cmake -DCMAKE_BUILD_TYPE="RELWITHDEBINFO" -DCMAKE_INSTALL_PREFIX='.' ..
 make -j"$NCPUS"
 
-if [ "$?" == 0 ] && [ ! "$NO_INSTALL" ]; then
+if [ "$?" = 0 ] && [ ! "$NO_INSTALL" ]; then
     make install
 fi;
 
