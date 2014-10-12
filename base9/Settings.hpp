@@ -15,6 +15,7 @@ class Settings
     void fromCLI (int, char **);
 
     bool noBinaries = false;
+    bool overrideBounds = false;
 
     uint32_t seed = std::numeric_limits<uint32_t>::max();
     unsigned int threads = std::numeric_limits<int>::max();

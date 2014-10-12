@@ -157,6 +157,28 @@ int MpiMcmcApplication::run()
     std::copy(settings.singlePopMcmc.stepSize.begin(), settings.singlePopMcmc.stepSize.end(), stepSize.begin());
     stepSize.at(LAMBDA) = settings.multiPopMcmc.lambdaStep;
 
+    if (settings.verbose)
+    {
+        cout << std::setprecision(3) << std::fixed;
+        cout << "Model boundaries are (" << evoModels.mainSequenceEvol->getMinAge()
+             << ", " << evoModels.mainSequenceEvol->getMaxAge() << ") log years." << endl;
+
+        cout << "Binaries are " << (settings.noBinaries ? "OFF" : "ON") << endl;
+    }
+
+    if (   settings.cluster.logClusAge < evoModels.mainSequenceEvol->getMinAge()
+        || settings.cluster.logClusAge > evoModels.mainSequenceEvol->getMaxAge())
+    {
+        if (! settings.overrideBounds)
+        {
+            cerr << "\n***Error: logClusAge is outside the model boundaries. Use the `--overrideBounds` flag if you really want this.\n[Exiting...]" << endl;
+
+            exit(-1);
+        }
+        else if (settings.verbose)
+            cout << "\n***Warning: logClusAge is outside the model boundaries. Continuing due to `--overrideBounds` flag." << endl;
+    }
+
     {
         // Read photometry and calculate fsLike
         vector<double> filterPriorMin;

@@ -2,6 +2,7 @@
 #define INVALIDMSMODEL_HPP
 
 #include <string>
+#include <numeric>
 #include <vector>
 
 #include "../MsRgbModel.hpp"
@@ -27,12 +28,12 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
 
     virtual double getMinAge() const
     {
-        throw InvalidModelError("Called getMinAge() in invalid MainSequence model");
+        return std::numeric_limits<double>::lowest();
     }
 
     virtual double getMaxAge() const
     {
-        throw InvalidModelError("Called getMaxAge() in invalid MainSequence model");
+        return std::numeric_limits<double>::max();
     }
 
   protected:
