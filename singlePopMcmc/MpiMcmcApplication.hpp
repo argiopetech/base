@@ -30,6 +30,7 @@ class MpiMcmcApplication
 
   private:
     void scaleStepSizes (std::array<double, NPARAMS> &, double);
+    void allocateSSEMem();
 
     double wdGridMass (int) const;
 
@@ -40,8 +41,12 @@ class MpiMcmcApplication
 
     Cluster clust;
     Cluster mainClust;
+
     std::vector<StellarSystem> msSystems;
+    std::vector<StellarSystem> msMainRun;
+
     std::vector<StellarSystem> wdSystems;
+    std::vector<StellarSystem> wdMainRun;
 
     double* sysVars = nullptr;
     double* sysVar2 = nullptr;

@@ -149,6 +149,61 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 }
 
 
+// Initialize SSE memory for noBinaries
+// THIS LEAKS MEMORY LIKE A SIEVE DUE TO FORGETTING TALLOC
+// But it's okay if we only call it once (until it gets moved to the constructor)
+void MpiMcmcApplication::allocateSSEMem()
+{
+    using aligned_m128 = std::aligned_storage<16, 16>::type;
+
+    if (! systems.empty())
+    {
+        // howManyFilts has to be a multiple of two to make the SSE code happy
+        // Add 1 and round down.
+        howManyFiltsAligned = ((systems.front().obsPhot.size() + 1) & ~0x1);
+        howManyFilts        = systems.front().obsPhot.size();
+        size_t howManyWeNeed       = systems.size() * howManyFiltsAligned;
+        size_t howManyWeAlloc      = howManyWeNeed / 2;
+
+        aligned_m128* talloc = new aligned_m128[howManyWeAlloc];
+        sysVars = new(talloc) double[howManyWeNeed];
+
+        talloc  = new aligned_m128[howManyWeAlloc];
+        sysVar2 = new(talloc) double[howManyWeNeed];
+
+        talloc = new aligned_m128[howManyWeAlloc];
+        sysObs = new(talloc) double[howManyWeNeed];
+
+    }
+
+    int i = 0;
+
+    for (auto s : systems)
+    {
+        for (size_t k = 0; k < howManyFiltsAligned; ++k, ++i)
+        {
+            if ((k < s.variance.size()) && (s.variance.at(k) > EPS))
+            {
+                sysVars[i] = s.variance.at(k) * clust.clustA.varScale;
+                sysVar2[i] = __builtin_log (TWO_M_PI * sysVars[i]);
+
+                // Removes a division from the noBinaries loop which turns a 14 cycle loop into a 3.8 cycle loop
+                sysVars[i] = 1 / sysVars[i];
+
+                sysObs [i] = s.obsPhot.at(k);
+            }
+            else
+            {
+                sysVars[i] = 0.0;
+                sysVar2[i] = 0.0;
+
+                sysObs [i] = 0.0;
+            }
+        }
+    }
+}
+
+
 int MpiMcmcApplication::run()
 {
     double fsLike;
@@ -202,7 +257,18 @@ int MpiMcmcApplication::run()
         for (auto r : ret.second)
         {
             if (r.observedStatus == StarStatus::MSRG)
-                systems.push_back(r);
+            {
+                // Everything goes into the main run
+                mainRunSystems.push_back(r);
+
+                if (r.useDuringBurnIn)
+                {
+                    // Only burnin things go into systems
+                    systems.push_back(r);
+                }
+
+                // systems must be overwritten before the main run
+            }
             else if (r.observedStatus == StarStatus::WD)
                 cerr << "Found unsupported WD in photometry... Continuing anyway." << endl;
             else
@@ -240,54 +306,8 @@ int MpiMcmcApplication::run()
         }
     }
 
-    // Initialize SSE memory for noBinaries
-    // THIS LEAKS MEMORY LIKE A SIEVE DUE TO FORGETTING TALLOC
-    // But it's okay if we only call it once (until it gets moved to the constructor)
-    {
-        using aligned_m128 = std::aligned_storage<16, 16>::type;
+    allocateSSEMem();
 
-        // howManyFilts has to be a multiple of two to make the SSE code happy
-        // Add 1 and round down.
-               howManyFiltsAligned = ((systems.front().obsPhot.size() + 1) & ~0x1);
-               howManyFilts        = systems.front().obsPhot.size();
-        size_t howManyWeNeed       = systems.size() * howManyFiltsAligned;
-        size_t howManyWeAlloc      = howManyWeNeed / 2;
-
-        aligned_m128* talloc = new aligned_m128[howManyWeAlloc];
-        sysVars = new(talloc) double[howManyWeNeed];
-
-        talloc  = new aligned_m128[howManyWeAlloc];
-        sysVar2 = new(talloc) double[howManyWeNeed];
-
-        talloc = new aligned_m128[howManyWeAlloc];
-        sysObs = new(talloc) double[howManyWeNeed];
-
-        int i = 0;
-
-        for (auto s : systems)
-        {
-            for (size_t k = 0; k < howManyFiltsAligned; ++k, ++i)
-            {
-                if ((k < s.variance.size()) && (s.variance.at(k) > EPS))
-                {
-                    sysVars[i] = s.variance.at(k) * clust.clustA.varScale;
-                    sysVar2[i] = __builtin_log (TWO_M_PI * sysVars[i]);
-
-                    // Removes a division from the noBinaries loop which turns a 14 cycle loop into a 3.8 cycle loop
-                    sysVars[i] = 1 / sysVars[i];
-
-                    sysObs [i] = s.obsPhot.at(k);
-                }
-                else
-                {
-                    sysVars[i] = 0.0;
-                    sysVar2[i] = 0.0;
-
-                    sysObs [i] = 0.0;
-                }
-            }
-        }
-    }
     // Begin initChain
     {
         for (auto system : systems)
@@ -415,6 +435,12 @@ int MpiMcmcApplication::run()
     }
 
     // Main run
+    // Overwrite the burnin photometry set with the entire photometry set
+    systems = mainRunSystems;
+
+    // Don't forget to repopulate the SSE memory
+    allocateSSEMem();
+
     std::ofstream resultFile(ctrl.clusterFilename);
     if (!resultFile)
     {
