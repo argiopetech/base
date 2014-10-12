@@ -6,8 +6,6 @@
 #include <sstream>
 #include <vector>
 
-#include <boost/format.hpp>
-
 #include "Cluster.hpp"
 #include "constants.hpp"
 #include "Isochrone.hpp"
@@ -233,10 +231,10 @@ void Application::run()
     {
         for (auto f : filters)
         {
-            fout << boost::format("%10s ") % f;
+            fout << base::utility::format << f << ' ';
         }
 
-        fout << boost::format("%10s") % "alpha";
+        fout << base::utility::format << "alpha";
 
         fout << '\n';
     }
@@ -274,10 +272,10 @@ void Application::run()
         {
             for (auto mag : eep.mags)
             {
-                fout << boost::format("%10.6f ") % mag;
+                fout << base::utility::format << mag << ' ';
             }
 
-            fout << boost::format("%10.6f") % alpha(s.logPost);
+            fout << base::utility::format << alpha(s.logPost);
 
             fout << '\n';
         }

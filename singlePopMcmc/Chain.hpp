@@ -8,6 +8,7 @@
 #include "Cluster.hpp"
 #include "Matrix.hpp"
 #include "McmcApplication.hpp"
+#include "Utility.hpp"
 
 using std::ostream;
 using std::cout;
@@ -81,10 +82,11 @@ class Chain : public McmcApplication
                 {
                     if (priorVar.at(p) > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        fout << boost::format("%10.6f ") % clust.getParam(p);
+                        fout << base::utility::format << clust.getParam(p) << ' ';
                     }
                 }
-                fout << boost::format("%10.6f") % logPostCurr << endl;
+
+                fout << base::utility::format << logPostCurr << endl;
             }
         }
     }
@@ -142,7 +144,7 @@ class Chain : public McmcApplication
         //     {
         //         if (priorVar.at(i) > EPSILON || i == YYA || i == YYB || i == LAMBDA)
         //         {
-        //             cout << boost::format("%10.6f") % params.at(i).at(k) << " ";
+        //             cout << base::utility::format("%10.6f") % params.at(i).at(k) << " ";
         //         }
         //     }
 
@@ -155,7 +157,7 @@ class Chain : public McmcApplication
         // {
         //     for (int j = 0; j < nParamsUsed; j++)
         //     {
-        //         cout << boost::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
+        //         cout << base::utility::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
         //     }
         //     cout << endl;
         // }

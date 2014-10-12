@@ -9,8 +9,6 @@
 #include <vector>
 #include <stdexcept>
 
-#include <boost/format.hpp>
-
 #include "Star.hpp"
 #include "densities.hpp"
 #include "Filters.hpp"

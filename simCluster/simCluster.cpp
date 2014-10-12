@@ -1,15 +1,13 @@
 #include <array>
+#include <chrono>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <string>
 #include <random>
 
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
 #include <cstring>
-#include <boost/format.hpp>
 
 #include "Cluster.hpp"
 #include "Model.hpp"
@@ -24,6 +22,9 @@ using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::fixed;
+using std::setprecision;
+using std::setw;
 using std::string;
 using std::unique_ptr;
 
@@ -134,8 +135,7 @@ int main (int argc, char *argv[])
     if (settings.mainSequence.msRgbModel == MsModel::OLD_DSED)
         minMass = 0.25;
 
-    strcpy (w_file, settings.files.output.c_str());
-    strcat (w_file, ".sim.out");
+    strcpy (w_file, (settings.files.output + ".sim.out").c_str());
     if ((w_ptr = fopen (w_file, "w")) == NULL)
     {
         cerr << "\nFile " << w_file << " was not available for writing - exiting" << endl;
@@ -294,14 +294,14 @@ int main (int argc, char *argv[])
         fprintf (w_ptr, "\n");
     }
 */
-    cout << "\n Properties for cluster:" << endl;
-    cout << boost::format(" logClusAge     = %6.3f") % theCluster.age << endl;
-    cout << boost::format(" [Fe/H]         = %5.2f") % theCluster.feh << endl;
-    cout << boost::format(" Y              = %5.2f") % theCluster.yyy << endl;
-    cout << boost::format(" modulus        = %5.2f") % theCluster.mod << endl;
-    cout << boost::format(" Av             = %5.2f") % theCluster.abs << endl;
-    cout << boost::format(" WDMassUp       = %4.1f") % theCluster.getM_wd_up() << endl;
-    cout << boost::format(" fractionBinary = %5.2f") % fractionBinary << endl;
+    cout << "\nProperties for cluster:" << endl;
+    cout << " logClusAge     = " << setw(6) << setprecision(3) << fixed << theCluster.age << endl;
+    cout << " [Fe/H]         = " << setw(5) << setprecision(2) << fixed << theCluster.feh << endl;
+    cout << " Y              = " << setw(5) << setprecision(2) << fixed << theCluster.yyy << endl;
+    cout << " modulus        = " << setw(5) << setprecision(2) << fixed << theCluster.mod << endl;
+    cout << " Av             = " << setw(5) << setprecision(2) << fixed << theCluster.abs << endl;
+    cout << " WDMassUp       = " << setw(4) << setprecision(1) << fixed << theCluster.getM_wd_up() << endl;
+    cout << " fractionBinary = " << setw(5) << setprecision(2) << fixed << fractionBinary << endl;
     
     cout << "Totals:" << endl;
     cout << " nSystems       = " << settings.simCluster.nStars << endl;

@@ -113,5 +113,13 @@ namespace base
             return std::make_pair(filterNames, systems);
         } // readPhotometry
 
+        // This sets up formatting suitable for either a string or a double in the default column output format
+        // This is the least efficient possible way of doing this, but output shouldn't be a bottlneck
+        std::ostream& format (std::ostream& out)
+        {
+            return out << std::setw(10) << std::fixed << std::setprecision(6);
+        }
+
+
     }
 }

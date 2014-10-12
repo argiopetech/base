@@ -5,8 +5,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/format.hpp>
-
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
@@ -15,6 +13,9 @@
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::fixed;
+using std::setprecision;
+using std::setw;
 using std::string;
 using std::unordered_map;
 using std::vector;
@@ -225,39 +226,47 @@ int main (int argc, char *argv[])
         exit (-1);
     }
 
-    //Output photometry header
-    fout << boost::format("%4s ") % "id";
+    // Output photometry header
+    // All floating point have decimal precision = 3
+    fout << setprecision(3) << fixed;
+
+    fout << setw(4) << "id" << ' ';
 
     for (auto f : filters)
-        fout << boost::format("%6s ") % f;
+        fout << setw(6) << f << ' ';
 
     for (auto f : filters)
-        fout << boost::format("%6s ") % ("sig" + f);
+        fout << setw(6) << ("sig" + f) << ' ';
 
-    fout << boost::format("%7s %9s %5s %7s %6s\n") % "mass1" % "massRatio" % "stage" % "Cmprior" % "useDBI";
+    fout << setw(7) <<     "mass1" << ' '
+         << setw(9) << "massRatio" << ' '
+         << setw(5) <<     "stage" << ' '
+         << setw(7) <<   "Cmprior" << ' '
+         << setw(6) <<    "useDBI" << ' '
+         << endl;
 
     for (size_t i = 0; i < systems.size(); ++i)
     {
         auto s = systems.at(i);
 
-        fout << boost::format("%4d ") % (i + 1);
+        fout << setw(4) << (i + 1) << ' ';
 
         for (auto f : s.obsPhot)
-            fout << boost::format("%6.3f ") % f;
+            fout << setw(6) << f
+                 << ' ';
 
         for (auto f : s.variance)
         {
-            fout << boost::format("%6.3f ") % (f < 0
-                                                 ? f
-                                                 : sqrt (f));
+            fout << setw(6) << (f < 0 ? f : sqrt (f))
+                 << ' ';
         }
 
-        fout << boost::format("%7.3f %9.3f %5d %7.3f %6d\n")
-            % s.primary.mass
-            % s.getMassRatio()
-            % s.observedStatus
-            % s.clustStarPriorDens
-            % 1;
+        fout << setw(7) << s.primary.mass       << ' '
+             << setw(9) << s.getMassRatio()     << ' '
+             << setw(5) << s.observedStatus     << ' '
+             << setw(7) << s.clustStarPriorDens << ' '
+             << setw(6) << 1
+             << endl;
     }
 
 

@@ -4,14 +4,13 @@
 #include <string>
 #include <vector>
 
-#include <boost/format.hpp>
-
 #include "Cluster.hpp"
 #include "constants.hpp"
 #include "Isochrone.hpp"
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
+#include "Utility.hpp"
 
 using std::cerr;
 using std::endl;
@@ -103,11 +102,11 @@ void Application::run()
 
     // Print file header
     {
-        fout << boost::format("%10s") % "Mass";
+        fout << base::utility::format << "Mass";
 
         for (auto f : filters)
         {
-            fout << boost::format(" %10s") % f;
+            fout << ' ' << base::utility::format << f;
         }
 
         fout << '\n';
@@ -115,11 +114,11 @@ void Application::run()
 
     for (auto eep : interpIsochrone.eeps)
     {
-        fout << boost::format("%10.6f") % eep.mass;
+        fout << base::utility::format << eep.mass;
 
         for (auto mag : eep.mags)
         {
-            fout << boost::format(" %10.6f") % mag;
+            fout << ' ' << base::utility::format << mag;
         }
 
         fout << '\n';

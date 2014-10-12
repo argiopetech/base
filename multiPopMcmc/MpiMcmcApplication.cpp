@@ -1,8 +1,6 @@
 #include <functional>
 #include <iostream>
 
-#include <boost/format.hpp>
-
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>

@@ -3,12 +3,14 @@
 
 #include <cassert>
 #include <condition_variable>
+#include <fstream>
 #include <functional>
+#include <ostream>
+#include <iomanip>
 #include <mutex>
 #include <queue>
 #include <thread>
 
-#include <fstream>
 
 #include "Settings.hpp"
 #include "Star.hpp"
@@ -135,6 +137,7 @@ namespace base
                 : std::runtime_error(what_arg) {}
         };
 
+        std::ostream& format (std::ostream&);
     }
 }
 

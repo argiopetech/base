@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/format.hpp>
-
 #include "Chain.hpp"
 
 #include "constants.hpp"
@@ -408,7 +406,7 @@ void Application::run()
 
         evoModels.restrictFilters(filterNames);
 
-        if (settings.cluster.index < 0 || settings.cluster.index > filterNames.size())
+        if (settings.cluster.index < 0 || static_cast<size_t>(settings.cluster.index) > filterNames.size())
         {
             cerr << "*** Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0 through " << filterNames.size() - 1 << " ***"<< endl;
             cerr << "(Exiting...)" << endl;
@@ -484,7 +482,7 @@ void Application::run()
 
         auto starSize = mc.stars.size();
 
-        for (decltype(starSize) i = 0; i < starSize; ++i)
+        for (size_t i = 0; i < starSize; ++i)
         {
             auto sampleTuple = sampleMass(mc.clust, evoModels, *isochrone, gen, mc.stars.at(i), dMass1, dMassRatio);
 
@@ -496,31 +494,31 @@ void Application::run()
             memberships.at(i) = mc.stars.at(i).clustStarPriorDens * postClusterStar / (mc.stars.at(i).clustStarPriorDens * postClusterStar + (1.0 - mc.stars.at(i).clustStarPriorDens) * fsLike);
         }
 
-        massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
-                       << boost::format("%10.6f") % sampledPars.at(m).FeH
-                       << boost::format("%10.6f") % sampledPars.at(m).modulus
-                       << boost::format("%10.6f") % sampledPars.at(m).absorption;
+        massSampleFile << base::utility::format << sampledPars.at(m).age
+                       << base::utility::format << sampledPars.at(m).feh
+                       << base::utility::format << sampledPars.at(m).distMod
+                       << base::utility::format << sampledPars.at(m).abs;
 
         if (evoModels.IFMR >= 4)
         {
-            massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrIntercept
-                           << boost::format("%10.6f") % sampledPars.at(m).ifmrSlope;
+            massSampleFile << base::utility::format << sampledPars.at(m).ifmrIntercept
+                           << base::utility::format << sampledPars.at(m).ifmrSlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrQuadCoef;
+            massSampleFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
         }
 
         for (auto mass : masses)
         {
-            massSampleFile << boost::format("%10.6f") % mass.first
-                           << boost::format("%10.6f") % mass.second;
+            massSampleFile << base::utility::format << mass.first
+                           << base::utility::format << mass.second;
         }
 
         for (auto membership : memberships)
         {
-            membershipFile << boost::format("%10.6f") % membership;
+            membershipFile << base::utility::format << membership;
         }
 
         massSampleFile << endl;

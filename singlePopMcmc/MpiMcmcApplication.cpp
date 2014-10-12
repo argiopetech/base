@@ -1,8 +1,6 @@
 #include <functional>
 #include <iostream>
 
-#include <boost/format.hpp>
-
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
@@ -149,6 +147,8 @@ int MpiMcmcApplication::run()
 {
     cout << "Bayesian Analysis of Stellar Evolution" << endl;
 
+    cout << std::boolalpha << settings.noBinaries << endl;
+
     double fsLike;
 
     array<double, NPARAMS> stepSize;
@@ -193,7 +193,7 @@ int MpiMcmcApplication::run()
 
         evoModels.restrictFilters(filterNames);
 
-        if (settings.cluster.index < 0 || settings.cluster.index > filterNames.size())
+        if (settings.cluster.index < 0 || static_cast<size_t>(settings.cluster.index) > filterNames.size())
         {
             cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
             cerr << "[Exiting...]" << endl;

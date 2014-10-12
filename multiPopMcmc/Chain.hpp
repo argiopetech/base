@@ -88,16 +88,16 @@ class Chain : public McmcApplication
                 {
                     if (priorVar.at(p) > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        fout << boost::format("%10.6f ") % clust.clustA.getParam(p);
+                        fout << base::utility::format << clust.clustA.getParam(p) << ' ';
                     }
                 }
 
-                fout << boost::format("%10.6f ") % clust.clustA.yyy
-                     << boost::format("%10.6f ") % clust.clustB.yyy
-                     << boost::format("%10.6f ") % clust.lambda;
+                fout << base::utility::format << clust.clustA.yyy << ' '
+                     << base::utility::format << clust.clustB.yyy << ' '
+                     << base::utility::format << clust.lambda << ' ';
 
 
-                fout << boost::format("%10.6f") % logPostCurr << endl;
+                fout << base::utility::format << logPostCurr << endl;
             }
         }
     }
@@ -155,7 +155,7 @@ class Chain : public McmcApplication
         //     {
         //         if (priorVar.at(i) > EPSILON || i == YYA || i == YYB || i == LAMBDA)
         //         {
-        //             cout << boost::format("%10.6f") % params.at(i).at(k) << " ";
+        //             cout << base::utility::format << params.at(i).at(k) << " ";
         //         }
         //     }
 
@@ -168,7 +168,7 @@ class Chain : public McmcApplication
         // {
         //     for (int j = 0; j < nParamsUsed; j++)
         //     {
-        //         cout << boost::format("%10.6f") % gsl_matrix_get (covMat, i, j) << " ";
+        //         cout << base::utility::format << gsl_matrix_get (covMat, i, j) << " ";
         //     }
         //     cout << endl;
         // }

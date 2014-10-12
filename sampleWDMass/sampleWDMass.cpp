@@ -5,8 +5,6 @@
 #include <random>
 #include <vector>
 
-#include <boost/format.hpp>
-
 #include "Chain.hpp"
 
 #include "constants.hpp"
@@ -503,26 +501,26 @@ int main (int argc, char *argv[])
             }
         }
 
-        massSampleFile << boost::format("%10.6f") % sampledPars.at(m).age
-                       << boost::format("%10.6f") % sampledPars.at(m).FeH
-                       << boost::format("%10.6f") % sampledPars.at(m).modulus
-                       << boost::format("%10.6f") % sampledPars.at(m).absorption;
+        massSampleFile << base::utility::format << sampledPars.at(m).age
+                       << base::utility::format << sampledPars.at(m).FeH
+                       << base::utility::format << sampledPars.at(m).modulus
+                       << base::utility::format << sampledPars.at(m).absorption;
 
         if (evoModels.IFMR >= 4)
         {
-            massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrIntercept
-                           << boost::format("%10.6f") % sampledPars.at(m).ifmrSlope;
+            massSampleFile << base::utility::format << sampledPars.at(m).ifmrIntercept
+                           << base::utility::format << sampledPars.at(m).ifmrSlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            massSampleFile << boost::format("%10.6f") % sampledPars.at(m).ifmrQuadCoef;
+            massSampleFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
         }
 
         for (size_t j = 0; j < wdMass.size(); j++)
         {
-            massSampleFile << boost::format("%10.6f") % wdMass.at(j);
-            membershipFile << boost::format("%10.6f") % clusMemPost.at(j);
+            massSampleFile << base::utility::format << wdMass.at(j);
+            membershipFile << base::utility::format << clusMemPost.at(j);
         }
 
         massSampleFile << endl;
