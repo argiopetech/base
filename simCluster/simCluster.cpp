@@ -307,7 +307,7 @@ int main (int argc, char *argv[])
     cout << " MSRGMassTotal  = " << MSRGMassTotal << endl;
     cout.precision(2);
     cout << " wdMassTotal    = " << wdMassTotal << endl;
-    cout << " nFieldStars    = " << settings.simCluster.nFieldStars * 2 << endl;;
+/*    cout << " nFieldStars    = " << settings.simCluster.nFieldStars * 2 << endl;;
 
 
     //////////////////////////////
@@ -375,7 +375,7 @@ int main (int argc, char *argv[])
 
         i++;
     }
-
+*/
     fclose (w_ptr);
 
     return (0);
