@@ -70,34 +70,28 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 {
     ctrl.priorVar.fill(0);
 
-    mainClust.clustA.feh = settings.cluster.starting.Fe_H;
-    mainClust.clustA.priorMean[FEH] = clust.clustA.feh = clust.clustA.priorMean[FEH] = settings.cluster.Fe_H;
+    clust.clustA.feh = clust.clustA.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    mainClust.clustA.mod = settings.cluster.starting.distMod;
-    mainClust.clustA.priorMean[MOD] = clust.clustA.mod = clust.clustA.priorMean[MOD] = settings.cluster.distMod;
+    clust.clustA.mod = clust.clustA.priorMean[MOD] = settings.cluster.distMod;
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    mainClust.clustA.abs = settings.cluster.starting.Av;
-    mainClust.clustA.priorMean[ABS] = clust.clustA.abs = clust.clustA.priorMean[ABS] = fabs(settings.cluster.Av);
+    clust.clustA.abs = clust.clustA.priorMean[ABS] = fabs(settings.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    mainClust.clustA.age = mainClust.clustA.priorMean[AGE] = clust.clustA.age = clust.clustA.priorMean[AGE] = settings.cluster.logClusAge;
+    clust.clustA.age = clust.clustA.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
-    mainClust.clustA.carbonicity = settings.cluster.starting.carbonicity;
-    mainClust.clustA.priorMean[CARBONICITY] = clust.clustA.carbonicity = clust.clustA.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+    clust.clustA.carbonicity = clust.clustA.priorMean[CARBONICITY] = settings.cluster.carbonicity;
     ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
 
-    mainClust.clustA.yyy = settings.cluster.starting.Y;
-    mainClust.clustA.priorMean[YYY] = clust.clustA.yyy = clust.clustA.priorMean[YYY] = settings.cluster.Y;
+    clust.clustA.yyy = clust.clustA.priorMean[YYY] = settings.cluster.Y;
     ctrl.priorVar[YYY] = 0.0;
 
 
     // No IFMR code
 
     clust.clustA.setM_wd_up(settings.whiteDwarf.M_wd_up);
-    mainClust.clustA.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     for (auto &var : ctrl.priorVar)
     {
@@ -112,15 +106,8 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     }
 
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.clustA.priorVar.begin());
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mainClust.clustA.priorVar.begin());
 
     clust.clustB = clust.clustA;
-    mainClust.clustB = mainClust.clustA;
-
-    // Multi-pop Y values
-    mainClust.clustA.yyy = clust.clustA.yyy = settings.multiPopMcmc.YA_start;
-    mainClust.clustB.yyy = clust.clustB.yyy = settings.multiPopMcmc.YB_start;
-    mainClust.lambda     = clust.lambda     = 0.5;
 
     /* read burnIter and nIter */
     {

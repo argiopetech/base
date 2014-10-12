@@ -52,7 +52,6 @@ class MpiMcmcApplication
     std::mt19937 gen;
 
     DualPopCluster clust;
-    DualPopCluster mainClust;
 
     std::vector<StellarSystem> systems;
     std::vector<StellarSystem> mainRunSystems;

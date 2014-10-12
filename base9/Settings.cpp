@@ -67,25 +67,20 @@ void Settings::fromYaml (const string yamlFile)
 
     cluster.Fe_H = getOrDie<double>(priorsNode, "Fe_H");
     cluster.sigma.Fe_H = getOrDie<double>(sigmasNode, "Fe_H");
-    cluster.starting.Fe_H = getOrDie<double>(startingNode, "Fe_H");
 
     cluster.distMod = getOrDie<double>(priorsNode, "distMod");
     cluster.sigma.distMod = getOrDie<double>(sigmasNode, "distMod");
-    cluster.starting.distMod = getOrDie<double>(startingNode, "distMod");
 
     cluster.Av = getOrDie<double>(priorsNode, "Av");
     cluster.sigma.Av = getOrDie<double>(sigmasNode, "Av");
-    cluster.starting.Av = getOrDie<double>(startingNode, "Av");
 
     cluster.Y = getOrDie<double>(priorsNode, "Y");
     cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
-    cluster.starting.Y = getOrDie<double>(startingNode, "Y");
 
 // We want to keep this around for the case where carbonicity changes
 // to something other than a uniform prior.
 //    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
     cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
-    cluster.starting.carbonicity = getOrDie<double>(startingNode, "carbonicity");
 
     cluster.logClusAge = getOrDie<double>(startingNode, "logClusAge");
 

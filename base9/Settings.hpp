@@ -97,7 +97,6 @@ class Settings
         double carbonicity;
 
         struct ClusterSigmas sigma;
-        struct ClusterSigmas starting;
 
         double logClusAge;
 

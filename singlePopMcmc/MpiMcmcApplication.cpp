@@ -46,27 +46,22 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 {
     ctrl.priorVar.fill(0);
 
-    mainClust.feh = settings.cluster.starting.Fe_H;
-    mainClust.priorMean[FEH] = clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
+    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
     ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
 
-    mainClust.mod = settings.cluster.starting.distMod;
-    mainClust.priorMean[MOD] = clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
+    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
     ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
 
-    mainClust.abs = settings.cluster.starting.Av;
-    mainClust.priorMean[ABS] = clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
+    clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    mainClust.age = mainClust.priorMean[AGE] = clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
+    clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
     ctrl.priorVar[AGE] = 1.0;
 
-    mainClust.carbonicity = settings.cluster.starting.carbonicity;
-    mainClust.priorMean[CARBONICITY] = clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
+    clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
     ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
 
-    mainClust.yyy = settings.cluster.starting.Y;
-    mainClust.priorMean[YYY] = clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
+    clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
     ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
 
 
@@ -90,16 +85,15 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     }
 
     /* set starting values for IFMR parameters */
-    mainClust.ifmrSlope = mainClust.priorMean[IFMR_SLOPE] =clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
-    mainClust.ifmrIntercept = mainClust.priorMean[IFMR_INTERCEPT] = clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
+    clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
+    clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
 
     if (evoModels.IFMR <= 10)
-        mainClust.ifmrQuadCoef = mainClust.priorMean[IFMR_QUADCOEF] = clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
-        mainClust.ifmrQuadCoef = mainClust.priorMean[IFMR_QUADCOEF] = clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
+        clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;
 
     clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
-    mainClust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     for (auto &var : ctrl.priorVar)
     {
@@ -139,7 +133,6 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     ctrl.clusterFilename = settings.files.output + ".res";
 
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), mainClust.priorVar.begin());
 }
 
 

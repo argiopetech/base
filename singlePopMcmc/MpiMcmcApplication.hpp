@@ -40,7 +40,6 @@ class MpiMcmcApplication
     std::mt19937 gen;
 
     Cluster clust;
-    Cluster mainClust;
 
     std::vector<StellarSystem> msSystems;
     std::vector<StellarSystem> msMainRun;
