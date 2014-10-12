@@ -10,6 +10,8 @@ using std::exception;
 
 int main (int argc, char *argv[])
 {
+    cout << "Bayesian Analysis of Stellar Evolution" << endl;
+
     Settings settings;
 
     // Setup settings

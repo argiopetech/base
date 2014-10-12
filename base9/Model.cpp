@@ -81,7 +81,8 @@ namespace internal
 
 const Model makeModel(const Settings &s)
 {
-    cout << "Reading models..." << std::flush;
+    if (s.verbose)
+        cout << "Reading models..." << std::flush;
 
     Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
                , internal::createWdCoolingModel(s.whiteDwarf.wdModel)
@@ -97,7 +98,8 @@ const Model makeModel(const Settings &s)
     model.WDcooling->loadModel(s.files.models);
     model.WDAtmosphere->loadModel(s.files.models);
 
-    cout << " Done.\n" << endl;
+    if (s.verbose)
+        cout << " Done.\n" << endl;
 
     return model;
 }

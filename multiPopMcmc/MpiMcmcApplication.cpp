@@ -151,8 +151,6 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
 int MpiMcmcApplication::run()
 {
-    cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
-
     double fsLike;
 
     array<double, NPARAMS> stepSize;
@@ -197,7 +195,7 @@ int MpiMcmcApplication::run()
 
         evoModels.restrictFilters(filterNames);
 
-        if (settings.cluster.index < 0 || settings.cluster.index > filterNames.size())
+        if (settings.cluster.index < 0 || static_cast<size_t>(settings.cluster.index) > filterNames.size())
         {
             cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
             cerr << "[Exiting...]" << endl;
@@ -302,17 +300,20 @@ int MpiMcmcApplication::run()
 
         // Stage 1 burnin
         {
-            cout << "\nRunning Stage 1 burnin..." << flush;
+            if ( settings.verbose )
+                cout << "\nRunning Stage 1 burnin..." << flush;
 
             auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
             burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
 
-            cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
+            if ( settings.verbose )
+                cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
 
             burninChain.reset(); // Reset the chain to forget this part of the burnin.
         }
 
-        cout << "\nRunning Stage 2 (adaptive) burnin..." << endl;
+        if ( settings.verbose )
+            cout << "\nRunning Stage 2 (adaptive) burnin..." << endl;
 
         // Run adaptive burnin (stage 2)
         // -----------------------------
@@ -360,20 +361,24 @@ int MpiMcmcApplication::run()
 
                 if (acceptedOne)
                 {
-                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.singlePopMcmc.adaptiveBigSteps << ")" << endl;
+                    if ( settings.verbose )
+                        cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.singlePopMcmc.adaptiveBigSteps << ")" << endl;
 
                     break;
                 }
                 else
                 {
-                    cout << "    Acceptance ratio: " << acceptanceRatio << ". Trying for trend." << endl;
+                    if ( settings.verbose )
+                        cout << "    Acceptance ratio: " << acceptanceRatio << ". Trying for trend." << endl;
                     acceptedOne = true;
                 }
             }
             else
             {
                 acceptedOne = false;
-                cout << "    Acceptance ratio: " << acceptanceRatio << ". Retrying." << endl;
+
+                if ( settings.verbose )
+                    cout << "    Acceptance ratio: " << acceptanceRatio << ". Retrying." << endl;
 
                 scaleStepSizes(stepSize, burninChain.acceptanceRatio()); // Adjust step sizes
             }
@@ -406,10 +411,13 @@ int MpiMcmcApplication::run()
             // Make sure and pull the covariance matrix before resetting the burninChain
             auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
 
-            cout << "\nStarting adaptive run... " << flush;
+            if ( settings.verbose )
+                cout << "\nStarting adaptive run... " << flush;
 
             mainChain.run(proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
-            cout << " Preliminary acceptanceRatio = " << mainChain.acceptanceRatio() << endl;
+
+            if ( settings.verbose )
+                cout << " Preliminary acceptanceRatio = " << mainChain.acceptanceRatio() << endl;
         }
 
         // Begin main run
@@ -421,7 +429,8 @@ int MpiMcmcApplication::run()
             mainChain.run(proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
         }
 
-        cout << "\nFinal acceptance ratio: " << mainChain.acceptanceRatio() << endl;
+        if ( settings.verbose )
+            cout << "\nFinal acceptance ratio: " << mainChain.acceptanceRatio() << endl;
 
         resultFile.close();
     }
