@@ -12,6 +12,7 @@
 #include "WdAtmosphereModel.hpp"
 #include "WdAtmosphereModels/InvalidAtmosphereModel.hpp"
 
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::shared_ptr;
@@ -20,8 +21,8 @@ using std::shared_ptr;
 class Model
 {
   public:
-    Model(shared_ptr<MsRgbModel> msRgbModel, shared_ptr<WdCoolingModel> wdCool, shared_ptr<WdAtmosphereModel> wdAtmos)
-        : mainSequenceEvol(msRgbModel), WDcooling(wdCool), WDAtmosphere(wdAtmos)
+    Model(shared_ptr<MsRgbModel> msRgbModel, shared_ptr<WdCoolingModel> wdCool, shared_ptr<WdAtmosphereModel> wdAtmos, bool verbose)
+        : mainSequenceEvol(msRgbModel), WDcooling(wdCool), WDAtmosphere(wdAtmos), verbose(verbose)
     {;}
 
     void restrictFilters(const std::vector<std::string> &filters)
@@ -34,7 +35,11 @@ class Model
         }
         catch (InvalidModelError &e)
         {
-            cout << "Couldn't find filter \"" << e.what() << "\" in selected MSRGB model" << endl;
+            if (verbose)
+            {
+                cerr << "\n***Warning: \"" << e.what() << "\" is not available in the selected MSRGB model\n"
+                     << "            This is non-fatal if you aren't using the MSRGB models" << endl;
+            }
             mainSequenceEvol.reset(new InvalidMsModel());
         }
 
@@ -44,7 +49,12 @@ class Model
         }
         catch (InvalidModelError &e)
         {
-            cout << "Couldn't find filter \"" << e.what() << "\" in selected WD Atmosphere model" << endl;
+            if (verbose)
+            {
+                cerr << "\n***Warning: \"" << e.what() << "\" is not available in the selected WD Atmosphere model\n"
+                     << "            This is non-fatal if you aren't using the WD models" << endl;
+            }
+
             WDAtmosphere.reset(new InvalidAtmosphereModel());
         }
     }
@@ -57,6 +67,9 @@ class Model
 
     int evoModel = 0;
     int IFMR = 0;
+
+  private:
+    bool verbose;
 };
 
 const Model makeModel(const Settings &);

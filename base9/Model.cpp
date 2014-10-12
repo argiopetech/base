@@ -86,7 +86,8 @@ const Model makeModel(const Settings &s)
 
     Model model( internal::createMsRgbModel(s.mainSequence.msRgbModel)
                , internal::createWdCoolingModel(s.whiteDwarf.wdModel)
-               , internal::createWdAtmosphereModel(WdAtmosphereModelSet::BERGERON));
+               , internal::createWdAtmosphereModel(WdAtmosphereModelSet::BERGERON)
+               , s.verbose);
 
 // !!! FIX ME !!!
 
