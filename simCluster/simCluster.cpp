@@ -122,14 +122,6 @@ int main (int argc, char *argv[])
 
     seed = settings.seed;
 
-    // verbose = settings.verbose;
-    // if (verbose < 0 || verbose > 2)
-    //     verbose = 1;            // give standard feedback if incorrectly specified
-
-    // !!! FIX ME !!!
-    cerr << "This may be broken. If we need field stars and are using the YALE models, we also have to load the DSED models." << endl;
-//    loadModels (theCluster, evoModels, settings);
-
     if (settings.mainSequence.msRgbModel == MsModel::YALE)
         minMass = 0.4;
     if (settings.mainSequence.msRgbModel == MsModel::OLD_DSED)
@@ -326,17 +318,6 @@ int main (int argc, char *argv[])
 
 //    theCluster.nStars = nFieldStars;
     tempMod = theCluster.mod;
-
-    {
-        // !!! FIX ME !!!
-        cerr << "Field stars are broken..." << endl;
-        exit(1);
-
-        if (settings.mainSequence.msRgbModel == MsModel::YALE)
-        {
-            ; //            evoModels.mainSequenceEvol = DSED;
-        }
-    }
 
     if ((settings.mainSequence.msRgbModel == MsModel::OLD_DSED) || (settings.mainSequence.msRgbModel == MsModel::YALE))
     {
