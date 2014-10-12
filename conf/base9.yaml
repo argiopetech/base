@@ -1,5 +1,5 @@
 general:
-    verbose:            0     # 0 is quiet, 1 is verbose, 2 is very verbose
+    verbose:            1     # 0 is quiet, 1 is verbose
 
     files: # This will change to "paths" in a future version
         photFile:       "hyades/Hyades.UBV.phot"
