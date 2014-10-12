@@ -212,12 +212,23 @@ int MpiMcmcApplication::run()
     {
         if (! settings.overrideBounds)
         {
-            cerr << "\n***Error: logClusAge is outside the model boundaries. Use the `--overrideBounds` flag if you really want this.\n[Exiting...]" << endl;
+            cerr << std::setprecision(3) << std::fixed
+                 << "\n***Error: Starting value \"logClusAge\" (" << settings.cluster.logClusAge
+                 << ") is outside the model boundaries (" << evoModels.mainSequenceEvol->getMinAge()
+                 << ", " << evoModels.mainSequenceEvol->getMaxAge()
+                 << ").\n   Use the `--overrideBounds` flag if you really want this.\n[Exiting...]"
+                 << endl;
 
             exit(-1);
         }
         else if (settings.verbose)
-            cout << "\n***Warning: logClusAge is outside the model boundaries. Continuing due to `--overrideBounds` flag." << endl;
+        {
+            cout << std::setprecision(3) << std::fixed
+                 << "\n***Warning: logClusAge (" << settings.cluster.logClusAge
+                 << ") is outside the model boundaries (" << evoModels.mainSequenceEvol->getMinAge()
+                 << ", " << evoModels.mainSequenceEvol->getMaxAge()
+                 << ").\n   Continuing due to `--overrideBounds` flag." << endl;
+        }
     }
 
     {
@@ -269,8 +280,6 @@ int MpiMcmcApplication::run()
                 cerr << "Found unsupported star in photometry, type '" << r.observedStatus << "'... Continuing anyway." << endl;
         }
 
-        cout << msMainRun.size() << ' ' << msSystems.size() << endl;
-
         if ( msSystems.empty() && wdSystems.empty())
         {
             cerr << "No stars loaded... Exiting." << endl;
@@ -282,7 +291,7 @@ int MpiMcmcApplication::run()
 
         if (settings.cluster.index < 0 || static_cast<size_t>(settings.cluster.index) > filterNames.size())
         {
-            cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0, 1,or 2.***" << endl;
+            cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index." << endl;
             cerr << "[Exiting...]" << endl;
             exit (1);
         }
