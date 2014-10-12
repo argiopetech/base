@@ -96,8 +96,8 @@ void Application::run()
 
     if (!fout)
     {
-        cerr << "***Error: Photometry file " << filename << " was not found.***" << endl;
-        cerr << "[Exiting...]" << endl;
+        cerr << "*** Error: Output file " << filename << " could not be opened.***" << endl;
+        cerr << "*** [Exiting...]" << endl;
         exit (1);
     }
 
