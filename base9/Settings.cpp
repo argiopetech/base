@@ -157,7 +157,7 @@ void Settings::fromYaml (const string yamlFile)
 
 void Settings::fromCLI (int argc, char **argv)
 {
-    int i_noBinaries;
+    int i_noBinaries = 0; // Has to be set false
     char **t_argv = new char*[argc];
 
     for (int i = 0; i<argc; i++)
