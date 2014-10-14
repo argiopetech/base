@@ -261,7 +261,7 @@ static double mirror(double var)
     {
         var = 1.0 - (var - 1.0);
 
-        return var;
+        return mirror(var);
     }
     else if (var < 0.0)
     {
@@ -303,6 +303,9 @@ StellarSystem proposeCorrelated (std::mt19937 &gen, Matrix<double, 2, 2> const &
 
     s.primary.mass += propMatrix.at(0).at(0) * tDraws[0];
 
+    if (s.primary.mass < 0)
+        s.primary.mass = -s.primary.mass;
+
     {
         double corrProps = 0;
 
@@ -311,7 +314,7 @@ StellarSystem proposeCorrelated (std::mt19937 &gen, Matrix<double, 2, 2> const &
             corrProps += propMatrix.at(1).at(k) * tDraws[k];
         }
 
-        s.setMassRatio(s.getMassRatio() + corrProps);
+        s.setMassRatio(mirror(s.getMassRatio() + corrProps));
     }
 
     return s;
@@ -342,8 +345,8 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
         star.setMassRatio(tRat);
     }
 
-    const int iters = 10000;
-    const int burnIters = 1000;
+    const int iters = 4000;
+    const int burnIters = 300;
 
     std::ofstream nullstream;
 
@@ -363,14 +366,19 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
     burnin.run(burninProposal, logPost, priorCheck, burnIters);
 
     // Then do the main run
+    // First, an abbreviated run to get a second covariance matrix
     std::function<StellarSystem(StellarSystem)> mainProposal =
         std::bind(&proposeCorrelated, gen, burnin.makeCholeskyDecomp(), _1);
 
     Chain<StellarSystem> main(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), burnin.get(), nullstream);
+    main.run(mainProposal, logPost, priorCheck, burnIters);
+
+    // Then a secondary covariance matrix
+    mainProposal = std::bind(&proposeCorrelated, gen, main.makeCholeskyDecomp(), _1);
     main.run(mainProposal, logPost, priorCheck, iters);
 
     auto finalStar = main.get();
-    double acceptedPosterior = finalStar.logPost(clust, evoModels, isochrone);
+    double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
 
     return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
 }
@@ -380,8 +388,6 @@ void Application::run()
 {
     double fsLike;
 
-    vector<std::pair<double, double>> masses;
-    vector<double> memberships;
     vector<StellarSystem> stars;
 
     {
@@ -427,9 +433,6 @@ void Application::run()
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
 
-    masses.resize(stars.size());
-    memberships.resize(stars.size());
-
     // Open the file
     string filename = settings.files.output + ".massSamples";
 
@@ -455,6 +458,9 @@ void Application::run()
 
     for (size_t m = 0; m < sampledPars.size(); m++)
     {
+        vector<std::pair<double, double>> masses;
+        vector<double> memberships;
+
         clust.age = sampledPars.at(m).age;
         clust.feh = sampledPars.at(m).feh;
         clust.mod = sampledPars.at(m).distMod;
@@ -476,18 +482,16 @@ void Application::run()
         /************ sample WD masses for different parameters ************/
         unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(clust.feh, clust.yyy, clust.age));
 
-        auto starSize = stars.size();
-
-        for (size_t i = 0; i < starSize; ++i)
+        for (auto star : stars)
         {
-            auto sampleTuple = sampleMass(*isochrone, stars.at(i));
+            auto sampleTuple = sampleMass(*isochrone, star);
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (clust.getM_wd_up() - 0.15);
 
-            masses.at(i) = std::pair<double, double>(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
+            masses.emplace_back(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
 
-            memberships.at(i) = stars.at(i).clustStarPriorDens * postClusterStar / (stars.at(i).clustStarPriorDens * postClusterStar + (1.0 - stars.at(i).clustStarPriorDens) * fsLike);
+            memberships.emplace_back(star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike));
         }
 
         // massSampleFile << base::utility::format << sampledPars.at(m).age

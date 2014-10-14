@@ -80,14 +80,13 @@ class Chain : public McmcApplication
     Matrix<double, 2, 2> makeCholeskyDecomp() const
     {
         double cov;
-        int nParamsUsed = 0;
 
         Matrix<double, 2, 2> propMatrix;
 
         /* compute Cholesky decomposition of covariance matrix */
         gsl_matrix *covMat = gsl_matrix_alloc (2, 2);
 
-        double cholScale = 1000;    /* for numerical stability */
+        const double cholScale = 1000;    /* for numerical stability */
 
         {
             cov = gsl_stats_covariance (params.at(0).data(), 1, params.at(0).data(), 1, params.at(0).size());
@@ -111,7 +110,7 @@ class Chain : public McmcApplication
         /* compute proposal matrix from Cholesky factor */
 
         /* Gelman, Roberts, Gilks scale */
-        double GRGscale = 2.38 / sqrt(nParamsUsed);
+        double GRGscale = 2.38 / sqrt(2);
 
         for (int i = 0; i < 2; i++)
         {
