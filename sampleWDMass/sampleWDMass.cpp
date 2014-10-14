@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <random>
+#include <sstream>
 #include <vector>
 
 #include "Chain.hpp"
@@ -17,6 +18,7 @@
 using std::array;
 using std::string;
 using std::istringstream;
+using std::stringstream;
 using std::vector;
 using std::cerr;
 using std::cout;
@@ -44,25 +46,28 @@ struct ifmrGridControl
     double maxMag;
     int iStart;
     int modelSet;
-    int nSamples;
     array<double, NPARAMS> start; /* starting points for grid evaluations */
     array<double, NPARAMS> end;   /* end points for grid evaluations */
 };
 
+
 /* For posterior evaluation on a grid */
 struct clustPar
 {
-    clustPar(double age, double feh, double modulus, double absorption, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef)
-        : age(age), FeH(feh), modulus(modulus), absorption(absorption), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef)
+    clustPar(double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
+        : age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
     {}
 
     double age;
-    double FeH;
-    double modulus;
-    double absorption;
+    double y;
+    double feh;
+    double distMod;
+    double abs;
+    double carbonicity;
     double ifmrIntercept;
     double ifmrSlope;
     double ifmrQuadCoef;
+    double logPost;
 };
 
 /* Used in densities.c. */
@@ -122,6 +127,33 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     else
         ctrl->priorVar.at(IFMR_QUADCOEF) = 0.0;
 
+    ctrl->priorMean.at(YYY) = settings.cluster.Y;
+    ctrl->priorVar.at(YYY) = settings.cluster.sigma.Y;
+    if (ctrl->priorVar.at(YYY) < 0.0)
+    {
+        ctrl->priorVar.at(YYY) = 0.0;
+    }
+
+    ctrl->priorMean.at(CARBONICITY) = settings.cluster.carbonicity;
+    ctrl->priorVar.at(CARBONICITY) = settings.cluster.sigma.carbonicity;
+    if (ctrl->priorVar.at(CARBONICITY) < 0.0)
+    {
+        ctrl->priorVar.at(CARBONICITY) = 0.0;
+    }
+
+
+    for (auto &var : ctrl->priorVar)
+    {
+        if (var < 0.0)
+        {
+            var = 0.0;
+        }
+        else
+        {
+            var = var * var;
+        }
+    }
+
     // copy values to global variables
     priorVar.at(AGE) = ctrl->priorVar.at(AGE);
     priorVar.at(FEH) = ctrl->priorVar.at(FEH);
@@ -143,22 +175,6 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     priorMean.at(IFMR_INTERCEPT) = ctrl->priorMean.at(IFMR_INTERCEPT);
     priorMean.at(IFMR_QUADCOEF) = ctrl->priorMean.at(IFMR_QUADCOEF);
 
-    /* open model file, choose model set, and load models */
-
-    if (s.mainSequence.msRgbModel == MsModel::CHABHELIUM)
-    {
-        scanf ("%lf %lf", &ctrl->priorMean.at(YYY), &ctrl->priorVar.at(YYY));
-
-        if (ctrl->priorVar.at(YYY) < 0.0)
-        {
-            ctrl->priorVar.at(YYY) = 0.0;
-        }
-    }
-    else
-    {
-        ctrl->priorMean.at(YYY) = 0.0;
-        ctrl->priorVar.at(YYY) = 0.0;
-    }
     priorVar.at(YYY) = ctrl->priorVar.at(YYY);
     priorMean.at(YYY) = ctrl->priorMean.at(YYY);
 
@@ -175,53 +191,97 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 /*
  * Read sampled params
  */
-static void readSampledParams (struct ifmrGridControl *ctrl, vector<clustPar> &sampledPars, Model &evoModels)
+static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 {
     string line;
-    std::ifstream parsFile;
-    parsFile.open(settings.files.output + ".res");
 
-    if (!parsFile)
+    vector<clustPar> sampledPars;
+
+    std::ifstream parsFile;
+    parsFile.open(s.files.output + ".res");
+
+    bool hasY, hasCarbonicity;
+
+    getline(parsFile, line); // Parse header
+
     {
-        cerr << "*** Error: " << settings.files.output << ".res not found." << endl;
-        cerr << "(Exiting...)" << endl;
-        exit (1);
+        string sin;
+        stringstream in(line);
+
+        in >> sin  // logAge
+           >> sin; // Y?
+
+        if (sin == "Y")
+        {
+            hasY = true;
+
+            in >> sin  // FeH
+               >> sin  // Abs
+               >> sin  // DistMod
+               >> sin; // Carbonicity?
+
+            if (sin == "Carbonicity")
+                hasCarbonicity = true;
+            else
+                hasCarbonicity = false;
+        }
+        else
+        {
+            hasY = false;
+
+            // This one skips FeH (because it was already read instead of Y)
+            in >> sin  // Abs
+               >> sin  // DistMod
+               >> sin; // Carbonicity?
+
+            if (sin == "Carbonicity")
+                hasCarbonicity = true;
+            else
+                hasCarbonicity = false;
+        }
     }
 
-    getline(parsFile, line); // Eat the header
-
-    while (!parsFile.eof())
+    while (getline(parsFile, line))
     {
-        double newAge, newFeh, newMod, newAbs, newIInter, newISlope, newIQuad, ignore;
-        newAge = newFeh = newMod = newAbs = newIInter = newISlope = newIQuad = 0.0;
+        stringstream in(line);
 
-        parsFile >> newAge
-                 >> newFeh
-                 >> newMod
-                 >> newAbs;
+        double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
+
+        in >> newAge;
+
+        if (hasY)
+            in >> newY;
+        else
+            newY = s.cluster.Y;
+
+        in >> newFeh
+           >> newMod
+           >> newAbs;
+
+        if (hasCarbonicity)
+            in >> newCarbonicity;
+        else
+            newCarbonicity = s.cluster.carbonicity;
 
         if (evoModels.IFMR >= 4)
         {
-            parsFile >> newIInter
-                     >> newISlope;
+            in >> newIInter
+               >> newISlope;
         }
 
         if (evoModels.IFMR >= 9)
         {
-            parsFile >> newIQuad;
+            in >> newIQuad;
         }
 
-        parsFile >> ignore; // logPost
+        in >> newLogPost;
 
-        if (!parsFile.eof())
-        {
-            sampledPars.emplace_back(newAge, newFeh, newMod, newAbs, newIInter, newISlope, newIQuad);
-        }
+        sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
     }
 
     parsFile.close();
 
-    ctrl->nSamples = sampledPars.size();
+    return sampledPars;
 }
 
 
@@ -276,8 +336,6 @@ int main (int argc, char *argv[])
     struct ifmrGridControl ctrl;
 
     double fsLike;
-
-    vector<clustPar> sampledPars;
 
     settings.fromCLI (argc, argv);
     if (!settings.files.config.empty())
@@ -359,7 +417,7 @@ int main (int argc, char *argv[])
 
     initChain (&mc, &ctrl);
 
-    readSampledParams (&ctrl, sampledPars, evoModels);
+    auto sampledPars = readSampledParams (evoModels, settings);
     cout << "sampledPars.at(0).age    = " << sampledPars.at(0).age << endl;
     cout << "sampledPars.at(last).age = " << sampledPars.back().age << endl;
 
@@ -393,14 +451,14 @@ int main (int argc, char *argv[])
     }
     
     std::vector<double> us;
-    us.resize(ctrl.nSamples + 1);
+    us.resize(sampledPars.size() + 1);
 
     for (auto &u : us)
     {
         u = std::generate_canonical<double, 53>(gen);
     }
 
-    for (int m = 0; m < ctrl.nSamples; ++m)
+    for (int m = 0; m < sampledPars.size(); ++m)
     {
         Cluster internalCluster(mc.clust);
         std::vector<double> wdMass, clusMemPost;
@@ -409,9 +467,9 @@ int main (int argc, char *argv[])
         wdLogPost.resize(nWDLogPosts + 1);
 
         internalCluster.age = sampledPars.at(m).age;
-        internalCluster.feh = sampledPars.at(m).FeH;
-        internalCluster.mod = sampledPars.at(m).modulus;
-        internalCluster.abs = sampledPars.at(m).absorption;
+        internalCluster.feh = sampledPars.at(m).feh;
+        internalCluster.mod = sampledPars.at(m).distMod;
+        internalCluster.abs = sampledPars.at(m).abs;
 
         if (evoModels.IFMR >= 4)
         {
@@ -501,21 +559,21 @@ int main (int argc, char *argv[])
             }
         }
 
-        massSampleFile << base::utility::format << sampledPars.at(m).age
-                       << base::utility::format << sampledPars.at(m).FeH
-                       << base::utility::format << sampledPars.at(m).modulus
-                       << base::utility::format << sampledPars.at(m).absorption;
+        // massSampleFile << base::utility::format << sampledPars.at(m).age
+        //                << base::utility::format << sampledPars.at(m).feh
+        //                << base::utility::format << sampledPars.at(m).distMod
+        //                << base::utility::format << sampledPars.at(m).abs;
 
-        if (evoModels.IFMR >= 4)
-        {
-            massSampleFile << base::utility::format << sampledPars.at(m).ifmrIntercept
-                           << base::utility::format << sampledPars.at(m).ifmrSlope;
-        }
+        // if (evoModels.IFMR >= 4)
+        // {
+        //     massSampleFile << base::utility::format << sampledPars.at(m).ifmrIntercept
+        //                    << base::utility::format << sampledPars.at(m).ifmrSlope;
+        // }
 
-        if (evoModels.IFMR >= 9)
-        {
-            massSampleFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
-        }
+        // if (evoModels.IFMR >= 9)
+        // {
+        //     massSampleFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
+        // }
 
         for (size_t j = 0; j < wdMass.size(); j++)
         {
