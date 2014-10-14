@@ -396,7 +396,8 @@ int main (int argc, char *argv[])
 
         evoModels.restrictFilters(filterNames);
 
-        if (settings.cluster.index < 0 || settings.cluster.index > filterNames.size())
+        if (   settings.cluster.index < 0
+            || static_cast<size_t>(settings.cluster.index) > filterNames.size())
         {
             cerr << "*** Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0 through " << filterNames.size() - 1 << " ***"<< endl;
             cerr << "(Exiting...)" << endl;
@@ -458,7 +459,7 @@ int main (int argc, char *argv[])
         u = std::generate_canonical<double, 53>(gen);
     }
 
-    for (int m = 0; m < sampledPars.size(); ++m)
+    for (size_t m = 0; m < sampledPars.size(); ++m)
     {
         Cluster internalCluster(mc.clust);
         std::vector<double> wdMass, clusMemPost;
