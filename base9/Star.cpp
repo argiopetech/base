@@ -154,7 +154,10 @@ double Star::getLtau(const Cluster &clust, const Model &evoModels) const
 
 double StellarSystem::getMassRatio() const
 {
-    return secondary.mass / primary.mass;
+    if (primary.mass == 0.0)
+        return 0;
+    else
+        return secondary.mass / primary.mass;
 }
 
 void StellarSystem::setMassRatio(double r)
