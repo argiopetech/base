@@ -24,7 +24,7 @@ check_function_exists (pow HAS_POW)
 ######################
 set (Base9_VERSION_MAJOR 9)
 set (Base9_VERSION_MINOR 4)
-set (Base9_VERSION_PATCH 1)
+set (Base9_VERSION_PATCH 2)
 
 option (USE_TESTS "Enable testing" OFF) 
 
