@@ -70,7 +70,7 @@ double Cluster::logPrior (const Model &evoModels) const
 
         // if IFMR is decreasing at either endpoint, reject
         if (slopeLower < 0.0 || slopeUpper < 0.0)
-            throw std::range_error("IFMR decreasing at endpoint");
+            throw InvalidCluster("IFMR decreasing at endpoint");
     }
 
     double prior = 0.0;
