@@ -78,7 +78,7 @@ void BergeronAtmosphereModel::loadModel (std::string path)
                     in >> teff
                        >> ignore >> ignore >> ignore;
 
-                    for (int f = 0; f < 13; ++f) // Read all filters
+                    for (auto f : availableFilters) // Read all filters
                     {
                         double tmp;
                         in >> tmp;
