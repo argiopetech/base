@@ -8,8 +8,6 @@ using std::exception;
 
 int main (int argc, char *argv[])
 {
-    cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
-
     Settings settings;
 
     // Setup settings
@@ -25,23 +23,33 @@ int main (int argc, char *argv[])
 
     settings.fromCLI (argc, argv);
 
-    if (settings.seed == std::numeric_limits<uint32_t>::max())
+    if (settings.development)
     {
-        srand(std::time(0));
-        settings.seed = rand();
+        cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
 
-        cout << "Seed: " << settings.seed << endl;
+        if (settings.seed == std::numeric_limits<uint32_t>::max())
+        {
+            srand(std::time(0));
+            settings.seed = rand();
+
+            cout << "Seed: " << settings.seed << endl;
+        }
+
+        MpiMcmcApplication master(settings);
+
+        try
+        {
+            return master.run();
+        }
+        catch (exception &e)
+        {
+            cerr << "\nException: " << e.what() << endl;
+            return -1;
+        }
     }
-
-    MpiMcmcApplication master(settings);
-
-    try
+    else
     {
-        return master.run();
-    }
-    catch (exception &e)
-    {
-        cerr << "\nException: " << e.what() << endl;
+        cerr << "multiPropMcmc is still under development\n";
         return -1;
     }
 }

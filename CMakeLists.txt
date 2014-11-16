@@ -32,7 +32,8 @@ if (USE_TESTS)
   enable_testing()
 endif()
 
-option (USE_TCMALLOC "Enable linking to tcmalloc" OFF) 
+option (USE_TCMALLOC "Enable linking to tcmalloc" OFF)
+option (USE_MULTIPOP "Enable multiPopMcmc" OFF)
 
 ##########################
 # Set up the config file #
@@ -122,10 +123,13 @@ add_subdirectory(base9)
 
 # Applications
 add_subdirectory(singlePopMcmc)
-add_subdirectory(multiPopMcmc)
 add_subdirectory(makeCMD)
 #add_subdirectory(makeIsochrone)
 add_subdirectory(sampleMass)
 add_subdirectory(sampleWDMass)
 add_subdirectory(scatterCluster)
 add_subdirectory(simCluster)
+
+if (USE_MULTIPOP)
+  add_subdirectory(multiPopMcmc)
+endif()

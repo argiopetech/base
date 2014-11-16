@@ -17,6 +17,8 @@ class Settings
     bool noBinaries = false;
     bool overrideBounds = false;
 
+    bool development = false;
+
     uint32_t seed = std::numeric_limits<uint32_t>::max();
     unsigned int threads = std::numeric_limits<int>::max();
 

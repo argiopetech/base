@@ -154,6 +154,7 @@ void Settings::fromCLI (int argc, char **argv)
 {
     int i_noBinaries = 0; // Has to be set false
     int i_overrideBounds = 0; // Has to be set false
+    int i_development = 0; // Has to be set false
 
     char **t_argv = new char*[argc];
 
@@ -169,6 +170,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"verbose", no_argument, &(verbose), 1},
         {"noBinaries", no_argument, &(i_noBinaries), 1},
         {"overrideBounds", no_argument, &(i_overrideBounds), 1},
+        {"development", no_argument, &(i_development), 1},
 
         // These all have to be parsed
         {"msRgbModel", required_argument, 0, 0xFE},
@@ -428,6 +430,7 @@ void Settings::fromCLI (int argc, char **argv)
 
     noBinaries = i_noBinaries;
     overrideBounds = i_overrideBounds;
+    development = i_development;
 
     // Print any remaining command line arguments (not options). This is mainly for debugging purposes.
     if (optind < argc)
