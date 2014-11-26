@@ -23,42 +23,25 @@ class Application
 {
   public:
     Application(Settings s)
-        :  evoModels(makeModel(s)), settings(s)
+        :  evoModels(makeModel(s)), wdEvoModels(makeModel(s)), settings(s)
     {}
 
     ~Application()
     {}
 
     void run();
-    Isochrone interpolateIsochrone(const Cluster&, const Isochrone&);
+    std::pair<Isochrone, Isochrone> interpolateIsochrone(const Cluster&, const Isochrone&);
 
   private:
     Model evoModels;
+    Model wdEvoModels;
+
     const Settings settings;
 };
 
 
 void Application::run()
 {
-    vector<string> filters = evoModels.mainSequenceEvol->getAvailableFilters();
-
-    for (size_t f = 0; f < filters.size(); ++f)
-    {
-        try
-        {
-            Filters::absCoeffs.at(filters.at(f));
-        }
-        catch(std::out_of_range &e)
-        {
-            filters.erase(filters.begin() + f);
-
-            if (f > 0)
-                f -= 1;
-        }
-    }
-
-    evoModels.restrictFilters(filters);
-
     Cluster clust;
 
     // Standard cluster parameters
@@ -83,54 +66,148 @@ void Application::run()
 
     clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
 
+    // Now setup the filters for MS and WDs
+    {
+        vector<string> msFilters = evoModels.mainSequenceEvol->getAvailableFilters();
+        vector<string> filters;
+
+        for (auto f : msFilters)
+        {
+            try
+            {
+                Filters::absCoeffs.at(f);
+
+                filters.push_back(f);
+            }
+            catch(std::out_of_range &e)
+            {}
+        }
+
+        evoModels.restrictFilters(filters);
+    }
+
+    {
+        vector<string> msFilters = wdEvoModels.mainSequenceEvol->getAvailableFilters();
+        vector<string> wdFilters = wdEvoModels.WDAtmosphere->getAvailableFilters();
+
+        vector<string> filters;
+
+        for ( auto m : msFilters )
+        {
+            for ( auto w : wdFilters )
+            {
+                if (m == w)
+                {
+                    try
+                    {
+                        // Throws if not available
+                        Filters::absCoeffs.at(m);
+
+                        // If we make it to this point, push
+                        // This reminds me distinctly of goto...
+                        filters.push_back(m);
+                    }
+                    catch(std::out_of_range &e)
+                    {}
+
+                    break;
+                }
+            }
+        }
+
+        wdEvoModels.restrictFilters(filters);
+    }
+
     // Set Cluster's AGBT_zmass based on the model's agbTipMass
     unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(clust.feh, clust.yyy, clust.age));
 
     // Interpolate a new isochrone at 0.01M_0 steps
     auto interpIsochrone = interpolateIsochrone(clust, *isochrone);
 
-    string filename = settings.files.output + ".cmd";
-
-    ofstream fout(filename);
-
-    if (!fout)
     {
-        cerr << "*** Error: Output file " << filename << " could not be opened.***" << endl;
-        cerr << "*** [Exiting...]" << endl;
-        exit (1);
-    }
+        string filename = settings.files.output + ".ms.cmd";
 
-    // Print file header
-    {
-        fout << base::utility::format << "Mass";
+        ofstream fout(filename);
 
-        for (auto f : filters)
+        if (!fout)
         {
-            fout << ' ' << base::utility::format << f;
+            cerr << "*** Error: Output file " << filename << " could not be opened.***" << endl;
+            cerr << "*** [Exiting...]" << endl;
+            exit (1);
         }
 
-        fout << '\n';
-    }
-
-    for (auto eep : interpIsochrone.eeps)
-    {
-        fout << base::utility::format << eep.mass;
-
-        for (auto mag : eep.mags)
+        // Print file header
         {
-            fout << ' ' << base::utility::format << mag;
+            fout << base::utility::format << "Mass";
+
+            for (auto f : evoModels.mainSequenceEvol->getAvailableFilters())
+            {
+                fout << ' ' << base::utility::format << f;
+            }
+
+            fout << '\n';
         }
 
-        fout << '\n';
+        for (auto eep : interpIsochrone.first.eeps)
+        {
+            fout << base::utility::format << eep.mass;
+
+            for (auto mag : eep.mags)
+            {
+                fout << ' ' << base::utility::format << mag;
+            }
+
+            fout << '\n';
+        }
+
+        fout.close();
     }
 
-    fout.close();
+    {
+        string filename = settings.files.output + ".wd.cmd";
+
+        ofstream fout(filename);
+
+        if (!fout)
+        {
+            cerr << "*** Error: Output file " << filename << " could not be opened.***" << endl;
+            cerr << "*** [Exiting...]" << endl;
+            exit (1);
+        }
+
+        // Print file header
+        {
+            fout << base::utility::format << "Mass";
+
+            for (auto f : wdEvoModels.WDAtmosphere->getAvailableFilters())
+            {
+                fout << ' ' << base::utility::format << f;
+            }
+
+            fout << '\n';
+        }
+
+        for (auto eep : interpIsochrone.second.eeps)
+        {
+            fout << base::utility::format << eep.mass;
+
+            for (auto mag : eep.mags)
+            {
+                fout << ' ' << base::utility::format << mag;
+            }
+
+            fout << '\n';
+        }
+
+        fout.close();
+    }
 }
 
 
-Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochrone &isochrone)
+std::pair<Isochrone, Isochrone> Application::interpolateIsochrone(const Cluster &clust, const Isochrone &isochrone)
 {
     vector<EvolutionaryPoint> eeps;
+    vector<EvolutionaryPoint> wdEeps;
 
     for ( size_t e = 0; e < isochrone.eeps.size() - 1; ++e)
     {
@@ -148,7 +225,21 @@ Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochron
         }
     }
 
-    return {clust.age, eeps};
+    const double wdDelta = 0.01;
+    double mass = isochrone.eeps.back().mass + wdDelta;
+
+    while ( mass < clust.getM_wd_up() )
+    {
+        StellarSystem star;
+        star.primary.mass   = mass;
+        star.secondary.mass = 0.0;
+
+        wdEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone));
+
+        mass += wdDelta;
+    }
+
+    return {{clust.age, eeps}, {clust.age, wdEeps}};
 
 }
 
