@@ -10,46 +10,47 @@ int main (int argc, char *argv[])
 {
     Settings settings;
 
-    // Setup settings
-    settings.fromCLI (argc, argv);
-    if (!settings.files.config.empty())
+    try
     {
-        settings.fromYaml (settings.files.config);
-    }
-    else
-    {
-        settings.fromYaml ("base9.yaml");
-    }
-
-    settings.fromCLI (argc, argv);
-
-    if (settings.development)
-    {
-        cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
-
-        if (settings.seed == std::numeric_limits<uint32_t>::max())
+        // Setup settings
+        settings.fromCLI (argc, argv);
+        if (!settings.files.config.empty())
         {
-            srand(std::time(0));
-            settings.seed = rand();
-
-            cout << "Seed: " << settings.seed << endl;
+            settings.fromYaml (settings.files.config);
+        }
+        else
+        {
+            settings.fromYaml ("base9.yaml");
         }
 
-        MpiMcmcApplication master(settings);
+        settings.fromCLI (argc, argv);
 
-        try
+        if (settings.development)
         {
+            cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
+
+            if (settings.seed == std::numeric_limits<uint32_t>::max())
+            {
+                srand(std::time(0));
+                settings.seed = rand();
+
+                cout << "Seed: " << settings.seed << endl;
+            }
+
+            MpiMcmcApplication master(settings);
+
             return master.run();
         }
-        catch (exception &e)
+        else
         {
-            cerr << "\nException: " << e.what() << endl;
+            cerr << "multiPropMcmc is still under development\n";
             return -1;
         }
     }
-    else
+    catch (exception &e)
     {
-        cerr << "multiPropMcmc is still under development\n";
+        cerr << "\nException: " << e.what() << endl;
         return -1;
     }
+
 }
