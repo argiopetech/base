@@ -88,6 +88,7 @@ class Settings
         double Av;
         double Y;
         double carbonicity;
+        double logAge;
     };
 
     struct ClusterSettings
@@ -97,10 +98,9 @@ class Settings
         double Av;
         double Y;
         double carbonicity;
+        double logAge;
 
         struct ClusterSigmas sigma;
-
-        double logClusAge;
 
         double minMag;
         double maxMag;

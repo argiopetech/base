@@ -147,7 +147,7 @@ void initBase(std::string modelDir, int msModel, int wdModel, int ifmr)
     evil::s.cluster.carbonicity = 0.5;
     evil::s.cluster.sigma.carbonicity = 0.038;
 
-    evil::s.cluster.logClusAge = 8.796;
+    evil::s.cluster.logAge = 8.796;
 
     evil::s.cluster.minMag = 0.0;
     evil::s.cluster.maxMag = 30.0;

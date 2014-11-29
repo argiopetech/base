@@ -85,6 +85,14 @@ double Cluster::logPrior (const Model &evoModels) const
     if (priorVar[YYY] > EPSILON)
         prior += (-0.5) * sqr (yyy - priorMean[YYY]) / priorVar[YYY];
 
+    // Age is special. It was traditionally treated as having a
+    // uniform prior, and we wish to maintain that ability. As such,
+    // we only assume a non-uniform prior if the variance is both
+    // non-infinity (where infinity signifies a uniform distribution)
+    // and non-zero (where zero signifies a non-sampled variable).
+    if (!std::isinf(priorVar[AGE]) && priorVar[AGE] > EPSILON)
+        prior += (-0.5) * sqr (age - priorMean[AGE]) / priorVar[AGE];
+
     return prior;
 }
 

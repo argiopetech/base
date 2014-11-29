@@ -112,7 +112,7 @@ int main (int argc, char *argv[])
     fractionDB = settings.simCluster.percentDB;
     theCluster.mod = settings.cluster.distMod;
     theCluster.abs = settings.cluster.Av;
-    theCluster.age = settings.cluster.logClusAge;
+    theCluster.age = settings.cluster.logAge;
     theCluster.feh = settings.cluster.Fe_H;
     theCluster.yyy = settings.cluster.Y;
     theCluster.carbonicity = settings.cluster.carbonicity;
@@ -287,7 +287,7 @@ int main (int argc, char *argv[])
     }
 */
     cout << "\nProperties for cluster:" << endl;
-    cout << " logClusAge     = " << setw(6) << setprecision(3) << fixed << theCluster.age << endl;
+    cout << " logAge         = " << setw(6) << setprecision(3) << fixed << theCluster.age << endl;
     cout << " [Fe/H]         = " << setw(5) << setprecision(2) << fixed << theCluster.feh << endl;
     cout << " Y              = " << setw(5) << setprecision(2) << fixed << theCluster.yyy << endl;
     cout << " modulus        = " << setw(5) << setprecision(2) << fixed << theCluster.mod << endl;

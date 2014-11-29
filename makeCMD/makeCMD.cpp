@@ -48,7 +48,7 @@ void Application::run()
     clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
     clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
     clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
-    clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
+    clust.age = clust.priorMean[AGE] = settings.cluster.logAge;
 
     // IFMR parameters
     clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;

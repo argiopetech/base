@@ -79,8 +79,8 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
     clust.clustA.abs = clust.clustA.priorMean[ABS] = fabs(settings.cluster.Av);
     ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
 
-    clust.clustA.age = clust.clustA.priorMean[AGE] = settings.cluster.logClusAge;
-    ctrl.priorVar[AGE] = 1.0;
+    clust.clustA.age = clust.clustA.priorMean[AGE] = settings.cluster.logAge;
+    ctrl.priorVar[AGE] = settings.cluster.sigma.logAge;
 
     clust.clustA.carbonicity = clust.clustA.priorMean[CARBONICITY] = settings.cluster.carbonicity;
     ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
@@ -208,13 +208,13 @@ int MpiMcmcApplication::run()
         cout << "Binaries are " << (settings.noBinaries ? "OFF" : "ON") << endl;
     }
 
-    if (   settings.cluster.logClusAge < evoModels.mainSequenceEvol->getMinAge()
-        || settings.cluster.logClusAge > evoModels.mainSequenceEvol->getMaxAge())
+    if (   settings.cluster.logAge < evoModels.mainSequenceEvol->getMinAge()
+        || settings.cluster.logAge > evoModels.mainSequenceEvol->getMaxAge())
     {
         if (! settings.overrideBounds)
         {
             cerr << std::setprecision(3) << std::fixed
-                 << "\n***Error: Starting value \"logClusAge\" (" << settings.cluster.logClusAge
+                 << "\n***Error: Starting value \"logAge\" (" << settings.cluster.logAge
                  << ") is outside the model boundaries (" << evoModels.mainSequenceEvol->getMinAge()
                  << ", " << evoModels.mainSequenceEvol->getMaxAge()
                  << ").\n   Use the `--overrideBounds` flag if you really want this.\n[Exiting...]"
@@ -225,7 +225,7 @@ int MpiMcmcApplication::run()
         else if (settings.verbose)
         {
             cout << std::setprecision(3) << std::fixed
-                 << "\n***Warning: logClusAge (" << settings.cluster.logClusAge
+                 << "\n***Warning: logAge (" << settings.cluster.logAge
                  << ") is outside the model boundaries (" << evoModels.mainSequenceEvol->getMinAge()
                  << ", " << evoModels.mainSequenceEvol->getMaxAge()
                  << ").\n   Continuing due to `--overrideBounds` flag." << endl;

@@ -48,7 +48,6 @@ void Settings::fromYaml (const string yamlFile)
     Node newPriorNode = getNode(clusterNode, "priors");
     Node priorsNode = getNode (newPriorNode, "means");
     Node sigmasNode = getNode (newPriorNode, "sigmas");
-    Node startingNode = getNode (clusterNode, "starting");
     Node singlePopConfNode = getNode (configNode, "singlePopMcmc");
     Node mpiAdaptiveNode = getNode(singlePopConfNode, "adaptive");
     Node mpiStepNode = getNode (singlePopConfNode, "stepSizes");
@@ -82,7 +81,8 @@ void Settings::fromYaml (const string yamlFile)
 //    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
     cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
 
-    cluster.logClusAge = getOrDie<double>(startingNode, "logClusAge");
+    cluster.logAge = getOrDie<double>(priorsNode, "logAge");
+    cluster.sigma.logAge = getOrDie<double>(sigmasNode, "logAge");
 
     cluster.minMag = getOrDie<double>(clusterNode, "minMag");
     cluster.maxMag = getOrDie<double>(clusterNode, "maxMag");
@@ -186,7 +186,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"sigmaAv", required_argument, 0, 0xF3},
         {"priorY", required_argument, 0, 0xF2},
         {"sigmaY", required_argument, 0, 0xF1},
-        {"logClusAge", required_argument, 0, 0xF0},
+        {"logAge", required_argument, 0, 0xF0},
         {"minMag", required_argument, 0, 0xEF},
         {"maxMag", required_argument, 0, 0xEE},
         {"index", required_argument, 0, 0xED},
@@ -215,6 +215,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"sigmaCarbonicity", required_argument, 0, 0xCC},
         {"deltaMass", required_argument, 0, 0xCB},
         {"deltaMassRatio", required_argument, 0, 0xCA},
+        {"sigmaLogAge", required_argument, 0, 0xC9},
         {0, 0, 0, 0}
     };
 
@@ -300,7 +301,11 @@ void Settings::fromCLI (int argc, char **argv)
                 break;
 
             case 0xF0:
-                istringstream (string (optarg)) >> cluster.logClusAge;
+                istringstream (string (optarg)) >> cluster.logAge;
+                break;
+
+            case 0xC9:
+                istringstream (string (optarg)) >> cluster.sigma.logAge;
                 break;
 
             case 0xEF:
@@ -506,7 +511,8 @@ static void printUsage ()
     cerr << "\t--sigmaY" << endl << endl;
     cerr << "\t--priorCarbonicity" << endl;
     cerr << "\t--sigmaCarbonicity" << endl << endl;
-    cerr << "\t--logClusAge" << endl;
+    cerr << "\t--logAge" << endl;
+    cerr << "\t--sigmaLogAge" << endl;
     cerr << "\t--minMag" << endl;
     cerr << "\t--maxMag" << endl;
     cerr << "\t--index\t\t\t0 being the first filter in the dataset" << endl;

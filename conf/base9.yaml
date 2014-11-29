@@ -22,6 +22,7 @@ general:
                 distMod:     0.0
                 Av:          0.009
                 Y:           0.29
+                logAge:      8.796
 
             sigmas:
                 Fe_H:        0.05
@@ -29,9 +30,8 @@ general:
                 Av:          0.006
                 Y:           0.0
                 carbonicity: 0.0   # Only used to decide whether carbonicity is sampled or not
+                logAge:      .inf  # .inf for uniform, 0 for no sampling
 
-        starting:
-            logClusAge:  8.796
 
         minMag:         0.0   # these variables can be used to read a subset of the photometry
         maxMag:         30.0

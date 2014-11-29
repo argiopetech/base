@@ -196,8 +196,8 @@ class Application
         clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
         clust.priorVar[ABS] = settings.cluster.sigma.Av;
 
-        clust.age = clust.priorMean[AGE] = settings.cluster.logClusAge;
-        clust.priorVar[AGE] = 1.0;
+        clust.age = clust.priorMean[AGE] = settings.cluster.logAge;
+        clust.priorVar[AGE] = settings.cluster.sigma.logAge;
 
         clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
         clust.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;

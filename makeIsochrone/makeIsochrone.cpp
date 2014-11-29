@@ -130,7 +130,7 @@ int main (int argc, char *argv[])
     theCluster.carbonicity = settings.whiteDwarf.carbonicity;
 
     /* read cluster parameters */
-    theCluster.parameter[AGE] = settings.cluster.logClusAge;
+    theCluster.parameter[AGE] = settings.cluster.logAge;
 
     theCluster.parameter[FEH] = settings.cluster.Fe_H;
 

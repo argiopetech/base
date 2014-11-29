@@ -117,8 +117,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
         ctrl->priorVar.at(ABS) = 0.0;
     }
 
-    ctrl->initialAge = settings.cluster.logClusAge;
-    ctrl->priorVar.at(AGE) = 1.0;
+    ctrl->initialAge = settings.cluster.logAge;
+    ctrl->priorVar.at(AGE) = settings.cluster.logAge;
 
     ctrl->priorVar.at(IFMR_INTERCEPT) = 1.0;
     ctrl->priorVar.at(IFMR_SLOPE) = 1.0;
