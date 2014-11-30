@@ -205,9 +205,26 @@ void StellarSystem::readCMD(const string &s, int filters)
     if ((status == 1)   // MSRGB
      || (status == 3)   // WD
      || (status == 4)   // NSBH
-     || (status == 5))  // BD
+     || (status == 5)   // BD
+     || (status == 31)  // Explicit DA WD
+     || (status == 32)) // Explicit DB WD
     {
-        observedStatus = static_cast<StarStatus>(status);
+        if (status == 31)
+        {
+            observedStatus = WD;
+            primary.wdType = WdAtmosphere::DA;
+            secondary.wdType = WdAtmosphere::DA;
+        }
+        else if (status == 32)
+        {
+            observedStatus = WD;
+            primary.wdType = WdAtmosphere::DB;
+            secondary.wdType = WdAtmosphere::DB;
+        }
+        else
+        {
+            observedStatus = static_cast<StarStatus>(status);
+        }
     }
     else
         observedStatus = DNE;
