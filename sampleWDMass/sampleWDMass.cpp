@@ -320,9 +320,6 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     {
         star.clustStarProposalDens = star.clustStarPriorDens;   // Use prior prob of being clus star
 
-        star.primary.wdType = WdAtmosphere::DA;
-        star.secondary.wdType = WdAtmosphere::DA;
-
         // find photometry for initial values of currentClust and mc->stars
         if (star.observedStatus == WD)
         {
