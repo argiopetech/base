@@ -614,7 +614,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
     if ( ! wdSystems.empty() )
     {
         Star s;
-        vector<double> primaryMags, secondaryMags, combinedMags;
+        vector<double> primaryMags, secondaryMags, daCombinedMags, dbCombinedMags;
 
         {
             s.mass = 0.0;
@@ -634,14 +634,27 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
             const double logPrior    = propClust.logPriorMass (primaryMass);
 
             s.mass       = primaryMass;
+
+            s.wdType     = WdAtmosphere::DA;
             primaryMags  = s.getMags(propClust, evoModels, *isochrone);
-            combinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags);
+            daCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags);
+
+            s.wdType     = WdAtmosphere::DB;
+            primaryMags  = s.getMags(propClust, evoModels, *isochrone);
+            dbCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags);
 
             for (size_t i = 0; i < wdSize; ++i)
             {
                 double tmpLogPost;
 
-                tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, combinedMags);
+                if (wdSystems[i].primary.wdType == WdAtmosphere::DA)
+                {
+                    tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, daCombinedMags);
+                }
+                else
+                {
+                    tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, dbCombinedMags);
+                }
                 tmpLogPost += wdMassPrior;
 
                 post[i] += __builtin_exp(tmpLogPost);
