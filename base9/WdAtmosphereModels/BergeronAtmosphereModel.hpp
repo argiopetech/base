@@ -22,7 +22,10 @@ class BergeronAtmosphereModel : public WdAtmosphereModel
     virtual ~BergeronAtmosphereModel() {}
 
     virtual void loadModel (std::string);
+
     virtual std::vector<double> teffToMags  (double, double, WdAtmosphere) const;
+    virtual double teffToLogg (double, double, WdAtmosphere) const;
+
     virtual void restrictToFilters(const std::vector<std::string>&);
 };
 

@@ -10,6 +10,7 @@
 
 #include "constants.hpp"
 #include "densities.hpp"
+#include "ifmr.hpp"
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "WhiteDwarf.hpp"
@@ -397,7 +398,7 @@ int main (int argc, char *argv[])
         evoModels.restrictFilters(filterNames);
 
         if (   settings.cluster.index < 0
-            || static_cast<size_t>(settings.cluster.index) > filterNames.size())
+               || static_cast<size_t>(settings.cluster.index) > filterNames.size())
         {
             cerr << "*** Error: " << settings.cluster.index << " not a valid magnitude index.  Choose 0 through " << filterNames.size() - 1 << " ***"<< endl;
             cerr << "(Exiting...)" << endl;
@@ -429,28 +430,96 @@ int main (int argc, char *argv[])
     /*** now report sampled masses and parameters ***/
 
     // Open the file
-    string filename = settings.files.output + ".wdMassSamples";
+    string filename = settings.files.output + ".wd";
 
-    std::ofstream massSampleFile;
-    massSampleFile.open(filename);
-    if (!massSampleFile)
+    std::ofstream massFile;
+
     {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << ".at(Exiting...)" << endl;
-        exit (1);
-    }
+        string lf = filename + ".mass";
 
-    filename += ".membership";
+        massFile.open(lf);
+        if (!massFile)
+        {
+            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
+        }
+    }
 
     std::ofstream membershipFile;
-    membershipFile.open(filename);
-    if (!membershipFile)
+
     {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << ".at(Exiting...)" << endl;
-        exit (1);
+        string lf = filename + ".membership";
+
+        membershipFile.open(lf);
+        if (!membershipFile)
+        {
+            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
+        }
+    }
+
+    std::ofstream precLogAgeFile;
+
+    if (settings.details)
+    {
+        string lf = filename + ".precLogAge";
+
+        precLogAgeFile.open(lf);
+        if (!precLogAgeFile)
+        {
+            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
+        }
+    }
+
+    std::ofstream coolingAgeFile;
+
+    if (settings.details)
+    {
+        string lf = filename + ".coolingAge";
+
+        coolingAgeFile.open(lf);
+        if (!coolingAgeFile)
+        {
+            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
+        }
+    }
+
+    std::ofstream logTeffFile;
+
+    if (settings.details)
+    {
+        string lf = filename + ".logTeff";
+
+        logTeffFile.open(lf);
+        if (!logTeffFile)
+        {
+            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
+        }
     }
     
+    std::ofstream loggFile;
+
+    if (settings.details)
+    {
+        string lf = filename + ".logg";
+
+        loggFile.open(lf);
+        if (!loggFile)
+        {
+            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
+        }
+    }
+
     std::vector<double> us;
     us.resize(sampledPars.size() + 1);
 
@@ -560,34 +629,69 @@ int main (int argc, char *argv[])
             }
         }
 
-        // massSampleFile << base::utility::format << sampledPars.at(m).age
+        // massFile << base::utility::format << sampledPars.at(m).age
         //                << base::utility::format << sampledPars.at(m).feh
         //                << base::utility::format << sampledPars.at(m).distMod
         //                << base::utility::format << sampledPars.at(m).abs;
 
         // if (evoModels.IFMR >= 4)
         // {
-        //     massSampleFile << base::utility::format << sampledPars.at(m).ifmrIntercept
+        //     massFile << base::utility::format << sampledPars.at(m).ifmrIntercept
         //                    << base::utility::format << sampledPars.at(m).ifmrSlope;
         // }
 
         // if (evoModels.IFMR >= 9)
         // {
-        //     massSampleFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
+        //     massFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
         // }
 
         for (size_t j = 0; j < wdMass.size(); j++)
         {
-            massSampleFile << base::utility::format << wdMass.at(j);
+            auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(internalCluster.feh, wdMass.at(j), internalCluster.yyy);
+
+            double thisWDMass = intlFinalMassReln (internalCluster, evoModels, wdMass.at(j));
+            double coolingAge = log10(exp10(internalCluster.age) - exp10(precLogAge));
+
+            auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (internalCluster.age, internalCluster.carbonicity, precLogAge, thisWDMass);
+            double logTeff = teffRadiusPair.first;
+
+            auto logg = evoModels.WDAtmosphere->teffToLogg (logTeff, thisWDMass, WdAtmosphere::DA);
+
+            massFile << base::utility::format << wdMass.at(j);
             membershipFile << base::utility::format << clusMemPost.at(j);
+
+            if (settings.details)
+            {
+                precLogAgeFile << base::utility::format << precLogAge;
+                coolingAgeFile << base::utility::format << coolingAge;
+                logTeffFile << base::utility::format << logTeff;
+                loggFile << base::utility::format << logg;
+            }
         }
 
-        massSampleFile << endl;
+        massFile << endl;
         membershipFile << endl;
+
+        if (settings.details)
+        {
+            precLogAgeFile << endl;
+            coolingAgeFile << endl;
+            logTeffFile << endl;
+            loggFile << endl;
+        };
     }
 
-    massSampleFile.close();
+    massFile.close();
     membershipFile.close();
+
+    if (settings.details)
+    {
+        precLogAgeFile.close();
+        coolingAgeFile.close();
+        logTeffFile.close();
+        loggFile.close();
+    }
+
 
     cout << "Part 2 completed successfully" << endl;
 

@@ -13,12 +13,17 @@ class WdAtmosphereModel : virtual public StellarModel
   protected:
     struct record
     {
-        record(double logTeff, std::vector<double> mags)
-            : logTeff(logTeff), mags(mags)
+        record(double logTeff, double logg, std::vector<double> mags)
+            : logTeff(logTeff), logg(logg), mags(mags)
         {;}
 
         ~record()
         {;}
+
+        static bool compareTeff(const record &a, const double b)
+        {
+            return a.logTeff < b;
+        }
 
         // For use with sort/search functions in <algorithms>
         bool operator<(const struct record &b) const
@@ -27,6 +32,7 @@ class WdAtmosphereModel : virtual public StellarModel
         }
 
         double logTeff;
+        double logg;
 
         std::vector<double> mags;
     };
@@ -51,6 +57,7 @@ class WdAtmosphereModel : virtual public StellarModel
     virtual ~WdAtmosphereModel() {}
 
     virtual std::vector<double> teffToMags (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
+    virtual double teffToLogg (double wdLogTeff, double wdMass, WdAtmosphere wdType) const = 0;
 
     virtual void restrictToFilters(const std::vector<std::string>&) = 0;
 

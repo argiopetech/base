@@ -25,9 +25,6 @@ class MpiMcmcApplication
 
     double logPostStep (Cluster &, double);
 
-    void mainRun(std::function<Cluster(Cluster)> propose, std::function<double(Cluster&)> logPost, std::ofstream &fout, std::array<double, NPARAMS> priorVar, Cluster clust, int iters, int thin);
-
-
   private:
     void scaleStepSizes (std::array<double, NPARAMS> &, double);
     void allocateSSEMem();
