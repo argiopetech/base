@@ -80,6 +80,7 @@ class Settings
         double brightLimit;
         double faintLimit;
         double limitS2N;
+        bool crowded = false;
     };
 
     struct ClusterSigmas

@@ -128,6 +128,7 @@ void Settings::fromYaml (const string yamlFile)
     scatterCluster.faintLimit = getOrDie<double>(scatterConfNode, "faintLimit");
     scatterCluster.relevantFilt = getOrDie<int>(scatterConfNode, "relevantFilt");
     scatterCluster.limitS2N = getOrDie<double>(scatterConfNode, "limitS2N");
+    scatterCluster.crowded  = getOrDie<bool>(scatterConfNode, "crowded");
 
     sampleMass.deltaMass = getOrDie<double>(sampleMassNode, "deltaMass");
     sampleMass.deltaMassRatio = getOrDie<double>(sampleMassNode, "deltaMassRatio");

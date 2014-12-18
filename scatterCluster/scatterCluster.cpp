@@ -33,7 +33,7 @@ double getExposureTime(Settings &s, string f)
     }
 }
 
-static unordered_map<string, std::pair<double, double>> s2nCoeffs = {
+static unordered_map<string, std::pair<double, double>> s2nCoeffs_uncrowded = {
     {"U",       {9.33989,  0.3375778}},
     {"B",       {10.0478,  0.3462758}},
     {"V",       {10.48098, 0.3682010}},
@@ -56,13 +56,40 @@ static unordered_map<string, std::pair<double, double>> s2nCoeffs = {
     // {9.024068, 0.3985604}       // Band 4
 };
 
+
+static unordered_map<string, std::pair<double, double>> s2nCoeffs_crowded = {
+    {"U",       {9.33989,  0.3375778}},
+    {"B",       {10.0478,  0.3462758}},
+    {"V",       {10.48098, 0.3682010}},
+    {"R",       {10.71151, 0.3837847}},
+    {"I",       {10.61035, 0.3930941}},
+    {"J",       {9.282385, 0.3862580}},
+    {"H",       {9.197463, 0.3970419}},
+    {"K",       {9.024068, 0.3985604}},
+    {"UVf275w", {6.7302, 0.2090}},
+    {"UVf336w", {6.9292, 0.2090}},
+    {"UVf438w", {7.2452, 0.2090}},
+    {"F606W",   {7.0797, 0.2090}},
+    {"F814W",   {7.0797, 0.2090}}
+
+    // {9.024068, 0.3985604},      // IRAC Blue
+    // {9.024068, 0.3985604},      // IRAC Red
+    // {9.024068, 0.3985604},      // Band 1
+    // {9.024068, 0.3985604},      // Band 2
+    // {9.024068, 0.3985604},      // Band 3
+    // {9.024068, 0.3985604}       // Band 4
+};
+
+
 // This is an approximation to the results one would obtain in one
 // hour with the KPNO 4m + Mosaic (UBVRI) or Flamingos (JHK) per band,
 // assuming dark time, seeing=1.1", airmass=1.2, and then scaling from
 // their by sqrt(exptime).  I further approximated the CCDTIME results
 // (run on the NOAO webste) with linear fits of mag vs. log(S/N).
-double signalToNoise (double mag, double exptime, string filter)
+double signalToNoise (const Settings &settings, double mag, double exptime, string filter)
 {
+    auto s2nCoeffs = settings.scatterCluster.crowded ? s2nCoeffs_crowded : s2nCoeffs_uncrowded;
+
     double logS2N = s2nCoeffs[filter].first - s2nCoeffs[filter].second * mag;
     double s2n    = exp10 (logS2N);
 
@@ -166,7 +193,8 @@ int main (int argc, char *argv[])
                 for (size_t f = 0; f < filters.size(); ++f)
                 {
                     auto filter = filters.at(f);
-                    auto s2n    = signalToNoise (s.obsPhot.at(f),
+                    auto s2n    = signalToNoise (settings,
+                                                 s.obsPhot.at(f),
                                                  getExposureTime(settings, filter),
                                                  filter);
 
@@ -200,14 +228,17 @@ int main (int argc, char *argv[])
         for (size_t f = 0; f < filters.size(); ++f)
         {
             auto filter = filters.at(f);
-            auto s2n    = signalToNoise (s.obsPhot.at(f),
+            auto s2n    = signalToNoise (settings,
+                                         s.obsPhot.at(f),
                                          getExposureTime(settings, filter),
                                          filter);
 
             auto sigma  = 1 / s2n;
 
-            if (sigma < 0.01)
-                sigma = 0.01;
+            auto targetSigma = settings.scatterCluster.crowded ? 0.06 : 0.01;
+
+            if (sigma < targetSigma)
+                sigma = targetSigma;
 
             s.variance.at(f) = sigma * sigma;
 
