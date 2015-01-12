@@ -40,11 +40,11 @@ inline static __m128d calcDeltaMags(const double* sVar, const double* sVa2, cons
     const __m128d obsF = _mm_load_pd(sObs + f);
 
     // Do the math
-    __m128d deltaMags = _mm_sub_pd(magF, obsF);    // magsF - obsF
+    __m128d deltaMags = _mm_sub_pd(magF, obsF);   // magsF - obsF
     deltaMags = _mm_mul_pd(deltaMags, deltaMags); // sqr (deltaMags)
     deltaMags = _mm_mul_pd(deltaMags, varF);      // deltaMags * varF
     deltaMags = _mm_add_pd(deltaMags, va2F);      // deltaMags + va2F
-    deltaMags = _mm_mul_pd(deltaMags, half);       // deltaMags * (-0.5)
+    deltaMags = _mm_mul_pd(deltaMags, half);      // deltaMags * (-0.5)
 
     return deltaMags;
 }

@@ -22,11 +22,11 @@ using std::vector;
 
 double getExposureTime(Settings &s, string f)
 {
-    if (s.scatterCluster.exposures[f])
+    try
     {
         return s.scatterCluster.exposures[f];
     }
-    else
+    catch (std::out_of_range &e)
     {
         cerr << "No exposure field for filter \"" << f << "\" in configuration file" << endl;
         return 0.0;
@@ -139,6 +139,8 @@ int main (int argc, char *argv[])
 {
     Settings settings;
 
+    vector<double> exposureTimes;
+
     vector<string> filters;
     vector<StellarSystem> systems;
 
@@ -184,6 +186,9 @@ int main (int argc, char *argv[])
 
         filters = ret.first;
 
+        for (auto f : filters)
+            exposureTimes.push_back(getExposureTime(settings, f));
+
         for (auto s : ret.second)
         {
             if (meetsMagCutoff(settings, s) && meetsStageCutoff(s))
@@ -193,17 +198,22 @@ int main (int argc, char *argv[])
                 for (size_t f = 0; f < filters.size(); ++f)
                 {
                     auto filter = filters.at(f);
-                    auto s2n    = signalToNoise (settings,
-                                                 s.obsPhot.at(f),
-                                                 getExposureTime(settings, filter),
-                                                 filter);
+                    auto exposureTime = exposureTimes[f];
 
-                    if (s2n < settings.scatterCluster.limitS2N)
-                    {   // large photometric errors can lock mcmc during burnin
-                        // Negative variances are ignored by mpiMcmc
-                        // There's special code to check for negatives when we output stars (conversion to sigma)
-                        okay = false;
-                        break;
+                    if (exposureTime > 0)
+                    {
+                        auto s2n    = signalToNoise (settings,
+                                                     s.obsPhot.at(f),
+                                                     exposureTime,
+                                                     filter);
+
+                        if (s2n < settings.scatterCluster.limitS2N)
+                        {   // large photometric errors can lock mcmc during burnin
+                            // Negative variances are ignored by mpiMcmc
+                            // There's special code to check for negatives when we output stars (conversion to sigma)
+                            okay = false;
+                            break;
+                        }
                     }
                 }
 
@@ -264,10 +274,12 @@ int main (int argc, char *argv[])
     fout << setw(4) << "id" << ' ';
 
     for (auto f : filters)
-        fout << setw(6) << f << ' ';
+        if (getExposureTime(settings, f) > 0)
+            fout << setw(6) << f << ' ';
 
     for (auto f : filters)
-        fout << setw(6) << ("sig" + f) << ' ';
+        if (getExposureTime(settings, f) > 0)
+            fout << setw(6) << ("sig" + f) << ' ';
 
     fout << setw(7) <<     "mass1" << ' '
          << setw(9) << "massRatio" << ' '
@@ -282,14 +294,24 @@ int main (int argc, char *argv[])
 
         fout << setw(4) << (i + 1) << ' ';
 
-        for (auto f : s.obsPhot)
-            fout << setw(6) << f
-                 << ' ';
-
-        for (auto f : s.variance)
+        for (size_t f = 0; f < filters.size(); ++f)
         {
-            fout << setw(6) << (f < 0 ? f : sqrt (f))
-                 << ' ';
+            if (exposureTimes[f] > 0)
+            {
+                fout << setw(6) << s.obsPhot[f]
+                     << ' ';
+            }
+        }
+
+        for (size_t f = 0; f < filters.size(); ++f)
+        {
+            if (exposureTimes[f] > 0)
+            {
+                auto v = s.variance[f];
+
+                fout << setw(6) << (v < 0 ? v : sqrt (v))
+                     << ' ';
+            }
         }
 
         fout << setw(7) << s.primary.mass       << ' '
