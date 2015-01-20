@@ -245,7 +245,7 @@ int main (int argc, char *argv[])
 
             auto sigma  = 1 / s2n;
 
-            auto targetSigma = settings.scatterCluster.crowded ? 0.06 : 0.01;
+            auto targetSigma = settings.scatterCluster.crowded ? 0.04 : 0.01;
 
             if (sigma < targetSigma)
                 sigma = targetSigma;
