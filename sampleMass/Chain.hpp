@@ -5,6 +5,7 @@
 #include <ostream>
 #include <iostream>
 
+#include <gsl/gsl_errno.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_eigen.h>
@@ -14,12 +15,23 @@
 #include "Cluster.hpp"
 #include "Matrix.hpp"
 #include "McmcApplication.hpp"
+#include "StellarModel.hpp"
 #include "Utility.hpp"
 
 using std::ostream;
 using std::cout;
 using std::endl;
 using std::cerr;
+
+class NonPositiveDefiniteMatrix : public std::domain_error
+{
+  public:
+    explicit NonPositiveDefiniteMatrix (const std::string& what_arg)
+        : std::domain_error(what_arg) {}
+
+    explicit NonPositiveDefiniteMatrix (const char* what_arg)
+        : std::domain_error(what_arg) {}
+};
 
 template <class T>
 class Chain : public McmcApplication
@@ -36,7 +48,13 @@ class Chain : public McmcApplication
   public:
     Chain(uint32_t seed, T clust, ostream &fout)
         : McmcApplication(seed), clust(clust), fout(fout)
-    {}
+    {
+        // Disable the GSL error handler. This should be able to be
+        // called multiple times without adverse effect. After this,
+        // all GSL functions will return success/failure in an integer
+        // rather than exiting.
+        gsl_set_error_handler_off();
+    }
 
     void reset()
     {
@@ -61,6 +79,10 @@ class Chain : public McmcApplication
                 logPostProp = logPost (propClust);
             }
             catch(InvalidCluster &e)
+            {
+                logPostProp = -std::numeric_limits<double>::infinity();
+            }
+            catch(InvalidModelError &e)
             {
                 logPostProp = -std::numeric_limits<double>::infinity();
             }
@@ -105,7 +127,13 @@ class Chain : public McmcApplication
         }
 
         /* Cholesky decomposition */
-        gsl_linalg_cholesky_decomp (covMat);
+        if (gsl_linalg_cholesky_decomp (covMat))
+        {
+            // Handle a potential error.
+            // As far as I know, this will always be due to a
+            // non-positive definite matrix.
+            throw NonPositiveDefiniteMatrix("Non-positive matrix in makeCholeskyDecomp");
+        }
 
         /* compute proposal matrix from Cholesky factor */
 

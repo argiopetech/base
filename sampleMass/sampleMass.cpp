@@ -367,20 +367,27 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
 
     // Then do the main run
     // First, an abbreviated run to get a second covariance matrix
-    std::function<StellarSystem(StellarSystem)> mainProposal =
-        std::bind(&proposeCorrelated, gen, burnin.makeCholeskyDecomp(), _1);
+    try
+    {
+        std::function<StellarSystem(StellarSystem)> mainProposal =
+            std::bind(&proposeCorrelated, gen, burnin.makeCholeskyDecomp(), _1);
 
-    Chain<StellarSystem> main(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), burnin.get(), nullstream);
-    main.run(mainProposal, logPost, priorCheck, burnIters);
+        Chain<StellarSystem> main(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), burnin.get(), nullstream);
+        main.run(mainProposal, logPost, priorCheck, burnIters);
 
-    // Then a secondary covariance matrix
-    mainProposal = std::bind(&proposeCorrelated, gen, main.makeCholeskyDecomp(), _1);
-    main.run(mainProposal, logPost, priorCheck, iters);
+        // Then a secondary covariance matrix
+        mainProposal = std::bind(&proposeCorrelated, gen, main.makeCholeskyDecomp(), _1);
+        main.run(mainProposal, logPost, priorCheck, iters);
 
-    auto finalStar = main.get();
-    double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
+        auto finalStar = main.get();
+        double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
 
-    return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
+        return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
+    }
+    catch (NonPositiveDefiniteMatrix &e)
+    {
+        return std::make_tuple(99.99, 0.0, 0.0);
+    }
 }
 
 
@@ -534,29 +541,38 @@ void Application::run()
 
 int main (int argc, char *argv[])
 {
-    Settings settings;
-
-    settings.fromCLI (argc, argv);
-    if (!settings.files.config.empty())
+    try
     {
-        settings.fromYaml (settings.files.config);
+        Settings settings;
+
+        settings.fromCLI (argc, argv);
+        if (!settings.files.config.empty())
+        {
+            settings.fromYaml (settings.files.config);
+        }
+        else
+        {
+            settings.fromYaml ("base9.yaml");
+        }
+
+        settings.fromCLI (argc, argv);
+
+        if (settings.seed == std::numeric_limits<uint32_t>::max())
+        {
+            srand(std::time(0));
+            settings.seed = rand();
+
+            cout << "Seed: " << settings.seed << endl;
+        }
+
+
+        Application(settings).run();
+
+        return 0;
     }
-    else
+    catch (std::exception &e)
     {
-        settings.fromYaml ("base9.yaml");
+        cerr << "\nException: " << e.what() << endl;
+        return -1;
     }
-
-    settings.fromCLI (argc, argv);
-
-    if (settings.seed == std::numeric_limits<uint32_t>::max())
-    {
-        srand(std::time(0));
-        settings.seed = rand();
-
-        cout << "Seed: " << settings.seed << endl;
-    }
-
-    Application(settings).run();
-
-    return 0;
 }
