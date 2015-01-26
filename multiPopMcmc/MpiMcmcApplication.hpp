@@ -19,7 +19,7 @@ struct DualPopCluster
     Cluster clustA;
     Cluster clustB;
 
-    double lambda;
+    double lambda = 0.5;
 };
 
 class MpiMcmcApplication
