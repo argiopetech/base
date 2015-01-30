@@ -101,11 +101,11 @@ singlePopMcmc:
         ifmrQuadCoef:   0.008
 
 multiPopMcmc:
-    Y_starting: [0.2467, 0.33]
+#    Y_starting: [0.2467, 0.33]
     YA_start:           0.2467
     YB_start:           0.33
 
-    Y_limits:   [0.20, 0.30, 0.40]
+#    Y_limits:   [0.20, 0.30, 0.40]
     YA_lo:              0.20
     YA_hi:              0.30
     YB_hi:              0.40

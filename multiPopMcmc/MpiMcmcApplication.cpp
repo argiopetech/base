@@ -109,6 +109,10 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     clust.clustB = clust.clustA;
 
+    // Cluster-specific variables
+    clust.clustA.yyy = settings.multiPopMcmc.YA_start;
+    clust.clustB.yyy = settings.multiPopMcmc.YB_start;
+
     /* read burnIter and nIter */
     {
         ctrl.burnIter = settings.singlePopMcmc.burnIter;
