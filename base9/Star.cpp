@@ -173,11 +173,10 @@ void StellarSystem::readCMD(const string &s, int filters)
 {
     int status;
     double tempSigma, massRatio;
-    string starID;
 
     stringstream in(s);  
 
-    in >> starID;
+    in >> id;
 
     for (int i = 0; i < filters; i++)
     {

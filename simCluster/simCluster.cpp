@@ -204,7 +204,7 @@ int main (int argc, char *argv[])
         for (size_t f = 0; f < filters.size(); ++f)
             fprintf (w_ptr, "%6.3f ", 0.0);  // output (blank) sigmas
 
-        fprintf (w_ptr, "%7.3f %9.3f %5d %7.3f %6d", theStar.primary.mass, theStar.getMassRatio(), theStar.primary.getStatus(theCluster, *isochrone), 0.999, 1);    // output secondary star data
+        fprintf (w_ptr, "%7.3f %9.3f %5d %7.3f %6d\n", theStar.primary.mass, theStar.getMassRatio(), theStar.primary.getStatus(theCluster, *isochrone), 0.999, 1);    // output secondary star data
 
 
         switch (theStar.primary.getStatus(theCluster, *isochrone))
@@ -236,9 +236,6 @@ int main (int argc, char *argv[])
                 nNSBH++;
                 break;
         }
-
-
-        fprintf (w_ptr, "\n");
 
         // Update min and max
         if (photometry[2] < 97 && theStar.primary.getStatus(theCluster, *isochrone) != WD && theStar.secondary.getStatus(theCluster, *isochrone) != WD)
@@ -307,7 +304,7 @@ int main (int argc, char *argv[])
     cout << " MSRGMassTotal  = " << MSRGMassTotal << endl;
     cout.precision(2);
     cout << " wdMassTotal    = " << wdMassTotal << endl;
-/*    cout << " nFieldStars    = " << settings.simCluster.nFieldStars * 2 << endl;;
+    cout << " nFieldStars    = " << settings.simCluster.nFieldStars << endl;
 
 
     //////////////////////////////
@@ -316,28 +313,15 @@ int main (int argc, char *argv[])
 
     double minFeH, maxFeH, minAge, maxAge;
 
-//    theCluster.nStars = nFieldStars;
     tempMod = theCluster.mod;
+    minAge = evoModels.mainSequenceEvol->getMinAge();
+    maxAge = evoModels.mainSequenceEvol->getMaxAge();
+    minFeH = evoModels.mainSequenceEvol->getMinFeh();
+    maxFeH = evoModels.mainSequenceEvol->getMaxFeh();
 
-    if ((settings.mainSequence.msRgbModel == MsModel::OLD_DSED) || (settings.mainSequence.msRgbModel == MsModel::YALE))
-    {
-        minFeH = -2.5;
-        maxFeH = 0.56;
-        minAge = 8.4;
-        maxAge = 10.17;
-    }
-    else
-    {
-        minFeH = -1.5;
-        maxFeH = 0.2;
-        minAge = 8.0;
-        maxAge = 9.7;
-    }
+    vector<double> photometry;
 
-    std::vector<double> photometry;
-
-    i = 0;
-    while (i < settings.simCluster.nFieldStars)
+    for (int i = 0; i < settings.simCluster.nFieldStars; ++i)
     {
         do
         {
@@ -361,21 +345,17 @@ int main (int argc, char *argv[])
 
         } while (photometry[2] < minV || photometry[2] > maxV || photometry[1] - photometry[2] < -0.5 || photometry[1] - photometry[2] > 1.7);
 
-        fprintf (w_ptr, "%4d %7.3f ", i + 20001, theStar.primary.mass);
-        for (auto f [[gnu::unused]] : filters)
-            fprintf (w_ptr, "%6.3f ", 99.999);
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.primary.getStatus(theCluster, *isochrone), (theStar.primary.getStatus(theCluster, *isochrone) == WD ? theStar.primary.wdMassNow(theCluster, evoModels, *isochrone) : 0.0), 0, theStar.primary.wdLogTeff(theCluster, evoModels), theStar.primary.getLtau(theCluster, evoModels));
-        fprintf (w_ptr, "%7.3f ", theStar.secondary.mass);
-        for (auto f [[gnu::unused]] : filters)
-            fprintf (w_ptr, "%6.3f ", 99.999);
-        fprintf (w_ptr, "%d %5.3f %d %5.3f %5.3f ", theStar.secondary.getStatus(theCluster, *isochrone), 0.0, 0, theStar.secondary.wdLogTeff(theCluster, evoModels), theStar.secondary.getLtau(theCluster, evoModels));
-        for (size_t f = 0; f < filters.size(); ++f)
-            fprintf (w_ptr, "%9.6f ", photometry[f]);
-        fprintf (w_ptr, "\n");
+        fprintf (w_ptr, "%4d ", i + 20001); // output primary star data
 
-        i++;
+        for (auto f : photometry)
+            fprintf (w_ptr, "%6.3f ", f < 99. ? f : 99.999);
+
+        for (auto f [[gnu::unused]] : filters)
+            fprintf (w_ptr, "%6.3f ", 0.0);  // output (blank) sigmas
+
+        fprintf (w_ptr, "%7.3f %9.3f %5d %7.3f %6d\n", theStar.primary.mass, theStar.getMassRatio(), theStar.primary.getStatus(theCluster, *isochrone), 0.999, 1);    // output secondary star data
     }
-*/
+
     fclose (w_ptr);
 
     return (0);

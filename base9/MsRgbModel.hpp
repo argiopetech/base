@@ -84,6 +84,9 @@ modified for different model sets.
     virtual double getMinAge() const { return ageLimit.first; }
     virtual double getMaxAge() const { return ageLimit.second; }
 
+    virtual double getMinFeh() const { return fehCurves.front().feh; }
+    virtual double getMaxFeh() const { return fehCurves.back().feh; }
+
     std::vector<std::string> getAvailableFilters() const { return availableFilters; }
 
   protected:

@@ -124,11 +124,11 @@ bool meetsMagCutoff (const Settings &settings, const StellarSystem &s)
         return true;
 }
 
-bool meetsStageCutoff (const StellarSystem &s)
+bool meetsStageCutoff (const StellarSystem &s, const bool isFS)
 {
     if (s.observedStatus == NSBH || s.observedStatus == DNE)
         return false;
-    else if (s.observedStatus == WD && s.secondary.mass > 0.0)
+    else if (s.observedStatus == WD && s.secondary.mass > 0.0 && !isFS)
         return false;                       // TEMPORARY KLUDGE -- ignore binaries of MS/RG + WDs and WD + WD
     else
         return true;
@@ -191,7 +191,8 @@ int main (int argc, char *argv[])
 
         for (auto s : ret.second)
         {
-            if (meetsMagCutoff(settings, s) && meetsStageCutoff(s))
+            bool isFS = std::stoi(s.id) > 20000;
+            if (meetsMagCutoff(settings, s) && meetsStageCutoff(s, isFS))
             {
                 bool okay = true;
 

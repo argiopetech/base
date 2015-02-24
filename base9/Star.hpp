@@ -58,6 +58,8 @@ class StellarSystem
     std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&) const;
     static std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&, const std::vector<double>&, const std::vector<double>&);
 
+    std::string id;
+
     // Variables
     Star primary;
     Star secondary;
