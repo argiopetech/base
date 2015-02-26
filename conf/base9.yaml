@@ -22,6 +22,7 @@ general:
                 distMod:     0.0
                 Av:          0.009
                 Y:           0.29
+                carbonicity: 0.00
                 logAge:      8.796
 
             sigmas:
@@ -29,7 +30,7 @@ general:
                 distMod:     0.05
                 Av:          0.006
                 Y:           0.0
-                carbonicity: 0.0   # Only used to decide whether carbonicity is sampled or not
+                carbonicity: .inf  # .inf for uniform, 0 for no sampling
                 logAge:      .inf  # .inf for uniform, 0 for no sampling
 
 

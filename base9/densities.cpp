@@ -93,6 +93,10 @@ double Cluster::logPrior (const Model &evoModels) const
     if (!std::isinf(priorVar[AGE]) && priorVar[AGE] > EPSILON)
         prior += (-0.5) * sqr (age - priorMean[AGE]) / priorVar[AGE];
 
+    // We now do this for carbonicity as well
+    if (!std::isinf(priorVar[CARBONICITY]) && priorVar[CARBONICITY] > EPSILON)
+        prior += (-0.5) * sqr (age - priorMean[CARBONICITY]) / priorVar[CARBONICITY];
+
     return prior;
 }
 

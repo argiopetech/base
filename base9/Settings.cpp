@@ -76,9 +76,7 @@ void Settings::fromYaml (const string yamlFile)
     cluster.Y = getOrDie<double>(priorsNode, "Y");
     cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
 
-// We want to keep this around for the case where carbonicity changes
-// to something other than a uniform prior.
-//    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
+    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
     cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
 
     cluster.logAge = getOrDie<double>(priorsNode, "logAge");
