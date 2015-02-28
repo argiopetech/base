@@ -125,7 +125,7 @@ void Application::run()
     auto interpIsochrone = interpolateIsochrone(clust, *isochrone);
 
     {
-        string filename = settings.files.output + ".ms.cmd";
+        string filename = settings.files.output + ".ms";
 
         ofstream fout(filename);
 
@@ -164,7 +164,7 @@ void Application::run()
     }
 
     {
-        string filename = settings.files.output + ".wd.cmd";
+        string filename = settings.files.output + ".wd";
 
         ofstream fout(filename);
 
