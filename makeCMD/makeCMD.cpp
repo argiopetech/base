@@ -45,19 +45,27 @@ void Application::run()
     Cluster clust;
 
     // Standard cluster parameters
-    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
-    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
-    clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
-    clust.age = clust.priorMean[AGE] = settings.cluster.logAge;
+    clust.feh = settings.cluster.starting.Fe_H;
+    clust.priorMean[FEH] = settings.cluster.priorMeans.Fe_H;
+
+    clust.mod = settings.cluster.starting.distMod;
+    clust.priorMean[MOD] = settings.cluster.priorMeans.distMod;
+
+    clust.abs = settings.cluster.starting.Av;
+    clust.priorMean[ABS] = fabs(settings.cluster.priorMeans.Av);
+
+    clust.age = settings.cluster.starting.logAge;
+    clust.priorMean[AGE] = settings.cluster.priorMeans.logAge;
+
+    clust.carbonicity = settings.cluster.starting.carbonicity;
+    clust.priorMean[CARBONICITY] = settings.cluster.priorMeans.carbonicity;
+
+    clust.yyy = settings.cluster.starting.Y;
+    clust.priorMean[YYY] = settings.cluster.priorMeans.Y;
 
     // IFMR parameters
     clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
     clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
-
-
-    // FilterSet-conditional parameters
-    clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
-    clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
 
     if (evoModels.IFMR <= 10)
         clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;

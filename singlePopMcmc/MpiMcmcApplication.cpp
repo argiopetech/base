@@ -46,23 +46,29 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 {
     ctrl.priorVar.fill(0);
 
-    clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
-    ctrl.priorVar[FEH] = settings.cluster.sigma.Fe_H;
+    clust.feh = settings.cluster.starting.Fe_H;
+    clust.priorMean[FEH] = settings.cluster.priorMeans.Fe_H;
+    ctrl.priorVar[FEH]   = settings.cluster.priorSigma.Fe_H;
 
-    clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
-    ctrl.priorVar[MOD] = settings.cluster.sigma.distMod;
+    clust.mod = settings.cluster.starting.distMod;
+    clust.priorMean[MOD] = settings.cluster.priorMeans.distMod;
+    ctrl.priorVar[MOD]   = settings.cluster.priorSigma.distMod;
 
-    clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
-    ctrl.priorVar[ABS] = settings.cluster.sigma.Av;
+    clust.abs = settings.cluster.starting.Av;
+    clust.priorMean[ABS] = fabs(settings.cluster.priorMeans.Av);
+    ctrl.priorVar[ABS]   = settings.cluster.priorSigma.Av;
 
-    clust.age = clust.priorMean[AGE] = settings.cluster.logAge;
-    ctrl.priorVar[AGE] = settings.cluster.sigma.logAge;
+    clust.age = settings.cluster.starting.logAge;
+    clust.priorMean[AGE] = settings.cluster.priorMeans.logAge;
+    ctrl.priorVar[AGE]   = settings.cluster.priorSigma.logAge;
 
-    clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
-    ctrl.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
+    clust.carbonicity = settings.cluster.starting.carbonicity;
+    clust.priorMean[CARBONICITY] = settings.cluster.priorMeans.carbonicity;
+    ctrl.priorVar[CARBONICITY]   = settings.cluster.priorSigma.carbonicity;
 
-    clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
-    ctrl.priorVar[YYY] = settings.cluster.sigma.Y;
+    clust.yyy = settings.cluster.starting.Y;
+    clust.priorMean[YYY] = settings.cluster.priorMeans.Y;
+    ctrl.priorVar[YYY]   = settings.cluster.priorSigma.Y;
 
 
     if (evoModels.IFMR <= 3)
@@ -207,13 +213,13 @@ int MpiMcmcApplication::run()
         cout << "Binaries are " << (settings.noBinaries ? "OFF" : "ON") << endl;
     }
 
-    if (   settings.cluster.logAge < evoModels.mainSequenceEvol->getMinAge()
-        || settings.cluster.logAge > evoModels.mainSequenceEvol->getMaxAge())
+    if (   settings.cluster.starting.logAge < evoModels.mainSequenceEvol->getMinAge()
+        || settings.cluster.starting.logAge > evoModels.mainSequenceEvol->getMaxAge())
     {
         if (! settings.overrideBounds)
         {
             cerr << std::setprecision(3) << std::fixed
-                 << "\n***Error: Starting value \"logAge\" (" << settings.cluster.logAge
+                 << "\n***Error: Starting value \"logAge\" (" << settings.cluster.starting.logAge
                  << ") is outside the model boundaries (" << evoModels.mainSequenceEvol->getMinAge()
                  << ", " << evoModels.mainSequenceEvol->getMaxAge()
                  << ").\n   Use the `--overrideBounds` flag if you really want this.\n[Exiting...]"
@@ -224,7 +230,7 @@ int MpiMcmcApplication::run()
         else if (settings.verbose)
         {
             cout << std::setprecision(3) << std::fixed
-                 << "\n***Warning: logAge (" << settings.cluster.logAge
+                 << "\n***Warning: logAge (" << settings.cluster.starting.logAge
                  << ") is outside the model boundaries (" << evoModels.mainSequenceEvol->getMinAge()
                  << ", " << evoModels.mainSequenceEvol->getMaxAge()
                  << ").\n   Continuing due to `--overrideBounds` flag." << endl;

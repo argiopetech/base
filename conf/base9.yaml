@@ -16,6 +16,14 @@ general:
         ifmr:           1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
 
     cluster:
+        starting:
+            Fe_H:        0.07
+            distMod:     0.0
+            Av:          0.009
+            Y:           0.29
+            carbonicity: 0.00
+            logAge:      8.796
+
         priors:
             means:
                 Fe_H:        0.07
@@ -32,7 +40,6 @@ general:
                 Y:           0.0
                 carbonicity: .inf  # .inf for uniform, 0 for no sampling
                 logAge:      .inf  # .inf for uniform, 0 for no sampling
-
 
         minMag:         0.0   # these variables can be used to read a subset of the photometry
         maxMag:         30.0

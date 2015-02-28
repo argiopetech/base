@@ -45,9 +45,10 @@ void Settings::fromYaml (const string yamlFile)
     Node mainSequenceNode = getNode (generalNode, "main_sequence");
     Node whiteDwarfNode = getNode (generalNode, "white_dwarfs");
     Node clusterNode = getNode (generalNode, "cluster");
-    Node newPriorNode = getNode(clusterNode, "priors");
-    Node priorsNode = getNode (newPriorNode, "means");
-    Node sigmasNode = getNode (newPriorNode, "sigmas");
+    Node startingNode = getNode(clusterNode, "starting");
+    Node priorNode = getNode(clusterNode, "priors");
+    Node meansNode = getNode (priorNode, "means");
+    Node sigmasNode = getNode (priorNode, "sigmas");
     Node singlePopConfNode = getNode (configNode, "singlePopMcmc");
     Node mpiAdaptiveNode = getNode(singlePopConfNode, "adaptive");
     Node mpiStepNode = getNode (singlePopConfNode, "stepSizes");
@@ -64,23 +65,29 @@ void Settings::fromYaml (const string yamlFile)
     whiteDwarf.wdModel = static_cast<WdModel>(getOrDie<int>(whiteDwarfNode, "wdModel"));
     whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfNode, "M_wd_up");
 
-    cluster.Fe_H = getOrDie<double>(priorsNode, "Fe_H");
-    cluster.sigma.Fe_H = getOrDie<double>(sigmasNode, "Fe_H");
+    cluster.starting.Fe_H = getOrDie<double>(meansNode, "Fe_H");
+    cluster.priorMeans.Fe_H = getOrDie<double>(meansNode, "Fe_H");
+    cluster.priorSigma.Fe_H = getOrDie<double>(sigmasNode, "Fe_H");
 
-    cluster.distMod = getOrDie<double>(priorsNode, "distMod");
-    cluster.sigma.distMod = getOrDie<double>(sigmasNode, "distMod");
+    cluster.starting.distMod = getOrDie<double>(meansNode, "distMod");
+    cluster.priorMeans.distMod = getOrDie<double>(meansNode, "distMod");
+    cluster.priorSigma.distMod = getOrDie<double>(sigmasNode, "distMod");
 
-    cluster.Av = getOrDie<double>(priorsNode, "Av");
-    cluster.sigma.Av = getOrDie<double>(sigmasNode, "Av");
+    cluster.starting.Av = getOrDie<double>(meansNode, "Av");
+    cluster.priorMeans.Av = getOrDie<double>(meansNode, "Av");
+    cluster.priorSigma.Av = getOrDie<double>(sigmasNode, "Av");
 
-    cluster.Y = getOrDie<double>(priorsNode, "Y");
-    cluster.sigma.Y = getOrDie<double>(sigmasNode, "Y");
+    cluster.starting.Y = getOrDie<double>(meansNode, "Y");
+    cluster.priorMeans.Y = getOrDie<double>(meansNode, "Y");
+    cluster.priorSigma.Y = getOrDie<double>(sigmasNode, "Y");
 
-    cluster.carbonicity = getOrDie<double>(priorsNode, "carbonicity");
-    cluster.sigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
+    cluster.starting.carbonicity = getOrDie<double>(meansNode, "carbonicity");
+    cluster.priorMeans.carbonicity = getOrDie<double>(meansNode, "carbonicity");
+    cluster.priorSigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
 
-    cluster.logAge = getOrDie<double>(priorsNode, "logAge");
-    cluster.sigma.logAge = getOrDie<double>(sigmasNode, "logAge");
+    cluster.starting.logAge = getOrDie<double>(meansNode, "logAge");
+    cluster.priorMeans.logAge = getOrDie<double>(meansNode, "logAge");
+    cluster.priorSigma.logAge = getOrDie<double>(sigmasNode, "logAge");
 
     cluster.minMag = getOrDie<double>(clusterNode, "minMag");
     cluster.maxMag = getOrDie<double>(clusterNode, "maxMag");
@@ -187,7 +194,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"sigmaAv", required_argument, 0, 0xF3},
         {"priorY", required_argument, 0, 0xF2},
         {"sigmaY", required_argument, 0, 0xF1},
-        {"logAge", required_argument, 0, 0xF0},
+        {"priorlogAge", required_argument, 0, 0xF0},
         {"minMag", required_argument, 0, 0xEF},
         {"maxMag", required_argument, 0, 0xEE},
         {"index", required_argument, 0, 0xED},
@@ -216,7 +223,12 @@ void Settings::fromCLI (int argc, char **argv)
         {"sigmaCarbonicity", required_argument, 0, 0xCC},
         {"deltaMass", required_argument, 0, 0xCB},
         {"deltaMassRatio", required_argument, 0, 0xCA},
-        {"sigmaLogAge", required_argument, 0, 0xC9},
+        {"sigmalogAge", required_argument, 0, 0xC9},
+        {"startingFe_H", required_argument, 0, 0xC8},
+        {"startingdistMod", required_argument, 0, 0xC7},
+        {"startingAv", required_argument, 0, 0xC6},
+        {"startingY", required_argument, 0, 0xC5},
+        {"startinglogAge", required_argument, 0, 0xC4},
         {0, 0, 0, 0}
     };
 
@@ -262,51 +274,47 @@ void Settings::fromCLI (int argc, char **argv)
                 break;
 
             case 0xF8:
-                istringstream (string (optarg)) >> cluster.Fe_H;
+                istringstream (string (optarg)) >> cluster.priorMeans.Fe_H;
                 break;
 
             case 0xF7:
-                istringstream (string (optarg)) >> cluster.sigma.Fe_H;
+                istringstream (string (optarg)) >> cluster.priorSigma.Fe_H;
                 break;
 
             case 0xF6:
-                istringstream (string (optarg)) >> cluster.distMod;
+                istringstream (string (optarg)) >> cluster.priorMeans.distMod;
                 break;
 
             case 0xF5:
-                istringstream (string (optarg)) >> cluster.sigma.distMod;
+                istringstream (string (optarg)) >> cluster.priorSigma.distMod;
                 break;
 
             case 0xF4:
-                istringstream (string (optarg)) >> cluster.Av;
+                istringstream (string (optarg)) >> cluster.priorMeans.Av;
                 break;
 
             case 0xF3:
-                istringstream (string (optarg)) >> cluster.sigma.Av;
+                istringstream (string (optarg)) >> cluster.priorSigma.Av;
                 break;
 
             case 0xF2:
-                istringstream (string (optarg)) >> cluster.Y;
+                istringstream (string (optarg)) >> cluster.priorMeans.Y;
                 break;
 
             case 0xF1:
-                istringstream (string (optarg)) >> cluster.sigma.Y;
+                istringstream (string (optarg)) >> cluster.priorSigma.Y;
                 break;
 
             case 0xCD:
-                istringstream (string (optarg)) >> cluster.carbonicity;
+                istringstream (string (optarg)) >> cluster.priorMeans.carbonicity;
                 break;
 
             case 0xCC:
-                istringstream (string (optarg)) >> cluster.sigma.carbonicity;
+                istringstream (string (optarg)) >> cluster.priorSigma.carbonicity;
                 break;
 
             case 0xF0:
-                istringstream (string (optarg)) >> cluster.logAge;
-                break;
-
-            case 0xC9:
-                istringstream (string (optarg)) >> cluster.sigma.logAge;
+                istringstream (string (optarg)) >> cluster.priorMeans.logAge;
                 break;
 
             case 0xEF:
@@ -418,6 +426,30 @@ void Settings::fromCLI (int argc, char **argv)
                 istringstream (string (optarg)) >> sampleMass.deltaMassRatio;
                 break;
 
+            case 0xC9:
+                istringstream (string (optarg)) >> cluster.priorSigma.logAge;
+                break;
+
+            case 0xC8:
+                istringstream (string (optarg)) >> cluster.starting.Fe_H;
+                break;
+
+            case 0xC7:
+                istringstream (string (optarg)) >> cluster.starting.distMod;
+                break;
+
+            case 0xC6:
+                istringstream (string (optarg)) >> cluster.starting.Av;
+                break;
+
+            case 0xC5:
+                istringstream (string (optarg)) >> cluster.starting.Y;
+                break;
+
+            case 0xC4:
+                istringstream (string (optarg)) >> cluster.starting.logAge;
+                break;
+
             case '?':
                 // getopt_long already printed an error message.
                 printUsage ();
@@ -503,17 +535,23 @@ static void printUsage ()
     cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery" << endl << endl;
     cerr << "\t--M_wd_up\t\tThe maximum mass for a WD-producing star" << endl << endl;
     cerr << "\t--bdModel\t\t0 = None\n\t\t\t\t1 = Baraffe" << endl << endl;
+    cerr << "\t--startingFe_H" << endl;
     cerr << "\t--priorFe_H" << endl;
     cerr << "\t--sigmaFe_H" << endl << endl;
+    cerr << "\t--startingdistMod" << endl;
     cerr << "\t--priordistMod" << endl;
     cerr << "\t--sigmadistMod" << endl << endl;
+    cerr << "\t--startingAv" << endl;
     cerr << "\t--priorAv" << endl;
     cerr << "\t--sigmaAv" << endl << endl;
+    cerr << "\t--startingY" << endl;
     cerr << "\t--priorY" << endl;
     cerr << "\t--sigmaY" << endl << endl;
+    cerr << "\t--startingCarbonicity" << endl;
     cerr << "\t--priorCarbonicity" << endl;
     cerr << "\t--sigmaCarbonicity" << endl << endl;
-    cerr << "\t--logAge" << endl;
+    cerr << "\t--startinglogAge" << endl;
+    cerr << "\t--priorlogAge" << endl;
     cerr << "\t--sigmaLogAge" << endl;
     cerr << "\t--minMag" << endl;
     cerr << "\t--maxMag" << endl;

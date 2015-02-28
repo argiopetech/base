@@ -110,12 +110,12 @@ int main (int argc, char *argv[])
     theCluster.setM_wd_up(settings.whiteDwarf.M_wd_up);
     fractionBinary = settings.simCluster.percentBinary;
     fractionDB = settings.simCluster.percentDB;
-    theCluster.mod = settings.cluster.distMod;
-    theCluster.abs = settings.cluster.Av;
-    theCluster.age = settings.cluster.logAge;
-    theCluster.feh = settings.cluster.Fe_H;
-    theCluster.yyy = settings.cluster.Y;
-    theCluster.carbonicity = settings.cluster.carbonicity;
+    theCluster.mod = settings.cluster.starting.distMod;
+    theCluster.abs = settings.cluster.starting.Av;
+    theCluster.age = settings.cluster.starting.logAge;
+    theCluster.feh = settings.cluster.starting.Fe_H;
+    theCluster.yyy = settings.cluster.starting.Y;
+    theCluster.carbonicity = settings.cluster.starting.carbonicity;
 
     fractionBinary /= 100.;     // input as percentages, use as fractions
     fractionDB /= 100.;

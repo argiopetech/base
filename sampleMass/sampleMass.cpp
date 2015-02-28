@@ -121,7 +121,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
         if (hasY)
             in >> newY;
         else
-            newY = s.cluster.Y;
+            newY = s.cluster.starting.Y;
 
         in >> newFeh
            >> newMod
@@ -130,7 +130,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
         if (hasCarbonicity)
             in >> newCarbonicity;
         else
-            newCarbonicity = s.cluster.carbonicity;
+            newCarbonicity = s.cluster.starting.carbonicity;
 
         if (evoModels.IFMR >= 4)
         {
@@ -187,24 +187,29 @@ class Application
             cout << "Generated " << warmupIter << " values." << endl;
         }
 
-        clust.feh = clust.priorMean[FEH] = settings.cluster.Fe_H;
-        clust.priorVar[FEH] = settings.cluster.sigma.Fe_H;
+        clust.feh = settings.cluster.starting.Fe_H;
+        clust.priorMean[FEH] = settings.cluster.priorMeans.Fe_H;
+        clust.priorVar[FEH]  = settings.cluster.priorSigma.Fe_H;
 
-        clust.mod = clust.priorMean[MOD] = settings.cluster.distMod;
-        clust.priorVar[MOD] = settings.cluster.sigma.distMod;
+        clust.mod = settings.cluster.starting.distMod;
+        clust.priorMean[MOD] = settings.cluster.priorMeans.distMod;
+        clust.priorVar[MOD]  = settings.cluster.priorSigma.distMod;
 
-        clust.abs = clust.priorMean[ABS] = fabs(settings.cluster.Av);
-        clust.priorVar[ABS] = settings.cluster.sigma.Av;
+        clust.abs = settings.cluster.starting.Av;
+        clust.priorMean[ABS] = fabs(settings.cluster.priorMeans.Av);
+        clust.priorVar[ABS]  = settings.cluster.priorSigma.Av;
 
-        clust.age = clust.priorMean[AGE] = settings.cluster.logAge;
-        clust.priorVar[AGE] = settings.cluster.sigma.logAge;
+        clust.age = settings.cluster.starting.logAge;
+        clust.priorMean[AGE] = settings.cluster.priorMeans.logAge;
+        clust.priorVar[AGE]  = settings.cluster.priorSigma.logAge;
 
-        clust.carbonicity = clust.priorMean[CARBONICITY] = settings.cluster.carbonicity;
-        clust.priorVar[CARBONICITY] = settings.cluster.sigma.carbonicity;
+        clust.carbonicity = settings.cluster.starting.carbonicity;
+        clust.priorMean[CARBONICITY] = settings.cluster.priorMeans.carbonicity;
+        clust.priorVar[CARBONICITY]  = settings.cluster.priorSigma.carbonicity;
 
-        clust.yyy = clust.priorMean[YYY] = settings.cluster.Y;
-        clust.priorVar[YYY] = settings.cluster.sigma.Y;
-
+        clust.yyy = settings.cluster.starting.Y;
+        clust.priorMean[YYY] = settings.cluster.priorMeans.Y;
+        clust.priorVar[YYY]  = settings.cluster.priorSigma.Y;
 
         if (evoModels.IFMR <= 3)
         {

@@ -27,21 +27,8 @@ using std::endl;
 using std::flush;
 using std::unique_ptr;
 
-const int N_AGE = 30;
-const int N_FEH = 1;
-const int N_MOD = 1;
-const int N_ABS = 1;
-const int N_Y = 1;
-const int N_IFMR_INT = 10;
-const int N_IFMR_SLOPE = 10;
-const int N_GRID = (N_AGE * N_FEH * N_MOD * N_ABS * N_Y * N_IFMR_INT * N_IFMR_SLOPE);
-const int MASTER = 0;       /* taskid of first process */
-
-const int ALLOC_CHUNK = 1;
-
 struct ifmrGridControl
 {
-    double initialAge;
     array<double, NPARAMS> priorMean, priorVar;
     double minMag;
     double maxMag;
@@ -85,41 +72,47 @@ Settings settings;
  */
 static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridControl *ctrl, Settings &s)
 {
-    if (s.whiteDwarf.wdModel == WdModel::MONTGOMERY)
-    {
-        ctrl->priorMean.at(CARBONICITY) = mc->clust.carbonicity = mc->clust.priorMean.at(CARBONICITY) = settings.cluster.carbonicity;
-        ctrl->priorVar.at(CARBONICITY) = settings.cluster.sigma.carbonicity;
-    }
-    else
-    {
-        ctrl->priorMean.at(CARBONICITY) = mc->clust.carbonicity = mc->clust.priorMean.at(CARBONICITY) = 0.0;
-        ctrl->priorVar.at(CARBONICITY) = 0.0;
-    }
+    ctrl->priorMean.at(CARBONICITY) = mc->clust.priorMean.at(CARBONICITY) = s.cluster.priorMeans.carbonicity;
+    ctrl->priorVar.at(CARBONICITY) = s.cluster.priorSigma.carbonicity;
 
+    ctrl->priorMean.at(FEH) = s.cluster.priorMeans.Fe_H;
+    ctrl->priorVar.at(FEH)  = s.cluster.priorSigma.Fe_H;
 
-    ctrl->priorMean.at(FEH) = settings.cluster.Fe_H;
-    ctrl->priorVar.at(FEH) = settings.cluster.sigma.Fe_H;
     if (ctrl->priorVar.at(FEH) < 0.0)
     {
         ctrl->priorVar.at(FEH) = 0.0;
     }
 
-    ctrl->priorMean.at(MOD) = settings.cluster.distMod;
-    ctrl->priorVar.at(MOD) = settings.cluster.sigma.distMod;
+    ctrl->priorMean.at(MOD) = s.cluster.priorMeans.distMod;
+    ctrl->priorVar.at(MOD)  = s.cluster.priorSigma.distMod;
     if (ctrl->priorVar.at(MOD) < 0.0)
     {
         ctrl->priorVar.at(MOD) = 0.0;
     }
 
-    ctrl->priorMean.at(ABS) = settings.cluster.Av;
-    ctrl->priorVar.at(ABS) = settings.cluster.sigma.Av;
+    ctrl->priorMean.at(ABS) = s.cluster.priorMeans.Av;
+    ctrl->priorVar.at(ABS)  = s.cluster.priorSigma.Av;
     if (ctrl->priorVar.at(ABS) < 0.0)
     {
         ctrl->priorVar.at(ABS) = 0.0;
     }
 
-    ctrl->initialAge = settings.cluster.logAge;
-    ctrl->priorVar.at(AGE) = settings.cluster.logAge;
+    ctrl->priorMean.at(AGE) = s.cluster.priorMeans.logAge;
+    ctrl->priorVar.at(AGE)  = s.cluster.priorSigma.logAge;
+
+    ctrl->priorMean.at(YYY) = s.cluster.priorMeans.Y;
+    ctrl->priorVar.at(YYY)  = s.cluster.priorSigma.Y;
+    if (ctrl->priorVar.at(YYY) < 0.0)
+    {
+        ctrl->priorVar.at(YYY) = 0.0;
+    }
+
+    ctrl->priorMean.at(CARBONICITY) = s.cluster.priorMeans.carbonicity;
+    ctrl->priorVar.at(CARBONICITY)  = s.cluster.priorSigma.carbonicity;
+    if (ctrl->priorVar.at(CARBONICITY) < 0.0)
+    {
+        ctrl->priorVar.at(CARBONICITY) = 0.0;
+    }
 
     ctrl->priorVar.at(IFMR_INTERCEPT) = 1.0;
     ctrl->priorVar.at(IFMR_SLOPE) = 1.0;
@@ -127,21 +120,6 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
         ctrl->priorVar.at(IFMR_QUADCOEF) = 1.0;
     else
         ctrl->priorVar.at(IFMR_QUADCOEF) = 0.0;
-
-    ctrl->priorMean.at(YYY) = settings.cluster.Y;
-    ctrl->priorVar.at(YYY) = settings.cluster.sigma.Y;
-    if (ctrl->priorVar.at(YYY) < 0.0)
-    {
-        ctrl->priorVar.at(YYY) = 0.0;
-    }
-
-    ctrl->priorMean.at(CARBONICITY) = settings.cluster.carbonicity;
-    ctrl->priorVar.at(CARBONICITY) = settings.cluster.sigma.carbonicity;
-    if (ctrl->priorVar.at(CARBONICITY) < 0.0)
-    {
-        ctrl->priorVar.at(CARBONICITY) = 0.0;
-    }
-
 
     for (auto &var : ctrl->priorVar)
     {
@@ -160,6 +138,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     priorVar.at(FEH) = ctrl->priorVar.at(FEH);
     priorVar.at(MOD) = ctrl->priorVar.at(MOD);
     priorVar.at(ABS) = ctrl->priorVar.at(ABS);
+    priorVar.at(YYY) = ctrl->priorVar.at(YYY);
+    priorVar.at(CARBONICITY) = ctrl->priorVar.at(CARBONICITY);
     priorVar.at(IFMR_INTERCEPT) = ctrl->priorVar.at(IFMR_INTERCEPT);
     priorVar.at(IFMR_SLOPE) = ctrl->priorVar.at(IFMR_SLOPE);
     priorVar.at(IFMR_QUADCOEF) = ctrl->priorVar.at(IFMR_QUADCOEF);
@@ -167,6 +147,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     priorMean.at(FEH) = ctrl->priorMean.at(FEH);
     priorMean.at(MOD) = ctrl->priorMean.at(MOD);
     priorMean.at(ABS) = ctrl->priorMean.at(ABS);
+    priorMean.at(YYY) = ctrl->priorMean.at(YYY);
+    priorMean.at(CARBONICITY) = ctrl->priorMean.at(CARBONICITY);
 
     /* prior values for linear IFMR */
     ctrl->priorMean.at(IFMR_SLOPE) = 0.08;
@@ -176,13 +158,10 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     priorMean.at(IFMR_INTERCEPT) = ctrl->priorMean.at(IFMR_INTERCEPT);
     priorMean.at(IFMR_QUADCOEF) = ctrl->priorMean.at(IFMR_QUADCOEF);
 
-    priorVar.at(YYY) = ctrl->priorVar.at(YYY);
-    priorMean.at(YYY) = ctrl->priorMean.at(YYY);
-
     /* open files for reading (data) and writing */
 
-    ctrl->minMag = settings.cluster.minMag;
-    ctrl->maxMag = settings.cluster.maxMag;
+    ctrl->minMag = s.cluster.minMag;
+    ctrl->maxMag = s.cluster.maxMag;
 
     ctrl->iStart = 0;
 
@@ -253,7 +232,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
         if (hasY)
             in >> newY;
         else
-            newY = s.cluster.Y;
+            newY = s.cluster.starting.Y;
 
         in >> newFeh
            >> newMod
@@ -262,7 +241,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
         if (hasCarbonicity)
             in >> newCarbonicity;
         else
-            newCarbonicity = s.cluster.carbonicity;
+            newCarbonicity = s.cluster.starting.carbonicity;
 
         if (evoModels.IFMR >= 4)
         {
@@ -299,19 +278,22 @@ static void initChain (Chain *mc, const struct ifmrGridControl *ctrl)
     }
 
     // If there is no beta in file, initialize everything to prior means
-    mc->clust.feh = ctrl->priorMean.at(FEH);
-    mc->clust.mod = ctrl->priorMean.at(MOD);
-    mc->clust.abs = ctrl->priorMean.at(ABS);
-    mc->clust.yyy = ctrl->priorMean.at(YYY);
-    mc->clust.age = ctrl->initialAge;
+    mc->clust.feh = settings.cluster.starting.Fe_H;
+    mc->clust.mod = settings.cluster.starting.Av;
+    mc->clust.abs = settings.cluster.starting.Av;
+    mc->clust.yyy = settings.cluster.starting.Y;
+    mc->clust.age = settings.cluster.starting.logAge;
+    mc->clust.carbonicity = settings.cluster.starting.carbonicity;
     mc->clust.ifmrIntercept = ctrl->priorMean.at(IFMR_INTERCEPT);
     mc->clust.ifmrSlope = ctrl->priorMean.at(IFMR_SLOPE);
     mc->clust.ifmrQuadCoef = ctrl->priorMean.at(IFMR_QUADCOEF);
-    mc->clust.mean.at(AGE) = ctrl->initialAge;
+
+    mc->clust.mean.at(AGE) = ctrl->priorMean.at(AGE);
     mc->clust.mean.at(YYY) = ctrl->priorMean.at(YYY);
     mc->clust.mean.at(MOD) = ctrl->priorMean.at(MOD);
     mc->clust.mean.at(FEH) = ctrl->priorMean.at(FEH);
     mc->clust.mean.at(ABS) = ctrl->priorMean.at(ABS);
+    mc->clust.mean.at(CARBONICITY) = ctrl->priorMean.at(CARBONICITY);
     mc->clust.mean.at(IFMR_INTERCEPT) = ctrl->priorMean.at(IFMR_INTERCEPT);
     mc->clust.mean.at(IFMR_SLOPE) = ctrl->priorMean.at(IFMR_SLOPE);
     mc->clust.mean.at(IFMR_QUADCOEF) = ctrl->priorMean.at(IFMR_QUADCOEF);

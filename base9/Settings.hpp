@@ -83,7 +83,7 @@ class Settings
         bool crowded = false;
     };
 
-    struct ClusterSigmas
+    struct ClusterValues
     {
         double Fe_H;
         double distMod;
@@ -95,14 +95,9 @@ class Settings
 
     struct ClusterSettings
     {
-        double Fe_H;
-        double distMod;
-        double Av;
-        double Y;
-        double carbonicity;
-        double logAge;
-
-        struct ClusterSigmas sigma;
+        struct ClusterValues priorMeans;
+        struct ClusterValues priorSigma;
+        struct ClusterValues starting;
 
         double minMag;
         double maxMag;

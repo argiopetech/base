@@ -101,7 +101,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
         if (hasY)
             in >> newY;
         else
-            newY = s.cluster.Y;
+            newY = s.cluster.starting.Y;
 
         in >> newFeh
            >> newMod
@@ -110,7 +110,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
         if (hasCarbonicity)
             in >> newCarbonicity;
         else
-            newCarbonicity = s.cluster.carbonicity;
+            newCarbonicity = s.cluster.starting.carbonicity;
 
         if (evoModels.IFMR >= 4)
         {
