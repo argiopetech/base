@@ -65,27 +65,27 @@ void Settings::fromYaml (const string yamlFile)
     whiteDwarf.wdModel = static_cast<WdModel>(getOrDie<int>(whiteDwarfNode, "wdModel"));
     whiteDwarf.M_wd_up = getOrDie<double>(whiteDwarfNode, "M_wd_up");
 
-    cluster.starting.Fe_H = getOrDie<double>(meansNode, "Fe_H");
+    cluster.starting.Fe_H = getOrDie<double>(startingNode, "Fe_H");
     cluster.priorMeans.Fe_H = getOrDie<double>(meansNode, "Fe_H");
     cluster.priorSigma.Fe_H = getOrDie<double>(sigmasNode, "Fe_H");
 
-    cluster.starting.distMod = getOrDie<double>(meansNode, "distMod");
+    cluster.starting.distMod = getOrDie<double>(startingNode, "distMod");
     cluster.priorMeans.distMod = getOrDie<double>(meansNode, "distMod");
     cluster.priorSigma.distMod = getOrDie<double>(sigmasNode, "distMod");
 
-    cluster.starting.Av = getOrDie<double>(meansNode, "Av");
+    cluster.starting.Av = getOrDie<double>(startingNode, "Av");
     cluster.priorMeans.Av = getOrDie<double>(meansNode, "Av");
     cluster.priorSigma.Av = getOrDie<double>(sigmasNode, "Av");
 
-    cluster.starting.Y = getOrDie<double>(meansNode, "Y");
+    cluster.starting.Y = getOrDie<double>(startingNode, "Y");
     cluster.priorMeans.Y = getOrDie<double>(meansNode, "Y");
     cluster.priorSigma.Y = getOrDie<double>(sigmasNode, "Y");
 
-    cluster.starting.carbonicity = getOrDie<double>(meansNode, "carbonicity");
+    cluster.starting.carbonicity = getOrDie<double>(startingNode, "carbonicity");
     cluster.priorMeans.carbonicity = getOrDie<double>(meansNode, "carbonicity");
     cluster.priorSigma.carbonicity = getOrDie<double>(sigmasNode, "carbonicity");
 
-    cluster.starting.logAge = getOrDie<double>(meansNode, "logAge");
+    cluster.starting.logAge = getOrDie<double>(startingNode, "logAge");
     cluster.priorMeans.logAge = getOrDie<double>(meansNode, "logAge");
     cluster.priorSigma.logAge = getOrDie<double>(sigmasNode, "logAge");
 
