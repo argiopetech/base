@@ -35,15 +35,15 @@ using base::utility::ThreadPool;
 
 void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
 {
-    const array<string, NPARAMS> paramNames = {  "    logAge",
-                                                "         YA",
-                                                "        FeH",
-                                                "    modulus",
-                                                " absorption",
-                                                "carbonicity",
-                                                "         YB",
-                                                "     Lambda",
-                                                "   IFMRquad"};
+    const array<string, NPARAMS> paramNames = {  "     logAge",
+                                                "          YA",
+                                                "         FeH",
+                                                "     modulus",
+                                                "  absorption",
+                                                " carbonicity",
+                                                "          YB",
+                                                "      Lambda",
+                                                "    IFMRquad"};
 
     for (int p = 0; p < NPARAMS; p++)
     {

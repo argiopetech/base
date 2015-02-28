@@ -117,7 +117,7 @@ namespace base
         // This is the least efficient possible way of doing this, but output shouldn't be a bottlneck
         std::ostream& format (std::ostream& out)
         {
-            return out << std::setw(10) << std::fixed << std::setprecision(6);
+            return out << std::setw(11) << std::fixed << std::setprecision(6);
         }
 
 
