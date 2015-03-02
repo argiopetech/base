@@ -57,6 +57,7 @@ class Settings
     {
         double YA_start;
         double YB_start;
+        double lambda_start;
 
         double YA_lo;
         double YA_hi;

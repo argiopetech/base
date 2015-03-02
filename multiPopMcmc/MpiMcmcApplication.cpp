@@ -70,6 +70,8 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 {
     ctrl.priorVar.fill(0);
 
+    clust.lambda = settings.multiPopMcmc.lambda_start;
+
     clust.clustA.feh = settings.cluster.starting.Fe_H;
     clust.clustA.priorMean[FEH] = settings.cluster.priorMeans.Fe_H;
     ctrl.priorVar[FEH]          = settings.cluster.priorSigma.Fe_H;

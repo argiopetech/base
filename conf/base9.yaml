@@ -128,7 +128,7 @@ multiPopMcmc:
 
     YA_start:           0.2467
     YB_start:           0.33
-
+    lambda_start:       0.50
 
     YA_lo:              0.20
     YA_hi:              0.30

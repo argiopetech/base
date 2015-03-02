@@ -116,6 +116,7 @@ void Settings::fromYaml (const string yamlFile)
 
     multiPopMcmc.YA_start = getOrDie<double>(multiPopConfNode, "YA_start");
     multiPopMcmc.YB_start = getOrDie<double>(multiPopConfNode, "YB_start");
+    multiPopMcmc.lambda_start = getOrDie<double>(multiPopConfNode, "lambda_start");
 
     multiPopMcmc.YA_lo = getOrDie<double>(multiPopConfNode, "YA_lo");
     multiPopMcmc.YA_hi = getOrDie<double>(multiPopConfNode, "YA_hi");
