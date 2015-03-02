@@ -2,9 +2,7 @@
 #define BASE9_CONFIG_H
 
 // the configured options and settings for Tutorial
-#define Base9_VERSION_MAJOR @Base9_VERSION_MAJOR@
-#define Base9_VERSION_MINOR @Base9_VERSION_MINOR@
-#define Base9_VERSION_PATCH @Base9_VERSION_PATCH@
+#define Base9_VERSION "@Base9_VERSION@"
 
 #cmakedefine HAS_EXP10
 #ifndef HAS_EXP10

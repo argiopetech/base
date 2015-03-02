@@ -22,9 +22,9 @@ check_function_exists (pow HAS_POW)
 ######################
 # Set project verion #
 ######################
-set (Base9_VERSION_MAJOR 9)
-set (Base9_VERSION_MINOR 4)
-set (Base9_VERSION_PATCH 3)
+include(GetGitRevisionDescription)
+#set (Base9_VERSION )
+git_describe(Base9_VERSION)
 
 option (USE_TESTS "Enable testing" OFF) 
 

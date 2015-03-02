@@ -587,5 +587,5 @@ static void printUsage ()
 
 static void printVersion()
 {
-    cerr << "Base-" << Base9_VERSION_MAJOR << "." << Base9_VERSION_MINOR << "." << Base9_VERSION_PATCH << endl;
+    cerr << "Base-" << Base9_VERSION << endl;
 }
