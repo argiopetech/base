@@ -75,7 +75,9 @@ int main (int argc, char *argv[])
 
     {
         vector<string> msFilters = evoModels.mainSequenceEvol->getAvailableFilters();
-        vector<string> wdFilters = evoModels.WDAtmosphere->getAvailableFilters();
+        vector<string> wdFilters = settings.simCluster.noWDs
+                                 ? evoModels.mainSequenceEvol->getAvailableFilters()
+                                 : evoModels.WDAtmosphere->getAvailableFilters();
 
         for ( auto m : msFilters )
         {
@@ -168,7 +170,11 @@ int main (int argc, char *argv[])
         do
         {
             theStar.primary.mass = drawFromIMF (gen); // create single stars in arbitrary mass order
-        } while (theStar.primary.mass < minMass);
+        } while (theStar.primary.mass < minMass
+             || (settings.simCluster.noWDs
+                // Loop again if theStar is a WD
+                ? theStar.primary.getStatus(theCluster, *isochrone) == WD
+                : false));
         nStars++;                       // keep track of the number of stars created
         massTotal += theStar.primary.mass;
 
@@ -325,12 +331,6 @@ int main (int argc, char *argv[])
     {
         do
         {
-            do
-            {
-                theStar.primary.mass = drawFromIMF (gen);
-            } while (theStar.primary.mass < minMass);
-            theStar.setMassRatio(std::generate_canonical<double, 53>(gen));
-
             // Draw a new age and metallicity
             theCluster.age = minAge + (maxAge - minAge) * std::generate_canonical<double, 53>(gen);
             theCluster.feh = minFeH + (maxFeH - minFeH) * std::generate_canonical<double, 53>(gen);
@@ -341,11 +341,22 @@ int main (int argc, char *argv[])
 
             isochrone.reset(evoModels.mainSequenceEvol->deriveIsochrone(theCluster.feh, theCluster.yyy, theCluster.age));
 
+            do
+            {
+                theStar.primary.mass = drawFromIMF (gen);
+            } while (theStar.primary.mass < minMass
+                 || (settings.simCluster.noWDs
+                    // Loop again if theStar is a WD
+                    ? theStar.primary.getStatus(theCluster, *isochrone) == WD
+                    : false));
+
+            theStar.setMassRatio(settings.simCluster.noWDs ? 0 : std::generate_canonical<double, 53>(gen));
+
             photometry = theStar.deriveCombinedMags(theCluster, evoModels, *isochrone);
 
         } while (photometry[2] < minV || photometry[2] > maxV || photometry[1] - photometry[2] < -0.5 || photometry[1] - photometry[2] > 1.7);
 
-        fprintf (w_ptr, "%4d ", i + 20001); // output primary star data
+        fprintf (w_ptr, "%4d ", i + 1000000); // output primary star data
 
         for (auto f : photometry)
             fprintf (w_ptr, "%6.3f ", f < 99. ? f : 99.999);

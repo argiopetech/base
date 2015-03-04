@@ -68,6 +68,8 @@ class Settings
 
     struct SimClusterSettings
     {
+        bool noWDs = false;
+
         int nStars;
         int nFieldStars;
         int percentBinary;      // Fraction * 100

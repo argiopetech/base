@@ -162,6 +162,7 @@ void Settings::fromCLI (int argc, char **argv)
     int i_noBinaries = 0; // Has to be set false
     int i_overrideBounds = 0; // Has to be set false
     int i_development = 0; // Has to be set false
+    int i_noWDs = 0; // Has to be set false
     int i_details = 0; // Has to be set false
 
     char **t_argv = new char*[argc];
@@ -178,6 +179,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"verbose", no_argument, &(verbose), 1},
         {"noBinaries", no_argument, &(i_noBinaries), 1},
         {"overrideBounds", no_argument, &(i_overrideBounds), 1},
+        {"noWDs", no_argument, &(i_noWDs), 1},
         {"development", no_argument, &(i_development), 1},
         {"details", no_argument, &(i_details), 1},
 
@@ -469,6 +471,7 @@ void Settings::fromCLI (int argc, char **argv)
 
     noBinaries = i_noBinaries;
     overrideBounds = i_overrideBounds;
+    simCluster.noWDs = i_noWDs;
     development = i_development;
     details = i_details;
 
@@ -582,6 +585,9 @@ static void printUsage ()
     cerr << "\n9.4.0 flags" << endl;
     cerr <<   "===========" << endl;
     cerr << "\t--noBinaries\t\tTurns off integration over secondary mass" << endl;
+    cerr << "\n9.4.4 flags" << endl;
+    cerr << "=============" << endl;
+    cerr << "\t--noWDs\t\t\tKeeps simCluster from generating WDs";
     cerr << endl;
 }
 
