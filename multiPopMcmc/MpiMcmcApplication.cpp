@@ -94,7 +94,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     clust.clustA.yyy = settings.cluster.starting.Y;
     clust.clustA.priorMean[YYY] = settings.cluster.priorMeans.Y;
-    ctrl.priorVar[YYY]          = settings.cluster.priorSigma.Y;
+    ctrl.priorVar[YYY]          = 0;
 
     // No IFMR code
 

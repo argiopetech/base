@@ -53,5 +53,5 @@ void printHeader (ofstream &file, array<double, NPARAMS> const &priors)
         }
     }
     file << paramNames.at(YYA) << paramNames.at(YYB) << paramNames.at(LAMBDA);
-    file << "     logPost" << endl;
+    file << "      logPost" << endl;
 }
