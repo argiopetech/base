@@ -132,22 +132,22 @@ void initBase(std::string modelDir, int msModel, int wdModel, int ifmr)
     evil::s.whiteDwarf.wdModel = static_cast<WdModel>(wdModel);
     evil::s.whiteDwarf.M_wd_up = 8.0;
 
-    evil::s.cluster.Fe_H = 0.07;
-    evil::s.cluster.sigma.Fe_H = 0.05;
+    evil::s.cluster.priorMeans.Fe_H = 0.07;
+    evil::s.cluster.priorSigma.Fe_H = 0.05;
 
-    evil::s.cluster.distMod = 0.0;
-    evil::s.cluster.sigma.distMod = 0.05;
+    evil::s.cluster.priorMeans.distMod = 0.0;
+    evil::s.cluster.priorSigma.distMod = 0.05;
 
-    evil::s.cluster.Av = 0.009;
-    evil::s.cluster.sigma.Av = 0.006;
+    evil::s.cluster.priorMeans.Av = 0.009;
+    evil::s.cluster.priorSigma.Av = 0.006;
 
-    evil::s.cluster.Y = 0.29;
-    evil::s.cluster.sigma.Y = 0.0;
+    evil::s.cluster.priorMeans.Y = 0.29;
+    evil::s.cluster.priorSigma.Y = 0.0;
 
-    evil::s.cluster.carbonicity = 0.5;
-    evil::s.cluster.sigma.carbonicity = 0.038;
+    evil::s.cluster.priorMeans.carbonicity = 0.5;
+    evil::s.cluster.priorSigma.carbonicity = 0.038;
 
-    evil::s.cluster.logAge = 8.796;
+    evil::s.cluster.priorMeans.logAge = 8.796;
 
     evil::s.cluster.minMag = 0.0;
     evil::s.cluster.maxMag = 30.0;
