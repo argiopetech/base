@@ -191,7 +191,7 @@ int main (int argc, char *argv[])
 
         for (auto s : ret.second)
         {
-            bool isFS = std::stoi(s.id) > 20000;
+            bool isFS = std::stoi(s.id) > 1000000;
             if (meetsMagCutoff(settings, s) && meetsStageCutoff(s, isFS))
             {
                 bool okay = true;
