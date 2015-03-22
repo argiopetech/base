@@ -622,11 +622,8 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
         Star s;
         vector<double> primaryMags, secondaryMags, daCombinedMags, dbCombinedMags;
 
-        {
-            s.mass = 0.0;
-
-            secondaryMags = s.getMags(propClust, evoModels, *isochrone);
-        }
+        s.mass = 0.0;
+        secondaryMags = s.getMags(propClust, evoModels, *isochrone);
 
         vector<double> post(wdSystems.size(), 0.0);
 
