@@ -176,6 +176,12 @@ int main (int argc, char *argv[])
 
         filters = ret.first;
 
+        if (settings.verbose)
+        {
+            for (int f = 0; f < filters.size(); ++f)
+                cout << f << ' ' << filters.at(f) << endl;
+        }
+
         for (auto f : filters)
             exposureTimes.push_back(getExposureTime(settings, f));
 
@@ -229,22 +235,26 @@ int main (int argc, char *argv[])
         for (size_t f = 0; f < filters.size(); ++f)
         {
             auto filter = filters.at(f);
-            auto s2n    = signalToNoise (settings,
-                                         s.obsPhot.at(f),
-                                         getExposureTime(settings, filter),
-                                         filter);
+            auto exposureTime = exposureTimes[f];
 
-            auto sigma  = 1 / s2n;
+            if (exposureTime > 0)
+            {
+                auto s2n    = signalToNoise (settings,
+                                             s.obsPhot.at(f),
+                                             exposureTime,
+                                             filter);
 
-            auto targetSigma = settings.scatterCluster.crowded ? 0.04 : 0.01;
+                auto sigma  = 1 / s2n;
 
-            if (sigma < targetSigma)
-                sigma = targetSigma;
+                auto targetSigma = settings.scatterCluster.crowded ? 0.04 : 0.01;
 
-            s.variance.at(f) = sigma * sigma;
+                sigma = std::max(sigma, targetSigma);
 
-            std::normal_distribution<double> normDist(0., sigma);
-            s.obsPhot.at(f) += normDist(gen);
+                s.variance.at(f) = sigma * sigma;
+
+                std::normal_distribution<double> normDist(0., sigma);
+                s.obsPhot.at(f) += normDist(gen);
+            }
         }
     }
 
