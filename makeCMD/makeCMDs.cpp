@@ -69,7 +69,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
                >> sin  // DistMod
                >> sin; // Carbonicity?
 
-            if (sin == "Carbonicity")
+            if (sin == "carbonicity")
                 hasCarbonicity = true;
             else
                 hasCarbonicity = false;
@@ -83,7 +83,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
                >> sin  // DistMod
                >> sin; // Carbonicity?
 
-            if (sin == "Carbonicity")
+            if (sin == "carbonicity")
                 hasCarbonicity = true;
             else
                 hasCarbonicity = false;
@@ -146,6 +146,7 @@ class Application
 
     void run();
     Isochrone interpolateIsochrone(const Cluster&, const Isochrone&);
+    Isochrone interpolateWDIsochrone(const Cluster&, const Isochrone&);
 
   private:
     Model evoModels;
@@ -285,6 +286,7 @@ void Application::run()
     fout.close();
 }
 
+
 Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochrone &isochrone)
 {
     vector<EvolutionaryPoint> eeps;
@@ -306,7 +308,32 @@ Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochron
     }
 
     return {clust.age, eeps};
+}
 
+
+Isochrone Application::interpolateWDIsochrone(const Cluster &clust, const Isochrone &isochrone)
+{
+    vector<EvolutionaryPoint> eeps;
+
+    double mass = 0;
+    int e = 0;
+    do
+    {
+        mass = isochrone.agbTipMass() + ++e * 0.05;
+
+        if (mass > 8.0)
+            continue;
+
+        {
+            StellarSystem star;
+            star.primary.mass   = mass;
+            star.secondary.mass = 0.0;
+
+            eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone));
+        }
+    } while (mass < 5.0);
+
+    return {clust.age, eeps};
 }
 
 
