@@ -285,6 +285,7 @@ int main (int argc, char *argv[])
     cout << " Y              = " << setw(5) << setprecision(2) << fixed << theCluster.yyy << endl;
     cout << " modulus        = " << setw(5) << setprecision(2) << fixed << theCluster.mod << endl;
     cout << " Av             = " << setw(5) << setprecision(2) << fixed << theCluster.abs << endl;
+    cout << " CarbonFraction = " << setw(5) << setprecision(2) << fixed << theCluster.carbonicity << endl;
     cout << " WDMassUp       = " << setw(4) << setprecision(1) << fixed << theCluster.getM_wd_up() << endl;
     cout << " fractionBinary = " << setw(5) << setprecision(2) << fixed << fractionBinary << endl;
     
