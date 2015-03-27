@@ -170,8 +170,9 @@ class Application
   public:
     Application(Settings s)
         // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
-        : settings(s), gen(s.seed * uint32_t(2654435761)), evoModels(makeModel(s)),
-          massStepSize(settings.sampleMass.deltaMass), massRatioStepSize(settings.sampleMass.deltaMassRatio)
+        : settings(s), gen(s.seed * uint32_t(2654435761)), evoModels(makeModel(s))
+        , massStepSize(settings.sampleMass.deltaMass)
+        , massRatioStepSize( s.noBinaries ? 0.0 : settings.sampleMass.deltaMassRatio )
     {
         {
             const int warmupIter = 10000;
@@ -371,27 +372,40 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
     burnin.run(burninProposal, logPost, priorCheck, burnIters);
 
     // Then do the main run
-    // First, an abbreviated run to get a second covariance matrix
-    try
+    if (settings.noBinaries)
     {
-        std::function<StellarSystem(StellarSystem)> mainProposal =
-            std::bind(&proposeCorrelated, gen, burnin.makeCholeskyDecomp(), _1);
-
         Chain<StellarSystem> main(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), burnin.get(), nullstream);
-        main.run(mainProposal, logPost, priorCheck, burnIters);
-
-        // Then a secondary covariance matrix
-        mainProposal = std::bind(&proposeCorrelated, gen, main.makeCholeskyDecomp(), _1);
-        main.run(mainProposal, logPost, priorCheck, iters);
+        main.run(burninProposal, logPost, priorCheck, iters);
 
         auto finalStar = main.get();
         double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
 
         return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
     }
-    catch (NonPositiveDefiniteMatrix &e)
+    else
     {
-        return std::make_tuple(99.99, 0.0, 0.0);
+    // First, an abbreviated run to get a second covariance matrix
+        try
+        {
+            std::function<StellarSystem(StellarSystem)> mainProposal =
+                std::bind(&proposeCorrelated, gen, burnin.makeCholeskyDecomp(), _1);
+
+            Chain<StellarSystem> main(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), burnin.get(), nullstream);
+            main.run(mainProposal, logPost, priorCheck, burnIters);
+
+            // Then a secondary covariance matrix
+            mainProposal = std::bind(&proposeCorrelated, gen, main.makeCholeskyDecomp(), _1);
+            main.run(mainProposal, logPost, priorCheck, iters);
+
+            auto finalStar = main.get();
+            double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
+
+            return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
+        }
+        catch (NonPositiveDefiniteMatrix &e)
+        {
+            return std::make_tuple(99.99, 0.0, 0.0);
+        }
     }
 }
 
@@ -496,6 +510,11 @@ void Application::run()
 
         for (auto star : stars)
         {
+            if (settings.noBinaries)
+            {
+                star.setMassRatio(0.0);
+            }
+
             auto sampleTuple = sampleMass(*isochrone, star);
 
             double postClusterStar = std::get<2>(sampleTuple);
