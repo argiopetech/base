@@ -89,7 +89,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
                >> sin  // DistMod
                >> sin; // Carbonicity?
 
-            if (sin == "Carbonicity")
+            if (sin == "carbonicity")
                 hasCarbonicity = true;
             else
                 hasCarbonicity = false;
@@ -103,7 +103,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
                >> sin  // DistMod
                >> sin; // Carbonicity?
 
-            if (sin == "Carbonicity")
+            if (sin == "carbonicity")
                 hasCarbonicity = true;
             else
                 hasCarbonicity = false;
