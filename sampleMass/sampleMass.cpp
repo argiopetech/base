@@ -328,7 +328,7 @@ StellarSystem proposeCorrelated (std::mt19937 &gen, Matrix<double, 2, 2> const &
 
 
 // std::function<void(const T&)> checkPriors
-void checkPriors(const double maxMass, const Cluster &clust, const StellarSystem &s)
+void checkPriors(const Cluster &clust, const StellarSystem &s)
 {
     if (s.getMassRatio() < 0.0)
         throw InvalidCluster("Low massRatio");
@@ -336,7 +336,7 @@ void checkPriors(const double maxMass, const Cluster &clust, const StellarSystem
         throw InvalidCluster("High massRatio");
     else if (s.primary.mass <= 0.1)
         throw InvalidCluster("Low mass in primary");
-    else if (s.primary.mass >= maxMass)
+    else if (s.primary.mass >= clust.getM_wd_up())
         throw InvalidCluster("High mass in primary");
 }
 
@@ -358,20 +358,11 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
 
     double maxMass = 0;
 
-    if (settings.simCluster.noWDs)
-    {
-        maxMass = isochrone.agbTipMass();
-    }
-    else
-    {
-        maxMass = clust.getM_wd_up();
-    }
-
     // Proposal function bindings
     std::function<StellarSystem(StellarSystem)> burninProposal =
         std::bind(&propose, gen, massStepSize, massRatioStepSize, 10.0, _1);
 
-    std::function<void(const StellarSystem&)> priorCheck = std::bind(&checkPriors, maxMass, clust, _1);
+    std::function<void(const StellarSystem&)> priorCheck = std::bind(&checkPriors, clust, _1);
 
     // This takes a special function binding because it's overridden.
     std::function<double(StellarSystem&)> logPost =
@@ -389,9 +380,17 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
         main.run(burninProposal, logPost, priorCheck, iters);
 
         auto finalStar = main.get();
-        double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
 
-        return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
+        try
+        {
+            double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
+            return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
+        }
+        catch (InvalidModelError &e)
+        {
+            double acceptedPosterior = -std::numeric_limits<double>::infinity();
+            return std::make_tuple(99.999, 0.0, acceptedPosterior);
+        }
     }
     else
     {
