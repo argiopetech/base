@@ -1,0 +1,12 @@
+plot_walker can be called from the command line as:
+> python plot_walker_base.py
+
+A handful of things are hard-coded; only the first two need your attention:
+
+— The first line is the path to python — maybe change it as appropriate
+— Input .res file: we should grab this from the mcmc call
+
+— Output png file is called mcmcWalkers.png
+— I have set the axes to be 11,000. Could be grabbed from YAML or mcmc call to be set to nstepsMC (?)
+— Figure sizes assume six columns in the .res file. Maybe it is worth making this a variable if that is likely to change.
+— Two basic python libraries are used (numpy, matplotlib).
