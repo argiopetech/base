@@ -1,6 +1,5 @@
 #include <string>
 #include <iostream>
-#include <sstream>
 #include <map>
 #include <vector>
 
@@ -25,8 +24,6 @@ using YAML::LoadFile;
 // Forward declaration
 static void printUsage ();
 static void printVersion ();
-
-using namespace std;
 
 void Settings::fromYaml (const string yamlFile)
 {
@@ -499,7 +496,7 @@ template<typename T> T Settings::getDefault (Node & n, string && f, T def)
     }
 }
 
-template<typename T> T Settings::getOrDie  (Node & n, string && f)
+template<typename T> T Settings::getOrDie (Node & n, string && f)
 {
     if (n[f])
     {
@@ -521,11 +518,10 @@ template<typename T> T Settings::getOrRequest (Node & n, string && f)
     {
         string input = "";
         cout << "Please enter your desired setting for field: '" + f + "':\n";
-        getline(cin, input);
-        cout << "Field '" + f + "' set to: " << input << endl;
-        YAML::Node node;
-        node[f] = input;
-        return node[f].as<T> ();
+        getline(std::cin, input);
+        T t;
+        istringstream(input) >> t;
+        return t;
     }
 }
 
