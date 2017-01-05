@@ -59,50 +59,133 @@ void Settings::fromYaml (const string yamlFile)
     Node sampleMassNode = getNode (configNode, "sampleMass");
 
     mainSequence.msRgbModel = static_cast<MsModel>(getOrRequest <int>(mainSequenceNode, "msRgbModel"));
+    // test
+    cout << "whiteDwarf.ifmr: " << whiteDwarf.ifmr << "\n";
+    cout << "whiteDwarf.M_wd_up: " << whiteDwarf.M_wd_up << "\n";
 
+    cout << "cluster.starting.Fe_H: " << cluster.starting.Fe_H << "\n";
+    cout << "cluster.priorMeans.Fe_H: " << cluster.priorMeans.Fe_H << "\n";
+    cout << "cluster.priorSigma.Fe_H: " << cluster.priorSigma.Fe_H << "\n";
+
+    cout << "cluster.starting.distMod: " << cluster.starting.distMod << "\n";
+    cout << "cluster.priorMeans.distMod: " << cluster.priorMeans.distMod << "\n";
+    cout << "cluster.priorSigma.distMod: " << cluster.priorSigma.distMod << "\n";
+
+    cout << "cluster.starting.Av: " << cluster.starting.Av << "\n";
+    cout << "cluster.priorMeans.Av: " << cluster.priorMeans.Av << "\n";
+    cout << "cluster.priorSigma.Av: " << cluster.priorSigma.Av << "\n";
+
+    cout << "cluster.starting.Y: " << cluster.starting.Y << "\n";
+    cout << "cluster.priorMeans.Y: " << cluster.priorMeans.Y << "\n";
+    cout << "cluster.priorSigma.Y: " << cluster.priorSigma.Y << "\n";
+
+    cout << "cluster.starting.carbonicity: " << cluster.starting.carbonicity << "\n";
+    cout << "cluster.priorMeans.carbonicity: " << cluster.priorMeans.carbonicity << "\n";
+    cout << "cluster.priorSigma.carbonicity: " << cluster.priorSigma.carbonicity << "\n";
+
+    cout << "cluster.starting.logAge: " << cluster.starting.logAge << "\n";
+    cout << "cluster.priorMeans.logAge: " << cluster.priorMeans.logAge << "\n";
+    cout << "cluster.priorSigma.logAge: " << cluster.priorSigma.logAge << "\n";
+
+    cout << "cluster.minMag: " << cluster.minMag << "\n";
+    cout << "cluster.maxMag: " << cluster.maxMag << "\n";
+    cout << "cluster.index: " << cluster.index << "\n";
+
+    cout << "singlePopMcmc.burnIter: " << singlePopMcmc.burnIter << "\n";
+    cout << "singlePopMcmc.stage3Iter: " << singlePopMcmc.stage3Iter << "\n";
+    cout << "singlePopMcmc.maxIter: " << singlePopMcmc.maxIter << "\n";
+    cout << "singlePopMcmc.thin: " << singlePopMcmc.thin << "\n";
+
+    cout << "singlePopMcmc.adaptiveBigSteps: " << singlePopMcmc.adaptiveBigSteps << "\n";
+    cout << "singlePopMcmc.trialIter: " << singlePopMcmc.trialIter << "\n";
+
+    cout << "singlePopMcmc.stepSize[AGE]: " << singlePopMcmc.stepSize[AGE] << "\n";
+    cout << "singlePopMcmc.stepSize[FEH]: " << singlePopMcmc.stepSize[FEH] << "\n";
+    cout << "singlePopMcmc.stepSize[MOD]: " << singlePopMcmc.stepSize[MOD] << "\n";
+    cout << "singlePopMcmc.stepSize[ABS]: " << singlePopMcmc.stepSize[ABS] << "\n";
+    cout << "singlePopMcmc.stepSize[YYY]: " << singlePopMcmc.stepSize[YYY] << "\n";
+    cout << "singlePopMcmc.stepSize[CARBONICITY]: " << singlePopMcmc.stepSize[CARBONICITY] << "\n";
+    cout << "singlePopMcmc.stepSize[IFMR_INTERCEPT]: " << singlePopMcmc.stepSize[IFMR_INTERCEPT] << "\n";
+    cout << "singlePopMcmc.stepSize[IFMR_SLOPE]: " << singlePopMcmc.stepSize[IFMR_SLOPE] << "\n";
+    cout << "singlePopMcmc.stepSize[IFMR_QUADCOEF]: " << singlePopMcmc.stepSize[IFMR_QUADCOEF] << "\n";
+
+    cout << "multiPopMcmc.YA_start: " << multiPopMcmc.YA_start << "\n";
+    cout << "multiPopMcmc.YB_start: " << multiPopMcmc.YB_start << "\n";
+    cout << "multiPopMcmc.lambda_start: " << multiPopMcmc.lambda_start << "\n";
+
+    cout << "multiPopMcmc.YA_lo: " << multiPopMcmc.YA_lo << "\n";
+    cout << "multiPopMcmc.YA_hi: " << multiPopMcmc.YA_hi << "\n";
+    cout << "multiPopMcmc.YB_hi: " << multiPopMcmc.YB_hi << "\n";
+
+    cout << "multiPopMcmc.lambdaStep: " << multiPopMcmc.lambdaStep << "\n";
+
+    cout << "simCluster.nStars: " << simCluster.nStars << "\n";
+    cout << "simCluster.percentBinary: " << simCluster.percentBinary << "\n";
+    cout << "simCluster.percentDB: " << simCluster.percentDB << "\n";
+    cout << "simCluster.nFieldStars: " << simCluster.nFieldStars << "\n";
+
+    cout << "scatterCluster.brightLimit: " << scatterCluster.brightLimit << "\n";
+    cout << "scatterCluster.faintLimit: " << scatterCluster.faintLimit << "\n";
+    cout << "scatterCluster.relevantFilt: " << scatterCluster.relevantFilt << "\n";
+    cout << "scatterCluster.limitS2N: " << scatterCluster.limitS2N << "\n";
+    cout << "scatterCluster.crowded: " << scatterCluster.crowded << "\n";
+
+    cout << "sampleMass.deltaMass: " << sampleMass.deltaMass << "\n";
+    cout << "sampleMass.deltaMassRatio: " << sampleMass.deltaMassRatio << "\n";
+
+    cout << "verbose: " << verbose << "\n";
+
+    cout << "files.phot: " << files.phot << "\n";
+
+    cout << "files.output: " << files.output << "\n";
+
+    cout << "files.scatter: " << files.scatter << "\n";
+
+    cout << "files.models: " << files.models << "\n";
+    //
     whiteDwarf.ifmr = getOrRequest <int>(whiteDwarfNode, "ifmr");
     whiteDwarf.wdModel = static_cast<WdModel>(getOrRequest <int>(whiteDwarfNode, "wdModel"));
     whiteDwarf.M_wd_up = getOrRequest <double>(whiteDwarfNode, "M_wd_up");
-
+    
     cluster.starting.Fe_H = getOrRequest <double>(startingNode, "Fe_H");
     cluster.priorMeans.Fe_H = getOrRequest <double>(meansNode, "Fe_H");
     cluster.priorSigma.Fe_H = getOrRequest <double>(sigmasNode, "Fe_H");
-
+    
     cluster.starting.distMod = getOrRequest <double>(startingNode, "distMod");
     cluster.priorMeans.distMod = getOrRequest <double>(meansNode, "distMod");
     cluster.priorSigma.distMod = getOrRequest <double>(sigmasNode, "distMod");
-
+    
     cluster.starting.Av = getOrRequest <double>(startingNode, "Av");
     cluster.priorMeans.Av = getOrRequest <double>(meansNode, "Av");
     cluster.priorSigma.Av = getOrRequest <double>(sigmasNode, "Av");
-
+    
     cluster.starting.Y = getOrRequest <double>(startingNode, "Y");
     cluster.priorMeans.Y = getOrRequest <double>(meansNode, "Y");
     cluster.priorSigma.Y = getOrRequest <double>(sigmasNode, "Y");
-
+    
     cluster.starting.carbonicity = getOrRequest <double>(startingNode, "carbonicity");
     cluster.priorMeans.carbonicity = getOrRequest <double>(meansNode, "carbonicity");
     cluster.priorSigma.carbonicity = getOrRequest <double>(sigmasNode, "carbonicity");
-
+    
     cluster.starting.logAge = getOrRequest <double>(startingNode, "logAge");
     cluster.priorMeans.logAge = getOrRequest <double>(meansNode, "logAge");
     cluster.priorSigma.logAge = getOrRequest <double>(sigmasNode, "logAge");
-
+    
     cluster.minMag = getOrRequest <double>(clusterNode, "minMag");
     cluster.maxMag = getOrRequest <double>(clusterNode, "maxMag");
     cluster.index = getOrRequest <int>(clusterNode, "index");
-
+    
     singlePopMcmc.burnIter = getOrRequest <int>(singlePopConfNode, "stage2IterMax");
     singlePopMcmc.stage3Iter = getOrRequest <int>(singlePopConfNode, "stage3Iter");
     singlePopMcmc.maxIter = getOrRequest <int>(singlePopConfNode, "runIter");
     singlePopMcmc.thin = getOrRequest <int>(singlePopConfNode, "thin");
-
+    
     singlePopMcmc.adaptiveBigSteps = getOrRequest <int>(mpiAdaptiveNode, "bigStepIter");
     singlePopMcmc.trialIter = getOrRequest <int>(mpiAdaptiveNode, "trialIter");
 
     if (singlePopMcmc.trialIter <= 0)
         exitWith("singlePopMcmc:adaptive:trialIter must be greater than 0");
-
+    
     singlePopMcmc.stepSize[AGE] = getOrRequest <double>(mpiStepNode, "age");
     singlePopMcmc.stepSize[FEH] = getOrRequest <double>(mpiStepNode, "Fe_H");
     singlePopMcmc.stepSize[MOD] = getOrRequest <double>(mpiStepNode, "distMod");
@@ -112,29 +195,29 @@ void Settings::fromYaml (const string yamlFile)
     singlePopMcmc.stepSize[IFMR_INTERCEPT] = getOrRequest <double>(mpiStepNode, "ifmrIntercept");
     singlePopMcmc.stepSize[IFMR_SLOPE] = getOrRequest <double>(mpiStepNode, "ifmrSlope");
     singlePopMcmc.stepSize[IFMR_QUADCOEF] = getOrRequest <double>(mpiStepNode, "ifmrQuadCoef");
-
+    
     multiPopMcmc.YA_start = getOrRequest <double>(multiPopConfNode, "YA_start");
     multiPopMcmc.YB_start = getOrRequest <double>(multiPopConfNode, "YB_start");
     multiPopMcmc.lambda_start = getOrRequest <double>(multiPopConfNode, "lambda_start");
-
+    
     multiPopMcmc.YA_lo = getOrRequest <double>(multiPopConfNode, "YA_lo");
     multiPopMcmc.YA_hi = getOrRequest <double>(multiPopConfNode, "YA_hi");
     multiPopMcmc.YB_hi = getOrRequest <double>(multiPopConfNode, "YB_hi");
-
+    
     multiPopMcmc.lambdaStep = getOrRequest <double>(multiPopConfNode, "lambdaStep");
-
+    
     simCluster.nStars = getOrRequest <int>(simConfNode, "nStars");
     simCluster.percentBinary = getOrRequest <int>(simConfNode, "percentBinary");
     simCluster.percentDB = getOrRequest <int>(simConfNode, "percentDB");
     simCluster.nFieldStars = getOrRequest <int>(simConfNode, "nFieldStars");
 //    simCluster.nBrownDwarfs = getOrRequest <int>(simConfNode, "nBrownDwarfs");
-
+    
     scatterCluster.brightLimit = getOrRequest <double>(scatterConfNode, "brightLimit");
     scatterCluster.faintLimit = getOrRequest <double>(scatterConfNode, "faintLimit");
     scatterCluster.relevantFilt = getOrRequest <int>(scatterConfNode, "relevantFilt");
     scatterCluster.limitS2N = getOrRequest <double>(scatterConfNode, "limitS2N");
     scatterCluster.crowded  = getOrRequest <bool>(scatterConfNode, "crowded");
-
+    
     sampleMass.deltaMass = getOrRequest <double>(sampleMassNode, "deltaMass");
     sampleMass.deltaMassRatio = getOrRequest <double>(sampleMassNode, "deltaMassRatio");
 
@@ -143,9 +226,9 @@ void Settings::fromYaml (const string yamlFile)
         getOrRequest <double>(tNode, "U");
         scatterCluster.exposures = tNode.as<map<string, double>>();
     }
-
+    
     verbose = getOrRequest <int>(generalNode, "verbose");
-
+    
     // When we switch to C++11, we can change these to std::string and remove most of the cruft
     files.phot = getOrRequest <string>(filesNode, "photFile");
 
@@ -517,7 +600,7 @@ template<typename T> T Settings::getOrRequest (Node & n, string && f)
     else
     {
         string input = "";
-        cout << "Please enter your desired setting for field: '" + f + "':\n";
+        cout << "Please enter your desired setting for field: '" + f + "'\n";
         getline(std::cin, input);
         T t;
         istringstream(input) >> t;
