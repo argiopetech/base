@@ -143,83 +143,83 @@ void Settings::fromYaml (const string yamlFile)
 
     cout << "files.models: " << files.models << "\n";
     //
-    whiteDwarf.ifmr = getOrRequest <int>(whiteDwarfNode, "ifmr");
-    whiteDwarf.wdModel = static_cast<WdModel>(getOrRequest <int>(whiteDwarfNode, "wdModel"));
-    whiteDwarf.M_wd_up = getOrRequest <double>(whiteDwarfNode, "M_wd_up");
+    whiteDwarf.ifmr = whiteDwarf.ifmr == 0 ? getOrRequest <int>(whiteDwarfNode, "ifmr") : whiteDwarf.ifmr;
+    whiteDwarf.wdModel = static_cast<int>(whiteDwarf.wdModel) == 0 ? static_cast<WdModel>(getOrRequest <int>(whiteDwarfNode, "wdModel")) : whiteDwarf.wdModel;
+    whiteDwarf.M_wd_up = whiteDwarf.M_wd_up == 0.0 ? getOrRequest <double>(whiteDwarfNode, "M_wd_up") : whiteDwarf.M_wd_up;
     
-    cluster.starting.Fe_H = getOrRequest <double>(startingNode, "Fe_H");
-    cluster.priorMeans.Fe_H = getOrRequest <double>(meansNode, "Fe_H");
-    cluster.priorSigma.Fe_H = getOrRequest <double>(sigmasNode, "Fe_H");
+    cluster.starting.Fe_H = cluster.starting.Fe_H == 0.0 ? getOrRequest <double>(startingNode, "Fe_H") : cluster.starting.Fe_H;
+    cluster.priorMeans.Fe_H = cluster.priorMeans.Fe_H == 0.0 ? getOrRequest <double>(meansNode, "Fe_H") : cluster.priorMeans.Fe_H;
+    cluster.priorSigma.Fe_H = cluster.priorSigma.Fe_H == 0.0 ? getOrRequest <double>(sigmasNode, "Fe_H") : cluster.priorSigma.Fe_H;
     
-    cluster.starting.distMod = getOrRequest <double>(startingNode, "distMod");
-    cluster.priorMeans.distMod = getOrRequest <double>(meansNode, "distMod");
-    cluster.priorSigma.distMod = getOrRequest <double>(sigmasNode, "distMod");
+    cluster.starting.distMod = cluster.starting.distMod == 0.0 ? getOrRequest <double>(startingNode, "distMod") : cluster.starting.distMod;
+    cluster.priorMeans.distMod = cluster.priorMeans.distMod == 0.0 ? getOrRequest <double>(meansNode, "distMod") : cluster.priorMeans.distMod;
+    cluster.priorSigma.distMod = cluster.priorSigma.distMod == 0.0 ? getOrRequest <double>(sigmasNode, "distMod") : cluster.priorSigma.distMod;
     
-    cluster.starting.Av = getOrRequest <double>(startingNode, "Av");
-    cluster.priorMeans.Av = getOrRequest <double>(meansNode, "Av");
-    cluster.priorSigma.Av = getOrRequest <double>(sigmasNode, "Av");
+    cluster.starting.Av = cluster.starting.Av == 0.0 ? getOrRequest <double>(startingNode, "Av") : cluster.starting.Av;
+    cluster.priorMeans.Av = cluster.priorMeans.Av == 0.0 ? getOrRequest <double>(meansNode, "Av") : cluster.priorMeans.Av;
+    cluster.priorSigma.Av = cluster.priorSigma.Av == 0.0 ? getOrRequest <double>(sigmasNode, "Av") : cluster.priorSigma.Av;
     
-    cluster.starting.Y = getOrRequest <double>(startingNode, "Y");
-    cluster.priorMeans.Y = getOrRequest <double>(meansNode, "Y");
-    cluster.priorSigma.Y = getOrRequest <double>(sigmasNode, "Y");
+    cluster.starting.Y = cluster.starting.Y == 0.0 ? getOrRequest <double>(startingNode, "Y") : cluster.starting.Y;
+    cluster.priorMeans.Y = cluster.priorMeans.Y == 0.0 ? getOrRequest <double>(meansNode, "Y") : cluster.priorMeans.Y;
+    cluster.priorSigma.Y = cluster.priorSigma.Y == 0.0 ? getOrRequest <double>(sigmasNode, "Y") : cluster.priorSigma.Y;
     
-    cluster.starting.carbonicity = getOrRequest <double>(startingNode, "carbonicity");
-    cluster.priorMeans.carbonicity = getOrRequest <double>(meansNode, "carbonicity");
-    cluster.priorSigma.carbonicity = getOrRequest <double>(sigmasNode, "carbonicity");
+    cluster.starting.carbonicity = cluster.starting.carbonicity == 0.38 ? getOrRequest <double>(startingNode, "carbonicity") : cluster.starting.carbonicity;
+    cluster.priorMeans.carbonicity = cluster.priorMeans.carbonicity == 0.38 ? getOrRequest <double>(meansNode, "carbonicity") : cluster.priorMeans.carbonicity;
+    cluster.priorSigma.carbonicity = cluster.priorSigma.carbonicity == 0.0 ? getOrRequest <double>(sigmasNode, "carbonicity") : cluster.priorSigma.carbonicity;
     
-    cluster.starting.logAge = getOrRequest <double>(startingNode, "logAge");
-    cluster.priorMeans.logAge = getOrRequest <double>(meansNode, "logAge");
-    cluster.priorSigma.logAge = getOrRequest <double>(sigmasNode, "logAge");
+    cluster.starting.logAge = cluster.starting.logAge == 0.0 ? getOrRequest <double>(startingNode, "logAge") : cluster.starting.logAge;
+    cluster.priorMeans.logAge = cluster.priorMeans.logAge == 0.0 ? getOrRequest <double>(meansNode, "logAge") : cluster.priorMeans.logAge;
+    cluster.priorSigma.logAge = cluster.priorSigma.logAge == 0.0 ? getOrRequest <double>(sigmasNode, "logAge") : cluster.priorSigma.logAge;
     
-    cluster.minMag = getOrRequest <double>(clusterNode, "minMag");
-    cluster.maxMag = getOrRequest <double>(clusterNode, "maxMag");
-    cluster.index = getOrRequest <int>(clusterNode, "index");
+    cluster.minMag = cluster.minMag == 0.0 ? getOrRequest <double>(clusterNode, "minMag") : cluster.minMag;
+    cluster.maxMag = cluster.maxMag == 0.0 ? getOrRequest <double>(clusterNode, "maxMag") : cluster.maxMag;
+    cluster.index = cluster.index == 0 ? getOrRequest <int>(clusterNode, "index") : cluster.index;
     
-    singlePopMcmc.burnIter = getOrRequest <int>(singlePopConfNode, "stage2IterMax");
-    singlePopMcmc.stage3Iter = getOrRequest <int>(singlePopConfNode, "stage3Iter");
-    singlePopMcmc.maxIter = getOrRequest <int>(singlePopConfNode, "runIter");
-    singlePopMcmc.thin = getOrRequest <int>(singlePopConfNode, "thin");
+    singlePopMcmc.burnIter = singlePopMcmc.burnIter == 0 ? getOrRequest <int>(singlePopConfNode, "stage2IterMax") : singlePopMcmc.burnIter;
+    singlePopMcmc.stage3Iter = singlePopMcmc.stage3Iter == 0 ? getOrRequest <int>(singlePopConfNode, "stage3Iter") : singlePopMcmc.stage3Iter;
+    singlePopMcmc.maxIter = singlePopMcmc.maxIter == 0 ? getOrRequest <int>(singlePopConfNode, "runIter") : singlePopMcmc.maxIter;
+    singlePopMcmc.thin = singlePopMcmc.thin == 0 ? getOrRequest <int>(singlePopConfNode, "thin") : singlePopMcmc.thin;
     
-    singlePopMcmc.adaptiveBigSteps = getOrRequest <int>(mpiAdaptiveNode, "bigStepIter");
-    singlePopMcmc.trialIter = getOrRequest <int>(mpiAdaptiveNode, "trialIter");
+    singlePopMcmc.adaptiveBigSteps = singlePopMcmc.adaptiveBigSteps == 0 ? getOrRequest <int>(mpiAdaptiveNode, "bigStepIter") : singlePopMcmc.adaptiveBigSteps;
+    singlePopMcmc.trialIter = singlePopMcmc.trialIter == 0 ? getOrRequest <int>(mpiAdaptiveNode, "trialIter") : singlePopMcmc.trialIter;
 
     if (singlePopMcmc.trialIter <= 0)
         exitWith("singlePopMcmc:adaptive:trialIter must be greater than 0");
     
-    singlePopMcmc.stepSize[AGE] = getOrRequest <double>(mpiStepNode, "age");
-    singlePopMcmc.stepSize[FEH] = getOrRequest <double>(mpiStepNode, "Fe_H");
-    singlePopMcmc.stepSize[MOD] = getOrRequest <double>(mpiStepNode, "distMod");
-    singlePopMcmc.stepSize[ABS] = getOrRequest <double>(mpiStepNode, "Av");
-    singlePopMcmc.stepSize[YYY] = getOrRequest <double>(mpiStepNode, "Y");
-    singlePopMcmc.stepSize[CARBONICITY] = getOrRequest <double>(mpiStepNode, "carbonicity");
-    singlePopMcmc.stepSize[IFMR_INTERCEPT] = getOrRequest <double>(mpiStepNode, "ifmrIntercept");
-    singlePopMcmc.stepSize[IFMR_SLOPE] = getOrRequest <double>(mpiStepNode, "ifmrSlope");
-    singlePopMcmc.stepSize[IFMR_QUADCOEF] = getOrRequest <double>(mpiStepNode, "ifmrQuadCoef");
+    singlePopMcmc.stepSize[AGE] = singlePopMcmc.stepSize[AGE] == 0.0 ? getOrRequest <double>(mpiStepNode, "age") : singlePopMcmc.stepSize[AGE];
+    singlePopMcmc.stepSize[FEH] = singlePopMcmc.stepSize[FEH] == 0.0 ? getOrRequest <double>(mpiStepNode, "Fe_H") : singlePopMcmc.stepSize[FEH];
+    singlePopMcmc.stepSize[MOD] = singlePopMcmc.stepSize[MOD] == 0.0 ? getOrRequest <double>(mpiStepNode, "distMod") : singlePopMcmc.stepSize[MOD];
+    singlePopMcmc.stepSize[ABS] = singlePopMcmc.stepSize[ABS] == 0.0 ? getOrRequest <double>(mpiStepNode, "Av") : singlePopMcmc.stepSize[ABS];
+    singlePopMcmc.stepSize[YYY] = singlePopMcmc.stepSize[YYY] == 0.0 ? getOrRequest <double>(mpiStepNode, "Y") : singlePopMcmc.stepSize[YYY];
+    singlePopMcmc.stepSize[CARBONICITY] = singlePopMcmc.stepSize[CARBONICITY] == 0.0 ? getOrRequest <double>(mpiStepNode, "carbonicity") : singlePopMcmc.stepSize[CARBONICITY];
+    singlePopMcmc.stepSize[IFMR_INTERCEPT] = singlePopMcmc.stepSize[IFMR_INTERCEPT] == 0.0 ? getOrRequest <double>(mpiStepNode, "ifmrIntercept") : singlePopMcmc.stepSize[IFMR_INTERCEPT];
+    singlePopMcmc.stepSize[IFMR_SLOPE] = singlePopMcmc.stepSize[IFMR_SLOPE] == 0.0 ? getOrRequest <double>(mpiStepNode, "ifmrSlope") : singlePopMcmc.stepSize[IFMR_SLOPE];
+    singlePopMcmc.stepSize[IFMR_QUADCOEF] = singlePopMcmc.stepSize[IFMR_QUADCOEF] == 0.0 ? getOrRequest <double>(mpiStepNode, "ifmrQuadCoef") : singlePopMcmc.stepSize[IFMR_QUADCOEF];
     
-    multiPopMcmc.YA_start = getOrRequest <double>(multiPopConfNode, "YA_start");
-    multiPopMcmc.YB_start = getOrRequest <double>(multiPopConfNode, "YB_start");
-    multiPopMcmc.lambda_start = getOrRequest <double>(multiPopConfNode, "lambda_start");
+    multiPopMcmc.YA_start = multiPopMcmc.YA_start == 0.0 ? getOrRequest <double>(multiPopConfNode, "YA_start") : multiPopMcmc.YA_start;
+    multiPopMcmc.YB_start = multiPopMcmc.YB_start == 0.0 ? getOrRequest <double>(multiPopConfNode, "YB_start") : multiPopMcmc.YB_start;
+    multiPopMcmc.lambda_start = multiPopMcmc.lambda_start == 0.0 ? getOrRequest <double>(multiPopConfNode, "lambda_start") : multiPopMcmc.lambda_start;
     
-    multiPopMcmc.YA_lo = getOrRequest <double>(multiPopConfNode, "YA_lo");
-    multiPopMcmc.YA_hi = getOrRequest <double>(multiPopConfNode, "YA_hi");
-    multiPopMcmc.YB_hi = getOrRequest <double>(multiPopConfNode, "YB_hi");
+    multiPopMcmc.YA_lo = multiPopMcmc.YA_lo == 0.0 ? getOrRequest <double>(multiPopConfNode, "YA_lo") : multiPopMcmc.YA_lo;
+    multiPopMcmc.YA_hi = multiPopMcmc.YA_hi == 0.0 ? getOrRequest <double>(multiPopConfNode, "YA_hi") : multiPopMcmc.YA_hi;
+    multiPopMcmc.YB_hi = multiPopMcmc.YB_hi == 0.0 ? getOrRequest <double>(multiPopConfNode, "YB_hi") : multiPopMcmc.YB_hi;
     
-    multiPopMcmc.lambdaStep = getOrRequest <double>(multiPopConfNode, "lambdaStep");
+    multiPopMcmc.lambdaStep = multiPopMcmc.lambdaStep == 0.0 ? getOrRequest <double>(multiPopConfNode, "lambdaStep") : multiPopMcmc.lambdaStep;
     
-    simCluster.nStars = getOrRequest <int>(simConfNode, "nStars");
-    simCluster.percentBinary = getOrRequest <int>(simConfNode, "percentBinary");
-    simCluster.percentDB = getOrRequest <int>(simConfNode, "percentDB");
-    simCluster.nFieldStars = getOrRequest <int>(simConfNode, "nFieldStars");
+    simCluster.nStars = simCluster.nStars == 0 ? getOrRequest <int>(simConfNode, "nStars") : simCluster.nStars;
+    simCluster.percentBinary = simCluster.percentBinary == 0 ? getOrRequest <int>(simConfNode, "percentBinary") : simCluster.percentBinary;
+    simCluster.percentDB = simCluster.percentDB == 0 ? getOrRequest <int>(simConfNode, "percentDB") : simCluster.percentDB;
+    simCluster.nFieldStars = simCluster.nFieldStars == 0 ? getOrRequest <int>(simConfNode, "nFieldStars") : simCluster.nFieldStars;
 //    simCluster.nBrownDwarfs = getOrRequest <int>(simConfNode, "nBrownDwarfs");
     
-    scatterCluster.brightLimit = getOrRequest <double>(scatterConfNode, "brightLimit");
-    scatterCluster.faintLimit = getOrRequest <double>(scatterConfNode, "faintLimit");
-    scatterCluster.relevantFilt = getOrRequest <int>(scatterConfNode, "relevantFilt");
-    scatterCluster.limitS2N = getOrRequest <double>(scatterConfNode, "limitS2N");
-    scatterCluster.crowded  = getOrRequest <bool>(scatterConfNode, "crowded");
+    scatterCluster.brightLimit = scatterCluster.brightLimit == 0.0 ? getOrRequest <double>(scatterConfNode, "brightLimit") : scatterCluster.brightLimit;
+    scatterCluster.faintLimit = scatterCluster.faintLimit == 0.0 ? getOrRequest <double>(scatterConfNode, "faintLimit") : scatterCluster.faintLimit;
+    scatterCluster.relevantFilt = scatterCluster.relevantFilt == 0 ? getOrRequest <int>(scatterConfNode, "relevantFilt") : scatterCluster.relevantFilt;
+    scatterCluster.limitS2N = scatterCluster.limitS2N == 0.0 ? getOrRequest <double>(scatterConfNode, "limitS2N") : scatterCluster.limitS2N;
+    scatterCluster.crowded = scatterCluster.crowded == false ? getOrRequest <bool>(scatterConfNode, "crowded") : scatterCluster.crowded;
     
-    sampleMass.deltaMass = getOrRequest <double>(sampleMassNode, "deltaMass");
-    sampleMass.deltaMassRatio = getOrRequest <double>(sampleMassNode, "deltaMassRatio");
+    sampleMass.deltaMass = sampleMass.deltaMass == 0.0 ? getOrRequest <double>(sampleMassNode, "deltaMass") : sampleMass.deltaMass;
+    sampleMass.deltaMassRatio = sampleMass.deltaMassRatio == 0.0 ? getOrRequest <double>(sampleMassNode, "deltaMassRatio") : sampleMass.deltaMassRatio;
 
     {
         auto tNode = getNode(scatterConfNode, "exposures");
@@ -227,16 +227,16 @@ void Settings::fromYaml (const string yamlFile)
         scatterCluster.exposures = tNode.as<map<string, double>>();
     }
     
-    verbose = getOrRequest <int>(generalNode, "verbose");
+    verbose = verbose == 0 ? getOrRequest <int>(generalNode, "verbose") : verbose;
     
     // When we switch to C++11, we can change these to std::string and remove most of the cruft
-    files.phot = getOrRequest <string>(filesNode, "photFile");
+    files.phot = files.phot == "" ? getOrRequest <string>(filesNode, "photFile") : files.phot;
 
-    files.output = getOrRequest <string>(filesNode, "outputFileBase");
+    files.output = files.output == "" ? getOrRequest <string>(filesNode, "outputFileBase") : files.output;
 
-    files.scatter = getOrRequest <string>(filesNode, "scatterFile");
+    files.scatter = files.scatter == "" ? getOrRequest <string>(filesNode, "scatterFile") : files.scatter;
 
-    files.models = getOrRequest <string>(filesNode, "modelDirectory");
+    files.models = files.models == "" ? getOrRequest <string>(filesNode, "modelDirectory") : files.models;
 }
 
 void Settings::fromCLI (int argc, char **argv)
