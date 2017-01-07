@@ -231,6 +231,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"startingAv", required_argument, 0, 0xC6},
         {"startingY", required_argument, 0, 0xC5},
         {"startinglogAge", required_argument, 0, 0xC4},
+        {"startingCarbonicity", required_argument, 0, 0xC3},
         {0, 0, 0, 0}
     };
 
@@ -450,6 +451,10 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0xC4:
                 istringstream (string (optarg)) >> cluster.starting.logAge;
+                break;
+
+            case 0xC3:
+                istringstream (string (optarg)) >> cluster.starting.carbonicity;
                 break;
 
             case '?':
