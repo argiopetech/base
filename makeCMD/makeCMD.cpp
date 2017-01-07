@@ -256,17 +256,7 @@ int main (int argc, char *argv[])
 {
     Settings settings;
 
-    settings.fromCLI (argc, argv);
-    if (!settings.files.config.empty())
-    {
-        settings.fromYaml (settings.files.config);
-    }
-    else
-    {
-        settings.fromYaml ("base9.yaml");
-    }
-
-    settings.fromCLI (argc, argv);
+    settings.loadSettings (argc, argv);
 
     if (settings.seed == std::numeric_limits<uint32_t>::max())
     {

@@ -11,7 +11,9 @@
 class Settings
 {
   public:
-    void fromYaml (const std::string);
+    void loadSettings(int argc, char** argv, const std::string& defaultFile = "base9.yaml");
+
+    void fromYaml (const std::string&);
     void fromCLI (int, char **);
 
     bool noBinaries = false;

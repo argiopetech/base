@@ -25,7 +25,25 @@ using YAML::LoadFile;
 static void printUsage ();
 static void printVersion ();
 
-void Settings::fromYaml (const string yamlFile)
+
+void Settings::loadSettings(int argc, char** argv, const string& defaultFile)
+{
+    fromCLI (argc, argv);
+
+    if (!files.config.empty())
+    {
+        fromYaml (files.config);
+    }
+    else
+    {
+        fromYaml (defaultFile);
+    }
+
+    fromCLI (argc, argv);
+}
+
+
+void Settings::fromYaml (const string& yamlFile)
 {
     Node configNode;
 
