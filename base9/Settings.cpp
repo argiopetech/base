@@ -522,7 +522,7 @@ template<typename T> T Settings::getOrRequest (Node & n, string && f)
     else
     {
         string input = "";
-        cout << "Please enter your desired setting for field: '" + f + "':\n";
+        cout << "Please enter your desired setting for field: '" + f + "'\n";
         getline(std::cin, input);
         T t;
         istringstream(input) >> t;
