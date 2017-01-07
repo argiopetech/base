@@ -539,11 +539,14 @@ template<typename T> T Settings::getOrRequest (Node & n, string && f)
     }
     else
     {
+        cerr << "No value was found in the YAML file for parameter '" + f + "'.\n Please enter your desired value for this parameter: ";
+
         string input = "";
-        cout << "Please enter your desired setting for field: '" + f + "'\n";
         getline(std::cin, input);
+
         T t;
         istringstream(input) >> t;
+
         return t;
     }
 }
