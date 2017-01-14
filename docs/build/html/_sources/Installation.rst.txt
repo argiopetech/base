@@ -27,6 +27,11 @@ A. Installing gcc, gsl, and cmake on a Mac running OS X 10.7 – 10.9
 
 Download the compiler. One way to do that is via downloading Xcode 4.6 or later from http://connect.apple.com. This requires that you have a developer account, but you can register for that for free. Also, it will give you 1+ GB of code and tools, most of which you will only need if you intend to develop for iPhones, Mac OS, etc. If you do follow this route, after installing Xcode, you will need to specifically install the command line tools with a window that will look similar to the one below. Click on the install button to the right of “command line tools” and it will appear as follows when done.
 
+.. image:: charts_7.png
+    :width: 933px
+    :align: center
+    :height: 653px
+
 This will install clang and (for Xcode 4.6) GCC 4.2.
 
 Download gsl from http://www.gnu.org/software/gsl/. Use the ftp site to obtain the source code, then
