@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>IV. Running BASE-9 &#8212; BASE-9 9.3.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '9.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="V. Diagnostics of run quality" href="Diagnostics-of-run-quality.html" />
+    <link rel="prev" title="III. Installation" href="Installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="iv-running-base-9">
+<h1>IV. Running BASE-9<a class="headerlink" href="#iv-running-base-9" title="Permalink to this headline">¶</a></h1>
+<p>In the following subsections, we describe how to run stand-alone portions of the BASE-9 modules from the command line. There are various reasons why you might want to run one or another of these, or some, but not all, so we detail how to run each one. As of BASE-9.2.0, all settings have been moved into a YAML-format configuration file. A sample configuration file with reasonable initial settings can be found in the <code class="docutils literal"><span class="pre">base-9.4.2/conf</span></code> directory under the name base9.yaml. A sample cshell script can be found at scripts/hyades.csh. Individual settings can be changed on a run-by-run basis via the command line options. Run any of the BASE-9 applications with the command line flag “&#8211;help” to view a description of available settings.</p>
+<p>The following examples assume you have installed the BASE-9 executables in a directory that is in your PATH (e.g., <code class="docutils literal"><span class="pre">/usr/local/bin</span></code>). If this is not the case, you may need to use absolute pathnames (e.g., <code class="docutils literal"><span class="pre">/home/me/base-9.4.2/BUILD/bin/singlePopMcmc</span></code>).</p>
+<div class="section" id="a-simcluster">
+<h2>A. simCluster<a class="headerlink" href="#a-simcluster" title="Permalink to this headline">¶</a></h2>
+<p>The first tool that you are likely to use within BASE-9 is simCluster. This module simulates a stellar cluster for a particular set of models (see references in the Introduction) and user-specified values of various cluster parameters that have been set in the base9.yaml file: the base-10 log of the cluster age, metallicity, the helium mass fraction (only for some Dotter et al. models), the distance modulus, absorption in the V-band, the percent of cluster stars that are binaries, the upper mass limit for creating a white dwarf (WD), and the fraction of WDs that have helium atmospheres (DBs). We recommend leaving these last two parameters at 8 solar masses and 0%, as we have not yet fully implemented and tested them. An additional parameter, the seed to the random number generator, is necessary as the mass of each star is determined by randomly drawing from the IMF. This allows you to specify multiple clusters with the same parameters but different random seeds if you wish to test the effects of, for instance, cluster size on the number of WDs or the clarity of the main sequence turn-off (MSTO). This seed can be set via the <code class="docutils literal"><span class="pre">--seed</span></code> option in the command line. To run simCluster, simply type its name:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="o">./</span><span class="n">simCluster</span>
+<span class="n">Seed</span><span class="p">:</span> <span class="mi">1559729633</span>
+<span class="n">Reading</span> <span class="n">models</span><span class="o">...</span> <span class="n">Done</span><span class="o">.</span>
+<span class="n">Properties</span> <span class="k">for</span> <span class="n">cluster</span><span class="p">:</span>
+ <span class="n">logClusAge</span>     <span class="o">=</span>  <span class="mf">8.796</span>
+ <span class="p">[</span><span class="n">Fe</span><span class="o">/</span><span class="n">H</span><span class="p">]</span>         <span class="o">=</span>  <span class="mf">0.07</span>
+ <span class="n">Y</span>              <span class="o">=</span>  <span class="mf">0.29</span>
+ <span class="n">modulus</span>        <span class="o">=</span>  <span class="mf">0.00</span>
+ <span class="n">Av</span>             <span class="o">=</span>  <span class="mf">0.01</span>
+ <span class="n">WDMassUp</span>       <span class="o">=</span>  <span class="mf">8.0</span>
+ <span class="n">fractionBinary</span> <span class="o">=</span>  <span class="mf">0.00</span>
+<span class="n">Totals</span><span class="p">:</span>
+ <span class="n">nSystems</span>               <span class="o">=</span>  <span class="mi">100</span>
+ <span class="n">nStars</span>                 <span class="o">=</span>  <span class="mi">100</span>
+ <span class="n">nMSRG</span>                  <span class="o">=</span>  <span class="mi">98</span>
+ <span class="n">nWD</span>                    <span class="o">=</span>  <span class="mi">2</span>
+ <span class="n">nNSBH</span>                  <span class="o">=</span>  <span class="mi">0</span>
+ <span class="n">massTotal</span>              <span class="o">=</span>  <span class="mf">62.72</span>
+ <span class="n">MSRGMassTotal</span>  <span class="o">=</span>  <span class="mf">55.10</span>
+ <span class="n">wdMassTotal</span>    <span class="o">=</span>  <span class="mf">1.66</span>
+</pre></div>
+</div>
+<p>The above output is diagnostic and reiterates the settings in the base9.yaml file. The stored output of simCluster is placed in a filename specified by the user with the outputFileBase option in the base9.yaml file. The file contents from the output of simCluster should look like the following:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span><span class="n">head</span> <span class="o">-</span><span class="mi">2</span> <span class="n">hyades</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">out</span>
+  <span class="nb">id</span>      <span class="n">U</span>      <span class="n">B</span>      <span class="n">V</span>      <span class="n">R</span>      <span class="n">I</span>      <span class="n">J</span>      <span class="n">H</span>      <span class="n">K</span>   <span class="n">sigU</span>
+<span class="n">sigB</span>   <span class="n">sigV</span>   <span class="n">sigR</span>   <span class="n">sigI</span>   <span class="n">sigJ</span>   <span class="n">sigH</span>   <span class="n">sigK</span>   <span class="n">mass1</span> <span class="n">massRatio</span> <span class="n">stage</span>
+<span class="n">Cmprior</span> <span class="n">useDBI</span>
+   <span class="mi">1</span>  <span class="mf">3.061</span>  <span class="mf">3.031</span>  <span class="mf">2.694</span>  <span class="mf">2.501</span>  <span class="mf">2.320</span>  <span class="mf">2.127</span>  <span class="mf">1.983</span>  <span class="mf">1.965</span>  <span class="mf">0.000</span>
+<span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>   <span class="mf">1.555</span>     <span class="mf">0.000</span>
+<span class="mi">1</span>   <span class="mf">0.999</span>      <span class="mi">1</span>
+</pre></div>
+</div>
+<p>There are more columns than can be presented cleanly on a page, but hopefully this is clear enough. The first column lists identification numbers for each star system (single star or binary). This is meant to be useful in tracking down particular stars. The next eight columns list the U- through K-band magnitudes (or ugriz through K) of the primary star. Columns 10 through 17 give the photometric uncertainties for each filter entry (for a simulated cluster, these are zero).</p>
+<p>The 18th and 19th columns give the mass of the primary star and the mass of its companion (if applicable). The 20th column lists the stage of stellar evolution for that particular star (1 = MS or RG, 3 = WD, &gt;3 for evolved stars above the WD mass limit). The final two columns are the cluster membership prior (which is essentially ~1 for simulated stars) and the flag (0 or 1) whether to use the star during the burn-in stage. With these final columns, the output file is formatted for input into scatterCluster. You should be able to plot reasonable looking CMDs/isochrones from this file for a wide range of cluster parameters, stellar models, and filters.</p>
+</div>
+<div class="section" id="b-scattercluster">
+<h2>B. scatterCluster<a class="headerlink" href="#b-scattercluster" title="Permalink to this headline">¶</a></h2>
+<p>The scatterCluster module adds Gaussian random errors to the photometry output created by simCluster. To specify the appropriate amount of error to add for your particular simulation, adjust the virtual exposure time in the base9.yaml file.</p>
+<p>We use exposure times of 1 hour in each filter to generate a scattered cluster with the above file. The algorithm for adding noise to the cluster photometry is rudimentary and only meant for simple purposes such as preparing for an observing proposal or for creating test files for the Markov chain Monte Carlos (singlePopMcmc) routine. The algorithm is an approximation to the results one would obtain in one hour with the KPNO 4m + Mosaic (UBVRI) or Flamingos (JHK), assuming dark time, seeing=1.1 arcsec, airmass=1.2. Signal-to-noise for the Spitzer bands, if included, are naively set to be the same as for the K-band. For departures from a one- hour exposure the S/N is scaled by sqrt(exptime). These exposure times can be set in the base9.yaml file under exposures for each individual filter.</p>
+<p>Additional options for scatterCluster are available in the yaml file. The bright and faint end cut-off mags allow you to narrow the portion of the CMD that you wish to retain. The relevantFilt option specifies which band is the reference filter (in this case, 0=U, 1=B, etc.). The base9.yaml options brightLimit and faintLimit refer to the bright and faint end cut-off magnitudes for the reference filter indicated. You can also clip on S/N with limitS2N and decide to cut out field stars, if they were simulated by simCluster. Additionally, scatterCluster will determine which filters you are using based on the header in the simCluster output file. Again, the integer seed may be set at the command line to allow you to start from the same input file, but create multiple simulated observations of that file with different initial seed values.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">scatterCluster</span>
+<span class="n">Seed</span><span class="p">:</span> <span class="mi">1564704505</span>
+</pre></div>
+</div>
+<p>The output file of scatterCluster looks like</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">head</span> <span class="o">-</span><span class="mi">2</span> <span class="n">hyades</span><span class="o">/</span><span class="n">hyades</span><span class="o">.</span><span class="n">scatter</span><span class="o">.</span><span class="n">out</span>
+  <span class="nb">id</span>      <span class="n">U</span>      <span class="n">B</span>      <span class="n">V</span>      <span class="n">R</span>      <span class="n">I</span>      <span class="n">J</span>      <span class="n">H</span>      <span class="n">K</span>   <span class="n">sigU</span>
+<span class="n">sigB</span>   <span class="n">sigV</span>   <span class="n">sigR</span>   <span class="n">sigI</span>   <span class="n">sigJ</span>   <span class="n">sigH</span>   <span class="n">sigK</span>   <span class="n">mass1</span> <span class="n">massRatio</span> <span class="n">stage</span>
+<span class="n">Cmprior</span> <span class="n">useDBI</span>
+<span class="mi">1</span> <span class="mf">3.065</span> <span class="mf">3.016</span> <span class="mf">2.691</span> <span class="mf">2.509</span> <span class="mf">2.328</span> <span class="mf">2.128</span> <span class="mf">1.985</span> <span class="mf">1.977</span> <span class="mf">0.010</span> <span class="mf">0.010</span> <span class="mf">0.010</span> <span class="mf">0.010</span> <span class="mf">0.010</span> <span class="mf">0.010</span> <span class="mf">0.010</span> <span class="mf">0.010</span> <span class="mf">1.555</span> <span class="mf">0.000</span> <span class="mi">1</span> <span class="mf">0.999</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>Notice now that the output includes the estimated errors for each band (sig-). The format of the output file is otherwise the same as the input file for scatterCluster.</p>
+<p>In this case, only the id, mass1, and stage1 values are kept from the output of simCluster. The photometry values (here UBVRIJHK) are derived from the photometry values in the simCluster output file, but are different in that they are scattered by adding a Gaussian random deviate with sigma = sigU, sigB, etc. This section of the output file is all one needs to plot realistic CMDs for proposals and possibly to prepare for observing projects. The scatterCluster output file contains additional information, however, and is formatted to be ingested by singlePopMcmc, so that it can be used to test singlePopMcmc and so that you can test the precision and accuracy that you would expect to recover from real data based on a given set of cluster parameters, observational errors, and the number of stars available. The massRatio column lists the ratio by mass of the secondary to primary stars, which in these examples are both 0 since there were no secondaries. The CMprior column is set by default in scatterCluster to 0.99, but the file can easily be edited to set a different prior probability that any particular star is a cluster member. The final column is just a 0 or 1 switch (off or on) of whether to use a particular star during the burnin process. (See DeGennaro et al. 2009 and van Dyk et al. 2009 for a discussion of what the burnin entails and why it is used.) To make it easiest for singlePopMcmc to converge, it is helpful to have this parameter set to 1 for stars that are likely to be cluster members and if there are many field stars, it is helpful if the bulk of them can be set to 0 at this point.</p>
+</div>
+<div class="section" id="c-singlepopmcmc">
+<h2>C. singlePopMcmc<a class="headerlink" href="#c-singlepopmcmc" title="Permalink to this headline">¶</a></h2>
+<p>The singlePopMcmc module is the workhorse of our software suite. This routine, along with its many subroutines, runs a Markov chain Monte Carlo sampler using a variety of standard Bayesian techniques as well as a few techniques newly developed by us. The approach and mathematics are presented by DeGennaro et al. (2009), van Dyk et al. (2009), and Stein et al. (2013). This code was designed to run on photometry formatted in the same manner as the output of scatterCluster. It can also be run just as easily on the simulated photometry from simCluster + scatterCluster.</p>
+<p>The singlePopMcmc module has a variety of values and options set in the base9.yaml file. Under the singlePopMcmc group, the stage2IterMax and stage3Iter set the length of the burnin for singlePopMcmc. The runIter option lets you choose the number of iterations of the Markov chain Monte Carlo. The rule-of-thumb is that one typically wants 10,000 well- sampled points from a Markov chain Monte Carlo in order to draw robust inferences on the posterior distribution. At the other extreme, the Central Limit Theorem dictates that approximately 30 uncorrelated samples are sufficient for a normal distribution. Before running a particular dataset against a specific set of models, you do not know if the posterior distributions will be Gaussian shaped or more complex, so we suggest you take the conservative approach and initially assume complex posterior distributions and run BASE-9 for 10,000 uncorrelated iterations. The parameter thin sets the increment between saved iterations. We recommend that this parameter be left equal to 1 to keep the adaptive sampling routine efficient. If the output of singlePopMcmc is correlated (see below), then each new iteration or step is not independent and you need substantially more than 10,000 iterations to draw robust inferences. In situations like this, we recommend that the output file be thinned afterwards, i.e. that the user uses every nth record where n is large enough to keep the output uncorrelated.</p>
+<p>Under the cluster options, there are five parameters for which means and standard deviations can be set: the metallicity prior (Fe_H), the distance modulus prior (distMod), the absorption prior (Av), the helium prior (Y), and the carbon fraction prior for a C+O WD (carbonicity). Note that carbonicity only works with the Montgomery models and is not yet supported because we are currently testing it. If you only have weak priors, that is fine. If you do not want to sample on one or more of these parameters, you can set the sigma for that parameter to 0.0 and this will turn of sampling for that parameter. Under starting, the parameter logClusAge is a starting value for the log of the age in years (e.g. 9.0 for a 1 billion year old cluster). <em>This is not a prior</em>, but just tells singlePopMcmc where to start searching for a fit. We have found that although convergence may depend on starting with a roughly reasonable age, the actual posterior age distribution does not depend on what that value is, assuming it does converge.</p>
+<p>The msRgbModel lets you choose which set of models to use with your data (the filters available in the models must match the filters of your observed or simulated/scattered cluster). This allows you to derive cluster parameters for a range of models as well as to create simulated clusters under one set of models and use singlePopMcmc to derive the cluster and stellar parameters under another set of models. The latter experiments might be useful, for instance, if you wanted to test the sensitivity of basic cluster or stellar parameters to a given model ingredient. With ancillary data for cluster or stellar parameters this might allow you to constrain model ingredients.</p>
+<p>Again we mention that the seed can be set inline with <code class="docutils literal"><span class="pre">--seed</span></code> when singlePopMcmc is called. If singlePopMcmc appears to be unable to converge on reasonable cluster values, rerun it with a different initial seed. Changing the seed also allows you to start a new MCMC chain if you ran a prior calculation with too few iterations.</p>
+<p>To run singlePopMcmc, using a properly prepared input base9.yaml file, type the following:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">singlePopMcmc</span> <span class="o">--</span><span class="n">verbose</span>
+<span class="n">Bayesian</span> <span class="n">Analysis</span> <span class="n">of</span> <span class="n">Stellar</span> <span class="n">Evolution</span>
+<span class="n">Seed</span><span class="p">:</span> <span class="mi">1570065938</span>
+<span class="n">Reading</span> <span class="n">models</span><span class="o">...</span> <span class="n">Done</span><span class="o">.</span>
+<span class="n">Model</span> <span class="n">boundaries</span> <span class="n">are</span> <span class="p">(</span><span class="mf">7.800</span><span class="p">,</span> <span class="mf">10.250</span><span class="p">)</span> <span class="n">log</span> <span class="n">years</span><span class="o">.</span>
+<span class="n">Binaries</span> <span class="n">are</span> <span class="n">OFF</span>
+<span class="n">Running</span> <span class="n">Stage</span> <span class="mi">1</span> <span class="n">burnin</span><span class="o">...</span> <span class="n">Complete</span> <span class="p">(</span><span class="n">acceptanceRatio</span> <span class="o">=</span> <span class="mf">0.090</span><span class="p">)</span>
+<span class="n">Running</span> <span class="n">Stage</span> <span class="mi">2</span> <span class="p">(</span><span class="n">adaptive</span><span class="p">)</span> <span class="n">burnin</span><span class="o">...</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.350</span><span class="o">.</span> <span class="n">Trying</span> <span class="k">for</span> <span class="n">trend</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.600</span><span class="o">.</span> <span class="n">Retrying</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.380</span><span class="o">.</span> <span class="n">Trying</span> <span class="k">for</span> <span class="n">trend</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.520</span><span class="o">.</span> <span class="n">Retrying</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.280</span><span class="o">.</span> <span class="n">Trying</span> <span class="k">for</span> <span class="n">trend</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.180</span><span class="o">.</span> <span class="n">Retrying</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.400</span><span class="o">.</span> <span class="n">Trying</span> <span class="k">for</span> <span class="n">trend</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.440</span><span class="o">.</span> <span class="n">Retrying</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.320</span><span class="o">.</span> <span class="n">Trying</span> <span class="k">for</span> <span class="n">trend</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.500</span><span class="o">.</span> <span class="n">Retrying</span><span class="o">.</span>
+    <span class="n">Acceptance</span> <span class="n">ratio</span><span class="p">:</span> <span class="mf">0.240</span><span class="o">.</span> <span class="n">Trying</span> <span class="k">for</span> <span class="n">trend</span><span class="o">.</span>
+  <span class="n">Leaving</span> <span class="n">adaptive</span> <span class="n">burnin</span> <span class="n">early</span> <span class="k">with</span> <span class="n">an</span> <span class="n">acceptance</span> <span class="n">ratio</span> <span class="n">of</span> <span class="mf">0.220</span>
+<span class="p">(</span><span class="n">iteration</span> <span class="mi">1300</span><span class="p">)</span>
+<span class="n">Starting</span> <span class="n">adaptive</span> <span class="n">run</span><span class="o">...</span> <span class="n">Preliminary</span> <span class="n">acceptanceRatio</span> <span class="o">=</span> <span class="mf">0.300</span>
+</pre></div>
+</div>
+<p>The singlePopMcmc routine creates multiple output files. In this case, it created:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span>  <span class="mi">1</span> <span class="n">comp</span>  <span class="n">staff</span>  <span class="mi">57955</span> <span class="n">Nov</span>  <span class="mi">3</span> <span class="mi">17</span><span class="p">:</span><span class="mi">27</span> <span class="n">hyades</span><span class="o">/</span><span class="n">hyades</span><span class="o">.</span><span class="n">res</span>
+<span class="o">-</span><span class="n">rw</span><span class="o">-</span><span class="n">r</span><span class="o">--</span><span class="n">r</span><span class="o">--</span>  <span class="mi">1</span> <span class="n">comp</span>  <span class="n">staff</span>  <span class="mi">50317</span> <span class="n">Nov</span>  <span class="mi">3</span> <span class="mi">17</span><span class="p">:</span><span class="mi">25</span> <span class="n">hyades</span><span class="o">/</span><span class="n">hyades</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">burnin</span>
+</pre></div>
+</div>
+<p>The .burnin files provide the sampling patterns during the burnin process and may be useful for diagnostic purposes, especially if singlePopMcmc is not sampling well (see below). The .res.burnin files look like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">head</span> <span class="o">-</span><span class="mi">2</span> <span class="n">hyades</span><span class="o">/</span><span class="n">hyades</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">burnin</span>
+    <span class="n">logAge</span>          <span class="n">Y</span>        <span class="n">FeH</span>    <span class="n">modulus</span> <span class="n">absorption</span>     <span class="n">logPost</span>
+  <span class="mf">8.821886</span>   <span class="mf">0.280626</span>   <span class="mf">0.086646</span>  <span class="o">-</span><span class="mf">0.010790</span>   <span class="mf">0.011206</span> <span class="o">-</span><span class="mf">174.520334</span>
+</pre></div>
+</div>
+<p>And the .res files have the same format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">head</span> <span class="o">-</span><span class="mi">2</span> <span class="n">hyades</span><span class="o">/</span><span class="n">hyades</span><span class="o">.</span><span class="n">res</span>
+    <span class="n">logAge</span>          <span class="n">Y</span>        <span class="n">FeH</span>    <span class="n">modulus</span> <span class="n">absorption</span>     <span class="n">logPost</span>
+  <span class="mf">8.843553</span>   <span class="mf">0.288468</span>   <span class="mf">0.016795</span>  <span class="o">-</span><span class="mf">0.180626</span>   <span class="mf">0.013647</span> <span class="o">-</span><span class="mf">198.263339</span>
+</pre></div>
+</div>
+<p>After the column headers, there is one record for each iteration of each of the cluster parameters of interest.</p>
+<p>If everything goes well, all you really need to do is plot histograms for any column of interest. These are the posterior parameter distributions. You can also calculate moments of these columns if you’d like, and look at correlations among the columns, e.g. by plotting logAge vs. modulus.</p>
+</div>
+<div class="section" id="d-samplemass-and-samplewdmass">
+<h2>D. sampleMass and sampleWDMass<a class="headerlink" href="#d-samplemass-and-samplewdmass" title="Permalink to this headline">¶</a></h2>
+<p>These modules are useful for anyone interested in the masses of some or all of the stars in their database. Running them is unnecessary if you are only interested in the cluster parameters. The module sampleMass reports the primary mass and secondary mass ratio at all iterations for every star in the database, and sampleWDMass reports the primary mass for the subset of database stars that are being fit as WDs.</p>
+<p>Running these programs is quite simple:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">sampleWDMass</span>
+<span class="n">Seed</span><span class="p">:</span> <span class="mi">1690745648</span>
+<span class="n">Warming</span> <span class="n">up</span> <span class="n">generator</span><span class="o">...</span> <span class="n">Done</span><span class="o">.</span>
+<span class="n">Generated</span> <span class="mi">10000</span> <span class="n">values</span><span class="o">.</span>
+<span class="n">Reading</span> <span class="n">models</span><span class="o">...</span> <span class="n">Done</span><span class="o">.</span>
+
+<span class="n">sampledPars</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">age</span>    <span class="o">=</span> <span class="mf">8.78411</span>
+<span class="n">sampledPars</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">last</span><span class="p">)</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="mf">8.74765</span>
+<span class="n">Part</span> <span class="mi">2</span> <span class="n">completed</span> <span class="n">successfully</span>
+</pre></div>
+</div>
+<p>Running sampleMass is effectively identical.</p>
+<p>These output files names end with .wdMassSamples, .wdMassSamples.membership, .massSamples, and .massSamples.membership. These correspond to the WD mass outputs from sampleWDMass, the membership likelihood of those masses, the mass and secondary mass ratio outputs from sampleMass, and the membership likelihood of those pairs.</p>
+<p>sampleWDMass output files consist of the same number of columns as there are WDs, and the same number of rows as there are in the results (.res) file. Each item in a row corresponds to the mass of a WD (ordered as in the database) given the sampled parameters in the results file. The membership file shares this format, though the values correspond to the likelihood that the given star is a member of a cluster with the given parameters.</p>
+<p>sampleMass output files are similar to sampleWDMass output files but have two columns per star in the database. For every 0-indexed star 𝑘 in the database, column 2𝑘 corresponds to that star’s primary mass, and 2𝑘 + 1 to that star’s secondary mass ratio. The membership file is identical to that of sampleWDMass, though the values correspond to the likelihood that the given unresolved binary is a cluster member.</p>
+<p>sampleWDMass has no configurable parameters.</p>
+<p>sampleMass takes two parameters in the YAML file: deltaMass and deltaMassRatio. These values are used as starting step sizes for the adaptive MCMC process used to obtain mass and mass ratio. We recommended that you change these parameters only if you are manipulating the code for diagnostic purposes.</p>
+</div>
+<div class="section" id="e-makecmd">
+<h2>E. makeCMD<a class="headerlink" href="#e-makecmd" title="Permalink to this headline">¶</a></h2>
+<p>The final module of our software suite, makeCMD, is a small module that calculates a mean fit isochrone. This is helpful for runs that do not converge as well as for situations where the posterior distribution of some key parameter may be multimodal. To run makeCMD</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">makeCMD</span>
+<span class="n">Seed</span><span class="p">:</span> <span class="mi">1574116425</span>
+<span class="n">Reading</span> <span class="n">models</span><span class="o">...</span> <span class="n">Done</span><span class="o">.</span>
+<span class="o">***</span><span class="ne">Warning</span><span class="p">:</span> <span class="s2">&quot;F435W&quot;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">available</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">selected</span> <span class="n">WD</span> <span class="n">Atmosphere</span>
+<span class="n">model</span>
+<span class="n">This</span> <span class="ow">is</span> <span class="n">non</span><span class="o">-</span><span class="n">fatal</span> <span class="k">if</span> <span class="n">you</span> <span class="n">aren</span><span class="s1">&#39;t using the WD models</span>
+</pre></div>
+</div>
+<p>The output of makeCMD looks like</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">linux</span><span class="o">&gt;</span> <span class="n">head</span> <span class="o">-</span><span class="mi">2</span> <span class="n">hyades</span><span class="o">/</span><span class="n">hyades</span><span class="o">.</span><span class="n">cmd</span>
+      <span class="n">Mass</span>          <span class="n">U</span>          <span class="n">B</span>          <span class="n">V</span>          <span class="n">R</span>          <span class="n">I</span>
+<span class="n">J</span>          <span class="n">H</span>          <span class="n">K</span>      <span class="n">F435W</span>      <span class="n">F475W</span>      <span class="n">F550M</span>      <span class="n">F555W</span>
+<span class="n">F606W</span>      <span class="n">F625W</span>      <span class="n">F775W</span>      <span class="n">F814W</span>
+  <span class="mf">0.150000</span>  <span class="mf">16.170454</span>  <span class="mf">14.623905</span>  <span class="mf">13.035403</span>  <span class="mf">11.950929</span>  <span class="mf">10.490719</span>
+<span class="mf">9.196773</span>   <span class="mf">8.640356</span>   <span class="mf">8.386555</span>  <span class="mf">14.666132</span>  <span class="mf">13.907510</span>  <span class="mf">12.768529</span>
+<span class="mf">13.128038</span>  <span class="mf">12.587469</span>  <span class="mf">12.243942</span>  <span class="mf">10.744691</span>  <span class="mf">10.477001</span>
+</pre></div>
+</div>
+<p>Because makeCMD uses the values of means under cluster in the base9.yaml, one can enter the mean or median values from the singlePopMcmc posterior distributions into the yaml file prior to running makeCMD. The output file from makeCMD can then be used to overplot what essentially amounts to the average fit isochrone from among the posterior parameter distributions. Note that this is not a best-fit isochrone, but rather a representative example drawn from that distribution. In fact, isochrones created from summary statistics such as mean or median parameters may not be truly representative if the distributions are substantially non- Gaussian because that simultaneous combination of parameters may fit the data with low probability.</p>
+</div>
+<div class="section" id="f-hyades-test">
+<h2>F. Hyades Test<a class="headerlink" href="#f-hyades-test" title="Permalink to this headline">¶</a></h2>
+<p>We have created a script, hyades.csh, which is set up to run on a Hyades data set (Hyades.UBV.testphot). It is a cshell script. If you have problems with this script, you may be using a shell other than the cshell or tshell, e.g. the Bourne shell. You can invoke the cshell as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Bourne</span> <span class="n">shell</span><span class="o">&gt;</span> <span class="n">csh</span>
+<span class="n">New</span> <span class="n">prompt</span> <span class="n">indicating</span> <span class="n">you</span> <span class="n">are</span> <span class="n">now</span> <span class="n">running</span> <span class="n">csh</span><span class="o">&gt;</span> <span class="n">hyades</span><span class="o">.</span><span class="n">csh</span>
+</pre></div>
+</div>
+<p>This will allow you to test your code installation and plot results, then compare to the DeGennaro et al. results. Note that you will not obtain an exact correspondence to the results of DeGennaro et al. because we have updated the Hyades data set since that publication. Because of the relative depth of the Hyades, which is significant compared to its distance, we have now corrected the cluster stars to lie at the mean cluster distance using individual proper motions from Hipparcos and the cluster converging point method. Because of the way we have corrected distances, this data set is converted to absolute magnitude space (we otherwise always use apparent magnitudes) and for this one test case, you will find a distance modulus of approximately 0.0.</p>
+</div>
+<div class="section" id="g-how-long-does-all-of-this-take">
+<h2>G. How long does all of this take?<a class="headerlink" href="#g-how-long-does-all-of-this-take" title="Permalink to this headline">¶</a></h2>
+<p>In our tests, it took 147 minutes to run hyades.csh, which in turn ran singlePopMcmc for 152 Hyades stars in three photometric bands for 10,000 iterations on a early 2011 Macbook Pro (2.3 GHz Intel with 8 GB RAM) laptop computer. Increasing the number of filters or number of stars will increase the computation time linearly. Increasing the number of MCMC iterations will increase the run time, but somewhat less than linearly because some of the time is spent during the burnin. You will see substantial increases in runtime if you have much larger data sets and/or if you have to increase the total number of calculated iterations.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">IV. Running BASE-9</a><ul>
+<li><a class="reference internal" href="#a-simcluster">A. simCluster</a></li>
+<li><a class="reference internal" href="#b-scattercluster">B. scatterCluster</a></li>
+<li><a class="reference internal" href="#c-singlepopmcmc">C. singlePopMcmc</a></li>
+<li><a class="reference internal" href="#d-samplemass-and-samplewdmass">D. sampleMass and sampleWDMass</a></li>
+<li><a class="reference internal" href="#e-makecmd">E. makeCMD</a></li>
+<li><a class="reference internal" href="#f-hyades-test">F. Hyades Test</a></li>
+<li><a class="reference internal" href="#g-how-long-does-all-of-this-take">G. How long does all of this take?</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Installation.html" title="previous chapter">III. Installation</a></li>
+      <li>Next: <a href="Diagnostics-of-run-quality.html" title="next chapter">V. Diagnostics of run quality</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Running-BASE-9.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Elliot Robinson, Ted von Hippel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/Running-BASE-9.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

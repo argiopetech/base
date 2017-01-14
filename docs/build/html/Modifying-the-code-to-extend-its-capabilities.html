@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VII. Modifying the code to extend its capabilities &#8212; BASE-9 9.3.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '9.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="vii-modifying-the-code-to-extend-its-capabilities">
+<h1>VII. Modifying the code to extend its capabilities<a class="headerlink" href="#vii-modifying-the-code-to-extend-its-capabilities" title="Permalink to this headline">¶</a></h1>
+<p>We continue to upgrade BASE-9 for our on-going projects. If you wish to add capability to BASE-9, we will be happy to suggest to you how best to go about this and try to estimate the work involved. Here is an example list of how involved a variety of tasks are likely to be.</p>
+<p><em>Less than 2 hours:</em> Modifying the IFMR. You can do this by editing or adding a few lines of code in ifmr.cpp.</p>
+<p><em>Less than 8 hours:</em> Change the IMF. You will need to create a subroutine where a random mass value can be drawn from your IMF distribution. This currently takes place in drawFromIMF.cpp. Note that you will also have to normalize the IMF for the Bayesian routine to work properly and that this takes place in densities.cpp and is stored in logMassNorm.</p>
+<p><em>Less than 16 hours:</em> Incorporating another set of stellar evolution models – see instructions at the top of msRgbEvol.cpp and possibly wdCooling.cpp and/or gBergMag.cpp.</p>
+<p><em>Less than a week:</em> Sampling a new variable (e.g. stellar rotation, alpha-element enhancement). This takes place primarily in singlePopMcmc/MpiMcmcApplication.cpp and base9/densities.cpp.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Modifying-the-code-to-extend-its-capabilities.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Elliot Robinson, Ted von Hippel.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/Modifying-the-code-to-extend-its-capabilities.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
