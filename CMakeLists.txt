@@ -33,7 +33,6 @@ if (USE_TESTS)
 endif()
 
 option (USE_TCMALLOC "Enable linking to tcmalloc" OFF)
-option (USE_MULTIPOP "Enable multiPopMcmc" OFF)
 
 ##########################
 # Set up the config file #
@@ -129,7 +128,4 @@ add_subdirectory(sampleMass)
 add_subdirectory(sampleWDMass)
 add_subdirectory(scatterCluster)
 add_subdirectory(simCluster)
-
-if (USE_MULTIPOP)
-  add_subdirectory(multiPopMcmc)
-endif()
+add_subdirectory(multiPopMcmc)

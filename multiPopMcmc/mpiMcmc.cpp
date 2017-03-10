@@ -15,27 +15,19 @@ int main (int argc, char *argv[])
         // Setup settings
         settings.loadSettings (argc, argv);
 
-        if (settings.development)
+        cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
+
+        if (settings.seed == std::numeric_limits<uint32_t>::max())
         {
-            cout << "Bayesian Analysis of Stellar Evolution (Multiple Populations)" << endl;
+            srand(std::time(0));
+            settings.seed = rand();
 
-            if (settings.seed == std::numeric_limits<uint32_t>::max())
-            {
-                srand(std::time(0));
-                settings.seed = rand();
-
-                cout << "Seed: " << settings.seed << endl;
-            }
-
-            MpiMcmcApplication master(settings);
-
-            return master.run();
+            cout << "Seed: " << settings.seed << endl;
         }
-        else
-        {
-            cerr << "multiPropMcmc is still under development\n";
-            return -1;
-        }
+
+        MpiMcmcApplication master(settings);
+
+        return master.run();
     }
     catch (exception &e)
     {
