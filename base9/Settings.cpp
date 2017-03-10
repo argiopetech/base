@@ -176,12 +176,6 @@ void Settings::fromYaml (const string& yamlFile)
 
 void Settings::fromCLI (int argc, char **argv)
 {
-    int i_noBinaries = 0; // Has to be set false
-    int i_overrideBounds = 0; // Has to be set false
-    int i_development = 0; // Has to be set false
-    int i_noWDs = 0; // Has to be set false
-    int i_details = 0; // Has to be set false
-
     char **t_argv = new char*[argc];
 
     for (int i = 0; i<argc; i++)
@@ -192,14 +186,6 @@ void Settings::fromCLI (int argc, char **argv)
     }
 
     static struct option long_options[] = {
-        // Thie one just sets a flag outright
-        {"verbose", no_argument, &(verbose), 1},
-        {"noBinaries", no_argument, &(i_noBinaries), 1},
-        {"overrideBounds", no_argument, &(i_overrideBounds), 1},
-        {"noWDs", no_argument, &(i_noWDs), 1},
-        {"development", no_argument, &(i_development), 1},
-        {"details", no_argument, &(i_details), 1},
-
         // These all have to be parsed
         {"msRgbModel", required_argument, 0, 0xFE},
         {"ifmr", required_argument, 0, 0xFD},
@@ -250,6 +236,15 @@ void Settings::fromCLI (int argc, char **argv)
         {"startingY", required_argument, 0, 0xC5},
         {"startinglogAge", required_argument, 0, 0xC4},
         {"startingCarbonicity", required_argument, 0, 0xC3},
+
+        // Various flags
+        // These are now handled the same way as the parameters due to occasional compiler weirdness
+        {"verbose", no_argument, 0, 0xAF},
+        {"noBinaries", no_argument, 0, 0xAE},
+        {"overrideBounds", no_argument, 0, 0xAD},
+        {"noWDs", no_argument, 0, 0xAC},
+        {"development", no_argument, 0, 0xAB},
+        {"details", no_argument, 0, 0xAA},
         {0, 0, 0, 0}
     };
 
@@ -475,6 +470,30 @@ void Settings::fromCLI (int argc, char **argv)
                 istringstream (string (optarg)) >> cluster.starting.carbonicity;
                 break;
 
+            case 0xAF:
+                verbose = true;
+                break;
+
+            case 0xAE:
+                noBinaries = true;
+                break;
+
+            case 0xAD:
+                overrideBounds = true;
+                break;
+
+            case 0xAC:
+                simCluster.noWDs = true;
+                break;
+
+            case 0xAB:
+                development = true;
+                break;
+
+            case 0xAA:
+                details = true;
+                break;
+
             case '?':
                 // getopt_long already printed an error message.
                 printUsage ();
@@ -490,12 +509,6 @@ void Settings::fromCLI (int argc, char **argv)
         delete[] t_argv[i];
     }
     delete[] t_argv;
-
-    noBinaries = i_noBinaries;
-    overrideBounds = i_overrideBounds;
-    simCluster.noWDs = i_noWDs;
-    development = i_development;
-    details = i_details;
 
     // Print any remaining command line arguments (not options). This is mainly for debugging purposes.
     if (optind < argc)

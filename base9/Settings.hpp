@@ -21,11 +21,10 @@ class Settings
 
     bool development = false;
     bool details = false;
+    bool verbose = false;
 
     uint32_t seed = std::numeric_limits<uint32_t>::max();
     unsigned int threads = std::numeric_limits<int>::max();
-
-    int verbose;
 
     struct MainSequenceSettings
     {
