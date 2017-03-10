@@ -25,6 +25,7 @@ using std::endl;
 using std::flush;
 using std::function;
 using std::mutex;
+using std::tuple;
 using std::unique_ptr;
 using std::vector;
 
@@ -35,27 +36,27 @@ const double TWO_M_PI = 2 * M_PI;
 void ensurePriors(const Settings &s, const DualPopCluster &clust)
 {
     // Clust A carbonicity
-    if (clust.clustA.carbonicity < 0.0)
+    if (clust.clust[0].carbonicity < 0.0)
         throw InvalidCluster("Low carbonicity, Clust A");
-    else if (clust.clustA.carbonicity > 1.0)
+    else if (clust.clust[0].carbonicity > 1.0)
         throw InvalidCluster("High carbonicity, Clust A");
 
     // Clust B carbonicity
-    else if (clust.clustB.carbonicity < 0.0)
+    else if (clust.clust[1].carbonicity < 0.0)
         throw InvalidCluster("Low carbonicity, Clust B");
-    else if (clust.clustB.carbonicity > 1.0)
+    else if (clust.clust[1].carbonicity > 1.0)
         throw InvalidCluster("High carbonicity, Clust B");
 
     // Clust A Y
-    else if (clust.clustA.yyy < s.multiPopMcmc.YA_lo)
+    else if (clust.clust[0].yyy < s.multiPopMcmc.YA_lo)
         throw InvalidCluster("Low Y, Clust A");
-    else if (clust.clustA.yyy > s.multiPopMcmc.YA_hi)
+    else if (clust.clust[0].yyy > s.multiPopMcmc.YA_hi)
         throw InvalidCluster("High Y, Clust A");
 
     // Clust B Y
-    else if (clust.clustB.yyy < clust.clustA.yyy)
+    else if (clust.clust[1].yyy < clust.clust[0].yyy)
         throw InvalidCluster("Low Y, Clust B");
-    else if (clust.clustB.yyy > s.multiPopMcmc.YB_hi)
+    else if (clust.clust[1].yyy > s.multiPopMcmc.YB_hi)
         throw InvalidCluster("High Y, Clust B");
 
     // Lambda
@@ -72,33 +73,33 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     clust.lambda = settings.multiPopMcmc.lambda_start;
 
-    clust.clustA.feh = settings.cluster.starting.Fe_H;
-    clust.clustA.priorMean[FEH] = settings.cluster.priorMeans.Fe_H;
+    clust.clust[0].feh = settings.cluster.starting.Fe_H;
+    clust.clust[0].priorMean[FEH] = settings.cluster.priorMeans.Fe_H;
     ctrl.priorVar[FEH]          = settings.cluster.priorSigma.Fe_H;
 
-    clust.clustA.mod = settings.cluster.starting.distMod;
-    clust.clustA.priorMean[MOD] = settings.cluster.priorMeans.distMod;
+    clust.clust[0].mod = settings.cluster.starting.distMod;
+    clust.clust[0].priorMean[MOD] = settings.cluster.priorMeans.distMod;
     ctrl.priorVar[MOD]          = settings.cluster.priorSigma.distMod;
 
-    clust.clustA.abs = settings.cluster.starting.Av;
-    clust.clustA.priorMean[ABS] = fabs(settings.cluster.priorMeans.Av);
+    clust.clust[0].abs = settings.cluster.starting.Av;
+    clust.clust[0].priorMean[ABS] = fabs(settings.cluster.priorMeans.Av);
     ctrl.priorVar[ABS]          = settings.cluster.priorSigma.Av;
 
-    clust.clustA.age = settings.cluster.starting.logAge;
-    clust.clustA.priorMean[AGE] = settings.cluster.priorMeans.logAge;
+    clust.clust[0].age = settings.cluster.starting.logAge;
+    clust.clust[0].priorMean[AGE] = settings.cluster.priorMeans.logAge;
     ctrl.priorVar[AGE]          = settings.cluster.priorSigma.logAge;
 
-    clust.clustA.carbonicity = settings.cluster.starting.carbonicity;
-    clust.clustA.priorMean[CARBONICITY] = settings.cluster.priorMeans.carbonicity;
+    clust.clust[0].carbonicity = settings.cluster.starting.carbonicity;
+    clust.clust[0].priorMean[CARBONICITY] = settings.cluster.priorMeans.carbonicity;
     ctrl.priorVar[CARBONICITY]          = settings.cluster.priorSigma.carbonicity;
 
-    clust.clustA.yyy = settings.cluster.starting.Y;
-    clust.clustA.priorMean[YYY] = settings.cluster.priorMeans.Y;
+    clust.clust[0].yyy = settings.cluster.starting.Y;
+    clust.clust[0].priorMean[YYY] = settings.cluster.priorMeans.Y;
     ctrl.priorVar[YYY]          = 0;
 
     // No IFMR code
 
-    clust.clustA.setM_wd_up(settings.whiteDwarf.M_wd_up);
+    clust.clust[0].setM_wd_up(settings.whiteDwarf.M_wd_up);
 
     for (auto &var : ctrl.priorVar)
     {
@@ -112,13 +113,13 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
         }
     }
 
-    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.clustA.priorVar.begin());
+    std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.clust[0].priorVar.begin());
 
-    clust.clustB = clust.clustA;
+    clust.clust[1] = clust.clust[0];
 
     // Cluster-specific variables
-    clust.clustA.yyy = settings.multiPopMcmc.YA_start;
-    clust.clustB.yyy = settings.multiPopMcmc.YB_start;
+    clust.clust[0].yyy = settings.multiPopMcmc.YA_start;
+    clust.clust[1].yyy = settings.multiPopMcmc.YB_start;
 
     /* read burnIter and nIter */
     {
@@ -182,7 +183,7 @@ void MpiMcmcApplication::allocateSSEMem()
         {
             if ((k < s.variance.size()) && (s.variance.at(k) > EPS))
             {
-                sysVars[i] = s.variance.at(k) * clust.clustA.varScale;
+                sysVars[i] = s.variance.at(k) * clust.clust[0].varScale;
                 sysVar2[i] = __builtin_log (TWO_M_PI * sysVars[i]);
 
                 // Removes a division from the noBinaries loop which turns a 14 cycle loop into a 3.8 cycle loop
@@ -340,7 +341,11 @@ int MpiMcmcApplication::run()
 
     printHeader (burninFile, ctrl.priorVar);
 
-    Chain<DualPopCluster> burninChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, burninFile);
+    // Set up the output file for stellar statistical parameters from margEvolve
+    std::ofstream starParams(settings.files.output + ".starParams.burnin");
+    starParams << base::utility::format << fsLike << std::endl;
+
+    Chain<DualPopCluster> burninChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, burninFile, starParams);
     std::function<void(const DualPopCluster&)> checkPriors = std::bind(&ensurePriors, std::cref(settings), _1);
 
     try
@@ -462,7 +467,12 @@ int MpiMcmcApplication::run()
     {
         printHeader (resultFile, ctrl.priorVar);
 
-        Chain<DualPopCluster> mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, burninChain.getCluster(), resultFile);
+        // Set up the output file for stellar statistical parameters from margEvolve
+        starParams.close();
+        starParams.open(settings.files.output + ".starParams");
+        starParams << base::utility::format << fsLike << std::endl;
+
+        Chain<DualPopCluster> mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, burninChain.getCluster(), resultFile, starParams);
 
         {
             // Make sure and pull the covariance matrix before resetting the burninChain
@@ -562,13 +572,13 @@ DualPopCluster MpiMcmcApplication::propClustIndep (DualPopCluster clust, struct 
     {
         if (ctrl.priorVar.at(p) > EPSILON && p != YYA && p != YYB && p != LAMBDA)
         {
-            clust.clustA.setParam(p, clust.clustA.getParam(p) + sampleT (gen, scale * stepSize.at(p) * stepSize.at(p)));
-            clust.clustB.setParam(p, clust.clustA.getParam(p));
+            clust.clust[0].setParam(p, clust.clust[0].getParam(p) + sampleT (gen, scale * stepSize.at(p) * stepSize.at(p)));
+            clust.clust[1].setParam(p, clust.clust[0].getParam(p));
         }
     }
 
-    clust.clustA.yyy += sampleT (gen, scale * stepSize.at(YYY) * stepSize.at(YYY));
-    clust.clustB.yyy += sampleT (gen, scale * stepSize.at(YYY) * stepSize.at(YYY));
+    clust.clust[0].yyy += sampleT (gen, scale * stepSize.at(YYY) * stepSize.at(YYY));
+    clust.clust[1].yyy += sampleT (gen, scale * stepSize.at(YYY) * stepSize.at(YYY));
 
     clust.lambda += sampleT (gen, scale * stepSize.at(LAMBDA) * stepSize.at(LAMBDA));
 
@@ -599,17 +609,17 @@ DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, st
             }
 
             if (p == YYA)
-                clust.clustA.yyy += corrProps;
+                clust.clust[0].yyy += corrProps;
             else if (p == YYB)
-                clust.clustB.yyy += corrProps;
+                clust.clust[1].yyy += corrProps;
             else if (p == LAMBDA)
                 clust.lambda += corrProps;
             else
             {
-                // Set the value in clustA
-                clust.clustA.setParam(p, clust.clustA.getParam(p) + corrProps);
-                // Then copy the value from clustA to clustB
-                clust.clustB.setParam(p, clust.clustA.getParam(p));
+                // Set the value in clust[0]
+                clust.clust[0].setParam(p, clust.clust[0].getParam(p) + corrProps);
+                // Then copy the value from clust[0] to clust[1]
+                clust.clust[1].setParam(p, clust.clust[0].getParam(p));
             }
         }
     }
@@ -617,12 +627,14 @@ DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, st
     return clust;
 }
 
-double MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
+tuple<double, vector<double>> MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
 {
-    double logPostProp = propClust.clustA.logPrior (evoModels);
+    double logPostProp = propClust.clust[0].logPrior (evoModels);
 
     array<unique_ptr<Isochrone>, 2> isochrone;
-    array<Cluster*, 2> cluster = { &propClust.clustA, &propClust.clustB };
+    array<Cluster*, 2> cluster = { &propClust.clust[0], &propClust.clust[1] };
+
+    vector<double> starData;
 
     pool.parallelFor(2, [=,&isochrone](int i)
     {
@@ -634,23 +646,31 @@ double MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
     const double lambdaA = propClust.lambda;
     const double lambdaB = (1 - lambdaA);
 
-    /* marginalize over isochrone */
-    vector<double> postA, postB;
+    starData.push_back(lambdaA);
 
-    if (settings.noBinaries)
+    /* marginalize over isochrone */
+    array<vector<double>, 2> post;
+    auto &postA = post[0];
+    auto &postB = post[1];
+
+    pool.parallelFor(2, [=, &isochrone, &propClust, &post](int i)
     {
-        postA = margEvolveNoBinaries (propClust.clustA, evoModels, *isochrone.at(0), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts);
-        postB = margEvolveNoBinaries (propClust.clustB, evoModels, *isochrone.at(1), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts);
-    }
-    else
-    {
-        postA = margEvolveWithBinary (propClust.clustA, systems, evoModels, *isochrone.at(0), pool);
-        postB = margEvolveWithBinary (propClust.clustB, systems, evoModels, *isochrone.at(1), pool);
-    }
+        if (settings.noBinaries)
+        {
+            post[i] = margEvolveNoBinaries (propClust.clust[i], evoModels, *isochrone.at(i), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts);
+        }
+        else
+        {
+            post[i] = margEvolveWithBinary (propClust.clust[i], systems, evoModels, *isochrone.at(i), pool);
+        }
+    });
 
 
     for (size_t i = 0; i < sSize; ++i)
     {
+        starData.push_back(postA[i]);
+        starData.push_back(postB[i]);
+
         // Give both A and B a chance to be the only contributor for this star.
         if (postA[i] > 0.0)
         {
@@ -675,7 +695,7 @@ double MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
         logPostProp += __builtin_log ((1.0 - systems[i].clustStarPriorDens) * fsLike + postA[i]);
     }
 
-    return logPostProp;
+    return std::make_tuple(logPostProp, starData);
 }
 
 

@@ -25,12 +25,15 @@ class Chain : public McmcApplication
     T clust;
 
     ostream &fout;
+    ostream &starParams;
 
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
+    std::vector<double> starData;
+
   public:
-    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ostream &fout)
-        : McmcApplication(seed), priorVar(priorVar), clust(clust), fout(fout)
+    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ostream &fout, ostream &starParams)
+        : McmcApplication(seed), priorVar(priorVar), clust(clust), fout(fout), starParams(starParams)
     {}
 
     void reset()
@@ -43,17 +46,22 @@ class Chain : public McmcApplication
         }
     }
 
-    void run(std::function<T(T)> propose, std::function<double(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
+    void run(std::function<T(T)> propose, std::function<std::tuple<double, std::vector<double>>(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
         {
             double logPostProp = 0.0;
+            std::vector<double> logPostStarData;
+
             auto propClust = propose (clust);
 
             try
             {
                 checkPriors(propClust);
-                logPostProp = logPost (propClust);
+
+                auto lpOut      = logPost (propClust);
+		logPostProp     = std::get<0>(lpOut);
+		logPostStarData = std::get<1>(lpOut);
             }
             catch(InvalidCluster &e)
             {
@@ -65,20 +73,21 @@ class Chain : public McmcApplication
             {
                 clust = propClust;
                 logPostCurr = logPostProp;
+                starData = logPostStarData;
             }
 
             /* save draws to estimate covariance matrix for more efficient Metropolis */
             for (int p = 0; p < NPARAMS; p++)
             {
                 if (p == YYA)
-                    params.at(p).push_back(clust.clustA.yyy);
+                    params.at(p).push_back(clust.clust[0].yyy);
                 else if (p == YYB)
-                    params.at(p).push_back(clust.clustB.yyy);
+                    params.at(p).push_back(clust.clust[1].yyy);
                 else if (p == LAMBDA)
                     params.at(p).push_back(clust.lambda);
                 else if (priorVar[p] > EPSILON)
                 {
-                    params.at(p).push_back(clust.clustA.getParam(p));
+                    params.at(p).push_back(clust.clust[0].getParam(p));
                 }
             }
 
@@ -88,17 +97,24 @@ class Chain : public McmcApplication
                 {
                     if (priorVar.at(p) > EPS || p == FEH || p == MOD || p == ABS)
                     {
-                        fout << base::utility::format << clust.clustA.getParam(p) << ' ';
+                        fout << base::utility::format << clust.clust[0].getParam(p) << ' ';
                     }
                 }
 
-                fout << base::utility::format << clust.clustA.yyy << ' '
-                     << base::utility::format << clust.clustB.yyy << ' '
+                fout << base::utility::format << clust.clust[0].yyy << ' '
+                     << base::utility::format << clust.clust[1].yyy << ' '
                      << base::utility::format << clust.lambda << ' ';
 
 
                 fout << base::utility::format << logPostCurr << endl;
             }
+
+	    for (auto a : starData)
+	    {
+                starParams << base::utility::format << a;
+	    }
+
+            starParams << std::endl;
         }
     }
 

@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <random>
+#include <tuple>
 
 #include "mpiMcmc.hpp"
 #include "McmcApplication.hpp"
@@ -16,8 +17,7 @@ const int LAMBDA = IFMR_SLOPE;
 
 struct DualPopCluster
 {
-    Cluster clustA;
-    Cluster clustB;
+    std::array<Cluster, 2> clust;
 
     double lambda = 0.5;
 };
@@ -35,7 +35,7 @@ class MpiMcmcApplication
     DualPopCluster propClustIndep (DualPopCluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &, double scale);
     DualPopCluster propClustCorrelated (DualPopCluster, const struct ifmrMcmcControl&, const Matrix<double, NPARAMS, NPARAMS>&);
 
-    double logPostStep (DualPopCluster &, double);
+    std::tuple<double, std::vector<double>> logPostStep (DualPopCluster &, double);
 
     void mainRun(std::function<DualPopCluster(DualPopCluster)> propose, std::function<double(DualPopCluster&)> logPost, std::ofstream &fout, std::array<double, NPARAMS> priorVar, DualPopCluster clust, int iters, int thin);
 
