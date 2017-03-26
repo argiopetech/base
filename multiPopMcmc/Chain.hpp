@@ -76,6 +76,12 @@ class Chain : public McmcApplication
                 starData = logPostStarData;
             }
 
+            // In addition to updating starData if the cluster is accepted, we need
+            //   to ensure that starData is full (if possible) at the first iteration
+            //   of a new Chain object.
+            if (starData.empty())
+                starData = logPostStarData;
+
             /* save draws to estimate covariance matrix for more efficient Metropolis */
             for (int p = 0; p < NPARAMS; p++)
             {
@@ -109,12 +115,17 @@ class Chain : public McmcApplication
                 fout << base::utility::format << logPostCurr << endl;
             }
 
-	    for (auto a : starData)
-	    {
-                starParams << base::utility::format << a;
-	    }
+            if (starData.size() >= 2)
+            {
+                starParams << base::utility::format << starData[0];
 
-            starParams << std::endl;
+                for (size_t i = 1; i < starData.size(); ++i)
+                {
+                    starParams << ' ' << base::utility::format << starData[i];
+                }
+
+                starParams << std::endl;
+            }
         }
     }
 
