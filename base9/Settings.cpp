@@ -194,13 +194,13 @@ void Settings::fromCLI (int argc, char **argv)
         {"bdModel", required_argument, 0, 0xF9},
         {"priorFe_H", required_argument, 0, 0xF8},
         {"sigmaFe_H", required_argument, 0, 0xF7},
-        {"priordistMod", required_argument, 0, 0xF6},
-        {"sigmadistMod", required_argument, 0, 0xF5},
+        {"priorDistMod", required_argument, 0, 0xF6},
+        {"sigmaDistMod", required_argument, 0, 0xF5},
         {"priorAv", required_argument, 0, 0xF4},
         {"sigmaAv", required_argument, 0, 0xF3},
         {"priorY", required_argument, 0, 0xF2},
         {"sigmaY", required_argument, 0, 0xF1},
-        {"priorlogAge", required_argument, 0, 0xF0},
+        {"priorLogAge", required_argument, 0, 0xF0},
         {"minMag", required_argument, 0, 0xEF},
         {"maxMag", required_argument, 0, 0xEE},
         {"index", required_argument, 0, 0xED},
@@ -229,12 +229,12 @@ void Settings::fromCLI (int argc, char **argv)
         {"sigmaCarbonicity", required_argument, 0, 0xCC},
         {"deltaMass", required_argument, 0, 0xCB},
         {"deltaMassRatio", required_argument, 0, 0xCA},
-        {"sigmalogAge", required_argument, 0, 0xC9},
+        {"sigmaLogAge", required_argument, 0, 0xC9},
         {"startingFe_H", required_argument, 0, 0xC8},
-        {"startingdistMod", required_argument, 0, 0xC7},
+        {"startingDistMod", required_argument, 0, 0xC7},
         {"startingAv", required_argument, 0, 0xC6},
         {"startingY", required_argument, 0, 0xC5},
-        {"startinglogAge", required_argument, 0, 0xC4},
+        {"startingLogAge", required_argument, 0, 0xC4},
         {"startingCarbonicity", required_argument, 0, 0xC3},
 
         // Various flags
@@ -597,9 +597,9 @@ static void printUsage ()
     cerr << "\t--startingFe_H" << endl;
     cerr << "\t--priorFe_H" << endl;
     cerr << "\t--sigmaFe_H" << endl << endl;
-    cerr << "\t--startingdistMod" << endl;
-    cerr << "\t--priordistMod" << endl;
-    cerr << "\t--sigmadistMod" << endl << endl;
+    cerr << "\t--startingDistMod" << endl;
+    cerr << "\t--priorDistMod" << endl;
+    cerr << "\t--sigmaDistMod" << endl << endl;
     cerr << "\t--startingAv" << endl;
     cerr << "\t--priorAv" << endl;
     cerr << "\t--sigmaAv" << endl << endl;
@@ -609,8 +609,8 @@ static void printUsage ()
     cerr << "\t--startingCarbonicity" << endl;
     cerr << "\t--priorCarbonicity" << endl;
     cerr << "\t--sigmaCarbonicity" << endl << endl;
-    cerr << "\t--startinglogAge" << endl;
-    cerr << "\t--priorlogAge" << endl;
+    cerr << "\t--startingLogAge" << endl;
+    cerr << "\t--priorLogAge" << endl;
     cerr << "\t--sigmaLogAge" << endl;
     cerr << "\t--minMag" << endl;
     cerr << "\t--maxMag" << endl;
