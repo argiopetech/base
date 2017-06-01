@@ -256,7 +256,7 @@ class Application
     }
 
     void run();
-    std::tuple<double, double, double> sampleMass(const Isochrone&, StellarSystem);
+    std::tuple<double, double, double> sampleMass(const Isochrone&, StellarSystem, int, int);
 };
 
 
@@ -341,7 +341,7 @@ void checkPriors(const Cluster &clust, const StellarSystem &s)
 }
 
 
-std::tuple<double, double, double> Application::sampleMass(const Isochrone &isochrone, StellarSystem star)
+std::tuple<double, double, double> Application::sampleMass(const Isochrone &isochrone, StellarSystem star, const int burnIters, const int iters)
 {
     if (star.primary.mass < 0.1)
     {
@@ -350,9 +350,6 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
         star.primary.mass = 0.1;
         star.setMassRatio(tRat);
     }
-
-    const int iters = 4000;
-    const int burnIters = 300;
 
     std::ofstream nullstream;
 
@@ -525,7 +522,7 @@ void Application::run()
                 star.setMassRatio(0.0);
             }
 
-            auto sampleTuple = sampleMass(*isochrone, star);
+            auto sampleTuple = sampleMass(*isochrone, star, settings.sampleMass.burnIters, settings.sampleMass.iters);
 
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (clust.getM_wd_up() - 0.15);

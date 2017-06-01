@@ -153,6 +153,8 @@ void Settings::fromYaml (const string& yamlFile)
     scatterCluster.limitS2N = getOrRequest <double>(scatterConfNode, "limitS2N");
     scatterCluster.crowded  = getOrRequest <bool>(scatterConfNode, "crowded");
 
+    sampleMass.burnIters = getOrRequest <int>(sampleMassNode, "iters");
+    sampleMass.iters     = getOrRequest <int>(sampleMassNode, "burnIters");
     sampleMass.deltaMass = getOrRequest <double>(sampleMassNode, "deltaMass");
     sampleMass.deltaMassRatio = getOrRequest <double>(sampleMassNode, "deltaMassRatio");
 

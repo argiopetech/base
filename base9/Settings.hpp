@@ -110,6 +110,9 @@ class Settings
 
     struct SampleMassSettings
     {
+        int iters;
+        int burnIters;
+
         double deltaMass;
         double deltaMassRatio;
     };

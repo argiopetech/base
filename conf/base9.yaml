@@ -140,6 +140,9 @@ sampleWDMass:
     # No sampleWDMass-specific settings yet
 
 sampleMass:
+    burnIters:          1000
+    iters:              4000
+
     deltaMass:          0.0005
     deltaMassRatio:     0.001
 
