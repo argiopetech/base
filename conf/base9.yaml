@@ -140,10 +140,10 @@ sampleWDMass:
     # No sampleWDMass-specific settings yet
 
 sampleMass:
-    burnIters:          1000
-    iters:              4000
+    burnIters:          10000
+    iters:              10000
 
-    deltaMass:          0.0005
+    deltaMass:          0.01
     deltaMassRatio:     0.001
 
 simCluster:
