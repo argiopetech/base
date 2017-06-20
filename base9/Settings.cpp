@@ -522,7 +522,7 @@ void Settings::fromCLI (int argc, char **argv)
     }
 }
 
-template<typename T> T Settings::getDefault (Node & n, string && f, T def)
+template<typename T> T Settings::getDefault (Node & n, string f, T def)
 {
     if (n[f])
     {
@@ -534,7 +534,7 @@ template<typename T> T Settings::getDefault (Node & n, string && f, T def)
     }
 }
 
-template<typename T> T Settings::getOrDie (Node & n, string && f)
+template<typename T> T Settings::getOrDie (Node & n, string f)
 {
     if (n[f])
     {
@@ -546,8 +546,18 @@ template<typename T> T Settings::getOrDie (Node & n, string && f)
     }
 }
 
-template<typename T> T Settings::getOrRequest (Node & n, string && f)
+template<typename T> T Settings::getOrRequest (Node & n, string f)
 {
+    // In the event that there is an issue with loading the YAML file, we
+    // request more information from the user.
+    //
+    // There is no sensible way to request information from the user in some
+    // circumstances (e.g., supercomputing clusters, where the client may be run
+    // many nodes at once and where the user may not have access to stdin). For
+    // these cases, we provide a build flag that makes this function call
+    // getOrDie instead.
+    #ifndef BUILD_NONINTERACTIVE
+
     if (n[f])
     {
         return n[f].as<T> ();
@@ -564,9 +574,15 @@ template<typename T> T Settings::getOrRequest (Node & n, string && f)
 
         return t;
     }
+
+    #else
+
+    return getOrDie<T>(n, f);
+
+    #endif
 }
 
-Node Settings::getNode (Node & n, string && f)
+Node Settings::getNode (Node & n, string f)
 {
     if (n[f])
     {
@@ -578,7 +594,7 @@ Node Settings::getNode (Node & n, string && f)
     }
 }
 
-[[noreturn]] void Settings::exitWith (string && s)
+[[noreturn]] void Settings::exitWith (string s)
 {
     cerr << s << endl;
     abort ();

@@ -33,6 +33,7 @@ if (USE_TESTS)
 endif()
 
 option (USE_TCMALLOC "Enable linking to tcmalloc" OFF)
+option (BUILD_NONINTERACTIVE "Builds non-interactive applications for use on e.g., supercomputing clusters" OFF)
 
 ##########################
 # Set up the config file #

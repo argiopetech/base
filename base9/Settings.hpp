@@ -137,11 +137,11 @@ class Settings
     struct SampleMassSettings sampleMass;
 
   private:
-    template <typename T> T getDefault (YAML::Node &, std::string &&, T);
-    template <typename T> T getOrDie (YAML::Node &, std::string &&);
-    template <typename T> T getOrRequest (YAML::Node &, std::string &&);
-    YAML::Node getNode (YAML::Node &, std::string &&);
-    [[noreturn]] void exitWith (std::string &&);
+    template <typename T> T getDefault (YAML::Node &, std::string, T);
+    template <typename T> T getOrDie (YAML::Node &, std::string);
+    template <typename T> T getOrRequest (YAML::Node &, std::string);
+    YAML::Node getNode (YAML::Node &, std::string);
+    [[noreturn]] void exitWith (std::string);
 };
 
 #endif
