@@ -1,5 +1,4 @@
-/* File   : makeCMDs.cpp
- * Author : Elliot Robinson
+/* Author: Elliot Robinson
  *
  * Outputs CMDs for every line in a .res output file
  */
