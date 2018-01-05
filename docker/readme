@@ -1,0 +1,2 @@
+docker build -t base9 .
+docker save -o base9.docker  base9:latest
