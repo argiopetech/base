@@ -1,3 +1,9 @@
+/* File   : makeCMDs.cpp
+ * Author : Elliot Robinson
+ *
+ * Outputs CMDs for every line in a .res output file
+ */
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
