@@ -217,34 +217,38 @@ std::pair<Isochrone, Isochrone> Application::interpolateIsochrone(const Cluster 
     vector<EvolutionaryPoint> eeps;
     vector<EvolutionaryPoint> wdEeps;
 
-    for ( size_t e = 0; e < isochrone.eeps.size() - 1; ++e)
     {
-        double mass = isochrone.eeps.at(e).mass;
-        double delta = isochrone.eeps.at(e + 1).mass - mass;
-        double deltaSteps = delta / 80;
-
-        for ( int steps = 0; steps < 80; ++steps )
+        for ( size_t e = 0; e < isochrone.eeps.size() - 1; ++e)
         {
-            StellarSystem star;
-            star.primary.mass   = mass + deltaSteps * steps;
-            star.secondary.mass = 0.0;
+            double mass = isochrone.eeps.at(e).mass;
+            double delta = isochrone.eeps.at(e + 1).mass - mass;
+            double deltaSteps = delta / 80;
 
-            eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone));
+            for ( int steps = 0; steps < 80; ++steps )
+            {
+                StellarSystem star;
+                star.primary.mass   = mass + deltaSteps * steps;
+                star.secondary.mass = 0.0;
+
+                eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone));
+            }
         }
     }
 
-    const double wdDelta = 0.01;
-    double mass = isochrone.eeps.back().mass + wdDelta;
-
-    while ( mass < clust.getM_wd_up() )
     {
-        StellarSystem star;
-        star.primary.mass   = mass;
-        star.secondary.mass = 0.0;
+        const double wdDelta = 0.01;
+        double mass = isochrone.eeps.back().mass + wdDelta;
 
-        wdEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone));
+        while ( mass < clust.getM_wd_up() )
+        {
+            StellarSystem star;
+            star.primary.mass   = mass;
+            star.secondary.mass = 0.0;
 
-        mass += wdDelta;
+            wdEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone));
+
+            mass += wdDelta;
+        }
     }
 
     return {{clust.age, eeps}, {clust.age, wdEeps}};
