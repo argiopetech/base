@@ -4,16 +4,20 @@
 #include <functional>
 #include <random>
 
+#include "Chain.hpp"
+#include "IO/BackingStore.hpp"
+#include "IO/Records.hpp"
 #include "mpiMcmc.hpp"
 #include "McmcApplication.hpp"
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Utility.hpp"
 
+
 class MpiMcmcApplication
 {
   public:
-    MpiMcmcApplication(Settings &s);
+    MpiMcmcApplication(Settings &s, SinglePopBackingStore*);
 
     virtual ~MpiMcmcApplication() {}
 
@@ -37,6 +41,8 @@ class MpiMcmcApplication
     std::mt19937 gen;
 
     Cluster clust;
+
+    std::unique_ptr<SinglePopBackingStore> backingStore;
 
     std::vector<StellarSystem> msSystems;
     std::vector<StellarSystem> msMainRun;

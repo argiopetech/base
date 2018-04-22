@@ -107,7 +107,8 @@ struct Result<TransformMethod::ExtrapHigh>
     const double val;
 };
 
-// Template metaprogramming. The TransformMethod, being known at runtime, 
+// Template metaprogramming. The TransformMethod, being known at runtime,
+// with a default value of "Extrap"
 template <TransformMethod M = TransformMethod::Extrap>
 auto linearTransform(double xL, double xH, double yL, double yH, double xActual) -> const Result<M>
 {

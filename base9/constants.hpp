@@ -64,6 +64,11 @@ const int IFMR_INTERCEPT    =  6;
 const int IFMR_SLOPE        =  7;
 const int IFMR_QUADCOEF     =  8;
 
+// multiPopMCMC makes use of this to keep track of multiple Y values without major changes
+const int YYA               = YYY;
+const int YYB               = IFMR_INTERCEPT;
+const int LAMBDA            = IFMR_SLOPE;
+
 const double DOF    = 6.0;
 const double GAMMA6 = -2.0590305444197083417635;   /* GAMMA for DOF=6 */
 

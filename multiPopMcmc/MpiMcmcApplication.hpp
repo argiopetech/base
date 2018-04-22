@@ -5,15 +5,13 @@
 #include <random>
 #include <tuple>
 
+#include "IO/Records.hpp"
 #include "mpiMcmc.hpp"
 #include "McmcApplication.hpp"
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "Utility.hpp"
 
-const int YYA = YYY;
-const int YYB = IFMR_INTERCEPT;
-const int LAMBDA = IFMR_SLOPE;
 
 struct DualPopCluster
 {
@@ -25,7 +23,7 @@ struct DualPopCluster
 class MpiMcmcApplication
 {
   public:
-    MpiMcmcApplication(Settings &s);
+    MpiMcmcApplication(Settings &s, MultiPopBackingStore*, StarParamsBackingStore*);
 
     virtual ~MpiMcmcApplication() {}
 
@@ -52,6 +50,9 @@ class MpiMcmcApplication
     std::mt19937 gen;
 
     DualPopCluster clust;
+
+    std::unique_ptr<MultiPopBackingStore> mcmcStore;
+    std::unique_ptr<StarParamsBackingStore> paramsStore;
 
     std::vector<StellarSystem> systems;
     std::vector<StellarSystem> mainRunSystems;
