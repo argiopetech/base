@@ -26,11 +26,9 @@ else
     if [ ! -e "yaml-cpp/CMakeLists.txt" ]; then
         # Manually clone yaml-cpp, removing the directory first
         rm -r yaml-cpp
-        git clone https://github.com/argiopetech/yaml-cpp.git --depth 1
+        git clone --depth=1 --branch=yaml-cpp-0.6.2 https://github.com/jbeder/yaml-cpp.git
     fi
 fi
-
-cp cmake/yaml-cpp-CMakeLists.txt yaml-cpp/CMakeLists.txt
 
 cd ./BUILD
 cmake -DCMAKE_BUILD_TYPE="RELWITHDEBINFO" -DCMAKE_INSTALL_PREFIX='.' ..

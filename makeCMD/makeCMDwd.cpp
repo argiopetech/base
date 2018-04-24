@@ -3,6 +3,7 @@
  * Output photometry for expected WD stars between 1Mo and 7.5Mo
  */
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -19,6 +20,7 @@
 
 using std::cerr;
 using std::endl;
+using std::fabs;
 using std::ofstream;
 using std::string;
 using std::unique_ptr;
