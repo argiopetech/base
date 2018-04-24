@@ -178,7 +178,7 @@ int main (int argc, char *argv[])
 
         if (settings.verbose)
         {
-            for (int f = 0; f < filters.size(); ++f)
+            for (size_t f = 0; f < filters.size(); ++f)
                 cout << f << ' ' << filters.at(f) << endl;
         }
 

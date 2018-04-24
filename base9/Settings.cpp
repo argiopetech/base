@@ -167,12 +167,10 @@ void Settings::fromYaml (const string& yamlFile)
     verbose = getOrRequest <int>(generalNode, "verbose");
 
     // When we switch to C++11, we can change these to std::string and remove most of the cruft
+    files.backend = static_cast<Backend>(getOrRequest <int>(filesNode, "backend"));
     files.phot = getOrRequest <string>(filesNode, "photFile");
-
     files.output = getOrRequest <string>(filesNode, "outputFileBase");
-
     files.scatter = getOrRequest <string>(filesNode, "scatterFile");
-
     files.models = getOrRequest <string>(filesNode, "modelDirectory");
 }
 
@@ -238,6 +236,8 @@ void Settings::fromCLI (int argc, char **argv)
         {"startingY", required_argument, 0, 0xC5},
         {"startingLogAge", required_argument, 0, 0xC4},
         {"startingCarbonicity", required_argument, 0, 0xC3},
+        {"backend", required_argument, 0, 0xC2},
+
 
         // Various flags
         // These are now handled the same way as the parameters due to occasional compiler weirdness
@@ -285,6 +285,11 @@ void Settings::fromCLI (int argc, char **argv)
             case 0xFC:
                 istringstream (string (optarg)) >> i;
                 whiteDwarf.wdModel = static_cast<WdModel>(i);
+                break;
+
+            case 0xC2:
+                istringstream (string (optarg)) >> i;
+                files.backend = static_cast<Backend>(i);
                 break;
 
             case 0xFA:
@@ -522,7 +527,8 @@ void Settings::fromCLI (int argc, char **argv)
     }
 }
 
-template<typename T> T Settings::getDefault (Node & n, string f, T def)
+template<typename T>
+T Settings::getDefault (Node & n, string f, T def)
 {
     if (n[f])
     {
@@ -534,7 +540,8 @@ template<typename T> T Settings::getDefault (Node & n, string f, T def)
     }
 }
 
-template<typename T> T Settings::getOrDie (Node & n, string f)
+template<typename T>
+T Settings::getOrDie (Node & n, string f)
 {
     if (n[f])
     {
@@ -546,7 +553,8 @@ template<typename T> T Settings::getOrDie (Node & n, string f)
     }
 }
 
-template<typename T> T Settings::getOrRequest (Node & n, string f)
+template<typename T>
+T Settings::getOrRequest (Node & n, string f)
 {
     // In the event that there is an issue with loading the YAML file, we
     // request more information from the user.
@@ -603,7 +611,7 @@ Node Settings::getNode (Node & n, string f)
 static void printUsage ()
 {
     cerr << "\nUsage:" << endl;
-    cerr << "=======" << endl;
+    cerr <<   "======" << endl;
     cerr << "\t--help\t\t\tPrints help" << endl;
     cerr << "\t--version\t\tPrints version string" << endl << endl;
     cerr << "\t--config\t\tYAML configuration file" << endl << endl;
@@ -651,16 +659,25 @@ static void printUsage ()
     cerr << "\t--modelDirectory\tThe directory in which models are located\n" << endl;
     cerr << "\t--deltaMass\t\tSet the delta for primary mass in sampleMass" << endl;
     cerr << "\t--deltaMassRatio\tSet the delta for mass ratio in sampleMass" << endl;
+
     cerr << "\n9.3.0 flags" << endl;
     cerr <<   "===========" << endl;
     cerr << "\t--threads\t\tSpecify the number of local threads to run with" << endl;
     cerr << "\t--bigStepBurnin\t\tRun the burnin only using the \"propClustBigSteps\" algorithm" << endl;
+
     cerr << "\n9.4.0 flags" << endl;
     cerr <<   "===========" << endl;
     cerr << "\t--noBinaries\t\tTurns off integration over secondary mass" << endl;
+
     cerr << "\n9.4.4 flags" << endl;
-    cerr << "=============" << endl;
+    cerr <<   "===========" << endl;
     cerr << "\t--noWDs\t\t\tKeeps simCluster from generating WDs";
+
+    cerr << "\n9.5.0 flags" << endl;
+    cerr <<   "===========" << endl;
+    cerr << "\t--backend\t\tSpecify the desired back end" << endl;
+    cerr << "\t\t0 = File" << endl;
+    cerr << "\t\t1 = SQLite" << endl;
     cerr << endl;
 }
 

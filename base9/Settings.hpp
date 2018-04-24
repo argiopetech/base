@@ -8,6 +8,8 @@
 #include "constants.hpp"
 #include "yaml-cpp/yaml.h"
 
+enum class Backend { File, Sqlite };
+
 class Settings
 {
   public:
@@ -119,6 +121,8 @@ class Settings
 
     struct Files
     {
+        Backend backend;
+
         std::string phot;
         std::string output;
         std::string scatter;

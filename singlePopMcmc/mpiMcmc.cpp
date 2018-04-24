@@ -4,10 +4,12 @@
 
 #include "MpiMcmcApplication.hpp"
 #include "IO/SinglePopMcmc.hpp"
+#include "IO/Records.hpp"
 
 using std::cerr;
 using std::endl;
 using std::exception;
+
 
 int main (int argc, char *argv[])
 {
@@ -28,8 +30,21 @@ int main (int argc, char *argv[])
             cout << "Seed: " << settings.seed << endl;
         }
 
-        // TODO - Make this read settings
-        auto store = new SinglePopMcmc_FileBackingStore(settings.files.output);
+
+        SinglePopBackingStore *store = nullptr;
+
+        if (settings.files.backend == Backend::Sqlite)
+        {
+            store = new SinglePopMcmc_SqlBackingStore(settings.files.output);
+        }
+        else if (settings.files.backend == Backend::File)
+        {
+            store = new SinglePopMcmc_FileBackingStore(settings.files.output);
+        }
+        else
+        {
+            throw std::runtime_error("Invalid back end specified");
+        }
 
         MpiMcmcApplication master(settings, std::move(store));
 

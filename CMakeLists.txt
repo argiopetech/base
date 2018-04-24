@@ -26,7 +26,7 @@ include(GetGitRevisionDescription)
 #set (Base9_VERSION )
 git_describe(Base9_VERSION)
 
-option (USE_TESTS "Enable testing" OFF) 
+option (USE_TESTS "Enable testing" OFF)
 
 if (USE_TESTS)
   enable_testing()
@@ -67,7 +67,8 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_PROFILE        "-O0 -g -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_OPROFILE       "-O3 -g -DNDEBUG" CACHE STRING "" FORCE)
 
-set(CMAKE_EXE_LINKER_FLAGS "-pthread" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-pthread -ldl" CACHE STRING "" FORCE)
+
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE    "-L/usr/local/lib -lprofiler")
 set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "-L/usr/local/lib -lprofiler")
 
