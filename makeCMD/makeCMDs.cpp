@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -16,6 +17,7 @@
 
 using std::cerr;
 using std::endl;
+using std::fabs;
 using std::stringstream;
 using std::ofstream;
 using std::string;

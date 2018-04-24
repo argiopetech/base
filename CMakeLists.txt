@@ -117,7 +117,12 @@ include_directories(base9)
 include_directories(yaml-cpp/include)
 
 # Libraries
+
+option(YAML_CPP_BUILD_TESTS "Enable testing" OFF)
+option(YAML_CPP_BUILD_TOOLS "Enable parse tools" OFF)
+option(YAML_CPP_BUILD_CONTRIB "Enable contrib stuff in library" OFF)
 add_subdirectory(yaml-cpp)
+
 add_subdirectory(base9)
 
 # Applications
