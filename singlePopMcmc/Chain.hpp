@@ -5,12 +5,19 @@
 #include <ostream>
 #include <iostream>
 
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_eigen.h>
+#include <gsl/gsl_statistics.h>
+#include <gsl/gsl_linalg.h>
+
 #include "Cluster.hpp"
+#include "IO/BackingStore.hpp"
+#include "IO/Records.hpp"
 #include "Matrix.hpp"
 #include "McmcApplication.hpp"
-#include "Utility.hpp"
 
-using std::ostream;
 using std::cout;
 using std::endl;
 using std::cerr;
@@ -24,13 +31,13 @@ class Chain : public McmcApplication
 
     T clust;
 
-    ostream &fout;
+    SinglePopBackingStore &store;
 
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
   public:
-    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ostream &fout)
-        : McmcApplication(seed), priorVar(priorVar), clust(clust), fout(fout)
+    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, SinglePopBackingStore &store)
+        : McmcApplication(seed), priorVar(priorVar), clust(clust), store(store)
     {}
 
     void reset()
@@ -43,7 +50,7 @@ class Chain : public McmcApplication
         }
     }
 
-    void run(std::function<T(T)> propose, std::function<double(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
+    void run(AdaptiveMcmcStage stage, std::function<T(T)> propose, std::function<double(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
         {
@@ -78,15 +85,8 @@ class Chain : public McmcApplication
 
             if (iteration % thin == 0)
             {
-                for (int p = 0; p < NPARAMS; p++)
-                {
-                    if (priorVar.at(p) > EPS || p == FEH || p == MOD || p == ABS)
-                    {
-                        fout << base::utility::format << clust.getParam(p) << ' ';
-                    }
-                }
-
-                fout << base::utility::format << logPostCurr << endl;
+                const auto iter = store.nextIteration();
+                store.save(iter, {stage, clust, logPostCurr});
             }
         }
     }

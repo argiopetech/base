@@ -1,17 +1,10 @@
 #include <functional>
 #include <iostream>
 
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_eigen.h>
-#include <gsl/gsl_statistics.h>
-#include <gsl/gsl_linalg.h>
-
 #include "Chain.hpp"
 #include "Cluster.hpp"
 #include "marg.hpp"
 #include "mpiMcmc.hpp"
-#include "mpiFuncs.hpp"
 #include "MpiMcmcApplication.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
@@ -66,8 +59,10 @@ void ensurePriors(const Settings &s, const DualPopCluster &clust)
         throw InvalidCluster("High Lambda");
 }
 
-MpiMcmcApplication::MpiMcmcApplication(Settings &s)
-    : evoModels(makeModel(s)), settings(s), gen(uint32_t(s.seed * uint32_t(2654435761))), pool(s.threads) // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
+MpiMcmcApplication::MpiMcmcApplication(Settings &s, MultiPopBackingStore *mcmcStore, StarParamsBackingStore *paramsStore)
+    : evoModels(makeModel(s)), settings(s)
+    , gen(uint32_t(s.seed * uint32_t(2654435761))) // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
+    , mcmcStore(mcmcStore), paramsStore(paramsStore), pool(s.threads)
 {
     ctrl.priorVar.fill(0);
 
@@ -143,8 +138,6 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s)
 
     ctrl.nIter = settings.singlePopMcmc.maxIter;
     ctrl.thin = settings.singlePopMcmc.thin;
-
-    ctrl.clusterFilename = settings.files.output + ".res";
 }
 
 
@@ -211,6 +204,7 @@ int MpiMcmcApplication::run()
     std::copy(settings.singlePopMcmc.stepSize.begin(), settings.singlePopMcmc.stepSize.end(), stepSize.begin());
     stepSize.at(LAMBDA) = settings.multiPopMcmc.lambdaStep;
 
+    
     if (settings.verbose)
     {
         cout << std::setprecision(3) << std::fixed;
@@ -316,6 +310,8 @@ int MpiMcmcApplication::run()
         }
     }
 
+    Chain<DualPopCluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), fsLike, ctrl.priorVar, clust, *mcmcStore, *paramsStore);
+    
     allocateSSEMem();
 
     // Begin initChain
@@ -330,123 +326,102 @@ int MpiMcmcApplication::run()
     // Assuming fsLike doesn't change, this is the "global" logPost function
     auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);
 
-    // Run Burnin
-    std::ofstream burninFile(ctrl.clusterFilename + ".burnin");
-    if (!burninFile)
-    {
-        cerr << "***Error: File " << ctrl.clusterFilename + ".burnin" << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
-
-    printHeader (burninFile, ctrl.priorVar);
-
     // Set up the output file for stellar statistical parameters from margEvolve
     std::ofstream starParams(settings.files.output + ".starParams.burnin");
     starParams << base::utility::format << fsLike << std::endl;
 
-    Chain<DualPopCluster> burninChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, burninFile, starParams);
     std::function<void(const DualPopCluster&)> checkPriors = std::bind(&ensurePriors, std::cref(settings), _1);
 
-    try
+    int adaptiveBurnIter = 0;
+    bool acceptedOne = false;  // Keeps track of whether we have two accepted trials in a ros
+    bool acceptedOnce = false; // Keeps track of whether we have ever accepted a trial
+
+    // Stage 1 burnin
     {
-        int adaptiveBurnIter = 0;
-        bool acceptedOne = false;  // Keeps track of whether we have two accepted trials in a ros
-        bool acceptedOnce = false; // Keeps track of whether we have ever accepted a trial
+        if ( settings.verbose )
+            cout << "\nRunning Stage 1 burnin..." << flush;
 
-        // Stage 1 burnin
-        {
-            if ( settings.verbose )
-                cout << "\nRunning Stage 1 burnin..." << flush;
-
-            auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
-            burninChain.run(proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
-
-            if ( settings.verbose )
-                cout << " Complete (acceptanceRatio = " << burninChain.acceptanceRatio() << ")" << endl;
-
-            burninChain.reset(); // Reset the chain to forget this part of the burnin.
-        }
+        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
+        chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
 
         if ( settings.verbose )
-            cout << "\nRunning Stage 2 (adaptive) burnin..." << endl;
+            cout << " Complete (acceptanceRatio = " << chain.acceptanceRatio() << ")" << endl;
 
-        // Run adaptive burnin (stage 2)
-        // -----------------------------
-        // Exits after two consecutive trials with a 20% < x < 40% acceptanceRatio,
-        // or after the numeber of iterations exceeds the maximum burnin iterations.
-        do
-        {
-            // Convenience variable
-            const int trialIter = settings.singlePopMcmc.trialIter;
-
-            // Increment the number of iterations we've gone through
-            // If the step sizes aren't converging on an acceptable acceptance ratio, this can kick us out of the burnin
-            adaptiveBurnIter += trialIter;
-
-            // Reset the ratio to determine step scaling for this trial
-            burninChain.resetRatio();
-
-            std::function<DualPopCluster(DualPopCluster)> proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 5);
-
-            if (settings.singlePopMcmc.bigStepBurnin)
-            {
-                // Run big steps for the entire trial
-                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter);
-            }
-            else if (acceptedOnce)
-            {
-                proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
-                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
-            }
-            else
-            {
-                // Run big steps for half the trial
-                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
-
-                // Then run smaller steps for the second half
-                proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
-                burninChain.run(proposalFunc, logPostFunc, checkPriors, trialIter / 2);
-            }
-
-            double acceptanceRatio = burninChain.acceptanceRatio();
-
-            if (acceptanceRatio <= 0.4 && acceptanceRatio >= 0.2)
-            {
-                acceptedOnce = true;
-
-                if (acceptedOne)
-                {
-                    if ( settings.verbose )
-                        cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.singlePopMcmc.adaptiveBigSteps << ")" << endl;
-
-                    break;
-                }
-                else
-                {
-                    if ( settings.verbose )
-                        cout << "    Acceptance ratio: " << acceptanceRatio << ". Trying for trend." << endl;
-                    acceptedOne = true;
-                }
-            }
-            else
-            {
-                acceptedOne = false;
-
-                if ( settings.verbose )
-                    cout << "    Acceptance ratio: " << acceptanceRatio << ". Retrying." << endl;
-
-                scaleStepSizes(stepSize, burninChain.acceptanceRatio()); // Adjust step sizes
-            }
-        } while (adaptiveBurnIter < ctrl.burnIter);
-
-        burninFile.close();
+        chain.reset(); // Reset the chain to forget this part of the burnin.
     }
-    catch (...)
+
+    if ( settings.verbose )
+        cout << "\nRunning Stage 2 (adaptive) burnin..." << endl;
+
+    // Run adaptive burnin (stage 2)
+    // -----------------------------
+    // Exits after two consecutive trials with a 20% < x < 40% acceptanceRatio,
+    // or after the numeber of iterations exceeds the maximum burnin iterations.
+    do
     {
-        burninFile.close();
-        throw;
-    }
+        // Convenience variable
+        const int trialIter = settings.singlePopMcmc.trialIter;
+
+        // Increment the number of iterations we've gone through
+        // If the step sizes aren't converging on an acceptable acceptance ratio, this can kick us out of the burnin
+        adaptiveBurnIter += trialIter;
+
+        // Reset the ratio to determine step scaling for this trial
+        chain.resetRatio();
+
+        std::function<DualPopCluster(DualPopCluster)> proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 5);
+
+        if (settings.singlePopMcmc.bigStepBurnin)
+        {
+            // Run big steps for the entire trial
+            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter);
+        }
+        else if (acceptedOnce)
+        {
+            proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
+            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
+        }
+        else
+        {
+            // Run big steps for half the trial
+            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
+
+            // Then run smaller steps for the second half
+            proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
+            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
+        }
+
+        double acceptanceRatio = chain.acceptanceRatio();
+
+        if (acceptanceRatio <= 0.4 && acceptanceRatio >= 0.2)
+        {
+            acceptedOnce = true;
+
+            if (acceptedOne)
+            {
+                if ( settings.verbose )
+                    cout << "  Leaving adaptive burnin early with an acceptance ratio of " << acceptanceRatio << " (iteration " << adaptiveBurnIter + settings.singlePopMcmc.adaptiveBigSteps << ")" << endl;
+
+                break;
+            }
+            else
+            {
+                if ( settings.verbose )
+                    cout << "    Acceptance ratio: " << acceptanceRatio << ". Trying for trend." << endl;
+                acceptedOne = true;
+            }
+        }
+        else
+        {
+            acceptedOne = false;
+
+            if ( settings.verbose )
+                cout << "    Acceptance ratio: " << acceptanceRatio << ". Retrying." << endl;
+
+            scaleStepSizes(stepSize, chain.acceptanceRatio()); // Adjust step sizes
+        }
+    } while (adaptiveBurnIter < ctrl.burnIter);
+
 
     // Main run
     // Overwrite the burnin photometry set with the entire photometry set
@@ -455,57 +430,38 @@ int MpiMcmcApplication::run()
     // Don't forget to repopulate the SSE memory
     allocateSSEMem();
 
-    std::ofstream resultFile(ctrl.clusterFilename);
-    if (!resultFile)
+    // Set up the output file for stellar statistical parameters from margEvolve
+    starParams.close();
+    starParams.open(settings.files.output + ".starParams");
+    starParams << base::utility::format << fsLike << std::endl;
+
     {
-        cerr << "***Error: File " << ctrl.clusterFilename << " was not available for writing.***" << endl;
-        cerr << "[Exiting...]" << endl;
-        exit (1);
-    }
+        // Make sure and pull the covariance matrix before resetting the chain
+        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
 
-    try
-    {
-        printHeader (resultFile, ctrl.priorVar);
-
-        // Set up the output file for stellar statistical parameters from margEvolve
-        starParams.close();
-        starParams.open(settings.files.output + ".starParams");
-        starParams << base::utility::format << fsLike << std::endl;
-
-        Chain<DualPopCluster> mainChain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, burninChain.getCluster(), resultFile, starParams);
-
-        {
-            // Make sure and pull the covariance matrix before resetting the burninChain
-            auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), burninChain.makeCholeskyDecomp());
-
-            if ( settings.verbose )
-                cout << "\nStarting adaptive run... " << flush;
-
-            mainChain.run(proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
-
-            if ( settings.verbose )
-                cout << " Preliminary acceptanceRatio = " << mainChain.acceptanceRatio() << endl;
-        }
-
-        // Begin main run
-        // Main run proceeds in increments of 1, adapting the covariance matrix after every increment
-        for (auto iters = 0; iters < ctrl.nIter; ++iters)
-        {
-            auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), mainChain.makeCholeskyDecomp());
-
-            mainChain.run(proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
-        }
+        chain.reset();
 
         if ( settings.verbose )
-            cout << "\nFinal acceptance ratio: " << mainChain.acceptanceRatio() << endl;
+            cout << "\nStarting adaptive run... " << flush;
 
-        resultFile.close();
+        chain.run(AdaptiveMcmcStage::AdaptiveMainRun, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
+
+        if ( settings.verbose )
+            cout << " Preliminary acceptanceRatio = " << chain.acceptanceRatio() << endl;
     }
-    catch (...)
+
+    // Begin main run
+    // Main run proceeds in increments of 1, adapting the covariance matrix after every increment
+    for (auto iters = 0; iters < ctrl.nIter; ++iters)
     {
-        resultFile.close();
-        throw;
+        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
+
+        chain.run(AdaptiveMcmcStage::MainRun, proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
     }
+
+    if ( settings.verbose )
+        cout << "\nFinal acceptance ratio: " << chain.acceptanceRatio() << endl;
+
 
     return 0;
 }

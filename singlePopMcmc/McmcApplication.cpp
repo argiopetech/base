@@ -1,13 +1,12 @@
-#include <iostream>
-
-#include <random>
-
 #include <cmath>
+#include <iostream>
+#include <random>
 
 #include "McmcApplication.hpp"
 
 using std::cerr;
 using std::endl;
+
 
 // Decides whether to accept a proposed cluster property
 bool McmcApplication::acceptClustMarg (const double logPostCurr, const double logPostProp)

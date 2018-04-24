@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "MpiMcmcApplication.hpp"
+#include "IO/SinglePopMcmc.hpp"
 
 using std::cerr;
 using std::endl;
@@ -27,7 +28,10 @@ int main (int argc, char *argv[])
             cout << "Seed: " << settings.seed << endl;
         }
 
-        MpiMcmcApplication master(settings);
+        // TODO - Make this read settings
+        auto store = new SinglePopMcmc_FileBackingStore(settings.files.output);
+
+        MpiMcmcApplication master(settings, std::move(store));
 
         return master.run();
     }

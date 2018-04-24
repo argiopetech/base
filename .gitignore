@@ -16,9 +16,13 @@
 *.out
 *.app
 
+# Temporary files
 \#*
+.\#*
 *~
 *_flymake.cpp
+
+# Merge conflicts
 *.orig
 
 BUILD/*

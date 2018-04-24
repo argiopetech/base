@@ -119,7 +119,5 @@ namespace base
         {
             return out << std::setw(11) << std::fixed << std::setprecision(6);
         }
-
-
     }
 }

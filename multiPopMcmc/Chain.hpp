@@ -5,6 +5,13 @@
 #include <ostream>
 #include <iostream>
 
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_eigen.h>
+#include <gsl/gsl_statistics.h>
+#include <gsl/gsl_linalg.h>
+
 #include "Cluster.hpp"
 #include "Matrix.hpp"
 #include "McmcApplication.hpp"
@@ -15,25 +22,28 @@ using std::cout;
 using std::endl;
 using std::cerr;
 
+
 template <class T>
 class Chain : public McmcApplication
 {
   private:
+    double fsLike;
+    
     MVatrix<double, NPARAMS> params;
     std::array<double, NPARAMS> priorVar;
 
     T clust;
 
-    ostream &fout;
-    ostream &starParams;
+    MultiPopBackingStore &mcmcStore;
+    StarParamsBackingStore &paramsStore;
 
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
     std::vector<double> starData;
 
   public:
-    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, ostream &fout, ostream &starParams)
-        : McmcApplication(seed), priorVar(priorVar), clust(clust), fout(fout), starParams(starParams)
+    Chain(uint32_t seed, double fsLike, std::array<double, NPARAMS> priorVar, T clust, MultiPopBackingStore &mcmcStore, StarParamsBackingStore &paramsStore)
+        : McmcApplication(seed), fsLike(fsLike), priorVar(priorVar), clust(clust), mcmcStore(mcmcStore), paramsStore(paramsStore)
     {}
 
     void reset()
@@ -46,7 +56,7 @@ class Chain : public McmcApplication
         }
     }
 
-    void run(std::function<T(T)> propose, std::function<std::tuple<double, std::vector<double>>(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
+    void run(AdaptiveMcmcStage stage, std::function<T(T)> propose, std::function<std::tuple<double, std::vector<double>>(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
         {
@@ -99,32 +109,12 @@ class Chain : public McmcApplication
 
             if (iteration % thin == 0)
             {
-                for (int p = 0; p < NPARAMS; p++)
+                const auto iter = mcmcStore.nextIteration();
+                mcmcStore.save(iter, {stage, clust.lambda, clust.clust[0], clust.clust[1], logPostCurr});
+                if (starData.size() >= 2)
                 {
-                    if (priorVar.at(p) > EPS || p == FEH || p == MOD || p == ABS)
-                    {
-                        fout << base::utility::format << clust.clust[0].getParam(p) << ' ';
-                    }
+                    paramsStore.save(iter, {fsLike, starData});
                 }
-
-                fout << base::utility::format << clust.clust[0].yyy << ' '
-                     << base::utility::format << clust.clust[1].yyy << ' '
-                     << base::utility::format << clust.lambda << ' ';
-
-
-                fout << base::utility::format << logPostCurr << endl;
-            }
-
-            if (starData.size() >= 2)
-            {
-                starParams << base::utility::format << starData[0];
-
-                for (size_t i = 1; i < starData.size(); ++i)
-                {
-                    starParams << ' ' << base::utility::format << starData[i];
-                }
-
-                starParams << std::endl;
             }
         }
     }

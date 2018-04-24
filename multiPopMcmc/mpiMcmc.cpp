@@ -1,10 +1,13 @@
 #include <stdexcept>
 
+#include "IO/MultiPopMcmc.cpp"
+#include "IO/StarParams.cpp"
 #include "MpiMcmcApplication.hpp"
 
 using std::cerr;
 using std::endl;
 using std::exception;
+
 
 int main (int argc, char *argv[])
 {
@@ -25,7 +28,11 @@ int main (int argc, char *argv[])
             cout << "Seed: " << settings.seed << endl;
         }
 
-        MpiMcmcApplication master(settings);
+        // TODO - Make this read settings
+        auto mcmcStore   = new MultiPopMcmc_FileBackingStore(settings.files.output + ".res");
+        auto paramsStore = new StarParams_FileBackingStore(settings.files.output + ".starParams");
+
+        MpiMcmcApplication master(settings, std::move(mcmcStore), std::move(paramsStore));
 
         return master.run();
     }

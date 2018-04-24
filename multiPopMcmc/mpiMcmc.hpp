@@ -22,8 +22,6 @@ const int N_WD_MASS1      = 8000;  /* evaluate white dwarfs on a finer grid? */
 // This should eventually be deprecated, because it's awful.
 struct ifmrMcmcControl
 {
-    std::string clusterFilename;
-
     int nIter;                  // number of post burn-in iterations
     int burnIter;               // total number of burn-in iterations
     int thin;
