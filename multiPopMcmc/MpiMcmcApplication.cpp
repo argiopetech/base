@@ -602,8 +602,6 @@ tuple<double, vector<double>> MpiMcmcApplication::logPostStep(DualPopCluster &pr
     const double lambdaA = propClust.lambda;
     const double lambdaB = (1 - lambdaA);
 
-    starData.push_back(lambdaA);
-
     /* marginalize over isochrone */
     array<vector<double>, 2> post;
     auto &postA = post[0];

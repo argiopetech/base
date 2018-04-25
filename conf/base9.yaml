@@ -2,6 +2,7 @@ general:
     verbose:            1     # 0 is quiet, 1 is verbose
 
     files: # This will change to "paths" in a future version
+        backend:        0     # 0 is File, 1 is SQLite
         photFile:       "hyades/Hyades.UBV.phot"
         outputFileBase: "hyades/Mcmc"
         modelDirectory: "base-models/"

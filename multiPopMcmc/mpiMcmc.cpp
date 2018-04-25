@@ -28,9 +28,24 @@ int main (int argc, char *argv[])
             cout << "Seed: " << settings.seed << endl;
         }
 
-        // TODO - Make this read settings
-        auto mcmcStore   = new MultiPopMcmc_FileBackingStore(settings.files.output + ".res");
-        auto paramsStore = new StarParams_FileBackingStore(settings.files.output + ".starParams");
+        MultiPopBackingStore *mcmcStore;
+        StarParamsBackingStore *paramsStore;
+
+        if (settings.files.backend == Backend::Sqlite)
+        {
+            auto tempStore = new MultiPopMcmc_SqlBackingStore(settings.files.output);
+            mcmcStore      = tempStore;
+            paramsStore    = new StarParams_SqlBackingStore(tempStore->runData());
+        }
+        else if (settings.files.backend == Backend::File)
+        {
+            mcmcStore   = new MultiPopMcmc_FileBackingStore(settings.files.output);
+            paramsStore = new StarParams_FileBackingStore(settings.files.output);
+        }
+        else
+        {
+            throw std::runtime_error("Invalid back end specified");
+        }
 
         MpiMcmcApplication master(settings, std::move(mcmcStore), std::move(paramsStore));
 

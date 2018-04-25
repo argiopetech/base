@@ -8,13 +8,23 @@
 #include "Cluster.hpp"
 #include "constants.hpp"
 
+#include "sqlite/sqlite3.h"
+
 
 enum class AdaptiveMcmcStage { FixedBurnin, AdaptiveBurnin, AdaptiveMainRun, MainRun };
+
+struct RunData
+{
+    const std::shared_ptr<sqlite3> db;
+    const sqlite3_int64 run;
+};
+
 
 struct Iteration
 {
     const int val;
 };
+
 
 template <typename T>
 class BackingStore
@@ -23,9 +33,9 @@ class BackingStore
     virtual ~BackingStore() = default;
 
     virtual void save(Iteration, T) = 0;
-    
-    Iteration nextIteration() { return {++iteration}; }
-    
+
+    virtual Iteration nextIteration() { return {++iteration}; }
+
   private:
     int iteration = 0;
 };
@@ -38,7 +48,7 @@ class FileBackingStore : public BackingStore<T>
     FileBackingStore(const std::string);
 
     virtual ~FileBackingStore();
-        
+
   protected:
     std::ofstream fout;
 
@@ -52,7 +62,34 @@ template <typename T>
 class SqlBackingStore : public BackingStore<T>
 {
   public:
-    virtual ~SqlBackingStore() = default;
+    SqlBackingStore(const std::string);
+    SqlBackingStore(const RunData&);
+    SqlBackingStore(const SqlBackingStore&);
+
+    virtual ~SqlBackingStore();
+
+    RunData runData() { return {db, run}; }
+    Iteration nextIteration();
+
+  protected:
+    std::shared_ptr<sqlite3> db;
+    sqlite3_int64 run = -1;
+
+    int execOnly(const std::string);
+
+    void dbErrorIf(int, const std::string);
+    void dbStepAndReset(sqlite3_stmt*, const std::string);
+    void dbPrepare(const std::string, sqlite3_stmt**, const std::string);
+
+  private:
+    sqlite3_stmt *insertIteration = nullptr;
+
+    void openDb(const std::string);
+    void ensureTables();
+    void generateRun();
+    void buildInsertStatement();
 };
+
+#include "SqlBackingStore.ipp"
 
 #endif

@@ -11,7 +11,7 @@ struct MultiPopMcmcRecord
 
     const Cluster clust0;
     const Cluster clust1;
-    
+
     const double logPost;
 };
 
