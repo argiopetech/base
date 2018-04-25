@@ -136,3 +136,5 @@ add_subdirectory(sampleWDMass)
 add_subdirectory(scatterCluster)
 add_subdirectory(simCluster)
 add_subdirectory(multiPopMcmc)
+
+add_subdirectory(sqlTools)

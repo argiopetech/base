@@ -28,4 +28,6 @@
 BUILD/*
 contrib/BUILD/*
 
+.dir-locals.el
+
 !.keep
