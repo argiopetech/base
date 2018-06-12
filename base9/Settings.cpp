@@ -671,13 +671,13 @@ static void printUsage ()
 
     cerr << "\n9.4.4 flags" << endl;
     cerr <<   "===========" << endl;
-    cerr << "\t--noWDs\t\t\tKeeps simCluster from generating WDs";
+    cerr << "\t--noWDs\t\t\tKeeps simCluster from generating WDs" << endl;
 
     cerr << "\n9.5.0 flags" << endl;
     cerr <<   "===========" << endl;
-    cerr << "\t--backend\t\tSpecify the desired back end" << endl;
-    cerr << "\t\t0 = File" << endl;
-    cerr << "\t\t1 = SQLite" << endl;
+    cerr << "\t--backend\t\tSpecify the desired back end:" << endl;
+    cerr << "\n\t\t\t\t0 = File" << endl;
+    cerr <<   "\t\t\t\t1 = SQLite" << endl;
     cerr << endl;
 }
 
