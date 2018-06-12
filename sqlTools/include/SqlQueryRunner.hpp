@@ -13,8 +13,9 @@ class SqlQueryRunner
     {
         sqlite3_open(filename.c_str(), &db);
 
-        sqlite3_prepare_v2( db, sql.c_str(), -1,
-                            &stmt, nullptr );
+        while ( SQLITE_BUSY == sqlite3_prepare_v2( db, sql.c_str(), -1,
+                                                   &stmt, nullptr ))
+        { ; }
     }
 
     ~SqlQueryRunner()
@@ -28,10 +29,12 @@ class SqlQueryRunner
 
     std::vector<std::vector<std::string>> run()
     {
-        auto ret = sqlite3_step(stmt);
-        int columns = 0;
+        int ret;
 
-        columns = sqlite3_column_count(stmt);
+        do
+        {
+            ret = sqlite3_step(stmt);
+        } while (ret == SQLITE_BUSY);
 
         if ( ret == SQLITE_DONE )
         {
@@ -39,6 +42,8 @@ class SqlQueryRunner
         }
         else if (ret == SQLITE_ROW)
         {
+            auto columns = sqlite3_column_count(stmt);
+
             table.emplace_back();
 
             for (int i = 0; i < columns; ++i)

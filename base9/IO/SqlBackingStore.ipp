@@ -155,8 +155,20 @@ Iteration SqlBackingStore<T>::nextIteration()
 template <typename T>
 int SqlBackingStore<T>::execOnly(const string s)
 {
-    return sqlite3_exec( db.get(), s.c_str(),
-                         nullptr, nullptr, nullptr);
+    int ret;
+
+    do
+    {
+        ret = sqlite3_exec( db.get(), s.c_str(),
+                            nullptr, nullptr, nullptr);
+
+        if ( ret == SQLITE_BUSY )
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+    } while ( ret == SQLITE_BUSY );
+
+    return ret;
 }
 
 
@@ -173,7 +185,17 @@ void SqlBackingStore<T>::dbErrorIf(int ret, const std::string description)
 template <typename T>
 void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string s)
 {
-    auto ret = sqlite3_step(stmt);
+    int ret;
+
+    do
+    {
+        ret = sqlite3_step(stmt);
+
+        if ( ret == SQLITE_BUSY )
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+    } while (ret == SQLITE_BUSY );
 
     if (ret != SQLITE_DONE)
     {
@@ -188,7 +210,17 @@ void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string s)
 template <typename T>
 void SqlBackingStore<T>::dbPrepare(const std::string sql, sqlite3_stmt **stmt, const std::string msg)
 {
-    auto ret = sqlite3_prepare_v2( db.get(), sql.c_str(), -1, stmt, nullptr);
+    int ret;
+
+    do
+    {
+        ret = sqlite3_prepare_v2( db.get(), sql.c_str(), -1, stmt, nullptr);
+
+        if ( ret == SQLITE_BUSY )
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+    } while ( ret == SQLITE_BUSY );
 
     dbErrorIf(ret, msg);
 }
