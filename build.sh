@@ -30,6 +30,10 @@ else
     fi
 fi
 
+cd yaml-cpp
+git checkout yaml-cpp-0.6.2
+cd ..
+
 cd ./BUILD
 if [ "$PREFIX" ]; then
     cmake -DCMAKE_BUILD_TYPE="RELEASE" -DCMAKE_INSTALL_PREFIX=$PREFIX ..
