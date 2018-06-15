@@ -21,7 +21,7 @@ const int NPARAMS            = 9;
 
 // Define model sets
 //Main sequence evolution
-enum class MsModel {GIRARDI = 0, CHABHELIUM = 1, YALE = 2, OLD_DSED = 3, NEW_DSED = 4};
+enum class MsModel {GIRARDI = 0, CHABHELIUM = 1, YALE = 2, OLD_DSED = 3, NEW_DSED = 4, PARSEC = 5};
 
 //IFMR
 const int WEIDEMANN  = 0;

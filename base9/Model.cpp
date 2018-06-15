@@ -8,6 +8,7 @@
 #include "MsRgbModels/ChabMsModel.hpp"
 #include "MsRgbModels/OldDsedMsModel.hpp"
 #include "MsRgbModels/NewDsedMsModel.hpp"
+#include "MsRgbModels/ParsecMsModel.hpp"
 #include "MsRgbModels/GirardiMsModel.hpp"
 #include "WdCoolingModels/AlthausWdModel.hpp"
 #include "WdCoolingModels/MontgomeryWdModel.hpp"
@@ -39,6 +40,8 @@ namespace internal
                 return shared_ptr<OldDsedMsModel>(new OldDsedMsModel);
             case MsModel::NEW_DSED:
                 return shared_ptr<NewDsedMsModel>(new NewDsedMsModel);
+            case MsModel::PARSEC:
+                return shared_ptr<ParsecMsModel>(new ParsecMsModel);
             default:
                 std::cerr << "***Error: No models found for main sequence evolution model " << static_cast<int>(model) << ".***" << std::endl;
                 std::cerr << "[Exiting...]\n" << std::endl;
