@@ -50,8 +50,16 @@ void SqlBackingStore<T>::ensureTables()
 {
     auto ret = execOnly(
         "PRAGMA foreign_keys=ON;"
-        "BEGIN TRANSACTION;"
+        );
+    dbErrorIf(ret, "Enabling Foreign Keys");
 
+    ret = execOnly(
+        "BEGIN TRANSACTION;"
+        );
+    dbErrorIf(ret, "Beginning transaction for tables");
+
+
+    ret = execOnly(
         "create table if not exists run"
         "( id   integer not null"
         ", time datetime default CURRENT_TIMESTAMP"
