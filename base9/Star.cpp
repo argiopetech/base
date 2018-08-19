@@ -110,7 +110,7 @@ vector<double> Star::wdEvol (const Cluster &clust, const Model &evoModels) const
 
     double logTeff = teffRadiusPair.first;
     // double thisWDLogRadius = teffRadiusPair.second;
-    
+
     auto mags = evoModels.WDAtmosphere->teffToMags (logTeff, thisWDMass, wdType);
 
     return mags;
@@ -172,9 +172,11 @@ void StellarSystem::setMassRatio(double r)
 void StellarSystem::readCMD(const string &s, int filters)
 {
     int status;
-    double tempSigma, massRatio;
+    double massRatio;
+    vector<double> stdDevs;
+    vector<double> obsPhot;
 
-    stringstream in(s);  
+    stringstream in(s);
 
     in >> id;
 
@@ -188,11 +190,10 @@ void StellarSystem::readCMD(const string &s, int filters)
 
     for (int i = 0; i < filters; i++)
     {
-        in >> tempSigma;
+        double sigma;
+        in >> sigma;
 
-        variance.push_back(tempSigma * fabs (tempSigma));
-        // The fabs() keeps the sign of the variance the same as that input by the user for sigma
-        // Negative sigma (variance) is used to signal "don't count this band for this star"
+        stdDevs.push_back(sigma);
     }
 
     in >> primary.mass
@@ -200,6 +201,30 @@ void StellarSystem::readCMD(const string &s, int filters)
        >> status
        >> clustStarPriorDens
        >> useDuringBurnIn;
+
+    setSystemParams(id, obsPhot, stdDevs, primary.mass, massRatio, status,
+                    clustStarPriorDens, useDuringBurnIn);
+}
+
+void StellarSystem::setSystemParams(string id, vector<double> obsPhot, vector<double> stdDevs,
+                                    double mass, double massRatio, int status, double clusterPrior,
+                                    bool useDuringBurnIn)
+{
+    this->id = id;
+    this->obsPhot = obsPhot;
+
+    variance.clear();
+
+    for (auto sigma : stdDevs)
+    {
+        this->variance.push_back(sigma * fabs (sigma));
+        // The fabs() keeps the sign of the variance the same as that input by the user for sigma
+        // Negative sigma (variance) is used to signal "don't count this band for this star"
+    }
+
+    this->primary.mass = mass;
+    this->clustStarPriorDens = clusterPrior;
+    this->useDuringBurnIn = useDuringBurnIn;
 
     if ((status == 1)   // MSRGB
      || (status == 3)   // WD
@@ -276,4 +301,29 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     }
 
     return combinedMags;
+}
+
+
+StarRecord StellarSystem::toStarRecord(const vector<string> filterNames)
+{
+    auto stage = observedStatus == WD ? ( primary.wdType == WdAtmosphere::DA ? 31 : 32 )
+                                      : static_cast<int>(observedStatus);
+
+    vector<PhotometryRecord> photometry;
+
+    for ( size_t i = 0; i < filterNames.size(); ++i)
+    {
+        // Change variance to stdDev, avoiding imaginary numbers
+        double stdDev = std::sqrt(std::abs(variance.at(i)));
+
+        // Preserve the sign of the variance
+        if (variance.at(i) < 0)
+        {
+            stdDev = -stdDev;
+        }
+
+        photometry.push_back({id, filterNames.at(i), obsPhot.at(i), stdDev});
+    }
+
+    return {id, primary.mass, getMassRatio(), stage, clustStarPriorDens, useDuringBurnIn, photometry};
 }

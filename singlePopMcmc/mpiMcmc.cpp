@@ -3,7 +3,9 @@
 #include <stdexcept>
 
 #include "MpiMcmcApplication.hpp"
+#include "IO/FieldStarLikelihood.hpp"
 #include "IO/SinglePopMcmc.hpp"
+#include "IO/Star.hpp"
 #include "IO/Records.hpp"
 
 using std::cerr;
@@ -31,22 +33,34 @@ int main (int argc, char *argv[])
         }
 
 
-        SinglePopBackingStore *store = nullptr;
+        SinglePopBackingStore *mcmcStore = nullptr;
+        FieldStarLikelihoodBackingStore *fieldStarStore = nullptr;
+        StarBackingStore *photometryStore = nullptr;
 
         if (settings.files.backend == Backend::Sqlite)
         {
-            store = new SinglePopMcmc_SqlBackingStore(settings.files.output);
+            auto tempStore = new SinglePopMcmc_SqlBackingStore(settings.files.output);
+            mcmcStore = tempStore;
+            fieldStarStore = new FieldStarLikelihood_SqlBackingStore(tempStore->runData());
+            photometryStore = new Star_SqlBackingStore(tempStore->runData());
         }
         else if (settings.files.backend == Backend::File)
         {
-            store = new SinglePopMcmc_FileBackingStore(settings.files.output);
+            mcmcStore = new SinglePopMcmc_FileBackingStore(settings.files.output);
+            fieldStarStore = new FieldStarLikelihood_FileBackingStore(settings.files.output);
+
+            // We don't have a reason to save photometry that we've read from a file
+            photometryStore = nullptr;
         }
         else
         {
             throw std::runtime_error("Invalid back end specified");
         }
 
-        MpiMcmcApplication master(settings, std::move(store));
+        MpiMcmcApplication master(settings,
+                                  std::move(mcmcStore),
+                                  std::move(fieldStarStore),
+                                  std::move(photometryStore));
 
         return master.run();
     }

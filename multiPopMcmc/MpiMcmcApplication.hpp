@@ -23,7 +23,11 @@ struct DualPopCluster
 class MpiMcmcApplication
 {
   public:
-    MpiMcmcApplication(Settings &s, MultiPopBackingStore*, StarParamsBackingStore*);
+    MpiMcmcApplication(Settings &s,
+                       MultiPopBackingStore*,
+                       StarParamsBackingStore*,
+                       FieldStarLikelihoodBackingStore*,
+                       StarBackingStore*);
 
     virtual ~MpiMcmcApplication() {}
 
@@ -53,6 +57,8 @@ class MpiMcmcApplication
 
     std::unique_ptr<MultiPopBackingStore> mcmcStore;
     std::unique_ptr<StarParamsBackingStore> paramsStore;
+    std::unique_ptr<FieldStarLikelihoodBackingStore> fieldStarLikelihood;
+    std::unique_ptr<StarBackingStore> photometryStore;
 
     std::vector<StellarSystem> systems;
     std::vector<StellarSystem> mainRunSystems;

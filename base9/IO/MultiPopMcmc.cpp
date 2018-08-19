@@ -12,12 +12,12 @@ MultiPopMcmc_FileBackingStore::MultiPopMcmc_FileBackingStore(string baseName)
     : FileBackingStore(baseName + ".res")
 { ; }
 
-void MultiPopMcmc_FileBackingStore::save(Iteration iter, MultiPopMcmcRecord data)
+void MultiPopMcmc_FileBackingStore::save(MultiPopMcmcRecord data)
 {
     const auto &clust0 = data.clust0;
     const auto &clust1 = data.clust1;
 
-    if (iter.val == 1)
+    if (data.iter.val == 1)
     {
         header(clust0.priorVar);
     }
@@ -84,13 +84,13 @@ void MultiPopMcmc_SqlBackingStore::buildInsertStatement()
                &insert, "Preparing multi pop insert");
 }
 
-void MultiPopMcmc_SqlBackingStore::save(Iteration iter, MultiPopMcmcRecord data)
+void MultiPopMcmc_SqlBackingStore::save(MultiPopMcmcRecord data)
 {
     const auto &clust0 = data.clust0;
     const auto &clust1 = data.clust1;
 
     sqlite3_bind_int(insert, 1, run);
-    sqlite3_bind_int(insert, 2, iter.val);
+    sqlite3_bind_int(insert, 2, data.iter.val);
 
     (clust0.priorVar[AGE] > EPS)
         ? sqlite3_bind_double(insert, 3, clust0.age)

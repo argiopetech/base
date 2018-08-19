@@ -13,11 +13,11 @@ SinglePopMcmc_FileBackingStore::SinglePopMcmc_FileBackingStore(string baseName)
     : FileBackingStore(baseName + ".res")
 { ; }
 
-void SinglePopMcmc_FileBackingStore::save(Iteration iter, SinglePopMcmcRecord data)
+void SinglePopMcmc_FileBackingStore::save(SinglePopMcmcRecord data)
 {
     const auto &clust = data.clust;
 
-    if (iter.val == 1)
+    if (data.iter.val == 1)
     {
         header(clust.priorVar);
     }
@@ -80,12 +80,12 @@ void SinglePopMcmc_SqlBackingStore::buildInsertStatement()
                &insert, "Preparing single pop insert");
 }
 
-void SinglePopMcmc_SqlBackingStore::save(Iteration iter, SinglePopMcmcRecord data)
+void SinglePopMcmc_SqlBackingStore::save(SinglePopMcmcRecord data)
 {
     auto &clust = data.clust;
 
     sqlite3_bind_int(insert, 1, run);
-    sqlite3_bind_int(insert, 2, iter.val);
+    sqlite3_bind_int(insert, 2, data.iter.val);
 
     (clust.priorVar[AGE] > EPS)
         ? sqlite3_bind_double(insert, 3, clust.age)

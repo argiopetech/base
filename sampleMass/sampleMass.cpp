@@ -353,8 +353,6 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
 
     std::ofstream nullstream;
 
-    double maxMass = 0;
-
     // Proposal function bindings
     std::function<StellarSystem(StellarSystem)> burninProposal =
         std::bind(&propose, gen, massStepSize, massRatioStepSize, 10.0, _1);
@@ -428,18 +426,31 @@ void Application::run()
         vector<double> filterPriorMin;
         vector<double> filterPriorMax;
 
-        std::ifstream rData(settings.files.phot);
+        vector<string> filterNames;
 
-        if (!rData)
+        if (settings.run <= 0)
         {
-            cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
+            std::ifstream rData(settings.files.phot);
 
-        auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
-        auto filterNames = ret.first;
-        stars = ret.second;
+            if (!rData)
+            {
+                cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+                cerr << ".at(Exiting...)" << endl;
+                exit (1);
+            }
+
+            auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
+
+            filterNames = ret.first;
+            stars = ret.second;
+        }
+        else
+        {
+            auto ret = base::utility::readPhotometryFromDB (filterPriorMin, filterPriorMax, settings);
+
+            filterNames = ret.first;
+            stars = ret.second;
+        }
 
         evoModels.restrictFilters(filterNames);
 

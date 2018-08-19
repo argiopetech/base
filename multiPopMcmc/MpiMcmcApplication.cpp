@@ -59,10 +59,16 @@ void ensurePriors(const Settings &s, const DualPopCluster &clust)
         throw InvalidCluster("High Lambda");
 }
 
-MpiMcmcApplication::MpiMcmcApplication(Settings &s, MultiPopBackingStore *mcmcStore, StarParamsBackingStore *paramsStore)
+MpiMcmcApplication::MpiMcmcApplication(Settings &s,
+                                       MultiPopBackingStore *mcmcStore,
+                                       StarParamsBackingStore *paramsStore,
+                                       FieldStarLikelihoodBackingStore *fieldStarLikelihood,
+                                       StarBackingStore *photometryStore)
     : evoModels(makeModel(s)), settings(s)
     , gen(uint32_t(s.seed * uint32_t(2654435761))) // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
-    , mcmcStore(mcmcStore), paramsStore(paramsStore), pool(s.threads)
+    , mcmcStore(mcmcStore), paramsStore(paramsStore)
+    , fieldStarLikelihood(fieldStarLikelihood), photometryStore(photometryStore)
+    , pool(s.threads)
 {
     ctrl.priorVar.fill(0);
 
@@ -204,7 +210,7 @@ int MpiMcmcApplication::run()
     std::copy(settings.singlePopMcmc.stepSize.begin(), settings.singlePopMcmc.stepSize.end(), stepSize.begin());
     stepSize.at(LAMBDA) = settings.multiPopMcmc.lambdaStep;
 
-    
+
     if (settings.verbose)
     {
         cout << std::setprecision(3) << std::fixed;
@@ -260,6 +266,11 @@ int MpiMcmcApplication::run()
 
         for (auto r : ret.second)
         {
+            if (photometryStore)
+            {
+                photometryStore->save(r.toStarRecord(filterNames));
+            }
+
             if (r.observedStatus == StarStatus::MSRG)
             {
                 // Everything goes into the main run
@@ -310,8 +321,10 @@ int MpiMcmcApplication::run()
         }
     }
 
+    fieldStarLikelihood->save({fsLike});
+
     Chain<DualPopCluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), fsLike, ctrl.priorVar, clust, *mcmcStore, *paramsStore);
-    
+
     allocateSSEMem();
 
     // Begin initChain

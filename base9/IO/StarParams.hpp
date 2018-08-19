@@ -10,12 +10,12 @@ class StarParams_FileBackingStore : public FileBackingStore<StarParamsRecord, do
   public:
     StarParams_FileBackingStore(std::string);
 
-    ~StarParams_FileBackingStore() = default;
+    ~StarParams_FileBackingStore() override = default;
 
-    void save(Iteration, StarParamsRecord);
+    void save(StarParamsRecord) override;
 
   private:
-    void header(double);
+    void header(double) override { ; }
 };
 
 
@@ -23,18 +23,18 @@ class StarParams_SqlBackingStore : public SqlBackingStore<StarParamsRecord>
 {
   public:
     StarParams_SqlBackingStore(const RunData&);
+    StarParams_SqlBackingStore(const SqlBackingStore&);
     StarParams_SqlBackingStore(const StarParams_SqlBackingStore&) = delete;
     StarParams_SqlBackingStore(std::string);
 
-    ~StarParams_SqlBackingStore();
+    ~StarParams_SqlBackingStore() override;
 
-    void save(Iteration, StarParamsRecord);
+    void save(StarParamsRecord) override;
 
   private:
-    sqlite3_stmt *insertFsLike   = nullptr;
-    sqlite3_stmt *insertStarData = nullptr;
+    sqlite3_stmt *insert = nullptr;
 
-    void buildInsertStatement();
+    void buildInsertStatement() override;
 };
 
 #endif

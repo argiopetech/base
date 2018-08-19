@@ -10,12 +10,12 @@ class MultiPopMcmc_FileBackingStore : public FileBackingStore<MultiPopMcmcRecord
   public:
     MultiPopMcmc_FileBackingStore(std::string);
 
-    ~MultiPopMcmc_FileBackingStore() = default;
+    ~MultiPopMcmc_FileBackingStore() override = default;
 
-    void save(Iteration, MultiPopMcmcRecord);
+    void save(MultiPopMcmcRecord) override;
 
   protected:
-    void header(std::array<double, NPARAMS> const&);
+    void header(std::array<double, NPARAMS> const&) override;
 };
 
 
@@ -26,14 +26,14 @@ class MultiPopMcmc_SqlBackingStore : public SqlBackingStore<MultiPopMcmcRecord>
     MultiPopMcmc_SqlBackingStore(const MultiPopMcmc_SqlBackingStore&) = delete;
     MultiPopMcmc_SqlBackingStore(std::string);
 
-    ~MultiPopMcmc_SqlBackingStore();
+    ~MultiPopMcmc_SqlBackingStore() override;
 
-    void save(Iteration, MultiPopMcmcRecord);
+    void save(MultiPopMcmcRecord) override;
 
   private:
     sqlite3_stmt *insert = nullptr;
 
-    void buildInsertStatement();
+    void buildInsertStatement() override;
 };
 
 #endif

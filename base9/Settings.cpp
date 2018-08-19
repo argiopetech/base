@@ -237,6 +237,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"startingLogAge", required_argument, 0, 0xC4},
         {"startingCarbonicity", required_argument, 0, 0xC3},
         {"backend", required_argument, 0, 0xC2},
+        {"run", required_argument, 0, 0xC1},
 
 
         // Various flags
@@ -477,6 +478,10 @@ void Settings::fromCLI (int argc, char **argv)
                 istringstream (string (optarg)) >> cluster.starting.carbonicity;
                 break;
 
+            case 0xC1:
+                istringstream (string (optarg)) >> run;
+                break;
+
             case 0xAF:
                 verbose = true;
                 break;
@@ -675,9 +680,14 @@ static void printUsage ()
 
     cerr << "\n9.5.0 flags" << endl;
     cerr <<   "===========" << endl;
-    cerr << "\t--backend\t\tSpecify the desired back end:" << endl;
-    cerr << "\n\t\t\t\t0 = File" << endl;
-    cerr <<   "\t\t\t\t1 = SQLite" << endl;
+    cerr << "\t--backend <int>" << endl;
+    cerr << "\t\tSpecify the desired back end:" << endl;
+    cerr << "\t\t\t0 = File" << endl;
+    cerr << "\t\t\t1 = SQLite" << endl;
+    cerr << "\t--run <runID>" << endl;
+    cerr << "\t\tSpecify a previous run ID in the DB on which to base this run." << endl;
+    cerr << "\t\tCurrently only supported by sampleWDMass and sampleMass." << endl;
+    cerr << "\t\tOnly makes sense if you're using the SQLite backend." << endl;
     cerr << endl;
 }
 

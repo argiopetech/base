@@ -85,8 +85,7 @@ class Chain : public McmcApplication
 
             if (iteration % thin == 0)
             {
-                const auto iter = store.nextIteration();
-                store.save(iter, {stage, clust, logPostCurr});
+                store.save({store.nextIteration(), stage, clust, logPostCurr});
             }
         }
     }
