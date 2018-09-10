@@ -15,7 +15,7 @@
 #include "Star.hpp"
 
 #include "LinearTransform.hpp"
-#include "MontgomeryWdModel.hpp"
+#include "NewMontgomeryWdModel.hpp"
 
 using std::lower_bound;
 using std::string;
@@ -26,14 +26,14 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-void MontgomeryWdModel::loadModel(string path)
+void NewMontgomeryWdModel::loadModel(string path)
 {
     string tempFile, line;
     double newAge, newTeff, newMass, newRadius;
     double newCarbon = 0.6 ;// 0.38; // Good default value, per Mike Montgomery
     double ignore;
 
-    tempFile = path + "montgomery/wdtables_orig";
+    tempFile = path + "montgomery/wdtables_2018";
 
     ifstream pCoolingModels;
     pCoolingModels.open(tempFile);
@@ -54,7 +54,7 @@ void MontgomeryWdModel::loadModel(string path)
                        >> ignore >> ignore >> ignore
                        >> newRadius
                        >> newTeff
-                       >> ignore >> ignore >> ignore
+                       >> ignore
                        >> newMass
                        >> newCarbon;
 
@@ -76,7 +76,7 @@ void MontgomeryWdModel::loadModel(string path)
 }
 
 
-pair<double, double> MontgomeryWdModel::wdMassToTeffAndRadius(double logAge, double x_carbon, double wdPrecLogAge, double wdMass) const
+pair<double, double> NewMontgomeryWdModel::wdMassToTeffAndRadius(double logAge, double x_carbon, double wdPrecLogAge, double wdMass) const
 {
     vector<double> carbonTeff;
     vector<double> carbonRadius;

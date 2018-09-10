@@ -33,7 +33,7 @@ const int SALARISPW  = 3;
 const int LINEAR     = 4;
 
 //WD Cooling
-enum class WdModel {WOOD, MONTGOMERY, ALTHAUS, RENEDO};
+enum class WdModel {WOOD = 0, MONTGOMERY = 1, ALTHAUS = 2, RENEDO = 3, NEW_MONTGOMERY = 4};
 enum class WdAtmosphereModelSet {BERGERON};
 
 //WD Atmosphere

@@ -13,6 +13,7 @@
 #include "MsRgbModels/NewYale.hpp"
 #include "WdCoolingModels/AlthausWdModel.hpp"
 #include "WdCoolingModels/MontgomeryWdModel.hpp"
+#include "WdCoolingModels/NewMontgomeryWdModel.hpp"
 #include "WdCoolingModels/RenedoWdModel.hpp"
 #include "WdCoolingModels/WoodWdModel.hpp"
 #include "WdAtmosphereModels/BergeronAtmosphereModel.hpp"
@@ -64,6 +65,8 @@ namespace internal
                 return shared_ptr<AlthausWdModel>(new AlthausWdModel);
             case WdModel::RENEDO:
                 return shared_ptr<RenedoWdModel>(new RenedoWdModel);
+            case WdModel::NEW_MONTGOMERY:
+                return shared_ptr<NewMontgomeryWdModel>(new NewMontgomeryWdModel);
             default:
                 cerr << "***Error: No model found for white dwarf filter set " << static_cast<int>(model) << ".***" << endl;
                 cerr << "[Exiting...]" << endl;
