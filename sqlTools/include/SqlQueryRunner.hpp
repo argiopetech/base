@@ -59,8 +59,9 @@ class SqlQueryRunner
 
                 for (int i = 0; i < columns; ++i)
                 {
-                    std::string s = std::string(reinterpret_cast<const char*>
-                                                    (sqlite3_column_text(stmt, i)));
+                    auto tStr = sqlite3_column_text(stmt, i);
+                    std::string s = tStr == nullptr ? ""
+                                                    : std::string(reinterpret_cast<const char*>(tStr));
                     table.back().push_back(s);
 
                     auto size = s.size();
