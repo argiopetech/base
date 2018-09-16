@@ -6,6 +6,7 @@
 
 #include "constants.hpp"
 #include "Cluster.hpp"
+#include "IO/Records.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
 
@@ -48,6 +49,10 @@ class StellarSystem
 
     // Functions
     void readCMD(const std::string&, int);
+    void setSystemParams(std::string, std::vector<double>, std::vector<double>,
+                                        double, double, int, double, bool);
+
+    StarRecord toStarRecord(const std::vector<std::string>);
 
     void setMassRatio(double);
     double getMassRatio() const;

@@ -36,10 +36,14 @@ void ensurePriors(const Settings&, const Cluster &clust)
         throw InvalidCluster("High carbonicity");
 }
 
-MpiMcmcApplication::MpiMcmcApplication(Settings &s, SinglePopBackingStore *store)
+MpiMcmcApplication::MpiMcmcApplication(Settings &s,
+                                       SinglePopBackingStore *mcmcStore,
+                                       FieldStarLikelihoodBackingStore *fieldStarLikelihood,
+                                       StarBackingStore *photometryStore)
     : evoModels(makeModel(s)), settings(s)
     , gen(uint32_t(s.seed * uint32_t(2654435761))) // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
-    , backingStore(store), pool(s.threads)
+    , mcmcStore(mcmcStore), fieldStarLikelihood(fieldStarLikelihood), photometryStore(photometryStore)
+    , pool(s.threads)
 {
     ctrl.priorVar.fill(0);
 
@@ -199,7 +203,7 @@ int MpiMcmcApplication::run()
     array<double, NPARAMS> stepSize;
     std::copy(settings.singlePopMcmc.stepSize.begin(), settings.singlePopMcmc.stepSize.end(), stepSize.begin());
 
-    Chain<Cluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, *backingStore);
+    Chain<Cluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, *mcmcStore);
 
 
     if (settings.verbose)
@@ -257,6 +261,11 @@ int MpiMcmcApplication::run()
 
         for (auto r : ret.second)
         {
+            if (photometryStore)
+            {
+                photometryStore->save(r.toStarRecord(filterNames));
+            }
+
             if (r.observedStatus == StarStatus::MSRG)
             {
                 // Everything goes into the main run
@@ -315,6 +324,8 @@ int MpiMcmcApplication::run()
             fsLike = 0;
         }
     }
+
+    fieldStarLikelihood->save({fsLike});
 
     allocateSSEMem();
 

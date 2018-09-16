@@ -30,13 +30,15 @@ struct Iteration
 };
 
 
+// TODO: Make this follow NVI
+// http://www.gotw.ca/publications/mill18.htm
 template <typename T>
 class BackingStore
 {
   public:
     virtual ~BackingStore() = default;
 
-    virtual void save(Iteration, T) = 0;
+    virtual void save(T) = 0;
 
     virtual Iteration nextIteration() { return {++iteration}; }
 
@@ -73,17 +75,22 @@ class SqlBackingStore : public BackingStore<T>
     virtual ~SqlBackingStore();
 
     RunData runData() { return {db, run}; }
-    Iteration nextIteration();
+    Iteration nextIteration() override;
 
   protected:
     std::shared_ptr<sqlite3> db;
     sqlite3_int64 run = -1;
 
     int execOnly(const std::string);
+    void execOnlyInTransaction(const std::string, const std::string);
 
     void dbErrorIf(int, const std::string);
+
     void dbStepAndReset(sqlite3_stmt*, const std::string);
     void dbPrepare(const std::string, sqlite3_stmt**, const std::string);
+
+    void beginTransaction(const std::string);
+    void endTransaction(const std::string);
 
   private:
     sqlite3_stmt *insertIteration = nullptr;
@@ -91,7 +98,10 @@ class SqlBackingStore : public BackingStore<T>
     void openDb(const std::string);
     void ensureTables();
     void generateRun();
-    void buildInsertStatement();
+    virtual void buildInsertStatement();
+
+    // Other utilities
+    void enableForeignKeys();
 };
 
 #include "SqlBackingStore.ipp"

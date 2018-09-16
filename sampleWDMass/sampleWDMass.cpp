@@ -351,18 +351,31 @@ int main (int argc, char *argv[])
         vector<double> filterPriorMin;
         vector<double> filterPriorMax;
 
-        std::ifstream rData(settings.files.phot);
+        vector<string> filterNames;
 
-        if (!rData)
+        if (settings.run <= 0)
         {
-            cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
+            std::ifstream rData(settings.files.phot);
 
-        auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
-        auto filterNames = ret.first;
-        mc.stars = ret.second;
+            if (!rData)
+            {
+                cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+                cerr << ".at(Exiting...)" << endl;
+                exit (1);
+            }
+
+            auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
+
+            filterNames = ret.first;
+            mc.stars = ret.second;
+        }
+        else
+        {
+            auto ret = base::utility::readPhotometryFromDB (filterPriorMin, filterPriorMax, settings);
+
+            filterNames = ret.first;
+            mc.stars = ret.second;
+        }
 
         evoModels.restrictFilters(filterNames);
 
@@ -473,7 +486,7 @@ int main (int argc, char *argv[])
             exit (1);
         }
     }
-    
+
     std::ofstream loggFile;
 
     if (settings.details)

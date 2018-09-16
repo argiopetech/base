@@ -48,18 +48,9 @@ void SqlBackingStore<T>::openDb(const std::string dbName)
 template <typename T>
 void SqlBackingStore<T>::ensureTables()
 {
-    auto ret = execOnly(
-        "PRAGMA foreign_keys=ON;"
-        );
-    dbErrorIf(ret, "Enabling Foreign Keys");
+    enableForeignKeys();
 
-    ret = execOnly(
-        "BEGIN TRANSACTION;"
-        );
-    dbErrorIf(ret, "Beginning transaction for tables");
-
-
-    ret = execOnly(
+    execOnlyInTransaction("creating tables",
         "create table if not exists run"
         "( id   integer not null"
         ", time datetime default CURRENT_TIMESTAMP"
@@ -69,7 +60,7 @@ void SqlBackingStore<T>::ensureTables()
         "( runId integer not null"
         ", id    integer not null"
         ", primary key (runId, id)"
-        ", foreign key(runId) references run);"
+        ", foreign key (runId) references run);"
 
         "create table if not exists single_pop"
         "( runId          integer not null"
@@ -102,7 +93,7 @@ void SqlBackingStore<T>::ensureTables()
         ", logPost        double  not null"
         ", stage          integer not null"
         ", primary key (runId, iterId)"
-        ", foreign key (runId, iterId) references iteration (runId, id));"
+        ", foreign key (runId, iterId) references iteration);"
 
         "create table if not exists field_star_likelihood"
         "( runId integer not null"
@@ -110,20 +101,35 @@ void SqlBackingStore<T>::ensureTables()
         ", primary key (runId)"
         ", foreign key (runId) references run(id));"
 
-        // TODO - Make this use a star reference
+        "create table if not exists star"
+        "( runId integer not null"
+        ", starId text not null"
+        ", primaryMass double not null"
+        ", secondaryMassRatio double not null"
+        ", stage integer not null"
+        ", clusterMembershipPrior double not null"
+        ", useDuringBurnin boolean not null"
+        ", primary key (runId, starId)"
+        ", foreign key (runId) references run);"
+
+        "create table if not exists photometry"
+        "( runId integer not null"
+        ", starId text not null"
+        ", filter text not null"
+        ", magnitude double not null"
+        ", stdDev double not null"
+        ", foreign key (runId, starId) references star);"
+
         "create table if not exists star_posterior"
         "( runId integer not null"
         ", iterId integer not null"
-        ", starId integer not null" // This should refer to the stars table - FIXME
+        ", starId text not null"
         ", clust_a_posterior double not null"
         ", clust_b_posterior double not null"
         ", primary key (runId, iterId, starId)"
-        ", foreign key (runId, iterId) references iteration (runId, id));"
-
-        "END TRANSACTION;"
+        ", foreign key (runId, iterId) references iteration (runId, id)"
+        ", foreign key (runId, starId) references star (runId, starId));"
     );
-
-    dbErrorIf(ret, "Creating tables");
 }
 
 
@@ -231,4 +237,49 @@ void SqlBackingStore<T>::dbPrepare(const std::string sql, sqlite3_stmt **stmt, c
     } while ( ret == SQLITE_BUSY );
 
     dbErrorIf(ret, msg);
+}
+
+
+template <typename T>
+void SqlBackingStore<T>::beginTransaction(const string msg)
+{
+    auto ret = execOnly(
+        "BEGIN TRANSACTION;"
+        );
+
+    dbErrorIf(ret, "Beginning transaction for " + msg);
+}
+
+
+template <typename T>
+void SqlBackingStore<T>::endTransaction(const string msg)
+{
+    auto ret = execOnly(
+        "END TRANSACTION;"
+        );
+
+    dbErrorIf(ret, "Ending transaction for " + msg);
+}
+
+
+template <typename T>
+void SqlBackingStore<T>::execOnlyInTransaction(const string msg, const string sql)
+{
+    beginTransaction(msg);
+
+    auto ret = execOnly(sql);
+    dbErrorIf(ret, msg);
+
+    endTransaction(msg);
+}
+
+
+template <typename T>
+void SqlBackingStore<T>::enableForeignKeys()
+{
+    auto ret = execOnly(
+        "PRAGMA foreign_keys=ON;"
+        );
+
+    dbErrorIf(ret, "Enabling Foreign Keys");
 }

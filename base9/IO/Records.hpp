@@ -3,8 +3,11 @@
 
 #include "BackingStore.hpp"
 
+
 struct MultiPopMcmcRecord
 {
+    Iteration iter;
+
     const AdaptiveMcmcStage stage;
 
     const double lambda;
@@ -20,6 +23,8 @@ typedef BackingStore<MultiPopMcmcRecord> MultiPopBackingStore;
 
 struct SinglePopMcmcRecord
 {
+    Iteration iter;
+
     const AdaptiveMcmcStage stage;
     const Cluster clust;
     const double logPost;
@@ -30,10 +35,43 @@ typedef BackingStore<SinglePopMcmcRecord> SinglePopBackingStore;
 
 struct StarParamsRecord
 {
-    const double fsLike;
+    Iteration iter;
+
     const std::vector<double> starData;
 };
 
 typedef BackingStore<StarParamsRecord> StarParamsBackingStore;
+
+
+struct PhotometryRecord
+{
+    const std::string starId;
+    const std::string filter;
+    const double magnitude;
+    const double stdDev;
+};
+
+typedef BackingStore<PhotometryRecord> PhotometryBackingStore;
+
+
+struct StarRecord
+{
+    const string starId;
+    const double primaryMass;
+    const double secondaryMassRatio;
+    const int stage;
+    const double clusterMembershipPrior;
+    const bool useDuringBurnin;
+    const std::vector<PhotometryRecord> photometryRecords;
+};
+
+typedef BackingStore<StarRecord> StarBackingStore;
+
+struct FieldStarLikelihoodRecord
+{
+    const double fsLike;
+};
+
+typedef BackingStore<FieldStarLikelihoodRecord> FieldStarLikelihoodBackingStore;
 
 #endif

@@ -28,7 +28,7 @@ class Chain : public McmcApplication
 {
   private:
     double fsLike;
-    
+
     MVatrix<double, NPARAMS> params;
     std::array<double, NPARAMS> priorVar;
 
@@ -70,8 +70,8 @@ class Chain : public McmcApplication
                 checkPriors(propClust);
 
                 auto lpOut      = logPost (propClust);
-		logPostProp     = std::get<0>(lpOut);
-		logPostStarData = std::get<1>(lpOut);
+                logPostProp     = std::get<0>(lpOut);
+                logPostStarData = std::get<1>(lpOut);
             }
             catch(InvalidCluster &e)
             {
@@ -110,10 +110,12 @@ class Chain : public McmcApplication
             if (iteration % thin == 0)
             {
                 const auto iter = mcmcStore.nextIteration();
-                mcmcStore.save(iter, {stage, clust.lambda, clust.clust[0], clust.clust[1], logPostCurr});
+
+                mcmcStore.save({iter, stage, clust.lambda, clust.clust[0], clust.clust[1], logPostCurr});
+
                 if (starData.size() >= 2)
                 {
-                    paramsStore.save(iter, {fsLike, starData});
+                    paramsStore.save({iter, starData});
                 }
             }
         }

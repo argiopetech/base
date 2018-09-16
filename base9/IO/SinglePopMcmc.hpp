@@ -10,12 +10,12 @@ class SinglePopMcmc_FileBackingStore : public FileBackingStore<SinglePopMcmcReco
   public:
     SinglePopMcmc_FileBackingStore(std::string);
 
-    ~SinglePopMcmc_FileBackingStore() = default;
+    ~SinglePopMcmc_FileBackingStore() override = default;
 
-    void save(Iteration, SinglePopMcmcRecord);
+    void save(SinglePopMcmcRecord) override;
 
   protected:
-    void header(std::array<double, NPARAMS> const&);
+    void header(std::array<double, NPARAMS> const&) override;
 };
 
 
@@ -26,14 +26,14 @@ class SinglePopMcmc_SqlBackingStore : public SqlBackingStore<SinglePopMcmcRecord
     SinglePopMcmc_SqlBackingStore(const SinglePopMcmc_SqlBackingStore&) = delete;
     SinglePopMcmc_SqlBackingStore(std::string);
 
-    ~SinglePopMcmc_SqlBackingStore();
+    ~SinglePopMcmc_SqlBackingStore() override;
 
-    void save(Iteration, SinglePopMcmcRecord);
+    void save(SinglePopMcmcRecord) override;
 
   private:
     sqlite3_stmt *insert = nullptr;
 
-    void buildInsertStatement();
+    void buildInsertStatement() override;
 };
 
 #endif
