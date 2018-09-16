@@ -9,12 +9,15 @@ general:
         scatterFile:    ""    # Empty string.  This is primarily a CLI option
 
     main_sequence:
-        msRgbModel:     3     # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling, 2 = Yale-Yonsei, 3 = Old (jc2mass) DSED, 4 = New DSED, 5 = PARSEC
+        msRgbModel:     3     # 0 = Girardi, 1 = Chaboyer-Dotter w/He sampling,
+                              # 2 = Yale-Yonsei (unsupported, 3 = Old (jc2mass) DSED,
+                              # 4 = New DSED, 5 = PARSEC, 6 = New Yale-Yonsei (2018)
 
     white_dwarfs:
         wdModel:        1     # 0 = Wood, 1 = Montgomery, 2 = Althaus, 3 = Renedo
         M_wd_up:        8.0   # The maximum mass for a WD-producing star
-        ifmr:           1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin, 3 = Salaris pw lin, 4+ = tunable
+        ifmr:           1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin,
+                              # 3 = Salaris pw lin, 4+ = tunable
 
     cluster:
         starting:

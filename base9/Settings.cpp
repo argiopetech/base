@@ -620,7 +620,7 @@ static void printUsage ()
     cerr << "\t--help\t\t\tPrints help" << endl;
     cerr << "\t--version\t\tPrints version string\n" << endl;
     cerr << "\t--config\t\tYAML configuration file\n" << endl;
-    cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Yale-Yonsei\n\t\t\t\t3 = Old (jc2mass) DSED\n\t\t\t\t4 = New DSED\n\t\t\t\t5 = PARSEC/PanSTARRS\n" << endl;
+    cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Original Yale-Yonsei (not currently supported)\n\t\t\t\t3 = Old (jc2mass) DSED\n\t\t\t\t4 = New DSED\n\t\t\t\t5 = PARSEC/PanSTARRS\n\t\t\t\t6 = New Yale-Yonsei models (2018)\n" << endl;
     cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable\n" << endl;
     cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery\n" << endl;
     cerr << "\t--M_wd_up\t\tThe maximum mass for a WD-producing star\n" << endl;

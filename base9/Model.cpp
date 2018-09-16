@@ -10,6 +10,7 @@
 #include "MsRgbModels/NewDsedMsModel.hpp"
 #include "MsRgbModels/ParsecMsModel.hpp"
 #include "MsRgbModels/GirardiMsModel.hpp"
+#include "MsRgbModels/NewYale.hpp"
 #include "WdCoolingModels/AlthausWdModel.hpp"
 #include "WdCoolingModels/MontgomeryWdModel.hpp"
 #include "WdCoolingModels/RenedoWdModel.hpp"
@@ -34,7 +35,7 @@ namespace internal
             case MsModel::CHABHELIUM:
                 return shared_ptr<ChabMsModel>(new ChabMsModel);
             case MsModel::YALE:
-                cerr << "Yale models are not currently supported." << endl;
+                cerr << " Yale models are not currently supported." << endl;
                 exit(0);
             case MsModel::OLD_DSED:
                 return shared_ptr<OldDsedMsModel>(new OldDsedMsModel);
@@ -42,6 +43,8 @@ namespace internal
                 return shared_ptr<NewDsedMsModel>(new NewDsedMsModel);
             case MsModel::PARSEC:
                 return shared_ptr<ParsecMsModel>(new ParsecMsModel);
+            case MsModel::NEW_YALE:
+                return shared_ptr<NewYaleMsModel>(new NewYaleMsModel);
             default:
                 std::cerr << "***Error: No models found for main sequence evolution model " << static_cast<int>(model) << ".***" << std::endl;
                 std::cerr << "[Exiting...]\n" << std::endl;
