@@ -75,4 +75,19 @@ struct FieldStarLikelihoodRecord
 
 typedef BackingStore<FieldStarLikelihoodRecord> FieldStarLikelihoodBackingStore;
 
+
+struct SampleMassRecord
+{
+    int referencedRun;
+    Iteration iter;
+    std::string starId;
+
+    double primaryMass;
+    double massRatio;
+
+    double clusterMembership;
+};
+
+typedef BackingStore<std::vector<SampleMassRecord>> SampleMassBackingStore;
+
 #endif

@@ -16,6 +16,9 @@
 
 #include "constants.hpp"
 #include "densities.hpp"
+#include "IO/BackingStore.hpp"
+#include "IO/SampleMass.hpp"
+#include "IO/Records.hpp"
 #include "Matrix.hpp"
 #include "Model.hpp"
 #include "samplers.hpp"
@@ -40,10 +43,11 @@ using namespace std::placeholders;
 /* For posterior evaluation on a grid */
 struct clustPar
 {
-    clustPar(double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
-        : age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
+    clustPar(Iteration iter, double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
+        : iter(iter), age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
     {}
 
+    Iteration iter;
     double age;
     double y;
     double feh;
@@ -147,7 +151,11 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
             in >> newLogPost;
 
-            sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+            // Passing -1 for iteration. It's not currently used for the
+            // file back-end, and I'd like a good sign if it breaks.
+            Iteration iter = {-1};
+
+            sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
         }
 
         parsFile.close();
@@ -158,7 +166,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
         for (auto r : records)
         {
-            sampledPars.emplace_back(r.clust.age, r.clust.yyy, r.clust.feh, r.clust.mod,
+            sampledPars.emplace_back(r.iter, r.clust.age, r.clust.yyy, r.clust.feh, r.clust.mod,
                                      r.clust.abs, r.clust.carbonicity, r.clust.ifmrIntercept,
                                      r.clust.ifmrSlope, r.clust.ifmrQuadCoef, r.logPost);
         }
@@ -178,13 +186,16 @@ class Application
     Cluster clust;
     Model evoModels;
 
+    std::unique_ptr<SampleMassBackingStore> sampleMassStore;
+
     const double massStepSize;
     const double massRatioStepSize;
 
   public:
-    Application(Settings s)
+    Application(Settings s, SampleMassBackingStore *sampleMassStore)
         // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
         : settings(s), gen(s.seed * uint32_t(2654435761)), evoModels(makeModel(s))
+        , sampleMassStore(sampleMassStore)
         , massStepSize(settings.sampleMass.deltaMass)
         , massRatioStepSize( s.noBinaries ? 0.0 : settings.sampleMass.deltaMassRatio )
     {
@@ -491,33 +502,9 @@ void Application::run()
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
 
-    // Open the file
-    string filename = settings.files.output + ".massSamples";
-
-    std::ofstream massSampleFile;
-    massSampleFile.open(filename);
-    if (!massSampleFile)
-    {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << ".at(Exiting...)" << endl;
-        exit (1);
-    }
-
-    filename += ".membership";
-
-    std::ofstream membershipFile;
-    membershipFile.open(filename);
-    if (!membershipFile)
-    {
-        cerr << "***Error: File " << filename << " was not available for writing.***" << endl;
-        cerr << ".at(Exiting...)" << endl;
-        exit (1);
-    }
-
     for (size_t m = 0; m < sampledPars.size(); m++)
     {
-        vector<std::pair<double, double>> masses;
-        vector<double> memberships;
+        vector<SampleMassRecord> records;
 
         clust.age = sampledPars.at(m).age;
         clust.feh = sampledPars.at(m).feh;
@@ -552,44 +539,14 @@ void Application::run()
             double postClusterStar = std::get<2>(sampleTuple);
             postClusterStar *= (clust.getM_wd_up() - 0.15);
 
-            masses.emplace_back(std::get<0>(sampleTuple), std::get<1>(sampleTuple));
+            double membership = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
 
-            memberships.emplace_back(star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike));
+            records.push_back({settings.run, sampledPars.at(m).iter, star.id,
+                               std::get<0>(sampleTuple), std::get<1>(sampleTuple), membership});
         }
 
-        // massSampleFile << base::utility::format << sampledPars.at(m).age
-        //                << base::utility::format << sampledPars.at(m).feh
-        //                << base::utility::format << sampledPars.at(m).distMod
-        //                << base::utility::format << sampledPars.at(m).abs;
-
-        // if (evoModels.IFMR >= 4)
-        // {
-        //     massSampleFile << base::utility::format << sampledPars.at(m).ifmrIntercept
-        //                    << base::utility::format << sampledPars.at(m).ifmrSlope;
-        // }
-
-        // if (evoModels.IFMR >= 9)
-        // {
-        //     massSampleFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
-        // }
-
-        for (auto mass : masses)
-        {
-            massSampleFile << base::utility::format << mass.first
-                           << base::utility::format << mass.second;
-        }
-
-        for (auto membership : memberships)
-        {
-            membershipFile << base::utility::format << membership;
-        }
-
-        massSampleFile << endl;
-        membershipFile << endl;
+        sampleMassStore->save(records);
     }
-
-    massSampleFile.close();
-    membershipFile.close();
 
     cout << "Completed successfully" << endl;
 }
@@ -611,7 +568,22 @@ int main (int argc, char *argv[])
             cout << "Seed: " << settings.seed << endl;
         }
 
-        Application(settings).run();
+        SampleMassBackingStore *sampleMassStore = nullptr;
+
+        if (settings.files.backend == Backend::Sqlite)
+        {
+            sampleMassStore = new SampleMass_SqlBackingStore(settings.files.output);
+        }
+        else if (settings.files.backend == Backend::File)
+        {
+            sampleMassStore = new SampleMass_FileBackingStore(settings.files.output);
+        }
+        else
+        {
+            throw std::runtime_error("Invalid back end specified");
+        }
+
+        Application(settings, std::move(sampleMassStore)).run();
 
         return 0;
     }

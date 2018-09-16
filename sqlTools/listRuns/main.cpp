@@ -17,16 +17,24 @@ int main(int argc, char **argv)
     auto sql =
         "select \"Multi-Pop\" as Program, runId as 'Run Identifier', time as Time, count(iterId) as Iterations"
         "  from run"
-        "    join multi_pop"
-        "  on run.id = runId"
+        "  join multi_pop"
+        "    on run.id = runId"
         "  group by runId "
 
         "union "
 
         "select \"Single Pop\" as program, runId, time, count(iterId)"
         "  from run"
-        "    join single_pop"
-        "  on run.id = runId"
+        "  join single_pop"
+        "    on run.id = runId"
+        "  group by runId "
+
+        "union "
+
+        "select \"Sample Mass\" as program, runId, time, count(distinct iterId)"
+        "  from run"
+        "  join sample_mass"
+        "    on run.id = runId"
         "  group by runId "
         "order by runId;";
 

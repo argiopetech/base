@@ -129,6 +129,19 @@ void SqlBackingStore<T>::ensureTables()
         ", primary key (runId, iterId, starId)"
         ", foreign key (runId, iterId) references iteration (runId, id)"
         ", foreign key (runId, starId) references star (runId, starId));"
+
+        "create table if not exists sample_mass"
+        "( runId integer not null"
+        ", referencedRunId integer not null"
+        ", iterId integer not null"
+        ", starId text not null"
+        ", primaryMass double not null"
+        ", massRatio double not null"
+        ", clusterMembership double not null"
+        ", primary key (runId, referencedRunId, iterId, starId)"
+        ", foreign key (referencedRunId, iterId) references iteration (runId, id)"
+        ", foreign key (referencedRunId, starId) references star (runId, starId)"
+        ", foreign key (referencedRunId, iterId) references single_pop (runId, iterId));"
     );
 }
 
