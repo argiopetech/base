@@ -50,7 +50,8 @@ void SqlBackingStore<T>::ensureTables()
 {
     enableForeignKeys();
 
-    execOnlyInTransaction("creating tables",
+    execOnlyInTransaction(
+        "creating tables",
         "create table if not exists run"
         "( id   integer not null"
         ", time datetime default CURRENT_TIMESTAMP"
@@ -138,6 +139,22 @@ void SqlBackingStore<T>::ensureTables()
         ", primaryMass double not null"
         ", massRatio double not null"
         ", clusterMembership double not null"
+        ", primary key (runId, referencedRunId, iterId, starId)"
+        ", foreign key (referencedRunId, iterId) references iteration (runId, id)"
+        ", foreign key (referencedRunId, starId) references star (runId, starId)"
+        ", foreign key (referencedRunId, iterId) references single_pop (runId, iterId));"
+
+        "create table if not exists sample_wd_mass"
+        "( runId integer not null"
+        ", referencedRunId integer not null"
+        ", iterId integer not null"
+        ", starId text not null"
+        ", mass double not null"
+        ", clusterMembership double not null"
+        ", precursorLogAge double not null"
+        ", coolingAge double" // Can sometimes be NaN, which registers as null
+        ", logTeff double not null"
+        ", logG double not null"
         ", primary key (runId, referencedRunId, iterId, starId)"
         ", foreign key (referencedRunId, iterId) references iteration (runId, id)"
         ", foreign key (referencedRunId, starId) references star (runId, starId)"

@@ -90,4 +90,20 @@ struct SampleMassRecord
 
 typedef BackingStore<std::vector<SampleMassRecord>> SampleMassBackingStore;
 
+struct SampleWdMassRecord
+{
+    int referencedRun;
+    Iteration iter;
+    std::string starId;
+
+    double mass;
+    double clusterMembership;
+    double precursorLogAge;
+    double coolingAge;
+    double logTeff;
+    double logG;
+};
+
+typedef BackingStore<std::vector<SampleWdMassRecord>> SampleWdMassBackingStore;
+
 #endif

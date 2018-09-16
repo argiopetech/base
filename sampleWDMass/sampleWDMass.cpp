@@ -11,6 +11,7 @@
 #include "constants.hpp"
 #include "densities.hpp"
 #include "ifmr.hpp"
+#include "IO/SampleWdMass.hpp"
 #include "Model.hpp"
 #include "Settings.hpp"
 #include "WhiteDwarf.hpp"
@@ -42,10 +43,11 @@ struct ifmrGridControl
 /* For posterior evaluation on a grid */
 struct clustPar
 {
-    clustPar(double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
-        : age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
+    clustPar(Iteration iter, double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
+        : iter(iter), age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
     {}
 
+    Iteration iter;
     double age;
     double y;
     double feh;
@@ -258,7 +260,11 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
             in >> newLogPost;
 
-            sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+            // Passing -1 for iteration. It's not currently used for the
+            // file back-end, and I'd like a good sign if it breaks.
+            Iteration iter = {-1};
+
+            sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
         }
 
         parsFile.close();
@@ -269,7 +275,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
         for (auto r : records)
         {
-            sampledPars.emplace_back(r.clust.age, r.clust.yyy, r.clust.feh, r.clust.mod,
+            sampledPars.emplace_back(r.iter, r.clust.age, r.clust.yyy, r.clust.feh, r.clust.mod,
                                      r.clust.abs, r.clust.carbonicity, r.clust.ifmrIntercept,
                                      r.clust.ifmrSlope, r.clust.ifmrQuadCoef, r.logPost);
         }
@@ -356,6 +362,22 @@ int main (int argc, char *argv[])
         cout << "Generated " << warmupIter << " values." << endl;
     }
 
+    std::unique_ptr<SampleWdMassBackingStore> sampleWdMassStore;
+
+    if (settings.files.backend == Backend::Sqlite)
+    {
+        sampleWdMassStore.reset(new SampleWdMass_SqlBackingStore(settings.files.output));
+    }
+    else if (settings.files.backend == Backend::File)
+    {
+        sampleWdMassStore.reset(new SampleWdMass_FileBackingStore(settings.files.output));
+    }
+    else
+    {
+        throw std::runtime_error("Invalid back end specified");
+    }
+
+
     Model evoModels = makeModel(settings);
 
     initIfmrGridControl (&mc, evoModels, &ctrl, settings);
@@ -425,97 +447,6 @@ int main (int argc, char *argv[])
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
 
-    // Open the file
-    string filename = settings.files.output + ".wd";
-
-    std::ofstream massFile;
-
-    {
-        string lf = filename + ".mass";
-
-        massFile.open(lf);
-        if (!massFile)
-        {
-            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
-    }
-
-    std::ofstream membershipFile;
-
-    {
-        string lf = filename + ".membership";
-
-        membershipFile.open(lf);
-        if (!membershipFile)
-        {
-            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
-    }
-
-    std::ofstream precLogAgeFile;
-
-    if (settings.details)
-    {
-        string lf = filename + ".precLogAge";
-
-        precLogAgeFile.open(lf);
-        if (!precLogAgeFile)
-        {
-            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
-    }
-
-    std::ofstream coolingAgeFile;
-
-    if (settings.details)
-    {
-        string lf = filename + ".coolingAge";
-
-        coolingAgeFile.open(lf);
-        if (!coolingAgeFile)
-        {
-            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
-    }
-
-    std::ofstream logTeffFile;
-
-    if (settings.details)
-    {
-        string lf = filename + ".logTeff";
-
-        logTeffFile.open(lf);
-        if (!logTeffFile)
-        {
-            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
-    }
-
-    std::ofstream loggFile;
-
-    if (settings.details)
-    {
-        string lf = filename + ".logg";
-
-        loggFile.open(lf);
-        if (!loggFile)
-        {
-            cerr << "***Error: File " << lf << " was not available for writing.***" << endl;
-            cerr << ".at(Exiting...)" << endl;
-            exit (1);
-        }
-    }
-
     std::vector<double> us;
     us.resize(sampledPars.size() + 1);
 
@@ -527,7 +458,7 @@ int main (int argc, char *argv[])
     for (size_t m = 0; m < sampledPars.size(); ++m)
     {
         Cluster internalCluster(mc.clust);
-        std::vector<double> wdMass, clusMemPost;
+        std::vector<SampleWdMassRecord> records;
         std::vector<double> wdLogPost;
 
         wdLogPost.resize(nWDLogPosts + 1);
@@ -616,78 +547,31 @@ int main (int argc, char *argv[])
                 }
                 mass1 -= dMass1;        /* maybe not necessary */
 
-                wdMass.push_back(mass1);
-
                 postClusterStar *= (internalCluster.getM_wd_up() - 0.15);
 
-                clusMemPost.push_back(star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike));
+                double membership = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
+
+                {
+                    auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(internalCluster.feh, mass1, internalCluster.yyy);
+
+                    double thisWDMass = intlFinalMassReln (internalCluster, evoModels, mass1);
+                    double coolingAge = log10(exp10(internalCluster.age) - exp10(precLogAge));
+
+                    auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (internalCluster.age, internalCluster.carbonicity, precLogAge, thisWDMass);
+                    double logTeff = teffRadiusPair.first;
+
+                    auto logg = evoModels.WDAtmosphere->teffToLogg (logTeff, thisWDMass, star.primary.wdType);
+
+                    records.push_back({settings.run, sampledPars.at(m).iter, star.id,
+                                       mass1, membership, precLogAge, coolingAge, logTeff, logg});
+                }
+
                 iWD++;
             }
         }
 
-        // massFile << base::utility::format << sampledPars.at(m).age
-        //                << base::utility::format << sampledPars.at(m).feh
-        //                << base::utility::format << sampledPars.at(m).distMod
-        //                << base::utility::format << sampledPars.at(m).abs;
-
-        // if (evoModels.IFMR >= 4)
-        // {
-        //     massFile << base::utility::format << sampledPars.at(m).ifmrIntercept
-        //                    << base::utility::format << sampledPars.at(m).ifmrSlope;
-        // }
-
-        // if (evoModels.IFMR >= 9)
-        // {
-        //     massFile << base::utility::format << sampledPars.at(m).ifmrQuadCoef;
-        // }
-
-        for (size_t j = 0; j < wdMass.size(); j++)
-        {
-            auto precLogAge = evoModels.mainSequenceEvol->wdPrecLogAge(internalCluster.feh, wdMass.at(j), internalCluster.yyy);
-
-            double thisWDMass = intlFinalMassReln (internalCluster, evoModels, wdMass.at(j));
-            double coolingAge = log10(exp10(internalCluster.age) - exp10(precLogAge));
-
-            auto teffRadiusPair = evoModels.WDcooling->wdMassToTeffAndRadius (internalCluster.age, internalCluster.carbonicity, precLogAge, thisWDMass);
-            double logTeff = teffRadiusPair.first;
-
-            auto logg = evoModels.WDAtmosphere->teffToLogg (logTeff, thisWDMass, WdAtmosphere::DA);
-
-            massFile << base::utility::format << wdMass.at(j);
-            membershipFile << base::utility::format << clusMemPost.at(j);
-
-            if (settings.details)
-            {
-                precLogAgeFile << base::utility::format << precLogAge;
-                coolingAgeFile << base::utility::format << coolingAge;
-                logTeffFile << base::utility::format << logTeff;
-                loggFile << base::utility::format << logg;
-            }
-        }
-
-        massFile << endl;
-        membershipFile << endl;
-
-        if (settings.details)
-        {
-            precLogAgeFile << endl;
-            coolingAgeFile << endl;
-            logTeffFile << endl;
-            loggFile << endl;
-        };
+        sampleWdMassStore->save(records);
     }
-
-    massFile.close();
-    membershipFile.close();
-
-    if (settings.details)
-    {
-        precLogAgeFile.close();
-        coolingAgeFile.close();
-        logTeffFile.close();
-        loggFile.close();
-    }
-
 
     cout << "Part 2 completed successfully" << endl;
 

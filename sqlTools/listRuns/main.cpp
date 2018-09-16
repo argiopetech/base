@@ -36,6 +36,14 @@ int main(int argc, char **argv)
         "  join sample_mass"
         "    on run.id = runId"
         "  group by runId "
+
+        "union "
+
+        "select \"Sample WD Mass\" as program, runId, time, count(distinct iterId)"
+        "  from run"
+        "  join sample_wd_mass"
+        "    on run.id = runId"
+        "  group by runId "
         "order by runId;";
 
     SqlQueryRunner query(argv[1], sql);
