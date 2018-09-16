@@ -173,93 +173,107 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
  */
 static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 {
-    string line;
-
     vector<clustPar> sampledPars;
 
-    std::ifstream parsFile;
-    parsFile.open(s.files.output + ".res");
-
-    bool hasY, hasCarbonicity;
-
-    getline(parsFile, line); // Parse header
-
+    if (s.run <= 0)
     {
-        string sin;
-        stringstream in(line);
+        string line;
 
-        in >> sin  // logAge
-           >> sin; // Y?
+        std::ifstream parsFile;
+        parsFile.open(s.files.output + ".res");
 
-        if (sin == "Y")
+        bool hasY, hasCarbonicity;
+
+        getline(parsFile, line); // Parse header
+
         {
-            hasY = true;
+            string sin;
+            stringstream in(line);
 
-            in >> sin  // FeH
-               >> sin  // Abs
-               >> sin  // DistMod
-               >> sin; // Carbonicity?
+            in >> sin  // logAge
+               >> sin; // Y?
 
-            if (sin == "carbonicity")
-                hasCarbonicity = true;
+            if (sin == "Y")
+            {
+                hasY = true;
+
+                in >> sin  // FeH
+                   >> sin  // Abs
+                   >> sin  // DistMod
+                   >> sin; // Carbonicity?
+
+                if (sin == "carbonicity")
+                    hasCarbonicity = true;
+                else
+                    hasCarbonicity = false;
+            }
             else
-                hasCarbonicity = false;
+            {
+                hasY = false;
+
+                // This one skips FeH (because it was already read instead of Y)
+                in >> sin  // Abs
+                   >> sin  // DistMod
+                   >> sin; // Carbonicity?
+
+                if (sin == "carbonicity")
+                    hasCarbonicity = true;
+                else
+                    hasCarbonicity = false;
+            }
         }
-        else
+
+        while (getline(parsFile, line))
         {
-            hasY = false;
+            stringstream in(line);
 
-            // This one skips FeH (because it was already read instead of Y)
-            in >> sin  // Abs
-               >> sin  // DistMod
-               >> sin; // Carbonicity?
+            double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
 
-            if (sin == "carbonicity")
-                hasCarbonicity = true;
+            in >> newAge;
+
+            if (hasY)
+                in >> newY;
             else
-                hasCarbonicity = false;
+                newY = s.cluster.starting.Y;
+
+            in >> newFeh
+               >> newMod
+               >> newAbs;
+
+            if (hasCarbonicity)
+                in >> newCarbonicity;
+            else
+                newCarbonicity = s.cluster.starting.carbonicity;
+
+            if (evoModels.IFMR >= 4)
+            {
+                in >> newIInter
+                   >> newISlope;
+            }
+
+            if (evoModels.IFMR >= 9)
+            {
+                in >> newIQuad;
+            }
+
+            in >> newLogPost;
+
+            sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+        }
+
+        parsFile.close();
+    }
+    else
+    {
+        auto records = base::utility::readSinglePopMainRunResFromDB(s.run, s.files.output);
+
+        for (auto r : records)
+        {
+            sampledPars.emplace_back(r.clust.age, r.clust.yyy, r.clust.feh, r.clust.mod,
+                                     r.clust.abs, r.clust.carbonicity, r.clust.ifmrIntercept,
+                                     r.clust.ifmrSlope, r.clust.ifmrQuadCoef, r.logPost);
         }
     }
-
-    while (getline(parsFile, line))
-    {
-        stringstream in(line);
-
-        double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
-
-        in >> newAge;
-
-        if (hasY)
-            in >> newY;
-        else
-            newY = s.cluster.starting.Y;
-
-        in >> newFeh
-           >> newMod
-           >> newAbs;
-
-        if (hasCarbonicity)
-            in >> newCarbonicity;
-        else
-            newCarbonicity = s.cluster.starting.carbonicity;
-
-        if (evoModels.IFMR >= 4)
-        {
-            in >> newIInter
-               >> newISlope;
-        }
-
-        if (evoModels.IFMR >= 9)
-        {
-            in >> newIQuad;
-        }
-
-        in >> newLogPost;
-
-        sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
-    }
-
-    parsFile.close();
 
     return sampledPars;
 }
