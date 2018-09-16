@@ -56,7 +56,7 @@ class Chain : public McmcApplication
         }
     }
 
-    void run(AdaptiveMcmcStage stage, std::function<T(T)> propose, std::function<std::tuple<double, std::vector<double>>(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
+    void run(AdaptiveMcmcStage stage, std::vector<string> starNames, std::function<T(T)> propose, std::function<std::tuple<double, std::vector<double>>(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
         {
@@ -115,7 +115,7 @@ class Chain : public McmcApplication
 
                 if (starData.size() >= 2)
                 {
-                    paramsStore.save({iter, starData});
+                    paramsStore.save({iter, starNames, starData});
                 }
             }
         }

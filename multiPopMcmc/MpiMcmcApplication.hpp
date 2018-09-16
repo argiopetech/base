@@ -60,6 +60,8 @@ class MpiMcmcApplication
     std::unique_ptr<FieldStarLikelihoodBackingStore> fieldStarLikelihood;
     std::unique_ptr<StarBackingStore> photometryStore;
 
+    std::vector<string> systemNames;
+    std::vector<string> mainRunSystemNames;
     std::vector<StellarSystem> systems;
     std::vector<StellarSystem> mainRunSystems;
 

@@ -275,11 +275,13 @@ int MpiMcmcApplication::run()
             {
                 // Everything goes into the main run
                 mainRunSystems.push_back(r);
+                mainRunSystemNames.push_back(r.id);
 
                 if (r.useDuringBurnIn)
                 {
                     // Only burnin things go into systems
                     systems.push_back(r);
+                    systemNames.push_back(r.id);
                 }
 
                 // systems must be overwritten before the main run
@@ -339,10 +341,6 @@ int MpiMcmcApplication::run()
     // Assuming fsLike doesn't change, this is the "global" logPost function
     auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);
 
-    // Set up the output file for stellar statistical parameters from margEvolve
-    std::ofstream starParams(settings.files.output + ".starParams.burnin");
-    starParams << base::utility::format << fsLike << std::endl;
-
     std::function<void(const DualPopCluster&)> checkPriors = std::bind(&ensurePriors, std::cref(settings), _1);
 
     int adaptiveBurnIter = 0;
@@ -355,7 +353,7 @@ int MpiMcmcApplication::run()
             cout << "\nRunning Stage 1 burnin..." << flush;
 
         auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
-        chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
+        chain.run(AdaptiveMcmcStage::FixedBurnin, systemNames, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
 
         if ( settings.verbose )
             cout << " Complete (acceptanceRatio = " << chain.acceptanceRatio() << ")" << endl;
@@ -387,21 +385,21 @@ int MpiMcmcApplication::run()
         if (settings.singlePopMcmc.bigStepBurnin)
         {
             // Run big steps for the entire trial
-            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter);
+            chain.run(AdaptiveMcmcStage::AdaptiveBurnin, systemNames, proposalFunc, logPostFunc, checkPriors, trialIter);
         }
         else if (acceptedOnce)
         {
             proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
-            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
+            chain.run(AdaptiveMcmcStage::AdaptiveBurnin, systemNames, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
         }
         else
         {
             // Run big steps for half the trial
-            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
+            chain.run(AdaptiveMcmcStage::AdaptiveBurnin, systemNames, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
 
             // Then run smaller steps for the second half
             proposalFunc = std::bind(&MpiMcmcApplication::propClustIndep, this, _1, std::cref(ctrl), std::cref(stepSize), 1);
-            chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
+            chain.run(AdaptiveMcmcStage::AdaptiveBurnin, systemNames, proposalFunc, logPostFunc, checkPriors, trialIter / 2);
         }
 
         double acceptanceRatio = chain.acceptanceRatio();
@@ -439,14 +437,10 @@ int MpiMcmcApplication::run()
     // Main run
     // Overwrite the burnin photometry set with the entire photometry set
     systems = mainRunSystems;
+    systemNames = mainRunSystemNames;
 
     // Don't forget to repopulate the SSE memory
     allocateSSEMem();
-
-    // Set up the output file for stellar statistical parameters from margEvolve
-    starParams.close();
-    starParams.open(settings.files.output + ".starParams");
-    starParams << base::utility::format << fsLike << std::endl;
 
     {
         // Make sure and pull the covariance matrix before resetting the chain
@@ -457,7 +451,7 @@ int MpiMcmcApplication::run()
         if ( settings.verbose )
             cout << "\nStarting adaptive run... " << flush;
 
-        chain.run(AdaptiveMcmcStage::AdaptiveMainRun, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
+        chain.run(AdaptiveMcmcStage::AdaptiveMainRun, systemNames, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
 
         if ( settings.verbose )
             cout << " Preliminary acceptanceRatio = " << chain.acceptanceRatio() << endl;
@@ -469,7 +463,7 @@ int MpiMcmcApplication::run()
     {
         auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
 
-        chain.run(AdaptiveMcmcStage::MainRun, proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
+        chain.run(AdaptiveMcmcStage::MainRun, systemNames, proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
     }
 
     if ( settings.verbose )

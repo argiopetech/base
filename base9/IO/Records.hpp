@@ -37,6 +37,7 @@ struct StarParamsRecord
 {
     Iteration iter;
 
+    const std::vector<string> starNames;
     const std::vector<double> starData;
 };
 
