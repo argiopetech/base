@@ -14,7 +14,7 @@ class ParsecMsModel : public GenericMsModel
 
   protected:
     virtual std::string getFileName (std::string path) const
-        { return path + "PanSTARRS/PanSTARRS.model"; }
+        { return path + "PARSEC/PARSEC.model"; }
 };
 
 #endif
