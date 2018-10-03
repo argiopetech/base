@@ -22,28 +22,40 @@ general:
     cluster:
         starting:
             Fe_H:        0.07
-            distMod:     0.0
             Av:          0.009
             Y:           0.29
             carbonicity: 0.38
             logAge:      8.796
 
+            # You may have distMod or parallax, but not both
+            #
+            # The starting parameter, prior mean, and prior sigma must all
+            #  specify the same parameter
+            distMod:     0.0
+            # parallax:    0.0
+
+
         priors:
             means:
                 Fe_H:        0.07
-                distMod:     0.0
                 Av:          0.009
                 Y:           0.29
                 carbonicity: 0.38
                 logAge:      8.796
 
+                distMod:     0.0
+                # parallax:    0.0
+
             sigmas:
                 Fe_H:        0.05
-                distMod:     0.05
                 Av:          0.006
                 Y:           0.0
                 carbonicity: 0.0   # .inf for uniform, 0 for no sampling
                 logAge:      .inf  # .inf for uniform, 0 for no sampling
+
+                distMod:     0.05
+                # parallax:    0.05
+
 
         minMag:         0.0   # these variables can be used to read a subset of the photometry
         maxMag:         30.0
@@ -104,13 +116,19 @@ singlePopMcmc:
     stepSizes:
         age:            0.005
         Fe_H:           0.005
-        distMod:        0.005
         Av:             0.002
         Y:              0.002
         carbonicity:    0.001
         ifmrIntercept:  0.01
         ifmrSlope:      0.008
         ifmrQuadCoef:   0.008
+
+        # Note:
+        #
+        # BASE-9 always uses distMod internally, even if you specify priors and
+        #  starting value in parallax. This value always reflects a step in
+        #  distMod-space.
+        distMod:        0.005
 
 multiPopMcmc:
 # These aren't used at the moment

@@ -86,9 +86,31 @@ void Settings::fromYaml (const string& yamlFile)
     cluster.priorMeans.Fe_H = getOrRequest <double>(meansNode, "Fe_H");
     cluster.priorSigma.Fe_H = getOrRequest <double>(sigmasNode, "Fe_H");
 
-    cluster.starting.distMod = getOrRequest <double>(startingNode, "distMod");
-    cluster.priorMeans.distMod = getOrRequest <double>(meansNode, "distMod");
-    cluster.priorSigma.distMod = getOrRequest <double>(sigmasNode, "distMod");
+    if ( ( startingNode["distMod"] || meansNode["distMod"] || sigmasNode["distMod"] ) &&
+         ( startingNode["parallax"] || meansNode["parallax"] || sigmasNode["parallax"] ) )
+    {
+        exitWith("You may not provide starting, prior mean, or prior sigma values for both parallax and distMod simultaneously.");
+    }
+    else if (startingNode["distMod"] && meansNode["distMod"] && sigmasNode["distMod"])
+    {
+        modIsParallax = false;
+
+        cluster.starting.distMod = getOrRequest <double>(startingNode, "distMod");
+        cluster.priorMeans.distMod = getOrRequest <double>(meansNode, "distMod");
+        cluster.priorSigma.distMod = getOrRequest <double>(sigmasNode, "distMod");
+    }
+    else if (startingNode["parallax"] && meansNode["parallax"] && sigmasNode["parallax"])
+    {
+        modIsParallax = true;
+
+        cluster.starting.distMod = getOrRequest <double>(startingNode, "parallax");
+        cluster.priorMeans.distMod = getOrRequest <double>(meansNode, "parallax");
+        cluster.priorSigma.distMod = getOrRequest <double>(sigmasNode, "parallax");
+    }
+    else
+    {
+        exitWith("You must provide starting, prior mean, and prior sigma value for either distMod or parallax");
+    }
 
     cluster.starting.Av = getOrRequest <double>(startingNode, "Av");
     cluster.priorMeans.Av = getOrRequest <double>(meansNode, "Av");
@@ -239,6 +261,9 @@ void Settings::fromCLI (int argc, char **argv)
         {"backend", required_argument, 0, 0xC2},
         {"run", required_argument, 0, 0xC1},
 
+        {"startingParallax", required_argument, 0, 0xC0},
+        {"priorParallax", required_argument, 0, 0xBF},
+        {"sigmaParallax", required_argument, 0, 0xBE},
 
         // Various flags
         // These are now handled the same way as the parameters due to occasional compiler weirdness
@@ -250,6 +275,8 @@ void Settings::fromCLI (int argc, char **argv)
         {"details", no_argument, 0, 0xAA},
         {0, 0, 0, 0}
     };
+
+    char modBits = 0;
 
     int c, option_index;
 
@@ -303,14 +330,6 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0xF7:
                 istringstream (string (optarg)) >> cluster.priorSigma.Fe_H;
-                break;
-
-            case 0xF6:
-                istringstream (string (optarg)) >> cluster.priorMeans.distMod;
-                break;
-
-            case 0xF5:
-                istringstream (string (optarg)) >> cluster.priorSigma.distMod;
                 break;
 
             case 0xF4:
@@ -458,10 +477,6 @@ void Settings::fromCLI (int argc, char **argv)
                 istringstream (string (optarg)) >> cluster.starting.Fe_H;
                 break;
 
-            case 0xC7:
-                istringstream (string (optarg)) >> cluster.starting.distMod;
-                break;
-
             case 0xC6:
                 istringstream (string (optarg)) >> cluster.starting.Av;
                 break;
@@ -506,6 +521,39 @@ void Settings::fromCLI (int argc, char **argv)
                 details = true;
                 break;
 
+
+            // distMod and parallax have to be handled with special care.
+            case 0xC7:
+                istringstream (string (optarg)) >> cluster.starting.distMod;
+                modBits |= 1;
+                break;
+
+            case 0xF6:
+                istringstream (string (optarg)) >> cluster.priorMeans.distMod;
+                modBits |= 2;
+                break;
+
+            case 0xF5:
+                istringstream (string (optarg)) >> cluster.priorSigma.distMod;
+                modBits |= 4;
+                break;
+
+            case 0xC0:
+                istringstream (string (optarg)) >> cluster.starting.distMod;
+                modBits |= 8;
+                break;
+
+            case 0xBF:
+                istringstream (string (optarg)) >> cluster.priorMeans.distMod;
+                modBits |= 16;
+                break;
+
+            case 0xBE:
+                istringstream (string (optarg)) >> cluster.priorSigma.distMod;
+                modBits |= 32;
+                break;
+
+
             case '?':
                 // getopt_long already printed an error message.
                 printUsage ();
@@ -530,6 +578,12 @@ void Settings::fromCLI (int argc, char **argv)
             cerr << argv[optind++];
         cerr << endl;
     }
+
+    if (modBits == 0)  { return; }
+    if (modBits == 7)  { modIsParallax = false; return; }
+    if (modBits == 56) { modIsParallax = true;  return; }
+
+    exitWith("You must specify starting, prior mean, and prior sigma values for either parallax or distMod.");
 }
 
 template<typename T>
@@ -617,78 +671,166 @@ static void printUsage ()
 {
     cerr << "\nUsage:" << endl;
     cerr <<   "======" << endl;
-    cerr << "\t--help\t\t\tPrints help" << endl;
-    cerr << "\t--version\t\tPrints version string\n" << endl;
-    cerr << "\t--config\t\tYAML configuration file\n" << endl;
-    cerr << "\t--msRgbModel\t\t0 = Girardi\n\t\t\t\t1 = Chaboyer-Dotter w/He sampling\n\t\t\t\t2 = Original Yale-Yonsei (not currently supported)\n\t\t\t\t3 = Old (jc2mass) DSED\n\t\t\t\t4 = New DSED\n\t\t\t\t5 = PARSEC\n\t\t\t\t6 = New Yale-Yonsei models (2018)\n" << endl;
-    cerr << "\t--ifmr\t\t\t0 = Weidemann\n\t\t\t\t1 = Williams\n\t\t\t\t2 = Salaris lin\n\t\t\t\t3 = Salaris pw lin\n\t\t\t\t4+ = tunable\n" << endl;
-    cerr << "\t--wdModel\t\t0 = Wood\n\t\t\t\t1 = Montgomery (original)\n\t\t\t\t2 = Althaus\n\t\t\t\t3 = Renedo\n\t\t\t\t4 = Montgomery (2018)\n" << endl;
-    cerr << "\t--M_wd_up\t\tThe maximum mass for a WD-producing star\n" << endl;
-    cerr << "\t--bdModel\t\t0 = None\n\t\t\t\t1 = Baraffe\n" << endl;
-    cerr << "\t--startingFe_H" << endl;
+
+    cerr << "\t--help" << endl;
+    cerr << "\t\tPrints help\n" << endl;
+
+    cerr << "\t--version" << endl;
+    cerr << "\t\tPrints version string\n" << endl;
+
+    cerr << "\t--config" << endl;
+    cerr << "\t\tYAML configuration file\n" << endl;
+
+    cerr << "\t--seed" << endl;
+    cerr << "\t\tinitialize the random number generator\n" << endl;
+
+    cerr << "\t--msRgbModel" << endl;
+    cerr << "\t\t0 = Girardi" << endl;
+    cerr << "\t\t1 = Chaboyer-Dotter w/He sampling" << endl;
+    cerr << "\t\t2 = Original Yale-Yonsei (not currently supported)" << endl;
+    cerr << "\t\t3 = Old (jc2mass) DSED" << endl;
+    cerr << "\t\t4 = New DSED" << endl;
+    cerr << "\t\t5 = PARSEC" << endl;
+    cerr << "\t\t6 = New Yale-Yonsei models (2018)\n" << endl;
+
+    cerr << "\t--ifmr" << endl;
+    cerr << "\t\t0 = Weidemann" << endl;
+    cerr << "\t\t1 = Williams" << endl;
+    cerr << "\t\t2 = Salaris lin" << endl;
+    cerr << "\t\t3 = Salaris pw lin" << endl;
+    cerr << "\t\t4+ = tunable\n" << endl;
+
+    cerr << "\t--wdModel" << endl;
+    cerr << "\t\t0 = Wood" << endl;
+    cerr << "\t\t1 = Montgomery (original)" << endl;
+    cerr << "\t\t2 = Althaus" << endl;
+    cerr << "\t\t3 = Renedo" << endl;
+    cerr << "\t\t4 = Montgomery (2018)\n" << endl;
+
+    cerr << "\t--bdModel" << endl;
+    cerr << "\t\t0 = None" << endl;
+    cerr << "\t\t1 = Baraffe\n" << endl;
+
+    cerr << "\t--photFile" << endl;
+    cerr << "\t\tThe absolute path to a photometry file for input\n" << endl;
+
+    cerr << "\t--scatterFile" << endl;
+    cerr << "\t\tThe absolute path to a scatter file for output. The scatter\n";
+    cerr << "\t\tfile does not have to exist and WILL be overwritten without\n";
+    cerr << "\t\twarning.\n" << endl;
+
+    cerr << "\t--outputFileBase" << endl;
+    cerr << "\t\tRun information is appended to this name\n" << endl;
+
+    cerr << "\t--modelDirectory" << endl;
+    cerr << "\t\tThe directory in which models are located\n" << endl;
+
+    cerr << "\t--M_wd_up" << endl;
+    cerr << "\t\tThe maximum mass for a WD-producing star\n" << endl;
+
     cerr << "\t--priorFe_H" << endl;
-    cerr << "\t--sigmaFe_H\n" << endl;
-    cerr << "\t--startingDistMod" << endl;
+    cerr << "\t--sigmaFe_H" << endl;
+    cerr << "\t--startingFe_H\n" << endl;
+
     cerr << "\t--priorDistMod" << endl;
-    cerr << "\t--sigmaDistMod\n" << endl;
-    cerr << "\t--startingAv" << endl;
+    cerr << "\t--sigmaDistMod" << endl;
+    cerr << "\t--startingDistMod\n" << endl;
+
     cerr << "\t--priorAv" << endl;
-    cerr << "\t--sigmaAv\n" << endl;
-    cerr << "\t--startingY" << endl;
+    cerr << "\t--sigmaAv" << endl;
+    cerr << "\t--startingAv\n" << endl;
+
     cerr << "\t--priorY" << endl;
-    cerr << "\t--sigmaY\n" << endl;
-    cerr << "\t--startingCarbonicity" << endl;
+    cerr << "\t--sigmaY" << endl;
+    cerr << "\t--startingY\n" << endl;
+
     cerr << "\t--priorCarbonicity" << endl;
-    cerr << "\t--sigmaCarbonicity\n" << endl;
-    cerr << "\t--startingLogAge" << endl;
+    cerr << "\t--sigmaCarbonicity" << endl;
+    cerr << "\t--startingCarbonicity\n" << endl;
+
     cerr << "\t--priorLogAge" << endl;
     cerr << "\t--sigmaLogAge" << endl;
+    cerr << "\t--startingLogAge\n" << endl;
+
     cerr << "\t--minMag" << endl;
-    cerr << "\t--maxMag" << endl;
-    cerr << "\t--index\t\t\t0 being the first filter in the dataset" << endl;
+    cerr << "\t--maxMag\n" << endl;
+
+    cerr << "\t--index" << endl;
+    cerr << "\t\t0 being the first filter in the dataset\n" << endl;
+
     cerr << "\t--burnIter" << endl;
-    cerr << "\t--maxIter" << endl;
+    cerr << "\t--maxIter\n" << endl;
+
     cerr << "\t--thin" << endl;
-    cerr << "\t--nStars" << endl;
-    cerr << "\t--percentBinary\t\tpercent binaries (drawn randomly)" << endl;
-    cerr << "\t--percentDB\t\tpercent of WDs that have He atmospheres (drawn randomly)" << endl;
-    cerr << "\t--nFieldStars" << endl;
-    cerr << "\t--brightLimit\t\tapparant mags, can remove bright stars, e.g. RGB" << endl;
-    cerr << "\t--faintLimit\t\tapparant mags, can remove faint stars, e.g. faint MS and WDs" << endl;
-    cerr << "\t--relevantFilt\t\t0=bluest band available" << endl;
-    cerr << "\t--limitS2N\t\tuse to remove objects with overly low signal-to-noise" << endl;
-    cerr << "\t--seed\t\t\tinitialize the random number generator" << endl;
-    cerr << "\t--photFile" << endl;
-    cerr << "\t--scatterFile" << endl;
-    cerr << "\t--outputFileBase\tRun information is appended to this name" << endl;
-    cerr << "\t--modelDirectory\tThe directory in which models are located\n" << endl;
-    cerr << "\t--deltaMass\t\tSet the delta for primary mass in sampleMass" << endl;
-    cerr << "\t--deltaMassRatio\tSet the delta for mass ratio in sampleMass" << endl;
+    cerr << "\t--nStars\n" << endl;
+
+    cerr << "\t--percentBinary" << endl;
+    cerr << "\t\tpercent binaries (drawn randomly)\n" << endl;
+
+    cerr << "\t--percentDB" << endl;
+    cerr << "\t\tpercent of WDs that have He atmospheres (drawn randomly)\n" << endl;
+
+    cerr << "\t--nFieldStars\n" << endl;
+
+    cerr << "\t--brightLimit" << endl;
+    cerr << "\t\tapparant mags, can remove bright stars, e.g. RGB\n" << endl;
+
+    cerr << "\t--faintLimit" << endl;
+    cerr << "\t\tapparant mags, can remove faint stars, e.g. faint MS and WDs\n" << endl;
+
+    cerr << "\t--relevantFilt" << endl;
+    cerr << "\t\t0=bluest band available\n" << endl;
+
+    cerr << "\t--limitS2N" << endl;
+    cerr << "\t\tuse to remove objects with overly low signal-to-noise\n" << endl;
+
+    cerr << "\t--deltaMass" << endl;
+    cerr << "\t--deltaMassRatio" << endl;
+    cerr << "\t\tSets the step sizes for mass and mass ratio in sampleMass\n" << endl;
+
 
     cerr << "\n9.3.0 flags" << endl;
     cerr <<   "===========" << endl;
-    cerr << "\t--threads\t\tSpecify the number of local threads to run with" << endl;
-    cerr << "\t--bigStepBurnin\t\tRun the burnin only using the \"propClustBigSteps\" algorithm" << endl;
+
+    cerr << "\t--threads" << endl;
+    cerr << "\t\tSpecify the number of local threads with which to run\n" << endl;
+
+    cerr << "\t--bigStepBurnin" << endl;
+    cerr << "\t\tRun the burnin only using the \"propClustBigSteps\" algorithm" << endl;
+
 
     cerr << "\n9.4.0 flags" << endl;
     cerr <<   "===========" << endl;
-    cerr << "\t--noBinaries\t\tTurns off integration over secondary mass" << endl;
+
+    cerr << "\t--noBinaries" << endl;
+    cerr << "\t\tTurns off integration over secondary mass" << endl;
+
 
     cerr << "\n9.4.4 flags" << endl;
     cerr <<   "===========" << endl;
-    cerr << "\t--noWDs\t\t\tKeeps simCluster from generating WDs" << endl;
+
+    cerr << "\t--noWDs" << endl;
+    cerr << "\t\tKeeps simCluster from generating WDs" << endl;
+
 
     cerr << "\n9.5.0 flags" << endl;
     cerr <<   "===========" << endl;
+
     cerr << "\t--backend <int>" << endl;
     cerr << "\t\tSpecify the desired back end:" << endl;
     cerr << "\t\t\t0 = File" << endl;
-    cerr << "\t\t\t1 = SQLite" << endl;
+    cerr << "\t\t\t1 = SQLite\n" << endl;
+
     cerr << "\t--run <runID>" << endl;
     cerr << "\t\tSpecify a previous run ID in the DB on which to base this run." << endl;
     cerr << "\t\tCurrently only supported by sampleWDMass and sampleMass." << endl;
-    cerr << "\t\tOnly makes sense if you're using the SQLite backend." << endl;
-    cerr << endl;
+    cerr << "\t\tOnly makes sense if you're using the SQLite backend.\n" << endl;
+
+    cerr << "\t--priorParallax" << endl;
+    cerr << "\t--sigmaParallax" << endl;
+    cerr << "\t--startingParallax" << endl;
+    cerr << "\t\tSpecifies distance values in parallax. Can not be combined\n";
+    cerr << "\t\twith any DistMod flag. Must all be specified simultaneously." << endl;
 }
 
 static void printVersion()

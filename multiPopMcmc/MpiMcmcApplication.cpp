@@ -592,7 +592,7 @@ DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, st
 
 tuple<double, vector<double>> MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
 {
-    double logPostProp = propClust.clust[0].logPrior (evoModels);
+    double logPostProp = propClust.clust[0].logPrior (evoModels, settings.modIsParallax);
 
     array<unique_ptr<Isochrone>, 2> isochrone;
     array<Cluster*, 2> cluster = { &propClust.clust[0], &propClust.clust[1] };

@@ -18,6 +18,8 @@ class Settings
     void fromYaml (const std::string&);
     void fromCLI (int, char **);
 
+    bool modIsParallax = false;
+
     bool noBinaries = false;
     bool overrideBounds = false;
 

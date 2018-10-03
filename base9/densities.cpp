@@ -40,7 +40,7 @@ double Cluster::logPriorMass (double primaryMass) const
 }
 
 // Compute log prior density for cluster properties
-double Cluster::logPrior (const Model &evoModels) const
+double Cluster::logPrior (const Model &evoModels, bool modIsParallax) const
 {
     if ((age < evoModels.mainSequenceEvol->getMinAge())
         || (age > evoModels.mainSequenceEvol->getMaxAge())
@@ -76,26 +76,49 @@ double Cluster::logPrior (const Model &evoModels) const
     double prior = 0.0;
     //DS: with a uniform prior on carbonicity, the above won't change since log(1) = 0.
 
-    if (priorVar[FEH] > EPSILON)
-        prior += (-0.5) * sqr (feh - priorMean[FEH]) / priorVar[FEH];
-    if (priorVar[MOD] > EPSILON)
-        prior += (-0.5) * sqr (mod - priorMean[MOD]) / priorVar[MOD];
-    if (priorVar[ABS] > EPSILON)
-        prior += (-0.5) * sqr (abs - priorMean[ABS]) / priorVar[ABS];
-    if (priorVar[YYY] > EPSILON)
-        prior += (-0.5) * sqr (yyy - priorMean[YYY]) / priorVar[YYY];
+    auto normalPrior = [] (double val, double mean, double var)
+        {
+            if (var <= EPSILON) return 0.0;
+
+            return (-0.5) * sqr (val - mean) / var;
+        };
+
+    auto normalPrior_distModToParallax = [normalPrior] (double mod, double priorMean, double priorVar)
+        {
+            // Variance less than EPSILON signifies non-sampled parameter.
+            if (priorVar <= EPSILON) return 0.0;
+
+            double transform = exp10( -(mod + 5) / 5);
+
+            double left = normalPrior(transform, priorMean, priorVar);
+
+            // double right  = log( abs ( transform * log(10) / -5 ));
+            double right  = log( transform * log(10) / 5 );
+
+            return left + right;
+        };
+
+    prior += normalPrior(feh, priorMean[FEH], priorVar[FEH]);
+    prior += normalPrior(abs, priorMean[ABS], priorVar[ABS]);
+    prior += normalPrior(yyy, priorMean[YYY], priorVar[YYY]);
+
+    // Distance modulus can be provided either in M-m or parallax
+    // The simulation uses M-m either way, so we convert to M-m space
+    prior += modIsParallax
+               ? normalPrior_distModToParallax(mod, priorMean[MOD], priorVar[MOD])
+               : normalPrior(mod, priorMean[MOD], priorVar[MOD]);
 
     // Age is special. It was traditionally treated as having a
     // uniform prior, and we wish to maintain that ability. As such,
     // we only assume a non-uniform prior if the variance is both
     // non-infinity (where infinity signifies a uniform distribution)
     // and non-zero (where zero signifies a non-sampled variable).
-    if (!std::isinf(priorVar[AGE]) && priorVar[AGE] > EPSILON)
-        prior += (-0.5) * sqr (age - priorMean[AGE]) / priorVar[AGE];
+    if (!std::isinf(priorVar[AGE]))
+        prior += normalPrior(age, priorMean[AGE], priorVar[AGE]);
 
     // We now do this for carbonicity as well
-    if (!std::isinf(priorVar[CARBONICITY]) && priorVar[CARBONICITY] > EPSILON)
-        prior += (-0.5) * sqr (carbonicity - priorMean[CARBONICITY]) / priorVar[CARBONICITY];
+    if (!std::isinf(priorVar[CARBONICITY]))
+        prior += normalPrior(carbonicity, priorMean[CARBONICITY], priorVar[CARBONICITY]);
 
     return prior;
 }

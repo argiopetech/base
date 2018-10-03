@@ -580,7 +580,7 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
 
 double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 {
-    double logPostProp = propClust.logPrior (evoModels);
+    double logPostProp = propClust.logPrior (evoModels, settings.modIsParallax);
 
     unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(propClust.feh, propClust.yyy, propClust.age));
 
