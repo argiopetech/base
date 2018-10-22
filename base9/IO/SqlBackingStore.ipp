@@ -166,9 +166,10 @@ void SqlBackingStore<T>::ensureTables()
 template <typename T>
 void SqlBackingStore<T>::generateRun()
 {
-    dbErrorIf(
-        execOnly("insert into run (id) values (NULL);"),
-        "Creating run");
+   execOnly(
+       "insert into run (id) values (NULL);",
+       "Creating run"
+       );
 
     this->run = sqlite3_last_insert_rowid(db.get());
 }
@@ -197,7 +198,14 @@ Iteration SqlBackingStore<T>::nextIteration()
 
 
 template <typename T>
-int SqlBackingStore<T>::execOnly(const string s)
+void SqlBackingStore<T>::execOnly(const string s, const string msg)
+{
+    dbErrorIf(execOnlyRet(s), msg);
+}
+
+
+template <typename T>
+int SqlBackingStore<T>::execOnlyRet(const string s)
 {
     int ret;
 
@@ -273,22 +281,20 @@ void SqlBackingStore<T>::dbPrepare(const std::string sql, sqlite3_stmt **stmt, c
 template <typename T>
 void SqlBackingStore<T>::beginTransaction(const string msg)
 {
-    auto ret = execOnly(
-        "BEGIN TRANSACTION;"
+    execOnly(
+        "BEGIN TRANSACTION;",
+        "Beginning transaction for " + msg
         );
-
-    dbErrorIf(ret, "Beginning transaction for " + msg);
 }
 
 
 template <typename T>
 void SqlBackingStore<T>::endTransaction(const string msg)
 {
-    auto ret = execOnly(
-        "END TRANSACTION;"
+    execOnly(
+        "END TRANSACTION;",
+        "Ending transaction for " + msg
         );
-
-    dbErrorIf(ret, "Ending transaction for " + msg);
 }
 
 
@@ -297,8 +303,7 @@ void SqlBackingStore<T>::execOnlyInTransaction(const string msg, const string sq
 {
     beginTransaction(msg);
 
-    auto ret = execOnly(sql);
-    dbErrorIf(ret, msg);
+    execOnly(sql, msg);
 
     endTransaction(msg);
 }
@@ -307,9 +312,8 @@ void SqlBackingStore<T>::execOnlyInTransaction(const string msg, const string sq
 template <typename T>
 void SqlBackingStore<T>::enableForeignKeys()
 {
-    auto ret = execOnly(
-        "PRAGMA foreign_keys=ON;"
+    execOnly(
+        "PRAGMA foreign_keys=ON;",
+        "Enabling Foreign Keys"
         );
-
-    dbErrorIf(ret, "Enabling Foreign Keys");
 }

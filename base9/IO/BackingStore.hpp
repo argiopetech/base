@@ -81,7 +81,8 @@ class SqlBackingStore : public BackingStore<T>
     std::shared_ptr<sqlite3> db;
     sqlite3_int64 run = -1;
 
-    int execOnly(const std::string);
+    void execOnly(const std::string, const std::string);
+    int execOnlyRet(const std::string);
     void execOnlyInTransaction(const std::string, const std::string);
 
     void dbErrorIf(int, const std::string);
