@@ -3,6 +3,7 @@
 
 #include <array>
 #include <fstream>
+#include <functional>
 #include <string>
 
 // Facilitates other than busy looping on busy SQL databases
@@ -86,6 +87,8 @@ class SqlBackingStore : public BackingStore<T>
     void execOnlyInTransaction(const std::string, const std::string);
 
     void dbErrorIf(int, const std::string);
+
+    int doWhileBusy(std::function<int()>);
 
     void dbStepAndReset(sqlite3_stmt*, const std::string);
     void dbPrepare(const std::string, sqlite3_stmt**, const std::string);

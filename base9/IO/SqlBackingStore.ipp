@@ -207,20 +207,11 @@ void SqlBackingStore<T>::execOnly(const string s, const string msg)
 template <typename T>
 int SqlBackingStore<T>::execOnlyRet(const string s)
 {
-    int ret;
-
-    do
-    {
-        ret = sqlite3_exec( db.get(), s.c_str(),
-                            nullptr, nullptr, nullptr);
-
-        if ( ret == SQLITE_BUSY )
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        }
-    } while ( ret == SQLITE_BUSY );
-
-    return ret;
+    return doWhileBusy([this, &s]
+                       {
+                           return sqlite3_exec( db.get(), s.c_str(),
+                                                nullptr, nullptr, nullptr);
+                       });
 }
 
 
@@ -233,15 +224,14 @@ void SqlBackingStore<T>::dbErrorIf(int ret, const std::string description)
     }
 }
 
-
 template <typename T>
-void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string s)
+int SqlBackingStore<T>::doWhileBusy(std::function<int()> func)
 {
     int ret;
 
     do
     {
-        ret = sqlite3_step(stmt);
+        ret = func();
 
         if ( ret == SQLITE_BUSY )
         {
@@ -249,10 +239,13 @@ void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string s)
         }
     } while (ret == SQLITE_BUSY );
 
-    if (ret != SQLITE_DONE)
-    {
-        dbErrorIf(ret, s.c_str());
-    }
+    return ret;
+}
+
+template <typename T>
+void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string s)
+{
+    int ret = doWhileBusy([stmt]() { return sqlite3_step(stmt); });
 
     sqlite3_clear_bindings(stmt);
     sqlite3_reset(stmt);
@@ -262,17 +255,14 @@ void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string s)
 template <typename T>
 void SqlBackingStore<T>::dbPrepare(const std::string sql, sqlite3_stmt **stmt, const std::string msg)
 {
-    int ret;
-
-    do
-    {
-        ret = sqlite3_prepare_v2( db.get(), sql.c_str(), -1, stmt, nullptr);
-
-        if ( ret == SQLITE_BUSY )
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        }
-    } while ( ret == SQLITE_BUSY );
+    int ret = doWhileBusy([this, &sql, stmt]()
+                          {
+                              return sqlite3_prepare_v2( db.get(),
+                                                         sql.c_str(),
+                                                         -1,
+                                                         stmt,
+                                                         nullptr);
+                          });
 
     dbErrorIf(ret, msg);
 }
