@@ -52,7 +52,7 @@ void SqlBackingStore<T>::ensureTables()
 
     execOnlyInTransaction(
         "creating tables",
-        #include "WrappedSql.sql"
+        #include "sql/BuildTables.sql"
     );
 }
 
