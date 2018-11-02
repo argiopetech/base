@@ -137,9 +137,14 @@ int SqlBackingStore<T>::doWhileBusy(std::function<int()> func)
 }
 
 template <typename T>
-void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string s)
+void SqlBackingStore<T>::dbStepAndReset(sqlite3_stmt *stmt, const std::string msg)
 {
     int ret = doWhileBusy([stmt]() { return sqlite3_step(stmt); });
+
+    if (ret != SQLITE_DONE)
+    {
+        dbErrorIf(ret, msg);
+    }
 
     sqlite3_clear_bindings(stmt);
     sqlite3_reset(stmt);
