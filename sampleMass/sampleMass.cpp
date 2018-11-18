@@ -497,7 +497,6 @@ void Application::run()
     }
 
     auto sampledPars = readSampledParams (evoModels, settings);
-    cout << "sampledPars[0].age = " << sampledPars.front().age << endl;
 
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/
