@@ -1,6 +1,11 @@
 # `sampleMass` output format
 
-`sampleMass` outputs two files: a `<prefix>.massSamples` file and a `<prefix>.membership` file, both with the prefix specified in your base9.yaml.
+`sampleMass` outputs two files:
+
+ - a `<prefix>.massSamples` file and
+ - a `<prefix>.membership` file,
+ 
+both with the prefix specified in your base9.yaml.
 
 
 ## `<prefix>.massSamples`
