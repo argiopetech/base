@@ -51,7 +51,7 @@ if(CMAKE_CONFIGURATION_TYPES)
     FORCE)
 endif()
 
-set(CMAKE_C_FLAGS                "-march=native -fstrict-aliasing -W -Wall -Wno-missing-braces -pedantic -pthread -DENABLE_SSE2 -msse3" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS                "${CMAKE_C_FLAGS} -march=native -fstrict-aliasing -W -Wall -Wno-missing-braces -pedantic -pthread -DENABLE_SSE2 -msse3" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_DEBUG          "-O0 -g" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL     "-Os -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_RELEASE        "-O3 -DNDEBUG" CACHE STRING "" FORCE)
@@ -59,7 +59,7 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_PROFILE        "-O0 -g -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_OPROFILE       "-O3 -g -DNDEBUG" CACHE STRING "" FORCE)
 
-set(CMAKE_CXX_FLAGS                "-march=native -fstrict-aliasing -std=c++11 -W -Wall -Wno-missing-braces -pedantic -pthread -fno-rtti -DENABLE_SSE2 -msse3" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} -march=native -fstrict-aliasing -std=c++11 -W -Wall -Wno-missing-braces -pedantic -pthread -fno-rtti -DENABLE_SSE2 -msse3" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG" CACHE STRING "" FORCE)
@@ -105,10 +105,12 @@ MARK_AS_ADVANCED(
 # Project specific code starts here #
 #####################################
 find_library(GSL_LOC
-  gsl)
+  gsl
+  ENV LD_LIBRARY_PATH)
 
 find_library(GSLCBLAS_LOC
-  gslcblas)
+  gslcblas
+  ENV LD_LIBRARY_PATH)
 
 MARK_AS_ADVANCED(
   GSL_LOC

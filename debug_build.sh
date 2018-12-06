@@ -18,16 +18,10 @@ BASE=`dirname "${0}"`
 
 cd $BASE
 
-if [ -e ".git" ]; then
-    # Setup submodules
-    git submodule init
-    git submodule update
-else
-    if [ ! -e "yaml-cpp/CMakeLists.txt" ]; then
-        # Manually clone yaml-cpp, removing the directory first
-        rm -r yaml-cpp
-        git clone --depth=1 --branch=yaml-cpp-0.6.2 https://github.com/jbeder/yaml-cpp.git
-    fi
+if [ ! -e "yaml-cpp/CMakeLists.txt" ]; then
+    # Manually clone yaml-cpp, removing the directory first
+    rm -r yaml-cpp
+    git clone --depth=1 --branch=yaml-cpp-0.6.2 https://github.com/jbeder/yaml-cpp.git
 fi
 
 cd ./BUILD
