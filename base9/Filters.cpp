@@ -70,7 +70,7 @@ const unordered_map<string, double> Filters::absCoeffs =
         { "UVf336w", 1.665 }, // from the theoretical values given in the Cardelli paper.
         { "UVf438w", 1.343 },
 
-        // PANDOC filters
+        // Gaia filters
         { "G",    1.976 },
         { "G_BP", 2.152 },
         { "G_RP", 1.610 }
