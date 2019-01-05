@@ -182,7 +182,6 @@ void Settings::fromYaml (const string& yamlFile)
 
     {
         auto tNode = getNode(scatterConfNode, "exposures");
-        getOrRequest <double>(tNode, "U");
         scatterCluster.exposures = tNode.as<map<string, double>>();
     }
 
