@@ -46,7 +46,12 @@ static unordered_map<string, std::pair<double, double>> s2nCoeffs_uncrowded = {
     {"UVf336w", {7.779995, 0.2705339}},
     {"UVf438w", {7.958377, 0.2727768}},
     {"F606W",   {8.271906, 0.2647206}},
-    {"F814W",   {8.272662, 0.2634004}}
+    {"F814W",   {8.272662, 0.2634004}},
+
+    // Gaia filter coefficients provided by Marina Kounkel
+    {"G",       {-6.2043903, 0.33251351}},
+    {"G_BP",    {-5.5271903, 0.24522901}},
+    {"G_RP",    {-6.0969793, 0.30982647}}
 
     // {9.024068, 0.3985604},      // IRAC Blue
     // {9.024068, 0.3985604},      // IRAC Red
