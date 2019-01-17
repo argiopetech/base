@@ -57,6 +57,13 @@ void ensurePriors(const Settings &s, const DualPopCluster &clust)
         throw InvalidCluster("Low Lambda");
     else if (clust.lambda > 1.0)
         throw InvalidCluster("High Lambda");
+
+    // Parallax
+    else if (s.modIsParallax && clust.clust[0].mod < 0.0)
+        throw InvalidCluster("Low parallax, Clust A");
+
+    else if (s.modIsParallax && clust.clust[1].mod < 0.0)
+        throw InvalidCluster("Low parallax, Clust B");
 }
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s,
@@ -592,7 +599,7 @@ DualPopCluster MpiMcmcApplication::propClustCorrelated (DualPopCluster clust, st
 
 tuple<double, vector<double>> MpiMcmcApplication::logPostStep(DualPopCluster &propClust, double fsLike)
 {
-    double logPostProp = propClust.clust[0].logPrior (evoModels, settings.modIsParallax);
+    double logPostProp = propClust.clust[0].logPrior (evoModels);
 
     array<unique_ptr<Isochrone>, 2> isochrone;
     array<Cluster*, 2> cluster = { &propClust.clust[0], &propClust.clust[1] };
@@ -618,11 +625,11 @@ tuple<double, vector<double>> MpiMcmcApplication::logPostStep(DualPopCluster &pr
     {
         if (settings.noBinaries)
         {
-            post[i] = margEvolveNoBinaries (propClust.clust[i], evoModels, *isochrone.at(i), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts);
+            post[i] = margEvolveNoBinaries (propClust.clust[i], evoModels, *isochrone.at(i), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts, settings.modIsParallax);
         }
         else
         {
-            post[i] = margEvolveWithBinary (propClust.clust[i], systems, evoModels, *isochrone.at(i), pool);
+            post[i] = margEvolveWithBinary (propClust.clust[i], systems, evoModels, *isochrone.at(i), pool, settings.modIsParallax);
         }
     });
 

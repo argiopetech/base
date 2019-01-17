@@ -56,12 +56,12 @@ class StellarSystem
 
     void setMassRatio(double);
     double getMassRatio() const;
-    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&) const;
+    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&, const bool) const;
     double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&, double, const std::vector<double>&) const;
-    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&, double, const std::vector<double>&, const std::vector<double>&) const;
+    double logPost (const Cluster &clust, const Model &evoModels, const Isochrone&, double, const std::vector<double>&, const std::vector<double>&, const bool) const;
 
-    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&) const;
-    static std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&, const std::vector<double>&, const std::vector<double>&);
+    std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&, const bool) const;
+    static std::vector<double> deriveCombinedMags (const Cluster&, const Model&, const Isochrone&, const std::vector<double>&, const std::vector<double>&, const bool);
 
     std::string id;
 

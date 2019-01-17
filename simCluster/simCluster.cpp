@@ -192,7 +192,7 @@ int main (int argc, char *argv[])
         fprintf (w_ptr, "%4d ", i + 1); // output primary star data
 
         // Evolve secondary star by itself
-        auto photometry = theStar.deriveCombinedMags(theCluster, evoModels, *isochrone);
+        auto photometry = theStar.deriveCombinedMags(theCluster, evoModels, *isochrone, settings.modIsParallax);
 
         for (size_t f = 0; f < filters.size(); ++f)
             fprintf (w_ptr, "%6.3f ", photometry[f] < 99. ? photometry[f] : 99.999);  // output photometry for whole system
@@ -288,7 +288,7 @@ int main (int argc, char *argv[])
     cout << " CarbonFraction = " << setw(5) << setprecision(2) << fixed << theCluster.carbonicity << endl;
     cout << " WDMassUp       = " << setw(4) << setprecision(1) << fixed << theCluster.getM_wd_up() << endl;
     cout << " fractionBinary = " << setw(5) << setprecision(2) << fixed << fractionBinary << endl;
-    
+
     cout << "Totals:" << endl;
     cout << " nSystems       = " << settings.simCluster.nStars << endl;
     cout << " nStars         = " << nStars << endl;
@@ -343,7 +343,7 @@ int main (int argc, char *argv[])
 
             theStar.setMassRatio(settings.simCluster.noWDs ? 0 : std::generate_canonical<double, 53>(gen));
 
-            photometry = theStar.deriveCombinedMags(theCluster, evoModels, *isochrone);
+            photometry = theStar.deriveCombinedMags(theCluster, evoModels, *isochrone, settings.modIsParallax);
 
         } while (photometry[2] < minV || photometry[2] > maxV || photometry[1] - photometry[2] < -0.5 || photometry[1] - photometry[2] > 1.7);
 

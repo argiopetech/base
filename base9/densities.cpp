@@ -40,7 +40,7 @@ double Cluster::logPriorMass (double primaryMass) const
 }
 
 // Compute log prior density for cluster properties
-double Cluster::logPrior (const Model &evoModels, bool modIsParallax) const
+double Cluster::logPrior (const Model &evoModels) const
 {
     if ((age < evoModels.mainSequenceEvol->getMinAge())
         || (age > evoModels.mainSequenceEvol->getMaxAge())
@@ -83,30 +83,14 @@ double Cluster::logPrior (const Model &evoModels, bool modIsParallax) const
             return (-0.5) * sqr (val - mean) / var;
         };
 
-    auto normalPrior_distModToParallax = [normalPrior] (double mod, double priorMean, double priorVar)
-        {
-            // Variance less than EPSILON signifies non-sampled parameter.
-            if (priorVar <= EPSILON) return 0.0;
-
-            double transform = exp10( -(mod + 5) / 5);
-
-            double left = normalPrior(transform, priorMean, priorVar);
-
-            // double right  = log( abs ( transform * log(10) / -5 ));
-            double right  = log( transform * log(10) / 5 );
-
-            return left + right;
-        };
-
     prior += normalPrior(feh, priorMean[FEH], priorVar[FEH]);
     prior += normalPrior(abs, priorMean[ABS], priorVar[ABS]);
     prior += normalPrior(yyy, priorMean[YYY], priorVar[YYY]);
 
     // Distance modulus can be provided either in M-m or parallax
-    // The simulation uses M-m either way, so we convert to M-m space
-    prior += modIsParallax
-               ? normalPrior_distModToParallax(mod, priorMean[MOD], priorVar[MOD])
-               : normalPrior(mod, priorMean[MOD], priorVar[MOD]);
+    // Either way, we assume a normal prior and act accordingly
+    // Any correction that needs to be done is elsewhere (particularly, Star.cpp and noBinaries.cpp)
+    prior += normalPrior(mod, priorMean[MOD], priorVar[MOD]);
 
     // Age is special. It was traditionally treated as having a
     // uniform prior, and we wish to maintain that ability. As such,
@@ -145,9 +129,9 @@ static double scaledLogLike (const vector<double> &obsPhot, const vector<double>
 
 
 // Calculates the posterior density for a stellar system
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, const bool modIsParallax) const
 {
-    const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone);
+    const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone, modIsParallax);
 
     double logPrior = clust.logPriorMass (primary.mass);
 
@@ -157,9 +141,9 @@ double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, con
 }
 
 
-double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, double logPrior, const vector<double> &primaryMags, const vector<double> &secondaryMags) const
+double StellarSystem::logPost (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, double logPrior, const vector<double> &primaryMags, const vector<double> &secondaryMags, const bool modIsParallax) const
 {
-    const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
+    const vector<double> mags = deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags, modIsParallax);
 
     double likelihood = scaledLogLike (obsPhot, variance, mags, clust.varScale);
 

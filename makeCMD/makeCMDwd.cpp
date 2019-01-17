@@ -215,12 +215,12 @@ std::pair<Isochrone, Isochrone> Application::interpolateIsochrone(const Cluster 
         star.primary.wdType = WdAtmosphere::DA;
         star.secondary.wdType = WdAtmosphere::DA;
 
-        wDAEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone));
+        wDAEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone, settings.modIsParallax));
 
         star.primary.wdType = WdAtmosphere::DB;
         star.secondary.wdType = WdAtmosphere::DB;
 
-        wDBEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone));
+        wDBEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone, settings.modIsParallax));
     }
 
     return {{clust.age, wDAEeps}, {clust.age, wDBEeps}};

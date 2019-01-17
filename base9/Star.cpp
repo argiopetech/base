@@ -257,15 +257,15 @@ void StellarSystem::setSystemParams(string id, vector<double> obsPhot, vector<do
 }
 
 
-vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone) const
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, bool modIsParallax) const
 {
     auto primaryMags = primary.getMags(clust, evoModels, isochrone);
     auto secondaryMags = secondary.getMags(clust, evoModels, isochrone);
 
-    return deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags);
+    return deriveCombinedMags(clust, evoModels, isochrone, primaryMags, secondaryMags, modIsParallax);
 }
 
-vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone&, const vector<double> &primaryMags, const vector<double> &secondaryMags)
+vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Model &evoModels, const Isochrone&, const vector<double> &primaryMags, const vector<double> &secondaryMags, bool modIsParallax)
 {
     assert(primaryMags.size() == secondaryMags.size());
     assert(evoModels.absCoeffs.size() == primaryMags.size());
@@ -273,6 +273,19 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
     vector<double> combinedMags;
 
     auto nPrimaryMags = primaryMags.size(); // Avoid calling vector::size a lot
+
+    // Correct distance if it's in parallax
+    double distance;
+
+    if (modIsParallax)
+    {
+        auto parsecs = 1 / clust.mod;
+        distance = clust.abs + 5 * log10(parsecs) - 5;
+    }
+    else
+    {
+        distance = clust.mod;
+    }
 
     // can now derive combined mags
     if (secondaryMags.front() < 99.)
@@ -296,7 +309,7 @@ vector<double> StellarSystem::deriveCombinedMags (const Cluster &clust, const Mo
 
     for (size_t f = 0; f < nPrimaryMags; ++f)
     {
-        combinedMags[f] += clust.mod;
+        combinedMags[f] += distance;
         combinedMags[f] += (evoModels.absCoeffs[f] - 1.0) * clust.abs;       // add A_[u-k] (standard defn of modulus already includes Av)
     }
 

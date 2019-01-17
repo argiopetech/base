@@ -310,7 +310,7 @@ Isochrone Application::interpolateIsochrone(const Cluster &clust, const Isochron
             star.primary.mass   = mass;
             star.secondary.mass = 0.0;
 
-            eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone));
+            eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone, settings.modIsParallax));
         }
     }
 
@@ -336,7 +336,7 @@ Isochrone Application::interpolateWDIsochrone(const Cluster &clust, const Isochr
             star.primary.mass   = mass;
             star.secondary.mass = 0.0;
 
-            eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone));
+            eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone, settings.modIsParallax));
         }
     } while (mass < 5.0);
 

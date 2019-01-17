@@ -503,7 +503,7 @@ int main (int argc, char *argv[])
 
                     try
                     {
-                        wdLogPost.at(im) = star.logPost (internalCluster, evoModels, *isochrone);
+                        wdLogPost.at(im) = star.logPost (internalCluster, evoModels, *isochrone, settings.modIsParallax);
                         postClusterStar += exp (wdLogPost.at(im));
                     }
                     catch ( WDBoundsError &e )

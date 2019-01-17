@@ -26,7 +26,7 @@ using base::utility::ThreadPool;
 //   1. margEvolveWithBinary is not adversely affected if the StellarSystem is modified
 //   2. margEvolveWithBinary passes the StellarSystem with primary.mass already set appropriately
 //   3. margEvolveWithBinary expects secondary.mass to be overwritten, possibly immediately
-static void calcPost (const double dMass, const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, vector<double> &post, const vector<vector<double>> &secondaryMags)
+static void calcPost (const double dMass, const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, vector<double> &post, const vector<vector<double>> &secondaryMags, const bool modIsParallax)
 {
     // This struct is only used inside this function, so we don't want it escaping
     struct diffStruct
@@ -80,7 +80,7 @@ static void calcPost (const double dMass, const Cluster &clust, vector<StellarSy
         vector<diffStruct> singleDiffs; // Keeps track of diffStructs for every filter
         singleDiffs.reserve(obsSize);
 
-        const auto combinedMags = systems.front().deriveCombinedMags (clust, evoModels, isochrone, primaryMags, secondaryMags.back());
+        const auto combinedMags = systems.front().deriveCombinedMags (clust, evoModels, isochrone, primaryMags, secondaryMags.back(), modIsParallax);
 
         // expTerms is pulled out of the loop, as it's the same across every star.
         vector<double> expTerms;
@@ -133,7 +133,7 @@ static void calcPost (const double dMass, const Cluster &clust, vector<StellarSy
 
             if ( ! singleDiffs.empty() )
             {
-                double tmpLogPost = system.logPost (clust, evoModels, isochrone, logPrior, primaryMags, secondaryMags.back())
+                double tmpLogPost = system.logPost (clust, evoModels, isochrone, logPrior, primaryMags, secondaryMags.back(), modIsParallax)
                                   + logdMass + dMassRatio;
 
                 post[s] += __builtin_exp (tmpLogPost);
@@ -190,7 +190,7 @@ static void calcPost (const double dMass, const Cluster &clust, vector<StellarSy
                 system.setMassRatio (isoMass / primaryMass); // Set the massRatio (and therefore the secondary mass)
 
                 if (combinedMags.empty())
-                    combinedMags = system.deriveCombinedMags (clust, evoModels, isochrone, primaryMags, secondaryMags[i]);
+                    combinedMags = system.deriveCombinedMags (clust, evoModels, isochrone, primaryMags, secondaryMags[i], modIsParallax);
 
                 // Calculate the posterior density for this system
                 double tmpLogPost = system.logPost (clust, evoModels, isochrone, logPrior, combinedMags)
@@ -205,7 +205,7 @@ static void calcPost (const double dMass, const Cluster &clust, vector<StellarSy
 
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, ThreadPool &pool)
+vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, ThreadPool &, const bool modIsParallax)
 {
     assert(isochrone.eeps.size() >= 2);
 
@@ -249,7 +249,7 @@ vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem>
             {
                 systems.front().primary.mass = isochrone.eeps[m].mass + (k * dMass);
 
-                calcPost (dMass, clust, systems, evoModels, isochrone, post, secondaryMags);
+                calcPost (dMass, clust, systems, evoModels, isochrone, post, secondaryMags, modIsParallax);
             }
         }
     }

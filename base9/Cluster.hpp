@@ -24,7 +24,7 @@ class Cluster
 
     double getLogMassNorm() const { return logMassNorm; }
 
-    double logPrior(const Model&, bool) const;
+    double logPrior(const Model&) const;
     double logPriorMass(double) const;
 
     std::array<double, NPARAMS> priorVar;

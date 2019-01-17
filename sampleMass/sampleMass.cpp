@@ -386,8 +386,8 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
 
     // This takes a special function binding because it's overridden.
     std::function<double(StellarSystem&)> logPost =
-        std::bind<double (StellarSystem::*) (const Cluster&, const Model&, const Isochrone&) const>
-        (&StellarSystem::logPost, _1, clust, evoModels, isochrone);
+        std::bind<double (StellarSystem::*) (const Cluster&, const Model&, const Isochrone&, const bool) const>
+        (&StellarSystem::logPost, _1, clust, evoModels, isochrone, settings.modIsParallax);
 
     // Start out with the burnin
     Chain<StellarSystem> burnin(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), star, nullstream);
@@ -403,7 +403,7 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
 
         try
         {
-            double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
+            double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone, settings.modIsParallax));
             return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
         }
         catch (InvalidModelError &e)
@@ -428,7 +428,7 @@ std::tuple<double, double, double> Application::sampleMass(const Isochrone &isoc
             main.run(mainProposal, logPost, priorCheck, iters);
 
             auto finalStar = main.get();
-            double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone));
+            double acceptedPosterior = exp(finalStar.logPost(clust, evoModels, isochrone, settings.modIsParallax));
 
             return std::make_tuple(finalStar.primary.mass, finalStar.getMassRatio(), acceptedPosterior);
         }

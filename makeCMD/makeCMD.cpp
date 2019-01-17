@@ -232,7 +232,7 @@ std::pair<Isochrone, Isochrone> Application::interpolateIsochrone(const Cluster 
                 star.primary.mass   = mass + deltaSteps * steps;
                 star.secondary.mass = 0.0;
 
-                eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone));
+                eeps.emplace_back(e, star.primary.mass, star.deriveCombinedMags(clust, evoModels, isochrone, settings.modIsParallax));
             }
         }
     }
@@ -247,7 +247,7 @@ std::pair<Isochrone, Isochrone> Application::interpolateIsochrone(const Cluster 
             star.primary.mass   = mass;
             star.secondary.mass = 0.0;
 
-            wdEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone));
+            wdEeps.emplace_back(0, star.primary.mass, star.deriveCombinedMags(clust, wdEvoModels, isochrone, settings.modIsParallax));
 
             mass += wdDelta;
         }

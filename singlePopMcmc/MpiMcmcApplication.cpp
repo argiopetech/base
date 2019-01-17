@@ -27,13 +27,15 @@ using namespace std::placeholders;
 
 const double TWO_M_PI = 2 * M_PI;
 
-void ensurePriors(const Settings&, const Cluster &clust)
+void ensurePriors(const Settings &s, const Cluster &clust)
 {
     // Clust A carbonicity
     if (clust.carbonicity < 0.0)
         throw InvalidCluster("Low carbonicity");
     else if (clust.carbonicity > 1.0)
         throw InvalidCluster("High carbonicity");
+    else if (s.modIsParallax && clust.mod < 0.0)
+        throw InvalidCluster("Low parallax");
 }
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s,
@@ -580,7 +582,7 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
 
 double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 {
-    double logPostProp = propClust.logPrior (evoModels, settings.modIsParallax);
+    double logPostProp = propClust.logPrior (evoModels);
 
     unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(propClust.feh, propClust.yyy, propClust.age));
 
@@ -608,11 +610,11 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
 
             s.wdType     = WdAtmosphere::DA;
             primaryMags  = s.getMags(propClust, evoModels, *isochrone);
-            daCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags);
+            daCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags, settings.modIsParallax);
 
             s.wdType     = WdAtmosphere::DB;
             primaryMags  = s.getMags(propClust, evoModels, *isochrone);
-            dbCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags);
+            dbCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags, settings.modIsParallax);
 
             for (size_t i = 0; i < wdSize; ++i)
             {
@@ -655,9 +657,9 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
         vector<double> post;
 
         if (settings.noBinaries)
-            post = margEvolveNoBinaries (propClust, evoModels, *isochrone, pool, sysVars, sysVar2, sysObs, msSize, howManyFiltsAligned, howManyFilts);
+            post = margEvolveNoBinaries (propClust, evoModels, *isochrone, pool, sysVars, sysVar2, sysObs, msSize, howManyFiltsAligned, howManyFilts, settings.modIsParallax);
         else
-            post = margEvolveWithBinary (propClust, msSystems, evoModels, *isochrone, pool);
+            post = margEvolveWithBinary (propClust, msSystems, evoModels, *isochrone, pool, settings.modIsParallax);
 
         for (size_t i = 0; i < msSize; ++i)
         {

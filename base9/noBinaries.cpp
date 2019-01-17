@@ -90,12 +90,25 @@ inline static void addLogLikelihood(const __m128d likelihood, double* sPost)
 //
 //   threadStorage storage[nThreads]
 //   double post[nSystems]
-vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, ThreadPool &, const double* const systemVars, const double* const systemVar2, const double* const systemObs, const size_t nSystems, const size_t obsSize, const size_t obsUnaligned)
+vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, ThreadPool &, const double* const systemVars, const double* const systemVar2, const double* const systemObs, const size_t nSystems, const size_t obsSize, const size_t obsUnaligned, const bool modIsParallax)
 {
     mutex logPostMutex;
     const int isoIncrem = 80;    /* ok for YY models? */
 
     double* post = reinterpret_cast<double*>(_mm_malloc(nSystems * sizeof(double), 16));
+
+    // Correct distance if it's in parallax
+    double distance;
+
+    if (modIsParallax)
+    {
+        auto parsecs = 1 / clust.mod;
+        distance = clust.abs + 5 * log10(parsecs) - 5;
+    }
+    else
+    {
+        distance = clust.mod;
+    }
 
     {
         size_t i;
@@ -156,7 +169,7 @@ vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels
 
                     for (size_t f = 0; f < obsUnaligned; ++f)
                     {
-                        combinedMags[f] += clust.mod;
+                        combinedMags[f] += distance;
                         combinedMags[f] += (evoModels.absCoeffs[f] - 1.0) * clust.abs;       // add A_[u-k] (standard defn of modulus already includes Av)
                     }
 
