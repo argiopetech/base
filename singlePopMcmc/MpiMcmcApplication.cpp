@@ -29,13 +29,18 @@ const double TWO_M_PI = 2 * M_PI;
 
 void ensurePriors(const Settings &s, const Cluster &clust)
 {
-    // Clust A carbonicity
+    // Carbonicity
     if (clust.carbonicity < 0.0)
         throw InvalidCluster("Low carbonicity");
     else if (clust.carbonicity > 1.0)
         throw InvalidCluster("High carbonicity");
-    else if (s.modIsParallax && clust.mod < 0.0)
+
+    // Parallax
+    // Bounded between 1 and 10^5 parsecs
+    else if (s.modIsParallax && clust.mod < 0.00001)
         throw InvalidCluster("Low parallax");
+    else if (s.modIsParallax && clust.mod > 1.0)
+        throw InvalidCluster("High parallax");
 }
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s,

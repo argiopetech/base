@@ -59,11 +59,18 @@ void ensurePriors(const Settings &s, const DualPopCluster &clust)
         throw InvalidCluster("High Lambda");
 
     // Parallax
-    else if (s.modIsParallax && clust.clust[0].mod < 0.0)
+    // Bounded between 1 and 10^5 parsecs
+    else if (s.modIsParallax && clust.clust[0].mod < 0.00001)
         throw InvalidCluster("Low parallax, Clust A");
 
-    else if (s.modIsParallax && clust.clust[1].mod < 0.0)
+    else if (s.modIsParallax && clust.clust[1].mod < 0.00001)
         throw InvalidCluster("Low parallax, Clust B");
+
+    else if (s.modIsParallax && clust.clust[0].mod > 1.0)
+        throw InvalidCluster("High parallax, Clust A");
+
+    else if (s.modIsParallax && clust.clust[1].mod > 1.0)
+        throw InvalidCluster("High parallax, Clust B");
 }
 
 MpiMcmcApplication::MpiMcmcApplication(Settings &s,
