@@ -430,7 +430,7 @@ int main (int argc, char *argv[])
             logFieldStarLikelihood -= log (filterPriorMax.at(filt) - filterPriorMin.at(filt));
         }
 
-        fsLike = exp (logFieldStarLikelihood);
+        fsLike = mc.stars.size() == 1 ? 0.0 : exp (logFieldStarLikelihood);
     }
 
     mc.clust.setM_wd_up(settings.whiteDwarf.M_wd_up);
