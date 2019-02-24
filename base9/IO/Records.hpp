@@ -28,6 +28,8 @@ struct SinglePopMcmcRecord
     const AdaptiveMcmcStage stage;
     const Cluster clust;
     const double logPost;
+
+    const bool modIsParallax;
 };
 
 typedef BackingStore<SinglePopMcmcRecord> SinglePopBackingStore;

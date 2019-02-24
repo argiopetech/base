@@ -32,12 +32,13 @@ class Chain : public McmcApplication
     T clust;
 
     SinglePopBackingStore &store;
+    const bool modIsParallax;
 
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
   public:
-    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, SinglePopBackingStore &store)
-        : McmcApplication(seed), priorVar(priorVar), clust(clust), store(store)
+    Chain(uint32_t seed, std::array<double, NPARAMS> priorVar, T clust, SinglePopBackingStore &store, bool modIsParallax)
+        : McmcApplication(seed), priorVar(priorVar), clust(clust), store(store), modIsParallax(modIsParallax)
     {}
 
     void reset()
@@ -85,7 +86,7 @@ class Chain : public McmcApplication
 
             if (iteration % thin == 0)
             {
-                store.save({store.nextIteration(), stage, clust, logPostCurr});
+                store.save({store.nextIteration(), stage, clust, logPostCurr, modIsParallax});
             }
         }
     }

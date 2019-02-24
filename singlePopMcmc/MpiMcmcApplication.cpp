@@ -210,7 +210,8 @@ int MpiMcmcApplication::run()
     array<double, NPARAMS> stepSize;
     std::copy(settings.singlePopMcmc.stepSize.begin(), settings.singlePopMcmc.stepSize.end(), stepSize.begin());
 
-    Chain<Cluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), ctrl.priorVar, clust, *mcmcStore);
+    Chain<Cluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)),
+                         ctrl.priorVar, clust, *mcmcStore, settings.modIsParallax);
 
 
     if (settings.verbose)

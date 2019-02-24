@@ -19,7 +19,7 @@ void SinglePopMcmc_FileBackingStore::save(SinglePopMcmcRecord data)
 
     if (data.iter.val == 1)
     {
-        header(clust.priorVar);
+        header(clust.priorVar, data.modIsParallax);
     }
 
     for (int p = 0; p < NPARAMS; p++)
@@ -35,12 +35,14 @@ void SinglePopMcmc_FileBackingStore::save(SinglePopMcmcRecord data)
 }
 
 
-void SinglePopMcmc_FileBackingStore::header(array<double, NPARAMS> const &priors)
+void SinglePopMcmc_FileBackingStore::header(array<double, NPARAMS> const &priors, bool modIsParallax)
 {
+    auto distanceName = modIsParallax ? "    parallax" : "     modulus";
+
     const array<string, NPARAMS> paramNames = {  "     logAge",
                                                 "           Y",
                                                 "         FeH",
-                                                "     modulus",
+                                                  distanceName,
                                                 "  absorption",
                                                 " carbonicity",
                                                 "   IFMRconst",
