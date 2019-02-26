@@ -37,13 +37,16 @@ class Chain : public McmcApplication
     MultiPopBackingStore &mcmcStore;
     StarParamsBackingStore &paramsStore;
 
+    bool modIsParallax;
+
     double logPostCurr = -std::numeric_limits<double>::infinity();
 
     std::vector<double> starData;
 
   public:
-    Chain(uint32_t seed, double fsLike, std::array<double, NPARAMS> priorVar, T clust, MultiPopBackingStore &mcmcStore, StarParamsBackingStore &paramsStore)
+    Chain(uint32_t seed, double fsLike, std::array<double, NPARAMS> priorVar, T clust, MultiPopBackingStore &mcmcStore, StarParamsBackingStore &paramsStore, bool modIsParallax)
         : McmcApplication(seed), fsLike(fsLike), priorVar(priorVar), clust(clust), mcmcStore(mcmcStore), paramsStore(paramsStore)
+        , modIsParallax(modIsParallax)
     {}
 
     void reset()
@@ -111,7 +114,7 @@ class Chain : public McmcApplication
             {
                 const auto iter = mcmcStore.nextIteration();
 
-                mcmcStore.save({iter, stage, clust.lambda, clust.clust[0], clust.clust[1], logPostCurr});
+                mcmcStore.save({iter, stage, clust.lambda, clust.clust[0], clust.clust[1], logPostCurr, modIsParallax});
 
                 if (starData.size() >= 2)
                 {

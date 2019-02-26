@@ -15,7 +15,8 @@ class MultiPopMcmc_FileBackingStore : public FileBackingStore<MultiPopMcmcRecord
     void save(MultiPopMcmcRecord) override;
 
   protected:
-    void header(std::array<double, NPARAMS> const&) override;
+    void header(std::array<double, NPARAMS> const &params) override { header(params, false); }
+    void header(std::array<double, NPARAMS> const&, bool);
 };
 
 

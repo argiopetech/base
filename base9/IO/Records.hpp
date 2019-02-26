@@ -16,6 +16,8 @@ struct MultiPopMcmcRecord
     const Cluster clust1;
 
     const double logPost;
+
+    const bool modIsParallax;
 };
 
 typedef BackingStore<MultiPopMcmcRecord> MultiPopBackingStore;

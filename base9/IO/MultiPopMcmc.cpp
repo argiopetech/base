@@ -19,7 +19,7 @@ void MultiPopMcmc_FileBackingStore::save(MultiPopMcmcRecord data)
 
     if (data.iter.val == 1)
     {
-        header(clust0.priorVar);
+        header(clust0.priorVar, data.modIsParallax);
     }
 
     for (int p = 0; p < NPARAMS; p++)
@@ -39,12 +39,14 @@ void MultiPopMcmc_FileBackingStore::save(MultiPopMcmcRecord data)
 }
 
 
-void MultiPopMcmc_FileBackingStore::header(array<double, NPARAMS> const &priors)
+void MultiPopMcmc_FileBackingStore::header(array<double, NPARAMS> const &priors, bool modIsParallax)
 {
+    auto distanceName = modIsParallax ? "    parallax" : "     modulus";
+
     const array<string, NPARAMS> paramNames = {  "     logAge",
                                                 "          YA",
                                                 "         FeH",
-                                                "     modulus",
+                                                  distanceName,
                                                 "  absorption",
                                                 " carbonicity",
                                                 "          YB",

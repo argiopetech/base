@@ -15,8 +15,8 @@ class SinglePopMcmc_FileBackingStore : public FileBackingStore<SinglePopMcmcReco
     void save(SinglePopMcmcRecord) override;
 
   protected:
-    void header(std::array<double, NPARAMS> const &params) { header(params, false); }
-    void header(std::array<double, NPARAMS> const&, bool modIsParallax);
+    void header(std::array<double, NPARAMS> const &params) override { header(params, false); }
+    void header(std::array<double, NPARAMS> const&, bool);
 };
 
 

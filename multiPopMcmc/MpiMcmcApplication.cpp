@@ -339,7 +339,7 @@ int MpiMcmcApplication::run()
 
     fieldStarLikelihood->save({fsLike});
 
-    Chain<DualPopCluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), fsLike, ctrl.priorVar, clust, *mcmcStore, *paramsStore);
+    Chain<DualPopCluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)), fsLike, ctrl.priorVar, clust, *mcmcStore, *paramsStore, settings.modIsParallax);
 
     allocateSSEMem();
 
