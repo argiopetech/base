@@ -22,6 +22,7 @@ using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::exception;
 using std::fixed;
 using std::setprecision;
 using std::setw;
@@ -35,7 +36,7 @@ static double wdMassTotal = 0.0, MSRGMassTotal = 0.0;
 // For random # generator (mt19937ar.c)
 unsigned long seed = 0;
 
-int main (int argc, char *argv[])
+int run(int argc, char *argv[])
 {
     int i, nStars;//, nBrownDwarfs;
     double fractionBinary, massTotal, fractionDB, tempMod, minV, maxV, minMass = 0.15;
@@ -373,4 +374,18 @@ void updateCount (const StellarSystem &system, int cmpnt)
         star = system.secondary;
 
 
+}
+
+
+int main (int argc, char *argv[])
+{
+    try
+    {
+        run(argc, argv);
+    }
+    catch (exception &e)
+    {
+        cerr << "\nException: " << e.what() << endl;
+        return -1;
+    }
 }
