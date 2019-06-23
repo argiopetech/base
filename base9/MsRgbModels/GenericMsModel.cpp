@@ -287,10 +287,10 @@ Isochrone* GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) co
      || (newFeH < fehCurves.front().feh)
      || (newFeH > fehCurves.back().feh))
     {
-        // cerr << newAge << " >? " << ageLimit.first << endl;
-        // cerr << newAge << " <? " << ageLimit.second << endl;
-        // cerr << newFeH << " >? " << fehCurves.front().feh << endl;
-        // cerr << newFeH << " <? " << fehCurves.back().feh << endl;
+        cerr << newAge << " >? " << ageLimit.first << endl;
+        cerr << newAge << " <? " << ageLimit.second << endl;
+        cerr << newFeH << " >? " << fehCurves.front().feh << endl;
+        cerr << newFeH << " <? " << fehCurves.back().feh << endl;
         throw InvalidCluster("Age or FeH out of bounds in GenericMsModel::deriveIsochrone");
     }
 
@@ -436,10 +436,10 @@ Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, dou
      || (newFeH < fehCurves.front().feh)
      || (newFeH > fehCurves.back().feh))
     {
-        // cerr << newAge << " >? " << ageLimit.first << endl;
-        // cerr << newAge << " <? " << ageLimit.second << endl;
-        // cerr << newFeH << " >? " << fehCurves.front().feh << endl;
-        // cerr << newFeH << " <? " << fehCurves.back().feh << endl;
+        cerr << newAge << " >? " << ageLimit.first << endl;
+        cerr << newAge << " <? " << ageLimit.second << endl;
+        cerr << newFeH << " >? " << fehCurves.front().feh << endl;
+        cerr << newFeH << " <? " << fehCurves.back().feh << endl;
         throw InvalidCluster("Age or FeH out of bounds in GenericMsModel::deriveIsochrone");
     }
 
