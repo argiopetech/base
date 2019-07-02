@@ -612,31 +612,34 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
             const double primaryMass = wdGridMass(j);
             const double logPrior    = propClust.logPriorMass (primaryMass);
 
-            s.mass       = primaryMass;
-
-            s.wdType     = WdAtmosphere::DA;
-            primaryMags  = s.getMags(propClust, evoModels, *isochrone);
-            daCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags, settings.modIsParallax);
-
-            s.wdType     = WdAtmosphere::DB;
-            primaryMags  = s.getMags(propClust, evoModels, *isochrone);
-            dbCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags, settings.modIsParallax);
-
-            for (size_t i = 0; i < wdSize; ++i)
+            if (!settings.onlyWDs || primaryMass > isochrone->agbTipMass())
             {
-                double tmpLogPost;
+                s.mass       = primaryMass;
 
-                if (wdSystems[i].primary.wdType == WdAtmosphere::DA)
-                {
-                    tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, daCombinedMags);
-                }
-                else
-                {
-                    tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, dbCombinedMags);
-                }
-                tmpLogPost += wdMassPrior;
+                s.wdType     = WdAtmosphere::DA;
+                primaryMags  = s.getMags(propClust, evoModels, *isochrone);
+                daCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags, settings.modIsParallax);
 
-                post[i] += __builtin_exp(tmpLogPost);
+                s.wdType     = WdAtmosphere::DB;
+                primaryMags  = s.getMags(propClust, evoModels, *isochrone);
+                dbCombinedMags = StellarSystem::deriveCombinedMags(propClust, evoModels, *isochrone, primaryMags, secondaryMags, settings.modIsParallax);
+
+                for (size_t i = 0; i < wdSize; ++i)
+                {
+                    double tmpLogPost;
+
+                    if (wdSystems[i].primary.wdType == WdAtmosphere::DA)
+                    {
+                        tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, daCombinedMags);
+                    }
+                    else
+                    {
+                        tmpLogPost  = wdSystems[i].logPost(propClust, evoModels, *isochrone, logPrior, dbCombinedMags);
+                    }
+                    tmpLogPost += wdMassPrior;
+
+                    post[i] += __builtin_exp(tmpLogPost);
+                }
             }
         }
 

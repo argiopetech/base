@@ -20,6 +20,7 @@ class Settings
 
     bool modIsParallax = false;
 
+    bool onlyWDs = false;
     bool noBinaries = false;
     bool overrideBounds = false;
 

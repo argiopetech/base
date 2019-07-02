@@ -26,6 +26,8 @@ const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
 void GenericMsModel::restrictToFilters(const vector<string>& filters)
 {
+    bool allowInvalid = true;
+
     vector<int> indices;
 
     for (auto f : filters)
@@ -43,9 +45,15 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
             }
         }
 
-        if ( ! foundFilter )
+        if ( ! (allowInvalid || foundFilter) )
         {
             throw InvalidModelError(f);
+        }
+        else if (! foundFilter)
+        {
+            indices.clear();
+            assert(indices.size() == 0);
+            break;
         }
     }
 
@@ -61,7 +69,8 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
     availableFilters.shrink_to_fit();
 
     // We should now have the same number of filters in the available filter set as in the input vector.
-    assert(availableFilters.size() == filters.size());
+    assert((allowInvalid && availableFilters.size() == 0)
+         || availableFilters.size() == filters.size());
 
     // Having this as a seperate loop allows a size assertion without
     // going over the data structure again. It also probably isn't bad
@@ -86,7 +95,7 @@ void GenericMsModel::restrictToFilters(const vector<string>& filters)
                     eep.mags.shrink_to_fit();
 
                     // At this point, eep.mags, availableFilters, and filters should all be the same size.
-                    assert(eep.mags.size() <= filters.size());
+                    assert(eep.mags.size() == availableFilters.size());
                 }
             }
         }

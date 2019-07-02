@@ -272,6 +272,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"noWDs", no_argument, 0, 0xAC},
         {"development", no_argument, 0, 0xAB},
         {"details", no_argument, 0, 0xAA},
+        {"onlyWDs", no_argument, 0, 0x9F},
         {0, 0, 0, 0}
     };
 
@@ -520,6 +521,9 @@ void Settings::fromCLI (int argc, char **argv)
                 details = true;
                 break;
 
+            case 0x9F:
+                onlyWDs = true;
+                break;
 
             // distMod and parallax have to be handled with special care.
             case 0xC7:
@@ -830,6 +834,10 @@ static void printUsage ()
     cerr << "\t--startingParallax" << endl;
     cerr << "\t\tSpecifies distance values in parallax. Can not be combined\n";
     cerr << "\t\twith any DistMod flag. Must all be specified simultaneously." << endl;
+
+    cerr << "\nPost-9.5.0 flags" << endl;
+    cerr << "\t--onlyWDs" << endl;
+    cerr << "\t\tRestrict WD numerical integration to only occur above the AGB tip. Primarily useful when the MS model doesn't contain the filters you want in a WD-only run." << endl;
 }
 
 static void printVersion()
