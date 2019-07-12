@@ -497,20 +497,23 @@ int main (int argc, char *argv[])
 
                 for (mass1 = 0.15; mass1 < internalCluster.getM_wd_up(); mass1 += dMass1)
                 {
-                    /* condition on WD being cluster star */
-                    star.primary.mass = mass1;
-                    star.setMassRatio(0.0);
-
-                    try
+                    if (!settings.onlyWDs || mass1 > isochrone->agbTipMass())
                     {
-                        wdLogPost.at(im) = star.logPost (internalCluster, evoModels, *isochrone, settings.modIsParallax);
-                        postClusterStar += exp (wdLogPost.at(im));
-                    }
-                    catch ( WDBoundsError &e )
-                    {
-                        cerr << e.what() << endl;
+                        /* condition on WD being cluster star */
+                        star.primary.mass = mass1;
+                        star.setMassRatio(0.0);
 
-                        wdLogPost.at(im) = -HUGE_VAL;
+                        try
+                        {
+                            wdLogPost.at(im) = star.logPost (internalCluster, evoModels, *isochrone, settings.modIsParallax);
+                            postClusterStar += exp (wdLogPost.at(im));
+                        }
+                        catch ( WDBoundsError &e )
+                        {
+                            cerr << e.what() << endl;
+
+                            wdLogPost.at(im) = -HUGE_VAL;
+                        }
                     }
 
                     im++;
