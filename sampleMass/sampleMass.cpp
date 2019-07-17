@@ -503,6 +503,8 @@ void Application::run()
 
     for (size_t m = 0; m < sampledPars.size(); m++)
     {
+        auto currentIter = sampleMassStore->nextIteration();
+
         vector<SampleMassRecord> records;
 
         clust.age = sampledPars.at(m).age;
@@ -540,7 +542,7 @@ void Application::run()
 
             double membership = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
 
-            records.push_back({settings.run, sampledPars.at(m).iter, star.id,
+            records.push_back({settings.run, currentIter, star.id,
                                std::get<0>(sampleTuple), std::get<1>(sampleTuple), membership});
         }
 

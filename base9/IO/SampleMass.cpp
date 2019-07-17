@@ -21,6 +21,11 @@ SampleMass_FileBackingStore::SampleMass_FileBackingStore(string baseName)
 
 void SampleMass_FileBackingStore::save(vector<SampleMassRecord> data)
 {
+    if (!data.empty() && data.at(0).iter.val == 1)
+    {
+        header(data);
+    }
+
     for ( auto d : data )
     {
         fout << base::utility::format << d.primaryMass
@@ -34,8 +39,16 @@ void SampleMass_FileBackingStore::save(vector<SampleMassRecord> data)
 }
 
 
-void SampleMass_FileBackingStore::header(SampleMassRecord)
-{ ; }
+void SampleMass_FileBackingStore::header(vector<SampleMassRecord> data)
+{
+    for ( auto d : data )
+    {
+        fout << base::utility::format << d.starId + " mass"
+             << base::utility::format << d.starId + " ratio";
+    }
+
+    fout << endl;
+}
 
 
 SampleMass_SqlBackingStore::SampleMass_SqlBackingStore(const RunData &bootstrap)

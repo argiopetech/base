@@ -5,7 +5,7 @@
 #include "Records.hpp"
 
 
-class SampleMass_FileBackingStore : public FileBackingStore<std::vector<SampleMassRecord>, SampleMassRecord>
+class SampleMass_FileBackingStore : public FileBackingStore<std::vector<SampleMassRecord>, std::vector<SampleMassRecord>>
 {
   public:
     SampleMass_FileBackingStore(std::string);
@@ -15,7 +15,7 @@ class SampleMass_FileBackingStore : public FileBackingStore<std::vector<SampleMa
     void save(std::vector<SampleMassRecord>) override;
 
   protected:
-    void header(SampleMassRecord) override;
+    void header(std::vector<SampleMassRecord>) override;
 
   private:
     std::ofstream membership;
