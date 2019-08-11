@@ -495,6 +495,8 @@ int main (int argc, char *argv[])
 
                 im = 0;
 
+                maxWDLogPost = -HUGE_VAL;
+
                 for (mass1 = 0.15; mass1 < internalCluster.getM_wd_up(); mass1 += dMass1)
                 {
                     if (!settings.onlyWDs || mass1 > isochrone->agbTipMass())
@@ -507,6 +509,9 @@ int main (int argc, char *argv[])
                         {
                             wdLogPost.at(im) = star.logPost (internalCluster, evoModels, *isochrone, settings.modIsParallax);
                             postClusterStar += exp (wdLogPost.at(im));
+
+                            if (wdLogPost.at(im) > maxWDLogPost)
+                                maxWDLogPost = wdLogPost.at(im);
                         }
                         catch ( WDBoundsError &e )
                         {
@@ -515,17 +520,11 @@ int main (int argc, char *argv[])
                             wdLogPost.at(im) = -HUGE_VAL;
                         }
                     }
+                    else
+                    {
+                        wdLogPost.at(im) = 0;
+                    }
 
-                    im++;
-                }
-                im = 0;
-
-                /* compute the maximum value */
-                maxWDLogPost = wdLogPost.at(0);
-                for (mass1 = 0.15; mass1 < internalCluster.getM_wd_up(); mass1 += dMass1)
-                {
-                    if (wdLogPost.at(im) > maxWDLogPost)
-                        maxWDLogPost = wdLogPost.at(im);
                     im++;
                 }
 
@@ -534,7 +533,11 @@ int main (int argc, char *argv[])
                 im = 0;
                 for (mass1 = 0.15; mass1 < internalCluster.getM_wd_up(); mass1 += dMass1)
                 {
-                    wdPostSum += exp (wdLogPost.at(im) - maxWDLogPost);
+                    if (!settings.onlyWDs || mass1 > isochrone->agbTipMass())
+                    {
+                        wdPostSum += exp (wdLogPost.at(im) - maxWDLogPost);
+                    }
+
                     im++;
                 }
 
@@ -544,7 +547,11 @@ int main (int argc, char *argv[])
                 im = 0;
                 while (cumSum < us.at(m) && mass1 < internalCluster.getM_wd_up())
                 {
-                    cumSum += exp (wdLogPost.at(im) - maxWDLogPost) / wdPostSum;
+                    if (!settings.onlyWDs || mass1 > isochrone->agbTipMass())
+                    {
+                        cumSum += exp (wdLogPost.at(im) - maxWDLogPost) / wdPostSum;
+                    }
+
                     mass1 += dMass1;
                     im++;
                 }
