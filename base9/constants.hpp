@@ -34,10 +34,7 @@ const int LINEAR     = 4;
 
 //WD Cooling
 enum class WdModel {WOOD = 0, MONTGOMERY = 1, ALTHAUS = 2, RENEDO = 3, NEW_MONTGOMERY = 4};
-enum class WdAtmosphereModelSet {BERGERON};
-
-//WD Atmosphere
-const int BERGERON   = 0;
+enum class WdAtmosphereModelSet {BERGERON, BERGERON_2019};
 
 //Brown Dwarf/Planet
 const int NONE       = 0;

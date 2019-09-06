@@ -44,7 +44,7 @@ void BergeronAtmosphereModel::loadModel (std::string path)
     // Open the appropriate file for each mass
     for (auto f : files)
     {
-        tempFile = path + "bergeron/" + f;
+        tempFile = path + dirName + f;
 
         fin.open(tempFile);
 

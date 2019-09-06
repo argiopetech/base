@@ -14,10 +14,11 @@ general:
                               # 4 = New DSED, 5 = PARSEC, 6 = New Yale-Yonsei (2018)
 
     white_dwarfs:
-        wdModel:        1     # 0 = Wood, 1 = Montgomery (original), 2 = Althaus, 3 = Renedo, 4 = Montgomery (2018)
-        M_wd_up:        8.0   # The maximum mass for a WD-producing star
-        ifmr:           1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin,
-                              # 3 = Salaris pw lin, 4+ = tunable
+        wdAtmosphereModel: 0     # 0 = Bergeron (2013), 1 = Bergeron (2019)
+        wdModel:           1     # 0 = Wood, 1 = Montgomery (original), 2 = Althaus, 3 = Renedo, 4 = Montgomery (2018)
+        M_wd_up:           8.0   # The maximum mass for a WD-producing star
+        ifmr:              1     # 0 = Weidemann, 1 = Williams, 2 = Salaris lin,
+                                 # 3 = Salaris pw lin, 4+ = tunable
 
     cluster:
         starting:

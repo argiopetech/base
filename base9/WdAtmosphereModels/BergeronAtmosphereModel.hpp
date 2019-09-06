@@ -27,6 +27,9 @@ class BergeronAtmosphereModel : public WdAtmosphereModel
     virtual double teffToLogg (double, double, WdAtmosphere) const;
 
     virtual void restrictToFilters(const std::vector<std::string>&);
+
+  protected:
+    std::string dirName = "bergeron/";
 };
 
 #endif

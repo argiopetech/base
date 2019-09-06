@@ -80,6 +80,7 @@ void Settings::fromYaml (const string& yamlFile)
 
     whiteDwarf.ifmr = getOrRequest <int>(whiteDwarfNode, "ifmr");
     whiteDwarf.wdModel = static_cast<WdModel>(getOrRequest <int>(whiteDwarfNode, "wdModel"));
+    whiteDwarf.wdAtmosphereModel = static_cast<WdAtmosphereModelSet>(getOrRequest <int>(whiteDwarfNode, "wdAtmosphereModel"));
     whiteDwarf.M_wd_up = getOrRequest <double>(whiteDwarfNode, "M_wd_up");
 
     cluster.starting.Fe_H = getOrRequest <double>(startingNode, "Fe_H");
@@ -264,6 +265,8 @@ void Settings::fromCLI (int argc, char **argv)
         {"priorParallax", required_argument, 0, 0xBF},
         {"sigmaParallax", required_argument, 0, 0xBE},
 
+        {"wdAtmosphereModel", required_argument, 0, 0xBD},
+
         // Various flags
         // These are now handled the same way as the parameters due to occasional compiler weirdness
         {"verbose", no_argument, 0, 0xAF},
@@ -313,6 +316,11 @@ void Settings::fromCLI (int argc, char **argv)
             case 0xFC:
                 istringstream (string (optarg)) >> i;
                 whiteDwarf.wdModel = static_cast<WdModel>(i);
+                break;
+
+            case 0xBD:
+                istringstream (string (optarg)) >> i;
+                whiteDwarf.wdAtmosphereModel = static_cast<WdAtmosphereModelSet>(i);
                 break;
 
             case 0xC2:
@@ -838,6 +846,11 @@ static void printUsage ()
     cerr << "\nPost-9.5.0 flags" << endl;
     cerr << "\t--onlyWDs" << endl;
     cerr << "\t\tRestrict WD numerical integration to only occur above the AGB tip. Primarily useful when the MS model doesn't contain the filters you want in a WD-only run." << endl;
+
+    cerr << "\t--wdAtmosphereModel" << endl;
+    cerr << "\t\t0 = Bergeron (~2013)" << endl;
+    cerr << "\t\t1 = Bergeron (2019)" << endl;
+
 }
 
 static void printVersion()

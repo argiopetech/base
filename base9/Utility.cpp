@@ -347,7 +347,7 @@ namespace base
                 auto logP = sqlite3_column_double(stmt, 10);
                 auto stag = sqlite3_column_double(stmt, 11);
 
-                results.push_back({{iter}, static_cast<AdaptiveMcmcStage>(stag), clust, logP});
+                results.push_back({{iter}, static_cast<AdaptiveMcmcStage>(stag), clust, logP, false});
 
                 ret = stepQuery(stmt);
             }

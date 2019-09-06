@@ -42,6 +42,7 @@ class Settings
     {
         int ifmr;
         WdModel wdModel;
+        WdAtmosphereModelSet wdAtmosphereModel;
         double M_wd_up;
     };
 
