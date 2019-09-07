@@ -25,13 +25,13 @@ class Model
         : mainSequenceEvol(msRgbModel), WDcooling(wdCool), WDAtmosphere(wdAtmos), verbose(verbose)
     {;}
 
-    void restrictFilters(const std::vector<std::string> &filters)
+    void restrictFilters(const std::vector<std::string> &filters, bool allowInvalid)
     {
         absCoeffs = Filters::calcAbsCoeffs(filters);
 
         try
         {
-            mainSequenceEvol->restrictToFilters(filters);
+            mainSequenceEvol->restrictToFilters(filters, allowInvalid);
         }
         catch (InvalidModelError &e)
         {

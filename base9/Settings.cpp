@@ -276,6 +276,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"development", no_argument, 0, 0xAB},
         {"details", no_argument, 0, 0xAA},
         {"onlyWDs", no_argument, 0, 0x9F},
+        {"allowInvalidModels", no_argument, 0, 0x9E},
         {0, 0, 0, 0}
     };
 
@@ -531,6 +532,10 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0x9F:
                 onlyWDs = true;
+                break;
+
+            case 0x9E:
+                allowInvalidModels = true;
                 break;
 
             // distMod and parallax have to be handled with special care.
@@ -847,7 +852,11 @@ static void printUsage ()
     cerr << "\t--onlyWDs" << endl;
     cerr << "\t\tRestrict WD numerical integration to only occur above the AGB tip. Primarily useful when the MS model doesn't contain the filters you want in a WD-only run." << endl;
 
-    cerr << "\t--wdAtmosphereModel" << endl;
+    cerr << "\n\t--allowInvalidModels" << endl;
+    cerr << "\t\tAllows runs with MS models which would be invalid due to missing filters to proceed. WILL cause an unexplained crash if you actually use the MS models." << endl;
+
+
+    cerr << "\n\t--wdAtmosphereModel" << endl;
     cerr << "\t\t0 = Bergeron (~2013)" << endl;
     cerr << "\t\t1 = Bergeron (2019)" << endl;
 

@@ -98,7 +98,7 @@ int run(int argc, char *argv[])
         }
     }
 
-    evoModels.restrictFilters(filters);
+    evoModels.restrictFilters(filters, false);
 
     theCluster.setM_wd_up(settings.whiteDwarf.M_wd_up);
     fractionBinary = settings.simCluster.percentBinary;

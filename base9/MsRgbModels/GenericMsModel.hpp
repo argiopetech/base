@@ -17,7 +17,7 @@ class GenericMsModel : public MsRgbModel
     virtual Isochrone* deriveIsochrone(double, double, double) const;
 
     virtual double wdPrecLogAge(double, double, double) const;
-    virtual void restrictToFilters(const std::vector<std::string>&);
+    virtual void restrictToFilters(const std::vector<std::string>&, bool);
 
   private:
     Isochrone* deriveIsochrone_oneY(double, double) const;

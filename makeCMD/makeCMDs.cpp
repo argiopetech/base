@@ -199,7 +199,7 @@ void Application::run()
         auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
         auto filterNames = ret.first;
 
-        evoModels.restrictFilters(filterNames);
+        evoModels.restrictFilters(filterNames, false);
     }
 
     // evoModels.restrictFilters(filters);

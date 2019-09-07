@@ -109,7 +109,7 @@ void Application::run()
             }
         }
 
-        wdEvoModels.restrictFilters(filters);
+        wdEvoModels.restrictFilters(filters, false);
     }
 
     // Set Cluster's AGBT_zmass based on the model's agbTipMass

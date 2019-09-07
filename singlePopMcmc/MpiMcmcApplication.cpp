@@ -308,7 +308,7 @@ int MpiMcmcApplication::run()
         }
 
 
-        evoModels.restrictFilters(filterNames);
+        evoModels.restrictFilters(filterNames, settings.allowInvalidModels);
 
         if (settings.cluster.index < 0 || static_cast<size_t>(settings.cluster.index) > filterNames.size())
         {

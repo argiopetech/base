@@ -19,6 +19,7 @@ class Settings
     void fromCLI (int, char **);
 
     bool modIsParallax = false;
+    bool allowInvalidModels = false;
 
     bool onlyWDs = false;
     bool noBinaries = false;

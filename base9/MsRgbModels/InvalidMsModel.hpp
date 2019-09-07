@@ -14,7 +14,7 @@ class InvalidMsModel : public MsRgbModel, public InvalidModel
     virtual ~InvalidMsModel() {;}
 
     virtual void loadModel(std::string) {;}
-    virtual void restrictToFilters(const std::vector<std::string>&) {;}
+    virtual void restrictToFilters(const std::vector<std::string>&, bool) {;}
 
     virtual double wdPrecLogAge(double, double, double) const
     {

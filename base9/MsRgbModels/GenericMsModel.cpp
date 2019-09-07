@@ -24,10 +24,8 @@ using std::vector;
 
 const unsigned int maxIgnore = std::numeric_limits<char>::max();
 
-void GenericMsModel::restrictToFilters(const vector<string>& filters)
+void GenericMsModel::restrictToFilters(const vector<string>& filters, bool allowInvalid)
 {
-    bool allowInvalid = true;
-
     vector<int> indices;
 
     for (auto f : filters)
