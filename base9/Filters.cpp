@@ -73,5 +73,12 @@ const unordered_map<string, double> Filters::absCoeffs =
         // Gaia filters
         { "G",    1.976 },
         { "G_BP", 2.152 },
-        { "G_RP", 1.610 }
+        { "G_RP", 1.610 },
+
+        // Pan-STARRS1 Filters
+        { "g_ps", 1.155 }, // Wang & Chen 2019, astroph 1904.04575v2
+        { "r_ps", 0.843 }, // Table 3
+        { "i_ps", 0.628 },
+        { "z_ps", 0.487 },
+        { "y_ps", 0.395 }
     };
