@@ -859,7 +859,7 @@ static void printUsage ()
     cerr << "\n\t--wdAtmosphereModel" << endl;
     cerr << "\t\t0 = Bergeron (~2013)" << endl;
     cerr << "\t\t1 = Bergeron (2019)" << endl;
-
+    cerr << "\t\t2 = Bergeron (2020)" << endl;
 }
 
 static void printVersion()

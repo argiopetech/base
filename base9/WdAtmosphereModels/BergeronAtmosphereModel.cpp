@@ -24,19 +24,6 @@ using std::endl;
 
 void BergeronAtmosphereModel::loadModel (std::string path)
 {
-    static std::string files[] = {
-        {"Table_Mass_0.2"},
-        {"Table_Mass_0.3"},
-        {"Table_Mass_0.4"},
-        {"Table_Mass_0.5"},
-        {"Table_Mass_0.6"},
-        {"Table_Mass_0.7"},
-        {"Table_Mass_0.8"},
-        {"Table_Mass_0.9"},
-        {"Table_Mass_1.0"},
-        {"Table_Mass_1.2"}
-    };
-
     ifstream fin;
     string line, tempFile;
     double teff, ignore, mass, logg;
