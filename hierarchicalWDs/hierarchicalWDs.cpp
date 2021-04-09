@@ -3,6 +3,7 @@
 #include <ctime>
 #include <fstream>
 #include <getopt.h>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <random>
@@ -137,8 +138,8 @@ void reportSettings(Settings settings)
         cout << "\t- " << f << "\n";
     }
 
-    cout << "\nRunning simulation for " << settings.samples 
-         << " samples thinning by " << settings.thin 
+    cout << "\nRunning simulation for " << settings.samples
+         << " samples thinning by " << settings.thin
          << " (" << settings.samples * settings.thin << " total iterations.)\n";
 }
 
@@ -186,11 +187,189 @@ struct Result
     vector<double> sampledAges;
 };
 
-vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> allAges, Settings settings)
+vector<double> sampleStarAges(vector<vector<double>> const &allAges, std::mt19937 &gen)
+{
+    vector<double> sampledAges;
+
+    for (auto star = 0u; star < allAges.size(); ++star)
+    {
+        std::uniform_int_distribution<size_t> randomIndex(0, allAges[star].size() - 1);
+
+        sampledAges.push_back(allAges[star][randomIndex(gen)]);
+    }
+
+    return sampledAges;
+}
+
+constexpr double sqr(double a)
+{
+    return a * a;
+}
+
+double meanOf(vector<double> const &values)
+{
+    double mean = 0;
+
+    for (auto v : values)
+    {
+        mean += v;
+    }
+
+    return mean / values.size();
+}
+
+double totalSumOfSquaresOf(vector<double> const &values, double mean)
+{
+    double result = 0;
+
+    for (auto v : values)
+    {
+        result += sqr(v - mean);
+    }
+
+    return result;
+}
+
+double truncatedNormallyDistributedDraw(double mean, double standardDeviation, double min, double max, std::mt19937 &gen)
+{
+    int count = 0;
+    bool once = false;
+
+    double result;
+
+    std::normal_distribution<double> normalDistr(mean, standardDeviation);
+
+    do
+    {
+        result = normalDistr(gen);
+        count += 1;
+
+        if (!once && count > 100000)
+        {
+            once = true;
+
+            cerr << "\rStuck drawing a truncated, normally distributed value. Perhaps your min or max bound needs adjustment?\n";
+        }
+    } while ((result < min) || (result > max));
+
+    return result;
+}
+
+double normalPDF(double mean, double standardDeviation, double point)
+{
+    double left = 1 / (standardDeviation * sqrt(2 * M_PI));
+    double right = exp(-0.5 * sqr((point - mean) / standardDeviation));
+
+    return left * right;
+}
+
+void percentComplete(int percent)
+{
+    cout << '\r' << percent << "% complete" << std::flush;
+}
+
+int reportPercentage(int lastPercent, int current, int target)
+{
+    int percent = (100 * current) / target;
+
+    if (percent > lastPercent)
+    {
+        percentComplete(percent);
+
+        lastPercent = percent;
+    }
+
+    return percent;
+}
+
+vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> const &allAges, Settings const settings, std::mt19937 &gen)
 {
     vector<Result> results;
 
+    int lastPercent = 0;
+    percentComplete(0);
+
+    auto nStars = allAges.size();
+
+    // Starting values
+    auto sampledAges = sampleStarAges(allAges, gen);
+
+    double tauSquaredScale = totalSumOfSquaresOf(sampledAges, meanOf(sampledAges));
+    double tauSquared      = tauSquaredScale / (nStars - 1);
+    double gamma           = truncatedNormallyDistributedDraw(meanOf(sampledAges), sqrt(tauSquared / nStars), settings.minLogAge, settings.maxLogAge, gen);
+
+    results.emplace_back(gamma, tauSquared, sampledAges);
+
+    for (auto sample = 0u; sample < settings.samples; ++sample)
+    {
+        double tau = sqrt(tauSquared);
+
+        for (auto i = 0u; i < settings.thin; ++i)
+        {
+            auto newAges = sampleStarAges(allAges, gen);
+
+            for (auto star = 0u; star < nStars; ++star)
+            {
+                auto probabilityRatio = normalPDF(gamma, tau, newAges[star]) /
+                                     // ---------------------------------------
+                                        normalPDF(gamma, tau, sampledAges[star]);
+
+                double u = std::generate_canonical<double, 53>(gen);
+
+                if (probabilityRatio <= u)
+                {
+                    sampledAges[star] = newAges[star];
+                }
+            }
+        }
+
+        tauSquaredScale = totalSumOfSquaresOf(sampledAges, gamma);
+
+        std::gamma_distribution<double> gammaDist((nStars - 1) / 2, tauSquaredScale / 2);
+
+        tauSquared = 1 / gammaDist(gen); // Inverts the draw from the gamma distribution, giving inverse-gamma
+        gamma      = truncatedNormallyDistributedDraw(meanOf(sampledAges), sqrt(tauSquared / nStars), settings.minLogAge, settings.maxLogAge, gen);
+
+        results.emplace_back(gamma, tauSquared, sampledAges);
+
+        lastPercent = reportPercentage(lastPercent, sample, settings.samples);
+   }
+
+    percentComplete(100);
+
     return results;
+}
+
+void exportResults(vector<Result> const &results)
+{
+    auto format = [](std::ostream& out) -> std::ostream&
+        {
+            return out << std::setw(11) << std::fixed << std::setprecision(6);
+        };
+
+    string filename = "hierarchicalWDs.out";
+
+    std::ofstream fout(filename);
+
+    if(!fout)
+    {
+        throw std::runtime_error(filename + " was not available for writing.");
+    }
+
+    for (auto result : results)
+    {
+        fout << format << result.gamma 
+             << ' ' << format << result.tauSquared;
+
+        for (auto age : result.sampledAges)
+        {
+            fout << ' ' << format << age;
+        }
+
+        fout << "\n";
+    }
+
+    fout.close();
 }
 
 int main (int argc, char *argv[])
@@ -198,10 +377,15 @@ int main (int argc, char *argv[])
     Settings settings = loadCLISettings(argc, argv);
 
     reportSettings(settings);
-    
+
     auto allAges = readResults(settings.resultFiles);
 
-    auto results = sampleHierarchicalModel_FullyBayesian(allAges, settings);
+    std::mt19937 gen(settings.seed);
+    gen.discard(10000); // Warms up the PRNG
+
+    auto results = sampleHierarchicalModel_FullyBayesian(allAges, settings, gen);
+
+    exportResults(results);
 
     return 0;
 }
