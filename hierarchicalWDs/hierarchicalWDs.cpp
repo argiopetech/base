@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 #include <getopt.h>
 #include <iostream>
 #include <limits>
@@ -14,6 +15,7 @@ using std::cout;
 using std::endl;
 using std::istringstream;
 using std::string;
+using std::stringstream;
 using std::vector;
 
 struct Settings
@@ -88,6 +90,7 @@ Settings loadCLISettings(int argc, char *argv[])
 
                 cerr << "\t-s, --seed\n";
                 cerr << "\t\tSet the seed for the random number generator\n";
+
                 exit (EXIT_FAILURE);
                 break;
 
@@ -96,7 +99,7 @@ Settings loadCLISettings(int argc, char *argv[])
         }
     }
 
-    if (optind - argc < 2) {
+    if ((argc - optind) >= 2) {
         while (optind < argc)
         {
             settings.resultFiles.push_back(argv[optind++]);
@@ -105,7 +108,8 @@ Settings loadCLISettings(int argc, char *argv[])
     else
     {
         cerr << "Must pass at least two result files. See --help for details.";
-            
+
+        exit (EXIT_FAILURE);
     }
 
     if (settings.seed == std::numeric_limits<uint32_t>::max())
@@ -138,11 +142,54 @@ void reportSettings(Settings settings)
          << " (" << settings.samples * settings.thin << " total iterations.)\n";
 }
 
+static vector<vector<double>> readResults (vector<string> resultFiles)
+{
+    vector<vector<double>> sampledAges;
+
+    string line;
+
+    for (string file : resultFiles)
+    {
+        sampledAges.emplace_back();
+
+        std::ifstream parsFile;
+        parsFile.open(file);
+
+        getline(parsFile, line); // Skip header
+
+        while (getline(parsFile, line))
+        {
+            stringstream in(line);
+
+            double newAge;
+            in >> newAge;
+
+            // Only take stage 3 (main run) iterations
+            if (line.back() == '3')
+                sampledAges.back().push_back(newAge);
+        }
+
+        parsFile.close();
+    }
+
+    return sampledAges;
+}
+
 int main (int argc, char *argv[])
 {
     Settings settings = loadCLISettings(argc, argv);
 
     reportSettings(settings);
     
+    auto allAges = readResults(settings.resultFiles);
+
+    for (size_t i = 0; i < 10000; ++i)
+    {
+        for (size_t j = 0; j < allAges.size(); ++j)
+            cout << allAges[j][i] << "\t";
+
+        cout << "\n";
+    }
+
     return 0;
 }
