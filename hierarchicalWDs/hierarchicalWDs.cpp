@@ -175,6 +175,24 @@ static vector<vector<double>> readResults (vector<string> resultFiles)
     return sampledAges;
 }
 
+struct Result
+{
+    Result(double gamma, double tauSquared, vector<double> sampledAges)
+        : gamma(gamma), tauSquared(tauSquared), sampledAges(sampledAges)
+    {;}
+
+    double gamma;
+    double tauSquared;
+    vector<double> sampledAges;
+};
+
+vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> allAges, Settings settings)
+{
+    vector<Result> results;
+
+    return results;
+}
+
 int main (int argc, char *argv[])
 {
     Settings settings = loadCLISettings(argc, argv);
@@ -183,13 +201,7 @@ int main (int argc, char *argv[])
     
     auto allAges = readResults(settings.resultFiles);
 
-    for (size_t i = 0; i < 10000; ++i)
-    {
-        for (size_t j = 0; j < allAges.size(); ++j)
-            cout << allAges[j][i] << "\t";
-
-        cout << "\n";
-    }
+    auto results = sampleHierarchicalModel_FullyBayesian(allAges, settings);
 
     return 0;
 }
