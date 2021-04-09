@@ -81,10 +81,8 @@ Settings loadCLISettings(int argc, char *argv[])
     return settings;
 }
 
-int main (int argc, char *argv[])
+void reportSettings(Settings settings)
 {
-    Settings settings = loadCLISettings(argc, argv);
-
     cout << "Seed: " << settings.seed << endl;
 
     cout << "Loading results from:\n";
@@ -93,6 +91,13 @@ int main (int argc, char *argv[])
     {
         cout << "\t- " << f << "\n";
     }
+}
+
+int main (int argc, char *argv[])
+{
+    Settings settings = loadCLISettings(argc, argv);
+
+    reportSettings(settings);
     
     return 0;
 }
