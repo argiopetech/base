@@ -20,7 +20,7 @@ struct Settings
 {
     unsigned int seed = std::numeric_limits<uint32_t>::max();
 
-    unsigned int iterations = 10000;
+    unsigned int samples = 10000;
     unsigned int thin = 400;
 
     double minLogAge = 9.5;
@@ -62,7 +62,7 @@ Settings loadCLISettings(int argc, char *argv[])
                 break;
 
             case 3:
-                istringstream (string (optarg)) >> settings.iterations;
+                istringstream (string (optarg)) >> settings.samples;
                 break;
 
             case 4:
@@ -133,9 +133,9 @@ void reportSettings(Settings settings)
         cout << "\t- " << f << "\n";
     }
 
-    cout << "\nRunning simulation for " << settings.iterations 
+    cout << "\nRunning simulation for " << settings.samples 
          << " samples thinning by " << settings.thin 
-         << " (" << settings.iterations * settings.thin << " total iterations.)\n";
+         << " (" << settings.samples * settings.thin << " total iterations.)\n";
 }
 
 int main (int argc, char *argv[])
