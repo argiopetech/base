@@ -24,7 +24,7 @@ struct Settings
     unsigned int seed = std::numeric_limits<uint32_t>::max();
 
     unsigned int samples = 10000;
-    unsigned int thin = 400;
+    unsigned int chainLength = 400;
 
     double minLogAge = 9.5;
     double maxLogAge = 10.176;
@@ -40,12 +40,12 @@ Settings loadCLISettings(int argc, char *argv[])
     Settings settings;
 
     static struct option long_options[] = {
-        {"seed",      required_argument, 0,    0 },
-        {"minLogAge", required_argument, 0,    1 },
-        {"maxLogAge", required_argument, 0,    2 },
-        {"samples",   required_argument, 0,    3 },
-        {"thin",      required_argument, 0,    4 },
-        {"help",      no_argument,       0, 0xFF },
+        {"seed",        required_argument, 0,    0 },
+        {"minLogAge",   required_argument, 0,    1 },
+        {"maxLogAge",   required_argument, 0,    2 },
+        {"samples",     required_argument, 0,    3 },
+        {"chainLength", required_argument, 0,    4 },
+        {"help",        no_argument,       0, 0xFF },
         {0, 0, 0, 0 }
     };
 
@@ -69,20 +69,20 @@ Settings loadCLISettings(int argc, char *argv[])
                 break;
 
             case 4:
-                istringstream (string (optarg)) >> settings.thin;
+                istringstream (string (optarg)) >> settings.chainLength;
                 break;
 
             case 0xFF:
             case '?':
                 cerr << "Usage: " << argv[0] << " [OPTION] FILES\n\n";
-                cerr << "Fit a hierarchical age model to multiple white dwarfs given result files from singlePopMcmc. Outputs a single flat-text file with sampled gamma and tau squared (from model by Shijing Si et. al 2017) as first columns and one following column for each sampled age of each star in order of appearance on the command line.\n\n";
+                cerr << "Fit a hierarchical age model to multiple white dwarfs given result files from singlePopMcmc. Outputs a single flat-text file with sampled gamma and tau squared (from model by Shijing Si et. al 2017) as the first two columns and one following column for each sampled age of each star in order of appearance on the command line.\n\n";
                 cerr << "\t--help\n";
                 cerr << "\t\tdisplay this help and exit\n\n";
 
                 cerr << "\t--samples\n";
                 cerr << "\t\tnumber of samples to take\n\n";
-                cerr << "\t--thin\n";
-                cerr << "\t\tnumber of iterations to run between samples\n\n";
+                cerr << "\t--chainLength\n";
+                cerr << "\t\tnumber of iterations to run for each sample\n\n";
 
                 cerr << "\t--maxLogAge\n";
                 cerr << "\t\tmaximum age for the gamma model parameter\n\n";
@@ -138,9 +138,9 @@ void reportSettings(Settings settings)
         cout << "\t- " << f << "\n";
     }
 
-    cout << "\nRunning simulation for " << settings.samples
-         << " samples thinning by " << settings.thin
-         << " (" << settings.samples * settings.thin << " total iterations.)\n";
+    cout << "\nTaking " << settings.samples
+         << " samples with " << settings.chainLength
+         << " iteration chains (" << settings.samples * settings.chainLength << " total iterations.)\n";
 }
 
 static vector<vector<double>> readResults (vector<string> resultFiles)
@@ -304,7 +304,7 @@ vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> cons
     {
         double tau = sqrt(tauSquared);
 
-        for (auto i = 0u; i < settings.thin; ++i)
+        for (auto i = 0u; i < settings.chainLength; ++i)
         {
             auto newAges = sampleStarAges(allAges, gen);
 
