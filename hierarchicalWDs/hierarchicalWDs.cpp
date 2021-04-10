@@ -29,6 +29,8 @@ struct Settings
     double minLogAge = 9.5;
     double maxLogAge = 10.176;
 
+    string outputFile = "hierarchicalWDs.out";
+
     vector<string> resultFiles;
 };
 
@@ -45,11 +47,12 @@ Settings loadCLISettings(int argc, char *argv[])
         {"maxLogAge",   required_argument, 0,    2 },
         {"samples",     required_argument, 0,    3 },
         {"chainLength", required_argument, 0,    4 },
+        {"output",      required_argument, 0,    5 },
         {"help",        no_argument,       0, 0xFF },
         {0, 0, 0, 0 }
     };
 
-    while ((c = getopt_long(argc, argv, "s:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "s:o:", long_options, &option_index)) != -1) {
         switch (c) {
             case 0:
             case 's':
@@ -72,6 +75,11 @@ Settings loadCLISettings(int argc, char *argv[])
                 istringstream (string (optarg)) >> settings.chainLength;
                 break;
 
+            case 5:
+            case 'o':
+                settings.outputFile = optarg;
+                break;
+
             case 0xFF:
             case '?':
                 cerr << "Usage: " << argv[0] << " [OPTION] FILES\n\n";
@@ -90,7 +98,10 @@ Settings loadCLISettings(int argc, char *argv[])
                 cerr << "\t\tminimum age for the gamma model parameter\n\n";
 
                 cerr << "\t-s, --seed\n";
-                cerr << "\t\tSet the seed for the random number generator\n";
+                cerr << "\t\tSet the seed for the random number generator\n\n";
+
+                cerr << "\t-o, --output\n";
+                cerr << "\t\tPlace output in the specified file\n";
 
                 exit (EXIT_FAILURE);
                 break;
@@ -347,20 +358,18 @@ vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> cons
     return results;
 }
 
-void exportResults(vector<Result> const &results)
+void exportResults(vector<Result> const &results, string outputFile)
 {
     auto format = [](std::ostream& out) -> std::ostream&
         {
             return out << std::setw(11) << std::fixed << std::setprecision(6);
         };
 
-    string filename = "hierarchicalWDs.out";
-
-    std::ofstream fout(filename);
+    std::ofstream fout(outputFile);
 
     if(!fout)
     {
-        throw std::runtime_error(filename + " was not available for writing.");
+        throw std::runtime_error(outputFile + " was not available for writing.");
     }
 
     for (auto result : results)
@@ -392,7 +401,7 @@ int main (int argc, char *argv[])
 
     auto results = sampleHierarchicalModel_FullyBayesian(allAges, settings, gen);
 
-    exportResults(results);
+    exportResults(results, settings.outputFile);
 
     return 0;
 }
