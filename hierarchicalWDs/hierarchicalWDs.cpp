@@ -140,7 +140,7 @@ void reportSettings(Settings settings)
 
     cout << "\nTaking " << settings.samples
          << " samples with " << settings.chainLength
-         << " iteration chains (" << settings.samples * settings.chainLength << " total iterations.)\n";
+         << " iteration chains (" << (long)settings.samples * settings.chainLength << " total iterations.)\n";
 }
 
 static vector<vector<double>> readResults (vector<string> resultFiles)
@@ -153,12 +153,18 @@ static vector<vector<double>> readResults (vector<string> resultFiles)
     {
         sampledAges.emplace_back();
 
-        std::ifstream parsFile;
-        parsFile.open(file);
+        std::ifstream inStream;
+        inStream.open(file);
 
-        getline(parsFile, line); // Skip header
+        if (!inStream.good())
+        {
+            cerr << "File not found: " << file << endl;
+            exit(EXIT_FAILURE);
+        }
 
-        while (getline(parsFile, line))
+        getline(inStream, line); // Skip header
+
+        while (getline(inStream, line))
         {
             stringstream in(line);
 
@@ -170,7 +176,7 @@ static vector<vector<double>> readResults (vector<string> resultFiles)
                 sampledAges.back().push_back(newAge);
         }
 
-        parsFile.close();
+        inStream.close();
     }
 
     return sampledAges;
@@ -291,6 +297,7 @@ vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> cons
 
     auto nStars = allAges.size();
 
+
     // Starting values
     auto sampledAges = sampleStarAges(allAges, gen);
 
@@ -300,7 +307,7 @@ vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> cons
 
     results.emplace_back(gamma, tauSquared, sampledAges);
 
-    for (auto sample = 0u; sample < settings.samples; ++sample)
+    for (auto sample = 1u; sample < settings.samples; ++sample)
     {
         double tau = sqrt(tauSquared);
 
@@ -316,7 +323,7 @@ vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> cons
 
                 double u = std::generate_canonical<double, 53>(gen);
 
-                if (probabilityRatio <= u)
+                if (u < probabilityRatio)
                 {
                     sampledAges[star] = newAges[star];
                 }
@@ -325,7 +332,7 @@ vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> cons
 
         tauSquaredScale = totalSumOfSquaresOf(sampledAges, gamma);
 
-        std::gamma_distribution<double> gammaDist((nStars - 1) / 2, tauSquaredScale / 2);
+        std::gamma_distribution<double> gammaDist((nStars - 1) / 2, 2 / tauSquaredScale);
 
         tauSquared = 1 / gammaDist(gen); // Inverts the draw from the gamma distribution, giving inverse-gamma
         gamma      = truncatedNormallyDistributedDraw(meanOf(sampledAges), sqrt(tauSquared / nStars), settings.minLogAge, settings.maxLogAge, gen);
