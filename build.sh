@@ -13,10 +13,10 @@ if [ ! "$NCPUS" ]; then
     fi
 fi
 
-OWD=$PWD
+OWD="${PWD}"
 BASE=`dirname "${0}"`
 
-cd $BASE
+cd "${BASE}"
 
 if [ ! -e "yaml-cpp/CMakeLists.txt" ]; then
     # Manually clone yaml-cpp, removing the directory first
@@ -26,6 +26,12 @@ fi
 
 cd yaml-cpp
 git checkout yaml-cpp-0.6.2
+
+TMPFILE=`mktemp`
+cp src/regex_yaml.h "${TMPFILE}"
+echo '#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"' > src/regex_yaml.h
+cat "${TMPFILE}" >> src/regex_yaml.h
+rm "${TMPFILE}"
 cd ..
 
 cd ./BUILD

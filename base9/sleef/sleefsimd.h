@@ -1,3 +1,5 @@
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 #ifndef SLEEFSIMD_H
 #define SLEEFSIMD_H
 

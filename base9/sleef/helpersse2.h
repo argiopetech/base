@@ -1,3 +1,6 @@
+#pragma GCC diagnostic ignored "-Wattributes"
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 #ifndef __SSE2__
 #error Please specify -msse2.
 #endif

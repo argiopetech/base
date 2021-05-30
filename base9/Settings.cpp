@@ -51,7 +51,7 @@ void Settings::fromYaml (const string& yamlFile)
     {
         configNode = LoadFile (yamlFile);
     }
-    catch (YAML::BadFile e)
+    catch (YAML::BadFile &e)
     {
         cerr << "Configuration file '" << yamlFile << "' not found." << endl;
         exit(1);

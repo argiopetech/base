@@ -110,8 +110,8 @@ void GenericMsModel::loadModel(string path)
     double logAge
         , previousFeH, currentFeH
         , previousY, currentY
-        , previousAlphaFe, currentAlphaFe
-        , previousMixLen, currentMixLen;
+        , previousAlphaFe = 0, currentAlphaFe
+        , previousMixLen = 0, currentMixLen;
 
     string line;
     stringstream lin;
@@ -212,15 +212,27 @@ void GenericMsModel::loadModel(string path)
                         else // Something changed that we don't support
                         {
                             cerr << "Something changed that we don't support:\n\t" << line << endl;
+
+                    // Currently we don't have models with multiple Alpha/Fe or MixLen, so these should always be the same
+                            if (previousAlphaFe != currentAlphaFe)
+                            {
+                                cerr << "This model has more than one Alpha/Fe value - this is not currently handled." << endl;
+                            }
+
+                            if (previousMixLen != currentMixLen)
+                            {
+                                cerr << "This model has more than one MixLen value - this is not currently handled." << endl;
+                            }
+
                             exit(1);
                         }
                     }
 
                     // Save all the values for the next section header check
                     previousFeH = currentFeH;
+                    previousY = currentY;
                     previousAlphaFe = currentAlphaFe;
                     previousMixLen = currentMixLen;
-                    previousY = currentY;
                 }
                 else if (line[1] == 'a') // The age headers
                 {
@@ -461,7 +473,9 @@ Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, dou
         fehIter -= 1;
     }
 
-    bool oneY = false;
+    // Technically unneeded till the two deriveIsochrone functions are combined
+    // Also see 13 lines below
+    // bool oneY = false;
 
     int iY;
     int iAge;
@@ -473,7 +487,7 @@ Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, dou
         return deriveIsochrone_oneY( newFeH, newAge );
 
         // Technically unneeded till the two deriveIsochrone functions are combined
-        oneY = true;
+        // oneY = true;
         iY = 0;
     }
     else

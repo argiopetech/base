@@ -1,3 +1,5 @@
+#pragma GCC diagnostic ignored "-Wattributes"
+
 typedef struct {
   vfloat x, y;
 } vfloat2;

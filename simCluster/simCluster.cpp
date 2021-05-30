@@ -217,6 +217,9 @@ int run(int argc, char *argv[])
             case NSBH:
                 nNSBH++;
                 break;
+            case BD:
+            case DNE:
+                break;
         }
 
         switch (theStar.secondary.getStatus(theCluster, *isochrone))
@@ -231,6 +234,9 @@ int run(int argc, char *argv[])
                 break;
             case NSBH:
                 nNSBH++;
+                break;
+            case BD:
+            case DNE:
                 break;
         }
 
