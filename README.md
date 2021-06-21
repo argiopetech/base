@@ -26,7 +26,7 @@ Installation
 Ensure you have installed the prerequisites:
 
     GSL (including development files)
-    GSL CBLAS (including development files)
+    GSL CBLAS
     Boost (including development files)
     CMake
     A C++ compiler (g++ or clang++)
