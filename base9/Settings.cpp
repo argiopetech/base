@@ -714,9 +714,9 @@ static void printUsage ()
     cerr << "\t\t1 = Williams" << endl;
     cerr << "\t\t2 = Salaris lin" << endl;
     cerr << "\t\t3 = Salaris pw lin" << endl;
-    cerr << "\t\t4 - 11 = tunable\n" << endl;
+    cerr << "\t\t4 - 11 = tunable" << endl;
     cerr << "\t\t12 = Cummings PARSEC-based" << endl;
-    cerr << "\t\t13 = Cummings MIST-based" << endl;
+    cerr << "\t\t13 = Cummings MIST-based\n" << endl;
 
     cerr << "\t--wdModel" << endl;
     cerr << "\t\t0 = Wood" << endl;
