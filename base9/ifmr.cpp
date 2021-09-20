@@ -9,6 +9,8 @@
 using std::cerr;
 using std::endl;
 
+double cummingsParsec(double);
+double cummingsMist(double);
 double weidemannIFMR (double);
 double williamsIFMR (double);
 double salarisLinearIFMR (double);
@@ -50,6 +52,10 @@ double intlFinalMassReln (const Cluster &clust, const Model &evoModels, double z
         wdMass = quadraticIFMRrotate (clust, zamsMass);
     else if (evoModels.IFMR == 11)
         wdMass = piecewiseLinearIFMR (clust, zamsMass);
+    else if (evoModels.IFMR == 12)
+        wdMass = cummingsParsec(zamsMass);
+    else if (evoModels.IFMR == 13)
+        wdMass = cummingsMist(zamsMass);
     else
         cerr << "ERROR: Undefined IFMR" << endl;
     return wdMass;
@@ -229,4 +235,46 @@ large as 9.0.
     }
 
     return 0.0;
+}
+
+// Equations 1 - 3 from Cummings et. al. 2018
+double cummingsParsec(double zamsMass)
+{
+    if (zamsMass < 0.87 || zamsMass >= 8.20) throw std::out_of_range("zamsMass out of bounds in cummingsParsec");
+    else if (zamsMass < 2.8)
+    {
+        // (0.0873 ± 0.0190) × M_i + (0.476 ± 0.033)M_sun
+        return 0.476 + 0.0873 * zamsMass;
+    }
+    else if (zamsMass < 3.65)
+    {
+        // (0.181 ± 0.041) × M_i + (0.210 ± 0.131)M_sun
+        return 0.210 + 0.181 * zamsMass;
+    }
+    else // if (zamsMass < 8.2)
+    {
+        // (0.0835 ± 0.0144) × M_i + (0.565 ± 0.073)M_sun
+        return 0.565 + 0.0835 * zamsMass;
+    }
+}
+
+// Equations 1 - 3 from Cummings et. al. 2018
+double cummingsMist(double zamsMass)
+{
+    if (zamsMass < 0.83 || zamsMass >= 7.2) throw std::out_of_range("zamsMass out of bounds in cummingsParsec");
+    else if (zamsMass < 2.85)
+    {
+        // (0.080 ± 0.016) × M_i + (0.489 ± 0.030)M_sun
+        return 0.489 + 0.080 * zamsMass;
+    }
+    else if (zamsMass < 3.60)
+    {
+        // (0.187 ± 0.061) × M_i + (0.184 ± 0.199)M_sun
+        return 0.184 + 0.187 * zamsMass;
+    }
+    else // if (zamsMass < 7.20)
+    {
+        // (0.107 ± 0.016) × M_i + (0.471 ± 0.077)M_sum
+        return 0.471 + 0.107 * zamsMass;
+    }
 }
