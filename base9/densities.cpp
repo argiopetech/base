@@ -44,7 +44,7 @@ double Cluster::logPrior (const Model &evoModels) const
 {
     if ((age < evoModels.mainSequenceEvol->getMinAge())
         || (age > evoModels.mainSequenceEvol->getMaxAge())
-        || (ifmrSlope < 0.0)
+        || (ifmrSlope < 0.0) || (ifmrSlope >= 1.0)
         || (abs < 0.0)
         || ((evoModels.IFMR == 11) && (ifmrQuadCoef < 0.0)))
     {
