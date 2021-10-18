@@ -138,13 +138,13 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
             else
                 newCarbonicity = s.cluster.starting.carbonicity;
 
-            if (evoModels.IFMR >= 4)
+            if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
             {
                 in >> newIInter
                    >> newISlope;
             }
 
-            if (evoModels.IFMR >= 9)
+            if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
             {
                 in >> newIQuad;
             }
@@ -237,7 +237,7 @@ class Application
         clust.priorMean[YYY] = settings.cluster.priorMeans.Y;
         clust.priorVar[YYY]  = settings.cluster.priorSigma.Y;
 
-        if (evoModels.IFMR <= 3)
+        if (evoModels.IFMR <= 3 || evoModels.IFMR >= 12)
         {
             clust.priorVar[IFMR_SLOPE] = 0.0;
             clust.priorVar[IFMR_INTERCEPT] = 0.0;
@@ -514,13 +514,13 @@ void Application::run()
         clust.yyy = sampledPars.at(m).y;
         clust.carbonicity = sampledPars.at(m).carbonicity;
 
-        if (evoModels.IFMR >= 4)
+        if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
         {
             clust.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
             clust.ifmrSlope = sampledPars.at(m).ifmrSlope;
         }
 
-        if (evoModels.IFMR >= 9)
+        if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
         {
             clust.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
         }

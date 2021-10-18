@@ -73,7 +73,7 @@ void Application::run()
     clust.ifmrSlope = clust.priorMean[IFMR_SLOPE] = 0.08;
     clust.ifmrIntercept = clust.priorMean[IFMR_INTERCEPT] = 0.65;
 
-    if (wdEvoModels.IFMR <= 10)
+    if (wdEvoModels.IFMR != 11)
         clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.0001;
     else
         clust.ifmrQuadCoef = clust.priorMean[IFMR_QUADCOEF] = 0.08;

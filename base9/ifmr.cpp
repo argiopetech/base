@@ -261,7 +261,7 @@ double cummingsParsec(double zamsMass)
 // Equations 1 - 3 from Cummings et. al. 2018
 double cummingsMist(double zamsMass)
 {
-    if (zamsMass < 0.83 || zamsMass >= 7.2) throw std::out_of_range("zamsMass out of bounds in cummingsParsec");
+    if (zamsMass < 0.83 || zamsMass >= 7.2) throw std::out_of_range("zamsMass out of bounds in cummingsMist");
     else if (zamsMass < 2.85)
     {
         // (0.080 ± 0.016) × M_i + (0.489 ± 0.030)M_sun

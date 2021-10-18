@@ -118,7 +118,8 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
 
     ctrl->priorVar.at(IFMR_INTERCEPT) = 1.0;
     ctrl->priorVar.at(IFMR_SLOPE) = 1.0;
-    if (evoModels.IFMR >= 9)
+
+    if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
         ctrl->priorVar.at(IFMR_QUADCOEF) = 1.0;
     else
         ctrl->priorVar.at(IFMR_QUADCOEF) = 0.0;
@@ -247,13 +248,13 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
             else
                 newCarbonicity = s.cluster.starting.carbonicity;
 
-            if (evoModels.IFMR >= 4)
+            if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
             {
                 in >> newIInter
                    >> newISlope;
             }
 
-            if (evoModels.IFMR >= 9)
+            if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
             {
                 in >> newIQuad;
             }
@@ -468,13 +469,13 @@ int main (int argc, char *argv[])
         internalCluster.mod = sampledPars.at(m).distMod;
         internalCluster.abs = sampledPars.at(m).abs;
 
-        if (evoModels.IFMR >= 4)
+        if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
         {
             internalCluster.ifmrIntercept = sampledPars.at(m).ifmrIntercept;
             internalCluster.ifmrSlope = sampledPars.at(m).ifmrSlope;
         }
 
-        if (evoModels.IFMR >= 9)
+        if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
         {
             internalCluster.ifmrQuadCoef = sampledPars.at(m).ifmrQuadCoef;
         }

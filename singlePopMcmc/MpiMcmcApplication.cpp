@@ -79,7 +79,7 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s,
     ctrl.priorVar[YYY]   = settings.cluster.priorSigma.Y;
 
 
-    if (evoModels.IFMR <= 3)
+    if (evoModels.IFMR <= 3 || evoModels.IFMR >= 12)
     {
         ctrl.priorVar[IFMR_SLOPE] = 0.0;
         ctrl.priorVar[IFMR_INTERCEPT] = 0.0;
