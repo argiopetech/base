@@ -240,7 +240,7 @@ large as 9.0.
 // Equations 1 - 3 from Cummings et. al. 2018
 double cummingsParsec(double zamsMass)
 {
-    if (zamsMass < 0.87 || zamsMass >= 8.20) throw std::out_of_range("zamsMass out of bounds in cummingsParsec");
+    if (zamsMass < 0.87 || zamsMass >= 8.20) return 0;
     else if (zamsMass < 2.8)
     {
         // (0.0873 ± 0.0190) × M_i + (0.476 ± 0.033)M_sun
@@ -261,7 +261,7 @@ double cummingsParsec(double zamsMass)
 // Equations 1 - 3 from Cummings et. al. 2018
 double cummingsMist(double zamsMass)
 {
-    if (zamsMass < 0.83 || zamsMass >= 7.2) throw std::out_of_range("zamsMass out of bounds in cummingsMist");
+    if (zamsMass < 0.83 || zamsMass >= 7.2) return 0;
     else if (zamsMass < 2.85)
     {
         // (0.080 ± 0.016) × M_i + (0.489 ± 0.030)M_sun
