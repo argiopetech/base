@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 file(GLOB SAMPLEWDMASS_FILES *.cpp *.hpp)
 
-include_directories( ${YAML_CPP_INCLUDE_DIRS} )
+include_directories( ${YAML_CPP_INCLUDE_DIRS} "/usr/local/include" )
 
 add_executable(sampleMass ${SAMPLEWDMASS_FILES})
 

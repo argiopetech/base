@@ -4,6 +4,8 @@ project(Base9 CXX C)
 
 list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 
+set(CMAKE_REQUIRED_INCLUDES "/usr/local/include")
+
 include(CheckIncludeFiles)
 
 check_include_files (math.h HAS_MATH)
