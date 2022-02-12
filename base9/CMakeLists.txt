@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB BASE9_FILES *.cpp *.hpp MsRgbModels/*.cpp MsRgbModels/*.hpp WdCoolingModels/*.cpp WdCoolingModels/*.hpp WdAtmosphereModels/*.cpp WdAtmosphereModels/*.hpp IO/*.cpp IO/*.hpp sleef/*.c sleef/*.h sqlite/sqlite3.c sqlite/sqlite3.h)
+file(GLOB BASE9_FILES *.cpp *.hpp MsRgbModels/*.cpp MsRgbModels/*.hpp WdCoolingModels/*.cpp WdCoolingModels/*.hpp WdAtmosphereModels/*.cpp WdAtmosphereModels/*.hpp IO/*.cpp IO/*.hpp sleef/*.c sleef/*.h)
 
 include_directories( ${YAML_CPP_INCLUDE_DIRS} )
 

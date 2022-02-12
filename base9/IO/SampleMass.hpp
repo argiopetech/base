@@ -21,22 +21,4 @@ class SampleMass_FileBackingStore : public FileBackingStore<std::vector<SampleMa
     std::ofstream membership;
 };
 
-
-class SampleMass_SqlBackingStore : public SqlBackingStore<std::vector<SampleMassRecord>>
-{
-  public:
-    SampleMass_SqlBackingStore(const RunData&);
-    SampleMass_SqlBackingStore(const SampleMass_SqlBackingStore&) = delete;
-    SampleMass_SqlBackingStore(std::string);
-
-    ~SampleMass_SqlBackingStore() override;
-
-    void save(std::vector<SampleMassRecord>) override;
-
-  private:
-    sqlite3_stmt *insert = nullptr;
-
-    void buildInsertStatement() override;
-};
-
 #endif

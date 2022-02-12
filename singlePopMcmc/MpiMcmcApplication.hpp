@@ -19,8 +19,7 @@ class MpiMcmcApplication
   public:
     MpiMcmcApplication(Settings &s,
                        SinglePopBackingStore*,
-                       FieldStarLikelihoodBackingStore*,
-                       StarBackingStore*);
+                       FieldStarLikelihoodBackingStore*);
 
     virtual ~MpiMcmcApplication() {}
 
@@ -47,7 +46,6 @@ class MpiMcmcApplication
 
     std::unique_ptr<SinglePopBackingStore> mcmcStore;
     std::unique_ptr<FieldStarLikelihoodBackingStore> fieldStarLikelihood;
-    std::unique_ptr<StarBackingStore> photometryStore;
 
     std::vector<StellarSystem> msSystems;
     std::vector<StellarSystem> msMainRun;

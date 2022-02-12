@@ -68,109 +68,95 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 {
     vector<clustPar> sampledPars;
 
-    if (s.run <= 0)
+    string line;
+
+    std::ifstream parsFile;
+    parsFile.open(s.files.output + ".res");
+
+    bool hasY, hasCarbonicity;
+
+    getline(parsFile, line); // Parse header
+
     {
-        string line;
+        string sin;
+        stringstream in(line);
 
-        std::ifstream parsFile;
-        parsFile.open(s.files.output + ".res");
+        in >> sin  // logAge
+           >> sin; // Y?
 
-        bool hasY, hasCarbonicity;
-
-        getline(parsFile, line); // Parse header
-
+        if (sin == "Y")
         {
-            string sin;
-            stringstream in(line);
+            hasY = true;
 
-            in >> sin  // logAge
-               >> sin; // Y?
+            in >> sin  // FeH
+               >> sin  // Abs
+               >> sin  // DistMod
+               >> sin; // Carbonicity?
 
-            if (sin == "Y")
-            {
-                hasY = true;
-
-                in >> sin  // FeH
-                   >> sin  // Abs
-                   >> sin  // DistMod
-                   >> sin; // Carbonicity?
-
-                if (sin == "carbonicity")
-                    hasCarbonicity = true;
-                else
-                    hasCarbonicity = false;
-            }
+            if (sin == "carbonicity")
+                hasCarbonicity = true;
             else
-            {
-                hasY = false;
-
-                // This one skips FeH (because it was already read instead of Y)
-                in >> sin  // Abs
-                   >> sin  // DistMod
-                   >> sin; // Carbonicity?
-
-                if (sin == "carbonicity")
-                    hasCarbonicity = true;
-                else
-                    hasCarbonicity = false;
-            }
+                hasCarbonicity = false;
         }
-
-        while (getline(parsFile, line))
+        else
         {
-            stringstream in(line);
+            hasY = false;
 
-            double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
+            // This one skips FeH (because it was already read instead of Y)
+            in >> sin  // Abs
+               >> sin  // DistMod
+               >> sin; // Carbonicity?
 
-            in >> newAge;
-
-            if (hasY)
-                in >> newY;
+            if (sin == "carbonicity")
+                hasCarbonicity = true;
             else
-                newY = s.cluster.starting.Y;
-
-            in >> newFeh
-               >> newMod
-               >> newAbs;
-
-            if (hasCarbonicity)
-                in >> newCarbonicity;
-            else
-                newCarbonicity = s.cluster.starting.carbonicity;
-
-            if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
-            {
-                in >> newIInter
-                   >> newISlope;
-            }
-
-            if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
-            {
-                in >> newIQuad;
-            }
-
-            in >> newLogPost;
-
-            // Passing -1 for iteration. It's not currently used for the
-            // file back-end, and I'd like a good sign if it breaks.
-            Iteration iter = {-1};
-
-            sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
-        }
-
-        parsFile.close();
-    }
-    else
-    {
-        auto records = base::utility::readSinglePopMainRunResFromDB(s.run, s.files.output);
-
-        for (auto r : records)
-        {
-            sampledPars.emplace_back(r.iter, r.clust.age, r.clust.yyy, r.clust.feh, r.clust.mod,
-                                     r.clust.abs, r.clust.carbonicity, r.clust.ifmrIntercept,
-                                     r.clust.ifmrSlope, r.clust.ifmrQuadCoef, r.logPost);
+                hasCarbonicity = false;
         }
     }
+
+    while (getline(parsFile, line))
+    {
+        stringstream in(line);
+
+        double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
+
+        in >> newAge;
+
+        if (hasY)
+            in >> newY;
+        else
+            newY = s.cluster.starting.Y;
+
+        in >> newFeh
+           >> newMod
+           >> newAbs;
+
+        if (hasCarbonicity)
+            in >> newCarbonicity;
+        else
+            newCarbonicity = s.cluster.starting.carbonicity;
+
+        if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
+        {
+            in >> newIInter
+               >> newISlope;
+        }
+
+        if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
+        {
+            in >> newIQuad;
+        }
+
+        in >> newLogPost;
+
+        // Passing -1 for iteration. It's not currently used for the
+        // file back-end, and I'd like a good sign if it breaks.
+        Iteration iter = {-1};
+
+        sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+    }
+
+    parsFile.close();
 
     return sampledPars;
 }
@@ -453,29 +439,19 @@ void Application::run()
 
         vector<string> filterNames;
 
-        if (settings.run <= 0)
+        std::ifstream rData(settings.files.phot);
+
+        if (!rData)
         {
-            std::ifstream rData(settings.files.phot);
-
-            if (!rData)
-            {
-                cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
-                cerr << ".at(Exiting...)" << endl;
-                exit (1);
-            }
-
-            auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
-
-            filterNames = ret.first;
-            stars = ret.second;
+            cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+            cerr << ".at(Exiting...)" << endl;
+            exit (1);
         }
-        else
-        {
-            auto ret = base::utility::readPhotometryFromDB (filterPriorMin, filterPriorMax, settings);
 
-            filterNames = ret.first;
-            stars = ret.second;
-        }
+        auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
+
+        filterNames = ret.first;
+        stars = ret.second;
 
         evoModels.restrictFilters(filterNames, settings.allowInvalidModels);
 
@@ -542,7 +518,7 @@ void Application::run()
 
             double membership = star.clustStarPriorDens * postClusterStar / (star.clustStarPriorDens * postClusterStar + (1.0 - star.clustStarPriorDens) * fsLike);
 
-            records.push_back({settings.run, currentIter, star.id,
+            records.push_back({currentIter, star.id,
                                std::get<0>(sampleTuple), std::get<1>(sampleTuple), membership});
         }
 
@@ -571,18 +547,7 @@ int main (int argc, char *argv[])
 
         SampleMassBackingStore *sampleMassStore = nullptr;
 
-        if (settings.files.backend == Backend::Sqlite)
-        {
-            sampleMassStore = new SampleMass_SqlBackingStore(settings.files.output);
-        }
-        else if (settings.files.backend == Backend::File)
-        {
-            sampleMassStore = new SampleMass_FileBackingStore(settings.files.output);
-        }
-        else
-        {
-            throw std::runtime_error("Invalid back end specified");
-        }
+        sampleMassStore = new SampleMass_FileBackingStore(settings.files.output);
 
         Application(settings, std::move(sampleMassStore)).run();
 

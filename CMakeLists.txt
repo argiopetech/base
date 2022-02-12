@@ -141,5 +141,3 @@ add_subdirectory(scatterCluster)
 add_subdirectory(simCluster)
 add_subdirectory(multiPopMcmc)
 add_subdirectory(hierarchicalWDs)
-
-add_subdirectory(sqlTools)

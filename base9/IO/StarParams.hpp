@@ -18,23 +18,4 @@ class StarParams_FileBackingStore : public FileBackingStore<StarParamsRecord, do
     void header(double) override { ; }
 };
 
-
-class StarParams_SqlBackingStore : public SqlBackingStore<StarParamsRecord>
-{
-  public:
-    StarParams_SqlBackingStore(const RunData&);
-    StarParams_SqlBackingStore(const SqlBackingStore&);
-    StarParams_SqlBackingStore(const StarParams_SqlBackingStore&) = delete;
-    StarParams_SqlBackingStore(std::string);
-
-    ~StarParams_SqlBackingStore() override;
-
-    void save(StarParamsRecord) override;
-
-  private:
-    sqlite3_stmt *insert = nullptr;
-
-    void buildInsertStatement() override;
-};
-
 #endif

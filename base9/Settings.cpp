@@ -259,7 +259,6 @@ void Settings::fromCLI (int argc, char **argv)
         {"startingLogAge", required_argument, 0, 0xC4},
         {"startingCarbonicity", required_argument, 0, 0xC3},
         {"backend", required_argument, 0, 0xC2},
-        {"run", required_argument, 0, 0xC1},
 
         {"startingParallax", required_argument, 0, 0xC0},
         {"priorParallax", required_argument, 0, 0xBF},
@@ -500,10 +499,6 @@ void Settings::fromCLI (int argc, char **argv)
 
             case 0xC3:
                 istringstream (string (optarg)) >> cluster.starting.carbonicity;
-                break;
-
-            case 0xC1:
-                istringstream (string (optarg)) >> run;
                 break;
 
             case 0xAF:
@@ -838,11 +833,6 @@ static void printUsage ()
     cerr << "\t\tSpecify the desired back end:" << endl;
     cerr << "\t\t\t0 = File" << endl;
     cerr << "\t\t\t1 = SQLite\n" << endl;
-
-    cerr << "\t--run <runID>" << endl;
-    cerr << "\t\tSpecify a previous run ID in the DB on which to base this run." << endl;
-    cerr << "\t\tCurrently only supported by sampleWDMass and sampleMass." << endl;
-    cerr << "\t\tOnly makes sense if you're using the SQLite backend.\n" << endl;
 
     cerr << "\t--priorParallax" << endl;
     cerr << "\t--sigmaParallax" << endl;
