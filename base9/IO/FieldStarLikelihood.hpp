@@ -18,22 +18,4 @@ class FieldStarLikelihood_FileBackingStore : public FileBackingStore<FieldStarLi
     void header(double) override;
 };
 
-
-class FieldStarLikelihood_SqlBackingStore : public SqlBackingStore<FieldStarLikelihoodRecord>
-{
-  public:
-    FieldStarLikelihood_SqlBackingStore(const RunData&);
-    FieldStarLikelihood_SqlBackingStore(const FieldStarLikelihood_SqlBackingStore&) = delete;
-    FieldStarLikelihood_SqlBackingStore(std::string);
-
-    ~FieldStarLikelihood_SqlBackingStore() override;
-
-    void save(FieldStarLikelihoodRecord) override;
-
-  private:
-    sqlite3_stmt *insert = nullptr;
-
-    void buildInsertStatement() override;
-};
-
 #endif

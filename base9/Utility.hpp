@@ -125,10 +125,6 @@ namespace base
 
         std::pair<std::vector<std::string>, std::vector<StellarSystem>> readPhotometry (std::ifstream &fin, std::vector<double> &filterPriorMin, std::vector<double> &filterPriorMax, const Settings &settings);
 
-        std::pair<std::vector<std::string>, std::vector<StellarSystem>> readPhotometryFromDB (std::vector<double> &filterPriorMin, std::vector<double> &filterPriorMax, const Settings &settings);
-
-        std::vector<SinglePopMcmcRecord> readSinglePopMainRunResFromDB(int, const string);
-
         class InvalidPhotometry : public std::runtime_error
         {
             // using std::domain_error::domain_error;

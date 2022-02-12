@@ -25,22 +25,4 @@ class SampleWdMass_FileBackingStore : public FileBackingStore<std::vector<Sample
     std::ofstream logG;
 };
 
-
-class SampleWdMass_SqlBackingStore : public SqlBackingStore<std::vector<SampleWdMassRecord>>
-{
-  public:
-    SampleWdMass_SqlBackingStore(const RunData&);
-    SampleWdMass_SqlBackingStore(const SampleWdMass_SqlBackingStore&) = delete;
-    SampleWdMass_SqlBackingStore(std::string);
-
-    ~SampleWdMass_SqlBackingStore() override;
-
-    void save(std::vector<SampleWdMassRecord>) override;
-
-  private:
-    sqlite3_stmt *insert = nullptr;
-
-    void buildInsertStatement() override;
-};
-
 #endif

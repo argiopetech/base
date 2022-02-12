@@ -76,12 +76,11 @@ void ensurePriors(const Settings &s, const DualPopCluster &clust)
 MpiMcmcApplication::MpiMcmcApplication(Settings &s,
                                        MultiPopBackingStore *mcmcStore,
                                        StarParamsBackingStore *paramsStore,
-                                       FieldStarLikelihoodBackingStore *fieldStarLikelihood,
-                                       StarBackingStore *photometryStore)
+                                       FieldStarLikelihoodBackingStore *fieldStarLikelihood)
     : evoModels(makeModel(s)), settings(s)
     , gen(uint32_t(s.seed * uint32_t(2654435761))) // Applies Knuth's multiplicative hash for obfuscation (TAOCP Vol. 3)
     , mcmcStore(mcmcStore), paramsStore(paramsStore)
-    , fieldStarLikelihood(fieldStarLikelihood), photometryStore(photometryStore)
+    , fieldStarLikelihood(fieldStarLikelihood)
     , pool(s.threads)
 {
     ctrl.priorVar.fill(0);
@@ -280,11 +279,6 @@ int MpiMcmcApplication::run()
 
         for (auto r : ret.second)
         {
-            if (photometryStore)
-            {
-                photometryStore->save(r.toStarRecord(filterNames));
-            }
-
             if (r.observedStatus == StarStatus::MSRG)
             {
                 // Everything goes into the main run

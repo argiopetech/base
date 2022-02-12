@@ -26,8 +26,7 @@ class MpiMcmcApplication
     MpiMcmcApplication(Settings &s,
                        MultiPopBackingStore*,
                        StarParamsBackingStore*,
-                       FieldStarLikelihoodBackingStore*,
-                       StarBackingStore*);
+                       FieldStarLikelihoodBackingStore*);
 
     virtual ~MpiMcmcApplication() {}
 
@@ -58,7 +57,6 @@ class MpiMcmcApplication
     std::unique_ptr<MultiPopBackingStore> mcmcStore;
     std::unique_ptr<StarParamsBackingStore> paramsStore;
     std::unique_ptr<FieldStarLikelihoodBackingStore> fieldStarLikelihood;
-    std::unique_ptr<StarBackingStore> photometryStore;
 
     std::vector<string> systemNames;
     std::vector<string> mainRunSystemNames;
