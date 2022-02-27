@@ -344,6 +344,10 @@ vector<Result> sampleHierarchicalModel_FullyBayesian(vector<vector<double>> cons
 
         tauSquaredScale = totalSumOfSquaresOf(sampledAges, gamma);
 
+        // Note here that std::gamma_distribution uses k/theta rather than alpha/beta
+        //
+        // As beta = 1 / theta, we invert the theta parameter to remain consistent
+        // with the alpha/beta parameterization used elsewhere in the program.
         std::gamma_distribution<double> gammaDist((nStars - 1) / 2, 2 / tauSquaredScale);
 
         tauSquared = 1 / gammaDist(gen); // Inverts the draw from the gamma distribution, giving inverse-gamma
