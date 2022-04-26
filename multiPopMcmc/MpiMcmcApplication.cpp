@@ -626,11 +626,11 @@ tuple<double, vector<double>> MpiMcmcApplication::logPostStep(DualPopCluster &pr
     {
         if (settings.noBinaries)
         {
-            post[i] = margEvolveNoBinaries (propClust.clust[i], evoModels, *isochrone.at(i), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts, settings.modIsParallax);
+            post[i] = margEvolveNoBinaries (propClust.clust[i], evoModels, *isochrone.at(i), pool, sysVars, sysVar2, sysObs, sSize, howManyFiltsAligned, howManyFilts, settings.modIsParallax, settings.eepInterpolationPower);
         }
         else
         {
-            post[i] = margEvolveWithBinary (propClust.clust[i], systems, evoModels, *isochrone.at(i), pool, settings.modIsParallax);
+            post[i] = margEvolveWithBinary (propClust.clust[i], systems, evoModels, *isochrone.at(i), pool, settings.modIsParallax, settings.eepInterpolationPower);
         }
     });
 

@@ -1,6 +1,5 @@
 #include <array>
 #include <bitset>
-#include <iostream>
 #include <vector>
 
 #include <cassert>
@@ -205,7 +204,7 @@ static void calcPost (const double dMass, const Cluster &clust, vector<StellarSy
 
 
 /* evaluate on a grid of primary mass and mass ratio to approximate the integral */
-vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, ThreadPool &, const bool modIsParallax)
+vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem> &systems, const Model &evoModels, const Isochrone &isochrone, ThreadPool &, const bool modIsParallax, const int eepInterpolationPower)
 {
     assert(isochrone.eeps.size() >= 2);
 
@@ -227,7 +226,11 @@ vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem>
         secondaryMags.push_back(s.getMags(clust, evoModels, isochrone));
     }
 
-    const int isoIncrem = 80;    /* ok for YY models? */
+    const int isoIncrem =
+        eepInterpolationPower == 0 ? 80 // Old default
+                                   // New configurable performance/quality, valid from [-4,0) to (0, int::maxBound]
+                                   : eepInterpolationPower > 0 ? 16 << eepInterpolationPower // 2^(3 + eepInterpolationPower)
+                                                               : 16 >> -eepInterpolationPower;
 
     vector<double> post(systems.size(), 0.0);
 

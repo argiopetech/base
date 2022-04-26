@@ -276,6 +276,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"details", no_argument, 0, 0xAA},
         {"onlyWDs", no_argument, 0, 0x9F},
         {"allowInvalidModels", no_argument, 0, 0x9E},
+        {"interpolationPower", required_argument, 0, 0xBC},
         {0, 0, 0, 0}
     };
 
@@ -564,6 +565,16 @@ void Settings::fromCLI (int argc, char **argv)
                 modBits |= 32;
                 break;
 
+            case 0xBC:
+                istringstream (string (optarg)) >> eepInterpolationPower;
+
+                if (eepInterpolationPower < -4)
+                {
+                    cerr << "EEP interpolation power must be -4 or greater." << endl;
+                    exit(EXIT_FAILURE);
+                }
+
+                break;
 
             case '?':
                 // getopt_long already printed an error message.
@@ -852,6 +863,13 @@ static void printUsage ()
     cerr << "\t\t0 = Bergeron (~2013)" << endl;
     cerr << "\t\t1 = Bergeron (2019)" << endl;
     cerr << "\t\t2 = Bergeron (2020)" << endl;
+
+    cerr << "\n\t--interpolationPower <int>" << endl;
+    cerr << "\t\tAdjusts the number of interpolated steps between EEPs in photometry.\n" << endl;
+    cerr << "\t\t       0 = Traditional EEP interpolation, 80 steps (default)" << endl;
+    cerr << "\t\t-4 .. -1" << endl;
+    cerr << "\t\t 1 ..  n = Configurable EEP interpolation, provides 2^(3 + n) steps." << endl;
+    cerr << "\t\t\t   1 is the bare minimum. 4 is the smallest value that provides more iterations than 0. Negative numbers should be used with significant caution." << endl;
 }
 
 static void printVersion()

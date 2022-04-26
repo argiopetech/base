@@ -90,10 +90,13 @@ inline static void addLogLikelihood(const __m128d likelihood, double* sPost)
 //
 //   threadStorage storage[nThreads]
 //   double post[nSystems]
-vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, ThreadPool &, const double* const systemVars, const double* const systemVar2, const double* const systemObs, const size_t nSystems, const size_t obsSize, const size_t obsUnaligned, const bool modIsParallax)
+vector<double> margEvolveNoBinaries(const Cluster &clust, const Model &evoModels, const Isochrone &isochrone, ThreadPool &, const double* const systemVars, const double* const systemVar2, const double* const systemObs, const size_t nSystems, const size_t obsSize, const size_t obsUnaligned, const bool modIsParallax, const int eepInterpolationPower)
 {
-    mutex logPostMutex;
-    const int isoIncrem = 80;    /* ok for YY models? */
+    const int isoIncrem =
+        eepInterpolationPower == 0 ? 80 // Old default
+                                   // New configurable performance/quality, valid from [-4,0) to (0, int::maxBound]
+                                   : eepInterpolationPower > 0 ? 16 << eepInterpolationPower // 2^(3 + eepInterpolationPower)
+                                                               : 16 >> -eepInterpolationPower;
 
     double* post = reinterpret_cast<double*>(_mm_malloc(nSystems * sizeof(double), 16));
 

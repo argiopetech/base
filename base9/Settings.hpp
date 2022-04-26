@@ -18,6 +18,8 @@ class Settings
     void fromYaml (const std::string&);
     void fromCLI (int, char **);
 
+    int eepInterpolationPower = 0;
+
     bool modIsParallax = false;
     bool allowInvalidModels = false;
 
