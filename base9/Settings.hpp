@@ -19,6 +19,7 @@ class Settings
     void fromCLI (int, char **);
 
     int eepInterpolationPower = 0;
+    int wdInterpolationPower = 0;
 
     bool modIsParallax = false;
     bool allowInvalidModels = false;

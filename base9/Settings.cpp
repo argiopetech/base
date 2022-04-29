@@ -276,7 +276,8 @@ void Settings::fromCLI (int argc, char **argv)
         {"details", no_argument, 0, 0xAA},
         {"onlyWDs", no_argument, 0, 0x9F},
         {"allowInvalidModels", no_argument, 0, 0x9E},
-        {"interpolationPower", required_argument, 0, 0xBC},
+        {"eepInterpolationPower", required_argument, 0, 0xBC},
+        {"wdInterpolationPower", required_argument, 0, 0xBB},
         {0, 0, 0, 0}
     };
 
@@ -568,13 +569,25 @@ void Settings::fromCLI (int argc, char **argv)
             case 0xBC:
                 istringstream (string (optarg)) >> eepInterpolationPower;
 
-                if (eepInterpolationPower < -4)
+                if (eepInterpolationPower < -6)
                 {
-                    cerr << "EEP interpolation power must be -4 or greater." << endl;
+                    cerr << "EEP interpolation power must be -6 or greater." << endl;
                     exit(EXIT_FAILURE);
                 }
 
                 break;
+
+            case 0xBB:
+                istringstream (string (optarg)) >> wdInterpolationPower;
+
+                if (wdInterpolationPower < -13)
+                {
+                    cerr << "WD interpolation power must be -13 or greater." << endl;
+                    exit(EXIT_FAILURE);
+                }
+
+                break;
+
 
             case '?':
                 // getopt_long already printed an error message.
@@ -864,12 +877,20 @@ static void printUsage ()
     cerr << "\t\t1 = Bergeron (2019)" << endl;
     cerr << "\t\t2 = Bergeron (2020)" << endl;
 
-    cerr << "\n\t--interpolationPower <int>" << endl;
+    cerr << "\n\t--eepInterpolationPower <int>" << endl;
     cerr << "\t\tAdjusts the number of interpolated steps between EEPs in photometry.\n" << endl;
     cerr << "\t\t       0 = Traditional EEP interpolation, 80 steps (default)" << endl;
-    cerr << "\t\t-4 .. -1" << endl;
-    cerr << "\t\t 1 ..  n = Configurable EEP interpolation, provides 2^(3 + n) steps." << endl;
-    cerr << "\t\t\t   1 is the bare minimum. 4 is the smallest value that provides more iterations than 0. Negative numbers should be used with significant caution." << endl;
+    cerr << "\t\t-5 .. -1" << endl;
+    cerr << "\t\t 1 ..  n = Configurable EEP interpolation, provides 2^(5 + n) steps." << endl;
+    cerr << "\t\t\t   1 is on the order of the traditional value. Negative numbers offer a performance boost in exchange for precision and potentially accuracy." << endl;
+
+    cerr << "\n\t--wdInterpolationPower <int>" << endl;
+    cerr << "\t\tAs with eepInterpolationPower, but with different bounds for a different grid.\n" << endl;
+    cerr << "\t\t        0 = Traditional WD interpolation, 8000 steps (default)" << endl;
+    cerr << "\t\t-13 .. -1" << endl;
+    cerr << "\t\t  1 ..  n = Configurable WD interpolation, provides 2^(12 + n) steps." << endl;
+    cerr << "\t\t\t    1 is on the order of the traditional value. Negative numbers offer a performance boost in exchange for precision and potentially accuracy." << endl;
+
 }
 
 static void printVersion()

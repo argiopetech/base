@@ -228,9 +228,8 @@ vector<double> margEvolveWithBinary (const Cluster &clust, vector<StellarSystem>
 
     const int isoIncrem =
         eepInterpolationPower == 0 ? 80 // Old default
-                                   // New configurable performance/quality, valid from [-4,0) to (0, int::maxBound]
-                                   : eepInterpolationPower > 0 ? 16 << eepInterpolationPower // 2^(3 + eepInterpolationPower)
-                                                               : 16 >> -eepInterpolationPower;
+                                   : eepInterpolationPower > 0 ? 64 << eepInterpolationPower // 2^(5 + eepInterpolationPower)
+                                                               : 64 >> -eepInterpolationPower;
 
     vector<double> post(systems.size(), 0.0);
 

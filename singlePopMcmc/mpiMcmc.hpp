@@ -11,7 +11,6 @@
 #include "Star.hpp"
 
 const double MIN_MASS1    = 0.15;
-const int N_WD_MASS1      = 8000;  /* evaluate white dwarfs on a finer grid? */
 
 struct ifmrMcmcControl
 {

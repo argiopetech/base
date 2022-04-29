@@ -51,6 +51,10 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s,
     , mcmcStore(mcmcStore), fieldStarLikelihood(fieldStarLikelihood)
     , pool(s.threads)
 {
+    N_WD_MASS1 = s.wdInterpolationPower == 0 ? 8000 // Old default
+                                             : s.wdInterpolationPower > 0 ? 64 << s.wdInterpolationPower // 2^(5 + wdInterpolationPower)
+                                                                          : 64 >> -s.wdInterpolationPower;
+
     ctrl.priorVar.fill(0);
 
     clust.feh = settings.cluster.starting.Fe_H;
@@ -601,7 +605,7 @@ double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
         const auto wdSize  = wdSystems.size();
         const auto wdMassPrior = __builtin_log ((m_wd_up - MIN_MASS1) / (double) N_WD_MASS1);
 
-        for (int j = 0; j < N_WD_MASS1; ++j)
+        for (size_t j = 0; j < N_WD_MASS1; ++j)
         {
             const double primaryMass = wdGridMass(j);
             const double logPrior    = propClust.logPriorMass (primaryMass);

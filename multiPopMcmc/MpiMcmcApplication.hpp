@@ -69,6 +69,8 @@ class MpiMcmcApplication
 
     size_t howManyFilts = 0;
     size_t howManyFiltsAligned = 0;
+    size_t N_WD_MASS1 = 0;
+
     base::utility::ThreadPool pool;
 
     struct ifmrMcmcControl ctrl;

@@ -83,6 +83,10 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s,
     , fieldStarLikelihood(fieldStarLikelihood)
     , pool(s.threads)
 {
+    N_WD_MASS1 = s.wdInterpolationPower == 0 ? 8000 // Old default
+                                             : s.wdInterpolationPower > 0 ? 64 << s.wdInterpolationPower // 2^(5 + wdInterpolationPower)
+                                                                          : 64 >> -s.wdInterpolationPower;
+
     ctrl.priorVar.fill(0);
 
     clust.lambda = settings.multiPopMcmc.lambda_start;
