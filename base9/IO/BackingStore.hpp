@@ -41,6 +41,17 @@ class BackingStore
 };
 
 
+// Provides a no-output version of the BackingStore which should match any FileBackingStore.
+template <typename T>
+class NullBackingStore : public BackingStore<T>
+{
+    public:
+      virtual ~NullBackingStore() = default;
+
+    virtual void save(T) {;}
+};
+
+
 template <typename T, typename HeaderData>
 class FileBackingStore : public BackingStore<T>
 {

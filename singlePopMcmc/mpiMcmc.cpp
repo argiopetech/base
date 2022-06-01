@@ -36,7 +36,10 @@ int main (int argc, char *argv[])
         FieldStarLikelihoodBackingStore *fieldStarStore = nullptr;
 
         mcmcStore = new SinglePopMcmc_FileBackingStore(settings.files.output);
-        fieldStarStore = new FieldStarLikelihood_FileBackingStore(settings.files.output);
+
+        // If you actually need FSLikelihood, uncomment the line below and comment the following line.
+        // fieldStarStore = new FieldStarLikelihood_FileBackingStore(settings.files.output);
+        fieldStarStore = new NullBackingStore<FieldStarLikelihoodRecord>();
 
         MpiMcmcApplication master(settings,
                                   std::move(mcmcStore),
