@@ -43,11 +43,10 @@ struct ifmrGridControl
 /* For posterior evaluation on a grid */
 struct clustPar
 {
-    clustPar(Iteration iter, double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
-        : iter(iter), age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
+    clustPar(double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
+        : age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
     {}
 
-    Iteration iter;
     double age;
     double y;
     double feh;
@@ -259,11 +258,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
         in >> newLogPost;
 
-        // Passing -1 for iteration. It's not currently used for the
-        // file back-end, and I'd like a good sign if it breaks.
-        Iteration iter = {-1};
-
-        sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+        sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
     }
 
     parsFile.close();
@@ -453,6 +448,8 @@ int main (int argc, char *argv[])
 
         unique_ptr<Isochrone> isochrone(evoModels.mainSequenceEvol->deriveIsochrone(internalCluster.feh, internalCluster.yyy, internalCluster.age));
 
+        auto iteration = sampleWdMassStore->nextIteration();
+
         for (auto star : mc.stars)
         {
             if (star.observedStatus == WD)
@@ -538,7 +535,7 @@ int main (int argc, char *argv[])
 
                     auto logg = evoModels.WDAtmosphere->teffToLogg (logTeff, thisWDMass, star.primary.wdType);
 
-                    records.push_back({sampledPars.at(m).iter, star.id,
+                    records.push_back({iteration, star.id,
                                        mass1, membership, precLogAge, coolingAge, logTeff, logg});
                 }
 
