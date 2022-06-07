@@ -11,46 +11,45 @@ using base::utility::format;
 
 
 SampleWdMass_FileBackingStore::SampleWdMass_FileBackingStore(string baseName)
-    : FileBackingStore(baseName + ".sampleWdMass.out")
+    : FileBackingStore(baseName + ".sampleWDMass.out")
 { ; }
 
 void SampleWdMass_FileBackingStore::save(vector<SampleWdMassRecord> data)
 {
     if (!data.empty() && data.front().iter.val == 1)
     {
-        header(data.front());
+        header(data);
     }
 
     for ( auto d : data )
     {
-        fout << base::utility::format << d.iter.val
-             << base::utility::format << d.starId
-             << base::utility::format << d.mass
-             << base::utility::format << d.clusterMembership
-             << base::utility::format << d.precursorLogAge
-             << base::utility::format << d.coolingAge
-             << base::utility::format << d.logTeff
-             << base::utility::format << d.logG
+        fout << base::utility::format          << d.iter.val          << ' '
+             << std::setw(longestStarIdLength) << d.starId            << ' '
+             << base::utility::format          << d.mass              << ' '
+             << base::utility::format          << d.clusterMembership << ' '
+             << base::utility::format          << d.precursorLogAge   << ' '
+             << base::utility::format          << d.coolingAge        << ' '
+             << base::utility::format          << d.logTeff           << ' '
+             << base::utility::format          << d.logG
              << endl;
     }
 }
 
 
-void SampleWdMass_FileBackingStore::header(SampleWdMassRecord)
+void SampleWdMass_FileBackingStore::header(std::vector<SampleWdMassRecord> records)
 {
-    const array<string, 8> paramNames = { "  iteration",
-                                          "     starId",
-                                          "       mass",
-                                          " clustMembr",
-                                          " precLogAge",
-                                          " coolLogAge",
-                                          "    logTeff",
-                                          "       logG"};
-
-    for (auto p : paramNames)
+    for (auto record : records)
     {
-        fout << p;
+        longestStarIdLength = std::max(longestStarIdLength, record.starId.size());
     }
 
-    fout << endl;
+     fout << base::utility::format          << "iteration"  << ' '
+          << std::setw(longestStarIdLength) << "starId"     << ' '
+          << base::utility::format          << "mass"       << ' '
+          << base::utility::format          << "clustMembr" << ' '
+          << base::utility::format          << "precLogAge" << ' '
+          << base::utility::format          << "coolLogAge" << ' '
+          << base::utility::format          << "logTeff"    << ' '
+          << base::utility::format          << "logG"
+          << endl;
 }

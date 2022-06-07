@@ -18,7 +18,8 @@ class SampleMass_FileBackingStore : public FileBackingStore<std::vector<SampleMa
     void header(std::vector<SampleMassRecord>) override;
 
   private:
-    std::ofstream membership;
+    // Default value to 11 to match the base::utility::format
+    size_t longestStarIdLength = 11;
 };
 
 #endif

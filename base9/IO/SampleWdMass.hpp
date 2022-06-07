@@ -5,7 +5,7 @@
 #include "Records.hpp"
 
 
-class SampleWdMass_FileBackingStore : public FileBackingStore<std::vector<SampleWdMassRecord>, SampleWdMassRecord>
+class SampleWdMass_FileBackingStore : public FileBackingStore<std::vector<SampleWdMassRecord>, std::vector<SampleWdMassRecord>>
 {
   public:
     SampleWdMass_FileBackingStore(std::string);
@@ -15,14 +15,11 @@ class SampleWdMass_FileBackingStore : public FileBackingStore<std::vector<Sample
     void save(std::vector<SampleWdMassRecord>) override;
 
   protected:
-    void header(SampleWdMassRecord) override;
+    void header(std::vector<SampleWdMassRecord>) override;
 
   private:
-    std::ofstream membership;
-    std::ofstream precLogAge;
-    std::ofstream coolingAge;
-    std::ofstream logTeff;
-    std::ofstream logG;
+    // Default value to 11 to match the base::utility::format
+    size_t longestStarIdLength = 11;
 };
 
 #endif
