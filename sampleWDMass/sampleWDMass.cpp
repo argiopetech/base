@@ -229,6 +229,8 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
         double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
 
+        int stage;
+
         in >> newAge;
 
         if (hasY)
@@ -258,7 +260,12 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
         in >> newLogPost;
 
-        sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+        in >> stage;
+
+        if ((stage == 3) || s.includeBurnin)
+        {
+            sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+        }
     }
 
     parsFile.close();

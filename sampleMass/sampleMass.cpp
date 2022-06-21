@@ -119,6 +119,7 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
         stringstream in(line);
 
         double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
+        int stage;
 
         in >> newAge;
 
@@ -149,11 +150,16 @@ static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
 
         in >> newLogPost;
 
+        in >> stage;
+
         // Passing -1 for iteration. It's not currently used for the
         // file back-end, and I'd like a good sign if it breaks.
         Iteration iter = {-1};
 
-        sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+        if ((stage == 3) || s.includeBurnin)
+        {
+            sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
+        }
     }
 
     parsFile.close();

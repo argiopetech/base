@@ -278,6 +278,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"allowInvalidModels", no_argument, 0, 0x9E},
         {"eepInterpolationPower", required_argument, 0, 0xBC},
         {"wdInterpolationPower", required_argument, 0, 0xBB},
+        {"includeBurnin", no_argument, 0, 0xBA},
         {0, 0, 0, 0}
     };
 
@@ -588,6 +589,9 @@ void Settings::fromCLI (int argc, char **argv)
 
                 break;
 
+            case 0xBA:
+                includeBurnin = true;
+                break;
 
             case '?':
                 // getopt_long already printed an error message.
@@ -891,6 +895,9 @@ static void printUsage ()
     cerr << "\t\t  1 ..  n = Configurable WD interpolation, provides 2^(12 + n) steps." << endl;
     cerr << "\t\t\t    1 is on the order of the traditional value. Negative numbers offer a performance boost in exchange for precision and potentially accuracy." << endl;
 
+    cerr << "\n\t--includeBurnin" << endl;
+    cerr << "\t\tReturns the pre-9.6 behavior to sampleMass and sampleWDMass where all lines from" << endl;
+    cerr << "\t\tthe result file are considered (rather than just stage 3, post-burnin)." << endl;
 }
 
 static void printVersion()
