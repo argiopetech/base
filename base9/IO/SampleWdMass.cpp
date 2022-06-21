@@ -30,7 +30,7 @@ void SampleWdMass_FileBackingStore::save(vector<SampleWdMassRecord> data)
              << base::utility::format          << d.precursorLogAge   << ' '
              << base::utility::format          << d.coolingAge        << ' '
              << base::utility::format          << d.logTeff           << ' '
-             << base::utility::format          << d.logG
+             << base::utility::format          << d.logLittleG
              << endl;
     }
 }
@@ -50,6 +50,6 @@ void SampleWdMass_FileBackingStore::header(std::vector<SampleWdMassRecord> recor
           << base::utility::format          << "precLogAge" << ' '
           << base::utility::format          << "coolLogAge" << ' '
           << base::utility::format          << "logTeff"    << ' '
-          << base::utility::format          << "logG"
+          << base::utility::format          << "logg"
           << endl;
 }

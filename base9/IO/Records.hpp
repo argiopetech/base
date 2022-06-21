@@ -103,7 +103,7 @@ struct SampleWdMassRecord
     double precursorLogAge;
     double coolingAge;
     double logTeff;
-    double logG;
+    double logLittleG;
 };
 
 typedef BackingStore<std::vector<SampleWdMassRecord>> SampleWdMassBackingStore;
