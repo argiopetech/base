@@ -1,6 +1,7 @@
 #ifndef MSRGBEVOL_HPP
 #define MSRGBEVOL_HPP
 
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -100,4 +101,34 @@ modified for different model sets.
 
     std::vector<struct FehCurve> fehCurves;
 };
+
+
+enum MsBoundsErrorOn {FehUpper, FehLower, AgeUpper, AgeLower};
+
+class MsBoundsError : public std::range_error
+{
+  public:
+    explicit MsBoundsError (const std::string& what_arg, MsBoundsErrorOn on)
+        : std::range_error(what_arg)
+    {
+        updateCounts(on);
+    }
+
+    explicit MsBoundsError (const char* what_arg, MsBoundsErrorOn on)
+        : std::range_error(what_arg)
+    {
+        updateCounts(on);
+    }
+
+    static unsigned int counts[4];
+
+    static void countSummary();
+
+  private:
+    void updateCounts(MsBoundsErrorOn on)
+    {
+        counts[on] += 1;
+    }
+};
+
 #endif

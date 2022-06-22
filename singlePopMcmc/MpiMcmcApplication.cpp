@@ -481,7 +481,11 @@ int MpiMcmcApplication::run()
     }
 
     if ( settings.verbose )
-        cout << "\nFinal acceptance ratio: " << chain.acceptanceRatio() << endl;
+    {
+        cout << "\nFinal acceptance ratio: " << chain.acceptanceRatio() << "\n" << endl;
+
+        MsBoundsError::countSummary();
+    }
 
     return 0;
 }

@@ -296,22 +296,17 @@ Isochrone* GenericMsModel::deriveIsochrone(double newFeH, double newY, double ne
         return deriveIsochrone_manyY(newFeH, newY, newAge);
 }
 
-
+// Run code comparable to the implementation of deriveAgbTipMass for every mag
+// in every eep, interpolating first in age and then in FeH
 Isochrone* GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) const
 {
-    // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
-    if ((newAge < ageLimit.first)
-     || (newAge > ageLimit.second)
-     || (newFeH < fehCurves.front().feh)
-     || (newFeH > fehCurves.back().feh))
-    {
-        cerr << newAge << " >? " << ageLimit.first << endl;
-        cerr << newAge << " <? " << ageLimit.second << endl;
-        cerr << newFeH << " >? " << fehCurves.front().feh << endl;
-        cerr << newFeH << " <? " << fehCurves.back().feh << endl;
-        throw InvalidCluster("Age or FeH out of bounds in GenericMsModel::deriveIsochrone");
-    }
+    if (newAge < ageLimit.first) throw MsBoundsError("Deriving isochrone, low age", MsBoundsErrorOn::AgeLower);
+    if (newAge > ageLimit.second) throw MsBoundsError("Deriving isochrone, high age", MsBoundsErrorOn::AgeUpper);
+
+    if (newFeH < fehCurves.front().feh) throw MsBoundsError("Deriving isochrone, low FeH", MsBoundsErrorOn::FehLower);
+    if (newFeH > fehCurves.back().feh) throw MsBoundsError("Deriving isochrone, high FeH", MsBoundsErrorOn::FehUpper);
+;
 
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), newFeH, FehCurve::compareFeh);
 
@@ -445,22 +440,16 @@ Isochrone* GenericMsModel::deriveIsochrone_oneY(double newFeH, double newAge) co
     return (new Isochrone(interpIso[0].logAge, interpEeps)) ;
 }
 
-
+// Run code comparable to the implementation of deriveAgbTipMass for every mag
+// in every eep, interpolating first in age and then in FeH
 Isochrone* GenericMsModel::deriveIsochrone_manyY(double newFeH, double newY, double newAge) const
 {
-    // Run code comparable to the implementation of deriveAgbTipMass for every mag in every eep, interpolating first in age and then in FeH
     // Check for requested age or [Fe/H] out of bounds
-    if ((newAge < ageLimit.first)
-     || (newAge > ageLimit.second)
-     || (newFeH < fehCurves.front().feh)
-     || (newFeH > fehCurves.back().feh))
-    {
-        cerr << newAge << " >? " << ageLimit.first << endl;
-        cerr << newAge << " <? " << ageLimit.second << endl;
-        cerr << newFeH << " >? " << fehCurves.front().feh << endl;
-        cerr << newFeH << " <? " << fehCurves.back().feh << endl;
-        throw InvalidCluster("Age or FeH out of bounds in GenericMsModel::deriveIsochrone");
-    }
+    if (newAge < ageLimit.first) throw MsBoundsError("Deriving isochrone, low age", MsBoundsErrorOn::AgeLower);
+    if (newAge > ageLimit.second) throw MsBoundsError("Deriving isochrone, high age", MsBoundsErrorOn::AgeUpper);
+
+    if (newFeH < fehCurves.front().feh) throw MsBoundsError("Deriving isochrone, low FeH", MsBoundsErrorOn::FehLower);
+    if (newFeH > fehCurves.back().feh) throw MsBoundsError("Deriving isochrone, high FeH", MsBoundsErrorOn::FehUpper);
 
     auto fehIter = lower_bound(fehCurves.begin(), fehCurves.end(), newFeH, FehCurve::compareFeh);
 

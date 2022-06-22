@@ -80,6 +80,10 @@ class Chain : public McmcApplication
             {
                 logPostProp = -std::numeric_limits<double>::infinity();
             }
+            catch(MsBoundsError &e)
+            {
+                logPostProp = -std::numeric_limits<double>::infinity();
+            }
 
             /* accept/reject */
             if (acceptClustMarg (logPostCurr, logPostProp))
