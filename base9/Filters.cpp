@@ -260,10 +260,10 @@ const unordered_map<string, double> Filters::absCoeffs =
 //      { "W4", 0.02  }, // No data, so TvH estimate
 
         // WISE filters added June, 2022 from Padova stellar evol webpage
-        { "W1", 0.05688 }, 
+        { "W1", 0.05688 },
         { "W2", 0.03427 },
         { "W3", 0.00707 },
-        { "W4", 0.00274 }, 
+        { "W4", 0.00274 },
 
 //      // JWST filters added January, 2020 from Padova stellar evol webpage
 //      { "JW070W",  0.74602 },
