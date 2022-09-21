@@ -266,6 +266,8 @@ void Settings::fromCLI (int argc, char **argv)
 
         {"wdAtmosphereModel", required_argument, 0, 0xBD},
 
+        {"startWithBurnin", required_argument, 0, 0xB9},
+
         // Various flags
         // These are now handled the same way as the parameters due to occasional compiler weirdness
         {"verbose", no_argument, 0, 0xAF},
@@ -279,6 +281,7 @@ void Settings::fromCLI (int argc, char **argv)
         {"eepInterpolationPower", required_argument, 0, 0xBC},
         {"wdInterpolationPower", required_argument, 0, 0xBB},
         {"includeBurnin", no_argument, 0, 0xBA},
+        {"stopAfterBurnin", no_argument, 0, 0xB8},
         {0, 0, 0, 0}
     };
 
@@ -593,6 +596,15 @@ void Settings::fromCLI (int argc, char **argv)
                 includeBurnin = true;
                 break;
 
+            case 0xB9:
+                istringstream (string (optarg)) >> startWithBurnin;
+                break;
+
+            case 0xB8:
+                stopAfterBurnin = true;
+                break;
+
+
             case '?':
                 // getopt_long already printed an error message.
                 printUsage ();
@@ -898,6 +910,14 @@ static void printUsage ()
     cerr << "\n\t--includeBurnin" << endl;
     cerr << "\t\tReturns the pre-9.6 behavior to sampleMass and sampleWDMass where all lines from" << endl;
     cerr << "\t\tthe result file are considered (rather than just stage 3, post-burnin)." << endl;
+
+    cerr << "\n\t--stopAfterBurnin" << endl;
+    cerr << "\t\tStops the run after the Stage 2 burnin for use with startWithRes. Result output" << endl;
+    cerr << "\t\tgoes to <filebase>.burnin rather than <filebase>.res" << endl;
+
+    cerr << "\n\t--startWithBurnin <filename>" << endl;
+    cerr << "\t\tStarts the run with the Stage 2 burnin output from a standard run of BASE-9 or" << endl;
+    cerr << "\t\ta run using the 'stopAfterBurnin' flag." << endl;
 }
 
 static void printVersion()

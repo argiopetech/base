@@ -34,6 +34,9 @@ class Settings
 
     bool includeBurnin = false;
 
+    bool stopAfterBurnin = false;
+    string startWithBurnin = "";
+
     uint32_t seed = std::numeric_limits<uint32_t>::max();
     unsigned int threads = std::numeric_limits<int>::max();
 
