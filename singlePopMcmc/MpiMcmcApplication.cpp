@@ -148,12 +148,15 @@ MpiMcmcApplication::MpiMcmcApplication(Settings &s,
     ctrl.thin = settings.singlePopMcmc.thin;
 
     std::copy(ctrl.priorVar.begin(), ctrl.priorVar.end(), clust.priorVar.begin());
+
+    std::copy(s.singlePopMcmc.stepSize.begin(),
+              s.singlePopMcmc.stepSize.end(),
+              stepSize.begin());
 }
 
 
 // Initialize SSE memory for noBinaries
-// THIS LEAKS MEMORY LIKE A SIEVE DUE TO FORGETTING TALLOC - FIXME
-// But it's okay if we only call it once (until it gets moved to the constructor)
+// THIS LEAKS MEMORY - FIXME
 void MpiMcmcApplication::allocateSSEMem()
 {
     using aligned_m128 = std::aligned_storage<16, 16>::type;
@@ -205,18 +208,86 @@ void MpiMcmcApplication::allocateSSEMem()
     }
 }
 
-
-int MpiMcmcApplication::run()
+void MpiMcmcApplication::readPhotometry()
 {
-    double fsLike;
+    // Read photometry and calculate fsLike
+    vector<double> filterPriorMin;
+    vector<double> filterPriorMax;
 
-    array<double, NPARAMS> stepSize;
-    std::copy(settings.singlePopMcmc.stepSize.begin(), settings.singlePopMcmc.stepSize.end(), stepSize.begin());
+    // open files for reading (data) and writing
+    // rData implcitly relies on going out of scope to close the photometry file
+    // This is awful, but pretty (since this code is, at time of writing, in restricted, anonymous scope
+    std::ifstream rData(settings.files.phot);
 
-    Chain<Cluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)),
-                         ctrl.priorVar, clust, *mcmcStore, settings.modIsParallax);
+    if (!rData)
+    {
+        cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (-1);
+    }
+
+    auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
+    auto filterNames = ret.first;
+
+    for (auto r : ret.second)
+    {
+        if (r.observedStatus == StarStatus::MSRG)
+        {
+            // Everything goes into the main run
+            msMainRun.push_back(r);
+
+            if (r.useDuringBurnIn)
+            {
+                msSystems.push_back(r);
+            }
+        }
+        else if (r.observedStatus == StarStatus::WD)
+        {
+            wdMainRun.push_back(r);
+
+            if (r.useDuringBurnIn)
+            {
+                wdSystems.push_back(r);
+            }
+        }
+        else
+            cerr << "Found unsupported star in photometry, type '" << r.observedStatus << "'... Continuing anyway." << endl;
+    }
+
+    if ( msSystems.empty() && wdSystems.empty())
+    {
+        cerr << "No stars loaded... Exiting." << endl;
+        exit(-1);
+    }
 
 
+    evoModels.restrictFilters(filterNames, settings.allowInvalidModels);
+
+    if (settings.cluster.index < 0 || static_cast<size_t>(settings.cluster.index) > filterNames.size())
+    {
+        cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index." << endl;
+        cerr << "[Exiting...]" << endl;
+        exit (1);
+    }
+
+    if ((msSystems.size() + wdSystems.size()) > 1)
+    {
+        double logFieldStarLikelihood = 0.0;
+
+        for (size_t filt = 0; filt < filterNames.size(); filt++)
+        {
+            logFieldStarLikelihood -= log (filterPriorMax.at(filt) - filterPriorMin.at(filt));
+        }
+        fsLike = exp (logFieldStarLikelihood);
+    }
+    else
+    {
+        fsLike = 0;
+    }
+}
+
+void MpiMcmcApplication::verifyModelBounds()
+{
     if (settings.verbose)
     {
         cout << std::setprecision(3) << std::fixed;
@@ -249,134 +320,45 @@ int MpiMcmcApplication::run()
                  << ").\n   Continuing due to `--overrideBounds` flag." << endl;
         }
     }
+}
 
+void MpiMcmcApplication::initChain()
+{
+    for (auto system : msSystems)
     {
-        // Read photometry and calculate fsLike
-        vector<double> filterPriorMin;
-        vector<double> filterPriorMax;
-
-        // open files for reading (data) and writing
-        // rData implcitly relies on going out of scope to close the photometry file
-        // This is awful, but pretty (since this code is, at time of writing, in restricted, anonymous scope
-        std::ifstream rData(settings.files.phot);
-
-        if (!rData)
-        {
-            cerr << "***Error: Photometry file " << settings.files.phot << " was not found.***" << endl;
-            cerr << "[Exiting...]" << endl;
-            exit (-1);
-        }
-
-        auto ret = base::utility::readPhotometry (rData, filterPriorMin, filterPriorMax, settings);
-        auto filterNames = ret.first;
-
-        for (auto r : ret.second)
-        {
-            if (r.observedStatus == StarStatus::MSRG)
-            {
-                // Everything goes into the main run
-                msMainRun.push_back(r);
-
-                if (r.useDuringBurnIn)
-                {
-                    // Only burnin things go into msSystems
-                    msSystems.push_back(r);
-                }
-
-                // msSystems must be overwritten before the main run
-            }
-            else if (r.observedStatus == StarStatus::WD)
-            {
-                // This is the same as the MS main run/burnin setup
-                wdMainRun.push_back(r);
-
-                if (r.useDuringBurnIn)
-                {
-                    wdSystems.push_back(r);
-                }
-            }
-            else
-                cerr << "Found unsupported star in photometry, type '" << r.observedStatus << "'... Continuing anyway." << endl;
-        }
-
-        if ( msSystems.empty() && wdSystems.empty())
-        {
-            cerr << "No stars loaded... Exiting." << endl;
-            exit(-1);
-        }
-
-
-        evoModels.restrictFilters(filterNames, settings.allowInvalidModels);
-
-        if (settings.cluster.index < 0 || static_cast<size_t>(settings.cluster.index) > filterNames.size())
-        {
-            cerr << "***Error: " << settings.cluster.index << " not a valid magnitude index." << endl;
-            cerr << "[Exiting...]" << endl;
-            exit (1);
-        }
-
-        if ((msSystems.size() + wdSystems.size()) > 1)
-        {
-            double logFieldStarLikelihood = 0.0;
-
-            for (size_t filt = 0; filt < filterNames.size(); filt++)
-            {
-                logFieldStarLikelihood -= log (filterPriorMax.at(filt) - filterPriorMin.at(filt));
-            }
-            fsLike = exp (logFieldStarLikelihood);
-        }
-        else
-        {
-            fsLike = 0;
-        }
+        system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
     }
 
-    fieldStarLikelihood->save({fsLike});
-
-    allocateSSEMem();
-
-    // Begin initChain
+    for (auto system : wdSystems)
     {
-        for (auto system : msSystems)
-        {
-            system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
-        }
+        system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
 
-        for (auto system : wdSystems)
-        {
-            system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
-
-            system.setMassRatio(0.0);
-        }
+        system.setMassRatio(0.0);
     }
-    // end initChain
+}
 
-    // Assuming fsLike doesn't change, this is the "global" logPost function
-    auto logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1, fsLike);
+void MpiMcmcApplication::stage1Burnin(Chain<Cluster>& chain, std::function<void(const Cluster&)>& checkPriors, std::function<double(Cluster&)>& logPostFunc)
+{
+    if ( settings.verbose )
+        cout << "\nRunning Stage 1 burnin..." << flush;
 
-    // Run Burnin
-    std::function<void(const Cluster&)> checkPriors = std::bind(&ensurePriors, std::cref(settings), _1);
+    auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
+    chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
+
+    if ( settings.verbose )
+        cout << " Complete (acceptanceRatio = " << chain.acceptanceRatio() << ")" << endl;
+
+    chain.reset(); // Reset the chain to forget this part of the burnin.
+}
+
+void MpiMcmcApplication::stage2Burnin(Chain<Cluster>& chain, std::function<void(const Cluster&)>& checkPriors, std::function<double(Cluster&)>& logPostFunc)
+{
+    if ( settings.verbose )
+        cout << "\nRunning Stage 2 (adaptive) burnin..." << endl;
 
     int  adaptiveBurnIter = 0;
     bool acceptedOne = false;  // Keeps track of whether we have two accepted trials in a row
     bool acceptedOnce = false; // Keeps track of whether we have ever accepted a trial
-
-    // Stage 1 burnin
-    {
-        if ( settings.verbose )
-            cout << "\nRunning Stage 1 burnin..." << flush;
-
-        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustBigSteps, this, _1, std::cref(ctrl), std::cref(stepSize));
-        chain.run(AdaptiveMcmcStage::FixedBurnin, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.adaptiveBigSteps);
-
-        if ( settings.verbose )
-            cout << " Complete (acceptanceRatio = " << chain.acceptanceRatio() << ")" << endl;
-
-        chain.reset(); // Reset the chain to forget this part of the burnin.
-    }
-
-    if ( settings.verbose )
-        cout << "\nRunning Stage 2 (adaptive) burnin..." << endl;
 
     // Run adaptive burnin (stage 2)
     // -----------------------------
@@ -446,40 +428,71 @@ int MpiMcmcApplication::run()
             scaleStepSizes(stepSize, chain.acceptanceRatio()); // Adjust step sizes
         }
     } while (adaptiveBurnIter < ctrl.burnIter);
+}
 
+void MpiMcmcApplication::mainRun(Chain<Cluster>& chain, std::function<void(const Cluster&)>& checkPriors, std::function<double(Cluster&)>& logPostFunc)
+{
+    // Begin main run
+    // Main run proceeds in increments of 1, adapting the covariance matrix after every increment
+    for (auto iters = 0; iters < ctrl.nIter; ++iters)
+    {
+        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
+
+        chain.run(AdaptiveMcmcStage::MainRun, proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
+    }
+}
+
+void MpiMcmcApplication::stage3Burnin(Chain<Cluster>& chain, std::function<void(const Cluster&)>& checkPriors, std::function<double(Cluster&)>& logPostFunc)
+{
+    if ( settings.verbose )
+        cout << "\nStarting adaptive run... " << flush;
+
+    // Make sure and pull the covariance matrix before resetting the chain
+    auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
+
+    chain.reset();
+
+    chain.run(AdaptiveMcmcStage::AdaptiveMainRun, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
+
+    if ( settings.verbose )
+        cout << " Preliminary acceptanceRatio = " << chain.acceptanceRatio() << endl;
+}
+
+int MpiMcmcApplication::run()
+{
+    Chain<Cluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)),
+                         ctrl.priorVar, clust, *mcmcStore, settings.modIsParallax);
+
+
+    verifyModelBounds();
+
+    readPhotometry();
+
+    fieldStarLikelihood->save({fsLike});
+
+    // Burnin
+    allocateSSEMem();
+    initChain();
+
+    std::function<double(Cluster&)> logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1);
+    std::function<void(const Cluster&)> checkPriors = std::bind(&ensurePriors, std::cref(settings), _1);
+
+    stage1Burnin(chain, checkPriors, logPostFunc);
+    stage2Burnin(chain, checkPriors, logPostFunc);
+    stage3Burnin(chain, checkPriors, logPostFunc);
 
     // Main run
-    // Overwrite the burnin photometry set with the entire photometry set
+    // Overwrite the burnin photometry set with the full photometry set
+    // SSE memory must be reallocated to fit the potentially larger number of stars
     msSystems = msMainRun;
     wdSystems = wdMainRun;
 
-    // Don't forget to repopulate the SSE memory
     allocateSSEMem();
 
-    {
-        // Make sure and pull the covariance matrix before resetting the chain
-        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
+    mainRun(chain, checkPriors, logPostFunc);
 
-        chain.reset();
 
-        if ( settings.verbose )
-            cout << "\nStarting adaptive run... " << flush;
-
-        chain.run(AdaptiveMcmcStage::AdaptiveMainRun, proposalFunc, logPostFunc, checkPriors, settings.singlePopMcmc.stage3Iter);
-
-        if ( settings.verbose )
-            cout << " Preliminary acceptanceRatio = " << chain.acceptanceRatio() << endl;
-
-        // Begin main run
-        // Main run proceeds in increments of 1, adapting the covariance matrix after every increment
-        for (auto iters = 0; iters < ctrl.nIter; ++iters)
-        {
-            auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
-
-            chain.run(AdaptiveMcmcStage::MainRun, proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
-        }
-    }
-
+    // Post-run
     if ( settings.verbose )
     {
         cout << "\nFinal acceptance ratio: " << chain.acceptanceRatio() << "\n" << endl;
@@ -588,7 +601,7 @@ Cluster MpiMcmcApplication::propClustCorrelated (Cluster clust, struct ifmrMcmcC
     return clust;
 }
 
-double MpiMcmcApplication::logPostStep(Cluster &propClust, double fsLike)
+double MpiMcmcApplication::logPostStep(Cluster &propClust)
 {
     double logPostProp = propClust.logPrior (evoModels);
 

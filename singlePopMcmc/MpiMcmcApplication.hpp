@@ -29,11 +29,19 @@ class MpiMcmcApplication
     Cluster propClustIndep (Cluster, const struct ifmrMcmcControl &, const std::array<double, NPARAMS> &, double scale);
     Cluster propClustCorrelated (Cluster, const struct ifmrMcmcControl&, const Matrix<double, NPARAMS, NPARAMS>&);
 
-    double logPostStep (Cluster &, double);
+    double logPostStep (Cluster &);
 
   private:
     void scaleStepSizes (std::array<double, NPARAMS> &, double);
     void allocateSSEMem();
+
+    void readPhotometry();
+    void verifyModelBounds();
+    void initChain();
+    void stage1Burnin(Chain<Cluster>&, std::function<void(const Cluster&)>&, std::function<double(Cluster&)>&);
+    void stage2Burnin(Chain<Cluster>&, std::function<void(const Cluster&)>&, std::function<double(Cluster&)>&);
+    void stage3Burnin(Chain<Cluster>&, std::function<void(const Cluster&)>&, std::function<double(Cluster&)>&);
+    void mainRun(Chain<Cluster>&, std::function<void(const Cluster&)>&, std::function<double(Cluster&)>&);
 
     double wdGridMass (int) const;
 
@@ -53,9 +61,13 @@ class MpiMcmcApplication
     std::vector<StellarSystem> wdSystems;
     std::vector<StellarSystem> wdMainRun;
 
+    std::array<double, NPARAMS> stepSize;
+
     double* sysVars = nullptr;
     double* sysVar2 = nullptr;
     double* sysObs  = nullptr;
+
+    double fsLike = 0;
 
     size_t howManyFilts = 0;
     size_t howManyFiltsAligned = 0;
