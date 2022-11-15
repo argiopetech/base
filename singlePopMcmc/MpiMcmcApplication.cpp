@@ -430,17 +430,6 @@ void MpiMcmcApplication::stage2Burnin(Chain<Cluster>& chain, std::function<void(
     } while (adaptiveBurnIter < ctrl.burnIter);
 }
 
-void MpiMcmcApplication::mainRun(Chain<Cluster>& chain, std::function<void(const Cluster&)>& checkPriors, std::function<double(Cluster&)>& logPostFunc)
-{
-    // Begin main run
-    // Main run proceeds in increments of 1, adapting the covariance matrix after every increment
-    for (auto iters = 0; iters < ctrl.nIter; ++iters)
-    {
-        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
-
-        chain.run(AdaptiveMcmcStage::MainRun, proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
-    }
-}
 
 void MpiMcmcApplication::stage3Burnin(Chain<Cluster>& chain, std::function<void(const Cluster&)>& checkPriors, std::function<double(Cluster&)>& logPostFunc)
 {
@@ -457,6 +446,20 @@ void MpiMcmcApplication::stage3Burnin(Chain<Cluster>& chain, std::function<void(
     if ( settings.verbose )
         cout << " Preliminary acceptanceRatio = " << chain.acceptanceRatio() << endl;
 }
+
+
+void MpiMcmcApplication::mainRun(Chain<Cluster>& chain, std::function<void(const Cluster&)>& checkPriors, std::function<double(Cluster&)>& logPostFunc)
+{
+    // Begin main run
+    // Main run proceeds in increments of 1, adapting the covariance matrix after every increment
+    for (auto iters = 0; iters < ctrl.nIter; ++iters)
+    {
+        auto proposalFunc = std::bind(&MpiMcmcApplication::propClustCorrelated, this, _1, std::cref(ctrl), chain.makeCholeskyDecomp());
+
+        chain.run(AdaptiveMcmcStage::MainRun, proposalFunc, logPostFunc, checkPriors, 1, ctrl.thin);
+    }
+}
+
 
 int MpiMcmcApplication::run()
 {
