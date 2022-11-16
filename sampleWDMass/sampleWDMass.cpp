@@ -39,26 +39,6 @@ struct ifmrGridControl
     array<double, NPARAMS> end;   /* end points for grid evaluations */
 };
 
-
-/* For posterior evaluation on a grid */
-struct clustPar
-{
-    clustPar(double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
-        : age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
-    {}
-
-    double age;
-    double y;
-    double feh;
-    double distMod;
-    double abs;
-    double carbonicity;
-    double ifmrIntercept;
-    double ifmrSlope;
-    double ifmrQuadCoef;
-    double logPost;
-};
-
 /* Used in densities.c. */
 array<double, NPARAMS> priorMean, priorVar;
 
@@ -168,110 +148,6 @@ static void initIfmrGridControl (Chain *mc, Model &evoModels, struct ifmrGridCon
     ctrl->iStart = 0;
 
 } // initIfmrGridControl
-
-
-/*
- * Read sampled params
- */
-static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
-{
-    vector<clustPar> sampledPars;
-
-    string line;
-
-    std::ifstream parsFile;
-    parsFile.open(s.files.output + ".res");
-
-    bool hasY, hasCarbonicity;
-
-    getline(parsFile, line); // Parse header
-
-    {
-        string sin;
-        stringstream in(line);
-
-        in >> sin  // logAge
-           >> sin; // Y?
-
-        if (sin == "Y")
-        {
-            hasY = true;
-
-            in >> sin  // FeH
-               >> sin  // Abs
-               >> sin  // DistMod
-               >> sin; // Carbonicity?
-
-            if (sin == "carbonicity")
-                hasCarbonicity = true;
-            else
-                hasCarbonicity = false;
-        }
-        else
-        {
-            hasY = false;
-
-            // This one skips FeH (because it was already read instead of Y)
-            in >> sin  // Abs
-               >> sin  // DistMod
-               >> sin; // Carbonicity?
-
-            if (sin == "carbonicity")
-                hasCarbonicity = true;
-            else
-                hasCarbonicity = false;
-        }
-    }
-
-    while (getline(parsFile, line))
-    {
-        stringstream in(line);
-
-        double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
-
-        int stage;
-
-        in >> newAge;
-
-        if (hasY)
-            in >> newY;
-        else
-            newY = s.cluster.starting.Y;
-
-        in >> newFeh
-           >> newMod
-           >> newAbs;
-
-        if (hasCarbonicity)
-            in >> newCarbonicity;
-        else
-            newCarbonicity = s.cluster.starting.carbonicity;
-
-        if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
-        {
-            in >> newIInter
-               >> newISlope;
-        }
-
-        if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
-        {
-            in >> newIQuad;
-        }
-
-        in >> newLogPost;
-
-        in >> stage;
-
-        if ((stage == 3) || s.includeBurnin)
-        {
-            sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
-        }
-    }
-
-    parsFile.close();
-
-    return sampledPars;
-}
 
 
 /*
@@ -405,7 +281,7 @@ int main (int argc, char *argv[])
 
     initChain (&mc, &ctrl);
 
-    auto sampledPars = readSampledParams (evoModels, settings);
+    auto sampledPars = base::utility::readSampledParams (evoModels, settings);
     cout << "sampledPars.at(0).age    = " << sampledPars.at(0).age << endl;
     cout << "sampledPars.at(last).age = " << sampledPars.back().age << endl;
 

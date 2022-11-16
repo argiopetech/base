@@ -11,9 +11,10 @@
 #include <queue>
 #include <thread>
 
-
+#include "IO/BackingStore.hpp"
 #include "Settings.hpp"
 #include "Star.hpp"
+
 
 namespace base
 {
@@ -89,7 +90,7 @@ namespace base
                 {
                     std::lock_guard<std::mutex> lk(m); // Lock everything (while in scope)
                     joinable = true; // We have a job, therefore we're joinable
-                    workQueue.push(f); // Push the job the queue
+                    workQueue.push(f); // Push the job to the queue
                     cv.notify_one(); // Signal the worker thread
                 }
 
@@ -138,6 +139,30 @@ namespace base
         };
 
         std::ostream& format (std::ostream&);
+
+        /* For posterior evaluation on a grid */
+        struct clustPar
+        {
+            clustPar(double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost, AdaptiveMcmcStage stage)
+                : age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost), stage(stage)
+            {}
+
+            double age;
+            double y;
+            double feh;
+            double distMod;
+            double abs;
+            double carbonicity;
+            double ifmrIntercept;
+            double ifmrSlope;
+            double ifmrQuadCoef;
+            double logPost;
+
+            AdaptiveMcmcStage stage;
+        };
+
+        std::vector<clustPar> readSampledParams (Model&, const Settings&);
+        std::vector<clustPar> readSampledParams (std::string, Model &evoModels, const Settings &s, std::function<bool(int)>);
     }
 }
 

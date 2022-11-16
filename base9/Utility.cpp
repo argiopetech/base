@@ -12,6 +12,7 @@ using std::pair;
 using std::ifstream;
 using std::istringstream;
 using std::string;
+using std::stringstream;
 using std::vector;
 
 namespace base
@@ -24,13 +25,14 @@ namespace base
 
             for (unsigned int idThread = 0; idThread < loopThreads; idThread++) {
                 auto threadFunc = [=]() {
-                    for (unsigned int i=idThread; i<size; i+=nThreads) {
+                    for (unsigned int i = idThread; i < size; i += nThreads) {
                         func(i);
                     }
                 };
 
                 threads.at(idThread).addJob(threadFunc);
             }
+
             for (auto &t : threads)
                 t.join();
         }
@@ -118,6 +120,118 @@ namespace base
         std::ostream& format (std::ostream& out)
         {
             return out << std::setw(11) << std::fixed << std::setprecision(6);
+        }
+
+
+        /*
+         * Read sampled params
+         */
+        vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
+        {
+            auto acceptStage = [&s](int stage){ return (stage == 3) || s.includeBurnin; };
+
+            return readSampledParams(s.files.output + ".res", evoModels, s, acceptStage);
+        }
+
+        vector<clustPar> readSampledParams (string filename, Model &evoModels, const Settings &s, std::function<bool(int)> acceptStage)
+        {
+            vector<clustPar> sampledPars;
+
+            string line;
+
+            std::ifstream parsFile;
+            parsFile.open(filename);
+
+            bool hasY, hasCarbonicity;
+
+            getline(parsFile, line); // Parse header
+
+            {
+                string sin;
+                stringstream in(line);
+
+                in >> sin  // logAge
+                   >> sin; // Y?
+
+                if (sin == "Y")
+                {
+                    hasY = true;
+
+                    in >> sin  // FeH
+                       >> sin  // Abs
+                       >> sin  // DistMod
+                       >> sin; // Carbonicity?
+
+                    if (sin == "carbonicity")
+                        hasCarbonicity = true;
+                    else
+                        hasCarbonicity = false;
+                }
+                else
+                {
+                    hasY = false;
+
+                    // This one skips FeH (because it was already read instead of Y)
+                    in >> sin  // Abs
+                       >> sin  // DistMod
+                       >> sin; // Carbonicity?
+
+                    if (sin == "carbonicity")
+                        hasCarbonicity = true;
+                    else
+                        hasCarbonicity = false;
+                }
+            }
+
+            while (getline(parsFile, line))
+            {
+                stringstream in(line);
+
+                double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
+                int stage;
+
+                in >> newAge;
+
+                if (hasY)
+                    in >> newY;
+                else
+                    newY = s.cluster.starting.Y;
+
+                in >> newFeh
+                   >> newMod
+                   >> newAbs;
+
+                if (hasCarbonicity)
+                    in >> newCarbonicity;
+                else
+                    newCarbonicity = s.cluster.starting.carbonicity;
+
+                if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
+                {
+                    in >> newIInter
+                       >> newISlope;
+                }
+
+                if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
+                {
+                    in >> newIQuad;
+                }
+
+                in >> newLogPost;
+
+                in >> stage;
+
+                auto amsStage = (AdaptiveMcmcStage)stage;
+
+                if (acceptStage(stage))
+                {
+                    sampledPars.emplace_back(newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost, amsStage);
+                }
+            }
+
+            parsFile.close();
+
+            return sampledPars;
         }
     }
 }

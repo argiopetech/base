@@ -40,133 +40,6 @@ using std::unique_ptr;
 
 using namespace std::placeholders;
 
-/* For posterior evaluation on a grid */
-struct clustPar
-{
-    clustPar(Iteration iter, double age, double y, double feh, double modulus, double absorption, double carbonicity, double ifmrIntercept, double ifmrSlope, double ifmrQuadCoef, double logPost)
-        : iter(iter), age(age), y(y), feh(feh), distMod(modulus), abs(absorption), carbonicity(carbonicity), ifmrIntercept(ifmrIntercept), ifmrSlope(ifmrSlope), ifmrQuadCoef(ifmrQuadCoef), logPost(logPost)
-    {}
-
-    Iteration iter;
-    double age;
-    double y;
-    double feh;
-    double distMod;
-    double abs;
-    double carbonicity;
-    double ifmrIntercept;
-    double ifmrSlope;
-    double ifmrQuadCoef;
-    double logPost;
-};
-
-
-/*
- * Read sampled params
- */
-static vector<clustPar> readSampledParams (Model &evoModels, const Settings &s)
-{
-    vector<clustPar> sampledPars;
-
-    string line;
-
-    std::ifstream parsFile;
-    parsFile.open(s.files.output + ".res");
-
-    bool hasY, hasCarbonicity;
-
-    getline(parsFile, line); // Parse header
-
-    {
-        string sin;
-        stringstream in(line);
-
-        in >> sin  // logAge
-           >> sin; // Y?
-
-        if (sin == "Y")
-        {
-            hasY = true;
-
-            in >> sin  // FeH
-               >> sin  // Abs
-               >> sin  // DistMod
-               >> sin; // Carbonicity?
-
-            if (sin == "carbonicity")
-                hasCarbonicity = true;
-            else
-                hasCarbonicity = false;
-        }
-        else
-        {
-            hasY = false;
-
-            // This one skips FeH (because it was already read instead of Y)
-            in >> sin  // Abs
-               >> sin  // DistMod
-               >> sin; // Carbonicity?
-
-            if (sin == "carbonicity")
-                hasCarbonicity = true;
-            else
-                hasCarbonicity = false;
-        }
-    }
-
-    while (getline(parsFile, line))
-    {
-        stringstream in(line);
-
-        double newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost;
-        int stage;
-
-        in >> newAge;
-
-        if (hasY)
-            in >> newY;
-        else
-            newY = s.cluster.starting.Y;
-
-        in >> newFeh
-           >> newMod
-           >> newAbs;
-
-        if (hasCarbonicity)
-            in >> newCarbonicity;
-        else
-            newCarbonicity = s.cluster.starting.carbonicity;
-
-        if (evoModels.IFMR >= 4 && evoModels.IFMR < 12)
-        {
-            in >> newIInter
-               >> newISlope;
-        }
-
-        if (evoModels.IFMR >= 9 && evoModels.IFMR < 12)
-        {
-            in >> newIQuad;
-        }
-
-        in >> newLogPost;
-
-        in >> stage;
-
-        // Passing -1 for iteration. It's not currently used for the
-        // file back-end, and I'd like a good sign if it breaks.
-        Iteration iter = {-1};
-
-        if ((stage == 3) || s.includeBurnin)
-        {
-            sampledPars.emplace_back(iter, newAge, newY, newFeh, newMod, newAbs, newCarbonicity, newIInter, newISlope, newIQuad, newLogPost);
-        }
-    }
-
-    parsFile.close();
-
-    return sampledPars;
-}
-
 
 class Application
 {
@@ -478,7 +351,7 @@ void Application::run()
         fsLike = exp (logFieldStarLikelihood);
     }
 
-    auto sampledPars = readSampledParams (evoModels, settings);
+    auto sampledPars = base::utility::readSampledParams (evoModels, settings);
 
     /********** compile results *********/
     /*** now report sampled masses and parameters ***/

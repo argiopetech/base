@@ -326,12 +326,12 @@ void MpiMcmcApplication::initChain()
 {
     for (auto system : msSystems)
     {
-        system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
+        system.clustStarProposalDens = system.clustStarPriorDens;
     }
 
     for (auto system : wdSystems)
     {
-        system.clustStarProposalDens = system.clustStarPriorDens;   // Use prior prob of being clus star
+        system.clustStarProposalDens = system.clustStarPriorDens;
 
         system.setMassRatio(0.0);
     }
@@ -461,6 +461,30 @@ void MpiMcmcApplication::mainRun(Chain<Cluster>& chain, std::function<void(const
 }
 
 
+void MpiMcmcApplication::loadPreviousBurnin(string filename, Chain<Cluster> chain)
+{
+    auto acceptStage = [](int stage) { return stage < (int)AdaptiveMcmcStage::AdaptiveMainRun; }
+    auto samples = base::utility::readSampledParams(filename, evoModels, settings, acceptStage);
+
+    for (auto sample : samples)
+    {
+        clust.age = sample.age;
+        clust.yyy = sample.y;
+        clust.feh = sample.feh;
+        clust.mod = sample.distMod;
+        clust.abs = sample.abs;
+        clust.carbonicity = sample.carbonicity;
+        clust.ifmrIntercept = sample.ifmrIntercept;
+        clust.ifmrSlope = sample.ifmrSlope;
+        clust.ifmrQuadCoef = sample.ifmrQuadCoef;
+
+        auto logPost = sample.logPost;
+
+        chain.storePars(sample.stage, clust, logPost);
+    }
+}
+
+
 int MpiMcmcApplication::run()
 {
     Chain<Cluster> chain(static_cast<uint32_t>(std::uniform_int_distribution<>()(gen)),
@@ -480,28 +504,41 @@ int MpiMcmcApplication::run()
     std::function<double(Cluster&)> logPostFunc = std::bind(&MpiMcmcApplication::logPostStep, this, _1);
     std::function<void(const Cluster&)> checkPriors = std::bind(&ensurePriors, std::cref(settings), _1);
 
-    stage1Burnin(chain, checkPriors, logPostFunc);
-    stage2Burnin(chain, checkPriors, logPostFunc);
-    stage3Burnin(chain, checkPriors, logPostFunc);
-
-    // Main run
-    // Overwrite the burnin photometry set with the full photometry set
-    // SSE memory must be reallocated to fit the potentially larger number of stars
-    msSystems = msMainRun;
-    wdSystems = wdMainRun;
-
-    allocateSSEMem();
-
-    mainRun(chain, checkPriors, logPostFunc);
-
-
-    // Post-run
-    if ( settings.verbose )
+    if (settings.startWithBurnin.empty())
     {
-        cout << "\nFinal acceptance ratio: " << chain.acceptanceRatio() << "\n" << endl;
-
-        MsBoundsError::countSummary();
+        stage1Burnin(chain, checkPriors, logPostFunc);
+        stage2Burnin(chain, checkPriors, logPostFunc);
     }
+    else
+    {
+        loadPreviousBurnin(settings.startWithBurnin, chain);
+    }
+
+    if (!settings.stopAfterBurnin)
+    {
+        stage3Burnin(chain, checkPriors, logPostFunc);
+
+        // Main run
+        // Overwrite the burnin photometry set with the full photometry set
+        // SSE memory must be reallocated to fit the potentially larger number of stars
+        msSystems = msMainRun;
+        wdSystems = wdMainRun;
+
+        allocateSSEMem();
+
+        mainRun(chain, checkPriors, logPostFunc);
+
+
+        // Post-run
+        if ( settings.verbose )
+        {
+            cout << "\nFinal acceptance ratio: " << chain.acceptanceRatio() << "\n" << endl;
+
+            MsBoundsError::countSummary();
+        }
+    }
+    else
+        cout << "Ended after burnin due to `--stopAfterBurnin`" << endl;
 
     return 0;
 }

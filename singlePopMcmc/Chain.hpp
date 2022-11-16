@@ -51,6 +51,25 @@ class Chain : public McmcApplication
         }
     }
 
+
+    void storePars(AdaptiveMcmcStage stage, T clust, double logPost, bool save = true)
+    {
+        /* save draws to estimate covariance matrix for more efficient Metropolis */
+        for (int p = 0; p < NPARAMS; p++)
+        {
+            if (priorVar[p] > EPSILON)
+            {
+                params.at(p).push_back(clust.getParam(p));
+            }
+        }
+
+        if (save)
+        {
+            store.save({store.nextIteration(), stage, clust, logPost, modIsParallax});
+        }
+    }
+
+
     void run(AdaptiveMcmcStage stage, std::function<T(T)> propose, std::function<double(T&)> logPost, std::function<void(const T&)> checkPriors, int iters, int thin = 1)
     {
         for (int iteration = 0; iteration < iters * thin; iteration++)
@@ -79,19 +98,7 @@ class Chain : public McmcApplication
                 logPostCurr = logPostProp;
             }
 
-            /* save draws to estimate covariance matrix for more efficient Metropolis */
-            for (int p = 0; p < NPARAMS; p++)
-            {
-                if (priorVar[p] > EPSILON)
-                {
-                    params.at(p).push_back(clust.getParam(p));
-                }
-            }
-
-            if (iteration % thin == 0)
-            {
-                store.save({store.nextIteration(), stage, clust, logPostCurr, modIsParallax});
-            }
+            storePars(stage, clust, logPostCurr, iteration % thin == 0);
         }
     }
 
