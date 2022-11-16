@@ -912,8 +912,7 @@ static void printUsage ()
     cerr << "\t\tthe result file are considered (rather than just stage 3, post-burnin)." << endl;
 
     cerr << "\n\t--stopAfterBurnin" << endl;
-    cerr << "\t\tStops the run after the Stage 2 burnin for use with startWithRes. Result output" << endl;
-    cerr << "\t\tgoes to <filebase>.burnin rather than <filebase>.res" << endl;
+    cerr << "\t\tStops the run after the Stage 2 burnin for use with startWithRes." << endl;
 
     cerr << "\n\t--startWithBurnin <filename>" << endl;
     cerr << "\t\tStarts the run with the Stage 2 burnin output from a standard run of BASE-9 or" << endl;
