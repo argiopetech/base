@@ -461,9 +461,9 @@ void MpiMcmcApplication::mainRun(Chain<Cluster>& chain, std::function<void(const
 }
 
 
-void MpiMcmcApplication::loadPreviousBurnin(string filename, Chain<Cluster> chain)
+void MpiMcmcApplication::loadPreviousBurnin(string filename, Chain<Cluster>& chain)
 {
-    auto acceptStage = [](int stage) { return stage < (int)AdaptiveMcmcStage::AdaptiveMainRun; }
+    auto acceptStage = [](int stage) { return stage == (int)AdaptiveMcmcStage::AdaptiveBurnin; };
     auto samples = base::utility::readSampledParams(filename, evoModels, settings, acceptStage);
 
     for (auto sample : samples)

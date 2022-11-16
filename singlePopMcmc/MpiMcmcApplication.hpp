@@ -38,7 +38,7 @@ class MpiMcmcApplication
     void readPhotometry();
     void verifyModelBounds();
     void initChain();
-    void loadPreviousBurnin(std::string, Chain<Cluster>);
+    void loadPreviousBurnin(std::string, Chain<Cluster>&);
     void stage1Burnin(Chain<Cluster>&, std::function<void(const Cluster&)>&, std::function<double(Cluster&)>&);
     void stage2Burnin(Chain<Cluster>&, std::function<void(const Cluster&)>&, std::function<double(Cluster&)>&);
     void stage3Burnin(Chain<Cluster>&, std::function<void(const Cluster&)>&, std::function<double(Cluster&)>&);
