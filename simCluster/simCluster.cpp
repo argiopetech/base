@@ -81,6 +81,14 @@ int run(int argc, char *argv[])
                 }
             }
         }
+
+        // If noWDs is set, logT and logL don't have valid AbsCoeffs and will 
+        while (settings.simCluster.noWDs && (filters.front() == "logT" || 
+                                             filters.front() == "logL"))
+        {
+            filters.erase(filters.begin());
+        }
+
     }
 
     for (size_t f = 0; f < filters.size(); ++f)
