@@ -1,2 +1,0 @@
-useDynLib(BASE9)
-exportPattern("^[[:alpha:]]+")
